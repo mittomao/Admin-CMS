@@ -6,3 +6,4 @@ const contentEditorController = require('../../controllers/admin/contentEditorCo
 router.get('/', contentEditorController.getContentEditor);
 
 module.exports = router;
+

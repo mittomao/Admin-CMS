@@ -51,3 +51,4 @@ npm test
 
 ## 4. Cấu trúc thư mục
 Xem tài liệu kiến trúc chi tiết tại `AGENTS.md`.
+

@@ -18,3 +18,4 @@ const getContentEditor = (req, res) => {
 module.exports = {
   getContentEditor,
 };
+

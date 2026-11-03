@@ -6,3 +6,4 @@ const launchpadController = require('../../controllers/admin/launchpadController
 router.get('/', launchpadController.getLaunchpad);
 
 module.exports = router;
+
