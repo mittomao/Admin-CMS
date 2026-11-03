@@ -1,0 +1,25 @@
+<footer class="sc-taskbar">
+  <div class="sc-taskbar-apps">
+    <a href="/admin/launchpad" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'launchpad' ? 'active' : '' %>" title="Launchpad">
+      <span>🚀</span>
+      <span>Launchpad</span>
+    </a>
+    <a href="/admin/content-editor" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'content-editor' ? 'active' : '' %>" title="Content Editor">
+      <span>📑</span>
+      <span>Content Editor</span>
+    </a>
+    <a href="#" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'media-library' ? 'active' : '' %>" onclick="alert('Media Library will be implemented in GĐ 5'); return false;" title="Media Library">
+      <span>🖼️</span>
+      <span>Media Library</span>
+    </a>
+    <a href="#" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'workbox' ? 'active' : '' %>" onclick="alert('Workbox will be implemented in GĐ 7'); return false;" title="Workbox">
+      <span>📥</span>
+      <span>Workbox</span>
+    </a>
+  </div>
+
+  <div class="sc-taskbar-info">
+    <span>Sitecore XM v10.4-like</span>
+    <span title="Database Master">master</span>
+  </div>
+</footer>

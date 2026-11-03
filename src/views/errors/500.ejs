@@ -1,0 +1,16 @@
+<div class="sc-error-container">
+  <div class="sc-error-badge" style="color: #ef4444;">500</div>
+  <h1 class="sc-error-title"><%= title || 'Internal Server Error' %></h1>
+  <p class="sc-error-desc">
+    <%= message || 'An unexpected error occurred while processing your request. Please contact your system administrator.' %>
+  </p>
+  <div>
+    <a href="/admin/launchpad" class="sc-btn sc-btn--primary">Return to Launchpad</a>
+    <a href="javascript:location.reload()" class="sc-btn sc-btn--secondary" style="margin-left: 8px;">Reload Page</a>
+  </div>
+  <% if (typeof stack !== 'undefined' && stack) { %>
+    <div class="sc-stack-trace">
+      <%= stack %>
+    </div>
+  <% } %>
+</div>

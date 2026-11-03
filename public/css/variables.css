@@ -1,0 +1,76 @@
+:root {
+  /* Sitecore Brand Colors */
+  --sc-red: #eb1c24;
+  --sc-red-hover: #c9151c;
+  --sc-red-active: #a80e14;
+  
+  /* Topbar & Header Themes */
+  --sc-topbar-navy: #1b2a47;
+  --sc-topbar-dark: #23282d;
+  --sc-topbar-text: #ffffff;
+  --sc-topbar-muted: #a0aec0;
+  
+  /* Taskbar Theme (Bottom) */
+  --sc-taskbar-bg: #1f2429;
+  --sc-taskbar-active-bg: #2d343c;
+  --sc-taskbar-text: #d1d5db;
+  --sc-taskbar-border-top: var(--sc-red);
+  
+  /* Content Editor Ribbon */
+  --sc-ribbon-tab-bg: #27303f;
+  --sc-ribbon-tab-active-bg: #f5f6f8;
+  --sc-ribbon-tab-text: #e2e8f0;
+  --sc-ribbon-tab-active-text: #1a202c;
+  --sc-ribbon-body-bg: #f5f6f8;
+  --sc-ribbon-border: #d2d6dc;
+  
+  /* Workspace & Panes */
+  --sc-bg-app: #f0f2f5;
+  --sc-bg-card: #ffffff;
+  --sc-border-light: #e2e8f0;
+  --sc-border-medium: #cbd5e1;
+  --sc-text-main: #1e293b;
+  --sc-text-muted: #64748b;
+  --sc-text-subtle: #94a3b8;
+  
+  /* Status Colors */
+  --sc-success: #10b981;
+  --sc-warning: #f59e0b;
+  --sc-danger: #ef4444;
+  --sc-info: #3b82f6;
+
+  /* Pastel Tile Accent Colors (Launchpad) */
+  --sc-pastel-blue: #e0f2fe;
+  --sc-pastel-blue-icon: #0284c7;
+  --sc-pastel-green: #dcfce7;
+  --sc-pastel-green-icon: #16a34a;
+  --sc-pastel-amber: #fef3c7;
+  --sc-pastel-amber-icon: #d97706;
+  --sc-pastel-purple: #f3e8ff;
+  --sc-pastel-purple-icon: #9333ea;
+  --sc-pastel-rose: #ffe4e6;
+  --sc-pastel-rose-icon: #e11d48;
+  --sc-pastel-indigo: #e0e7ff;
+  --sc-pastel-indigo-icon: #4f46e5;
+  
+  /* Typography */
+  --sc-font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Open Sans", Roboto, Helvetica, Arial, sans-serif;
+  --sc-font-size-xs: 11px;
+  --sc-font-size-sm: 12px;
+  --sc-font-size-base: 13px;
+  --sc-font-size-md: 14px;
+  --sc-font-size-lg: 16px;
+  --sc-font-size-xl: 18px;
+  --sc-font-size-2xl: 22px;
+
+  /* Dimensions */
+  --sc-topbar-height: 48px;
+  --sc-taskbar-height: 38px;
+  --sc-ribbon-tabs-height: 32px;
+  --sc-ribbon-body-height: 84px;
+
+  /* Shadows */
+  --sc-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --sc-shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --sc-shadow-card-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}

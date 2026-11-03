@@ -1,0 +1,21 @@
+<header class="sc-topbar <%= typeof topbarTheme !== 'undefined' && topbarTheme === 'dark' ? 'sc-topbar--dark' : '' %>">
+  <div class="sc-topbar-left">
+    <a href="/admin/launchpad" class="sc-brand" title="Sitecore Launchpad">
+      <div class="sc-brand-icon">S</div>
+      <span>Sitecore</span>
+    </a>
+  </div>
+  
+  <div class="sc-topbar-right">
+    <div class="sc-user-menu">
+      <div class="sc-user-avatar">
+        <%= typeof user !== 'undefined' && user.fullName ? user.fullName.charAt(0).toUpperCase() : 'A' %>
+      </div>
+      <span class="sc-user-name">
+        <%= typeof user !== 'undefined' && user.fullName ? user.fullName : 'sitecore\\admin' %>
+      </span>
+      <!-- GĐ 0: Mock Logout button. GĐ 1: Real POST logout -->
+      <a href="#" class="sc-logout-btn" onclick="alert('Logout feature will be activated in GĐ 1'); return false;">Log out</a>
+    </div>
+  </div>
+</header>

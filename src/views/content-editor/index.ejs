@@ -1,0 +1,129 @@
+<div class="sc-editor-container">
+  <!-- Ribbon Tabs -->
+  <div class="sc-ribbon-tabs">
+    <div class="sc-ribbon-tab active">Home</div>
+    <div class="sc-ribbon-tab">Navigate</div>
+    <div class="sc-ribbon-tab">Review</div>
+    <div class="sc-ribbon-tab">Publish</div>
+    <div class="sc-ribbon-tab">Versions</div>
+    <div class="sc-ribbon-tab">Configure</div>
+    <div class="sc-ribbon-tab">Presentation</div>
+    <div class="sc-ribbon-tab">Security</div>
+    <div class="sc-ribbon-tab">View</div>
+  </div>
+
+  <!-- Ribbon Action Bar -->
+  <div class="sc-ribbon-toolbar">
+    <div class="sc-ribbon-group">
+      <button class="sc-ribbon-btn" onclick="alert('Save feature will be connected to API in GĐ 2');">
+        <span class="sc-ribbon-btn-icon">💾</span>
+        <span>Save</span>
+      </button>
+    </div>
+
+    <div class="sc-ribbon-group">
+      <button class="sc-ribbon-btn" onclick="alert('Insert item modal will be implemented in GĐ 2');">
+        <span class="sc-ribbon-btn-icon">➕</span>
+        <span>Insert</span>
+      </button>
+      <button class="sc-ribbon-btn" onclick="alert('Duplicate feature will be implemented in GĐ 2');">
+        <span class="sc-ribbon-btn-icon">📋</span>
+        <span>Duplicate</span>
+      </button>
+      <button class="sc-ribbon-btn" onclick="alert('Rename modal will be implemented in GĐ 2');">
+        <span class="sc-ribbon-btn-icon">✏️</span>
+        <span>Rename</span>
+      </button>
+      <button class="sc-ribbon-btn" onclick="alert('Delete item feature will be implemented in GĐ 2');">
+        <span class="sc-ribbon-btn-icon">❌</span>
+        <span>Delete</span>
+      </button>
+      <button class="sc-ribbon-btn" onclick="alert('Move feature will be implemented in GĐ 2');">
+        <span class="sc-ribbon-btn-icon">📦</span>
+        <span>Move</span>
+      </button>
+      <button class="sc-ribbon-btn" onclick="alert('Sort feature will be implemented in GĐ 2');">
+        <span class="sc-ribbon-btn-icon">↕️</span>
+        <span>Sort</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3-Pane Workspace -->
+  <div class="sc-editor-main">
+    <!-- Left Pane: Tree View Placeholder -->
+    <div class="sc-editor-tree-pane">
+      <div class="sc-tree-search-bar">
+        <input type="text" class="sc-search-input" placeholder="Search tree (GĐ 2)..." disabled>
+      </div>
+      <div class="sc-tree-content-area">
+        <div class="sc-tree-node-mock" style="padding-left: 0px;">
+          <span>🌐</span>
+          <span>sitecore</span>
+        </div>
+        <div class="sc-tree-node-mock" style="padding-left: 16px;">
+          <span>📁</span>
+          <span>content</span>
+        </div>
+        <div class="sc-tree-node-mock selected" style="padding-left: 32px;">
+          <span>🏠</span>
+          <span>home</span>
+        </div>
+        <div class="sc-tree-node-mock" style="padding-left: 16px;">
+          <span>🖼️</span>
+          <span>media library</span>
+        </div>
+        <div class="sc-tree-node-mock" style="padding-left: 16px;">
+          <span>📋</span>
+          <span>templates</span>
+        </div>
+        <div class="sc-tree-node-mock" style="padding-left: 16px;">
+          <span>⚙️</span>
+          <span>system</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center/Right Pane: Item Form Placeholder -->
+    <div class="sc-editor-form-pane">
+      <div class="sc-form-header">
+        <div class="sc-item-headline">
+          <div class="sc-item-icon">🏠</div>
+          <div>
+            <div class="sc-item-title">home</div>
+            <div class="sc-item-path">/sitecore/content/home</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Quick Info -->
+      <div class="sc-section-card">
+        <div class="sc-section-header">Quick Info</div>
+        <div class="sc-section-body">
+          <p style="font-size: 12px; color: #64748b; line-height: 1.6;">
+            <strong>Item ID:</strong> <code>67c52b000000000000000001</code><br>
+            <strong>Template:</strong> Sample Item (Standard Template)<br>
+            <strong>Created:</strong> 2026-11-03 09:00:00 by <code>sitecore\admin</code><br>
+            <strong>Version:</strong> 1 (en)
+          </p>
+        </div>
+      </div>
+
+      <!-- Section: Data Fields Placeholder -->
+      <div class="sc-section-card">
+        <div class="sc-section-header">Content Data</div>
+        <div class="sc-section-body">
+          <div class="sc-field-group">
+            <label class="sc-field-label">Title (Single-Line Text)</label>
+            <input type="text" class="sc-field-input" value="Welcome to Sitecore Experience Management" placeholder="Enter title...">
+          </div>
+
+          <div class="sc-field-group">
+            <label class="sc-field-label">Text (Rich Text)</label>
+            <textarea class="sc-field-input sc-field-textarea" placeholder="Enter HTML body content...">Welcome to our Sitecore XM-like Content Management System. In GĐ 2, dynamic fields and TinyMCE rich-text editor will be rendered here dynamically based on the Item's Template.</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
