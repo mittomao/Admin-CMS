@@ -59,6 +59,11 @@
         <p class="empty-subtitle text-muted">
           This item template (<%= tplName %>) does not define any content fields. You can create subitems or organize nodes under it.
         </p>
+        <div class="empty-action mt-3">
+          <button type="button" class="btn btn-outline-primary btn-sm" id="btnSwitchToFolderView">
+            <i class="ti ti-layout-grid me-1"></i>View Subitems
+          </button>
+        </div>
       </div>
     <% } else { %>
       <div class="accordion" id="itemSectionsAccordion">

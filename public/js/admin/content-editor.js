@@ -38,6 +38,7 @@ function initContentTree() {
     extensions: ['filter', 'dnd5'],
     autoScroll: true,
     quicksearch: true,
+    clickFolderMode: 3, // Click on folder activates and expands/collapses
     filter: {
       autoApply: true,
       autoExpand: true,
@@ -135,6 +136,12 @@ function initContentTree() {
 
       currentItemId = node.key;
       updateRibbonContext(node);
+
+      // Auto-expand node on click if it has children and is collapsed
+      if (node.isLazy() && !node.isExpanded()) {
+        node.setExpanded(true);
+      }
+
       loadItemWorkspace(node.key, currentViewMode);
       window.history.pushState(null, '', `/admin/content-editor/${node.key}`);
     },
@@ -305,6 +312,19 @@ function attachItemFormEvents() {
   if (btnDiscard) {
     btnDiscard.addEventListener('click', () => {
       loadItemWorkspace(currentItemId, currentViewMode);
+    });
+  }
+
+  // Quick switch to folder view when on an empty folder item
+  const btnSwitchToFolder = document.getElementById('btnSwitchToFolderView');
+  if (btnSwitchToFolder) {
+    btnSwitchToFolder.addEventListener('click', () => {
+      const btnFolder = document.getElementById('btnModeFolder');
+      const btnContent = document.getElementById('btnModeContent');
+      if (btnFolder) btnFolder.classList.add('active');
+      if (btnContent) btnContent.classList.remove('active');
+      currentViewMode = 'folder';
+      loadItemWorkspace(currentItemId, 'folder');
     });
   }
 
