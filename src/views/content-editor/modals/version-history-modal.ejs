@@ -1,0 +1,103 @@
+<div class="modal fade" id="versionHistoryModal" tabindex="-1" aria-labelledby="versionHistoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2 px-3 bg-light border-bottom">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="versionHistoryModalLabel">
+          <i class="ti ti-timeline text-primary fs-3"></i>
+          <span>Lịch sử Phiên bản — <%= item.displayName || item.name %></span>
+          <span class="badge bg-azure-lt text-uppercase ms-1">[<%= currentLang %>]</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-3">
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+          <div class="text-muted small">
+            Tổng cộng: <strong><%= versions.length %></strong> phiên bản nội dung trong ngôn ngữ này.
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="btnModalAddVersionFromHistory">
+              <i class="ti ti-file-plus"></i> Thêm phiên bản mới
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btnModalCompareFromHistory">
+              <i class="ti ti-columns"></i> So sánh phiên bản
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive border rounded">
+          <table class="table table-vcenter table-hover table-striped card-table mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 80px;">Version</th>
+                <th>Người tạo / sửa</th>
+                <th>Ngày cập nhật</th>
+                <th>Ghi chú</th>
+                <th class="text-end" style="width: 180px;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (versions.length === 0) { %>
+                <tr>
+                  <td colspan="5" class="text-center py-4 text-muted">Chưa có phiên bản nào.</td>
+                </tr>
+              <% } else { %>
+                <% versions.forEach(v => { %>
+                  <tr>
+                    <td>
+                      <span class="badge <%= v.version === 1 ? 'bg-secondary' : 'bg-primary' %> fs-6 px-2 py-1">
+                        v<%= v.version %>
+                      </span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-xs rounded bg-blue-lt">
+                          <i class="ti ti-user"></i>
+                        </span>
+                        <div>
+                          <div class="fw-semibold"><%= v.updatedBy ? (v.updatedBy.fullName || v.updatedBy.username) : 'System' %></div>
+                          <div class="text-muted small font-monospace"><%= v.updatedBy ? v.updatedBy.username : '' %></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="text-muted small">
+                        <i class="ti ti-calendar me-1"></i><%= v.updatedAt ? new Date(v.updatedAt).toLocaleString() : 'N/A' %>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="text-muted small"><%= v.note || '—' %></span>
+                    </td>
+                    <td class="text-end">
+                      <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary btn-action-view-version" 
+                                data-version="<%= v.version %>" title="Xem phiên bản này">
+                          <i class="ti ti-eye"></i> Xem
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-action-restore-version" 
+                                data-version="<%= v.version %>" title="Khôi phục thành version mới">
+                          <i class="ti ti-history"></i> Khôi phục
+                        </button>
+                        <% if (versions.length > 1) { %>
+                          <button type="button" class="btn btn-outline-danger btn-action-delete-version" 
+                                  data-version="<%= v.version %>" title="Xóa phiên bản này">
+                            <i class="ti ti-trash"></i>
+                          </button>
+                        <% } %>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer py-2 px-3 bg-light">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+

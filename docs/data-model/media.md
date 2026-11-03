@@ -24,14 +24,19 @@
   fileDetails: {
     originalName: "hero-banner.jpg",
     storagePath: "uploads/2026/11/hero-banner_uuid.jpg",
-    thumbnailPath: "thumbnails/2026/11/hero-banner_uuid_thumb.jpg",
+    thumbnailPath: "thumbnails/2026/11/hero-banner_uuid_thumb.webp",
     mimeType: "image/jpeg",
     fileSize: 245000,                  // Dung lượng tính theo bytes (~245KB)
     dimensions: { width: 1920, height: 800 },
+    checksum: "a3f5...sha256",          // Mã băm SHA-256 phát hiện trùng lặp
     extension: "jpg"
   },
   
-  altText: "Hình ảnh banner trang chủ giới thiệu sản phẩm",
+  // Alt text đa ngôn ngữ (Map of String: { vi: "...", en: "..." })
+  altText: {
+    vi: "Hình ảnh banner trang chủ giới thiệu sản phẩm",
+    en: "Homepage hero banner introducing products"
+  },
   isDeleted: false,
   deletedAt: null,
   deletedBy: null,
@@ -50,6 +55,8 @@ mediaSchema.index({ path: 1 }, { unique: true });
 mediaSchema.index({ parentId: 1, isFolder: 1, isDeleted: 1 });
 mediaSchema.index({ ancestors: 1 });
 mediaSchema.index({ isDeleted: 1 });
+mediaSchema.index({ 'fileDetails.checksum': 1, isDeleted: 1 });
+mediaSchema.index({ name: 'text', displayName: 'text' });
 ```
 
 ---

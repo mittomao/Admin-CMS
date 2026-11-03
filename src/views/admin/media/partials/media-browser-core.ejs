@@ -1,0 +1,236 @@
+<%# Core Media Browser View Fragment (Dual-mode: Standalone & Modal Picker) %>
+<div class="media-browser-root" id="<%= typeof browserId !== 'undefined' ? browserId : 'mediaBrowserApp' %>" data-is-picker="<%= typeof isPicker !== 'undefined' && isPicker ? 'true' : 'false' %>">
+  
+  <!-- 1. TOP TOOLBAR & CONTROLS -->
+  <div class="media-toolbar">
+    <div class="media-toolbar-left">
+      <!-- Breadcrumbs -->
+      <nav class="media-breadcrumbs js-media-breadcrumbs" aria-label="Media path">
+        <span class="breadcrumb-item active">📁 Media Library</span>
+      </nav>
+    </div>
+
+    <div class="media-toolbar-right">
+      <!-- Action buttons -->
+      <button type="button" class="btn btn-sm btn-primary js-upload-trigger" title="Upload files">
+        <i class="ti ti-upload me-1"></i> Upload
+      </button>
+      <input type="file" class="d-none js-file-input" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,application/pdf" />
+
+      <button type="button" class="btn btn-sm btn-secondary js-new-folder-btn" title="Create new folder">
+        <i class="ti ti-folder-plus me-1"></i> New Folder
+      </button>
+
+      <button type="button" class="btn btn-sm btn-outline js-toggle-bulk-mode" title="Toggle multi-select mode">
+        <i class="ti ti-checkbox me-1"></i> Select
+      </button>
+
+      <button type="button" class="btn btn-sm btn-icon js-refresh-btn" title="Refresh">
+        <i class="ti ti-refresh"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. FILTER & SEARCH SUBBAR -->
+  <div class="media-subbar">
+    <div class="subbar-filters">
+      <!-- Format filter -->
+      <div class="filter-group">
+        <label for="formatFilter" class="filter-label">Type:</label>
+        <select class="form-control form-control-sm js-format-filter" id="formatFilter">
+          <option value="all">All Formats</option>
+          <option value="png">PNG</option>
+          <option value="jpg">JPG / JPEG</option>
+          <option value="webp">WebP</option>
+          <option value="gif">GIF</option>
+          <option value="svg">SVG</option>
+          <option value="pdf">PDF Documents</option>
+        </select>
+      </div>
+
+      <!-- Sort filter -->
+      <div class="filter-group">
+        <label for="sortFilter" class="filter-label">Sort:</label>
+        <select class="form-control form-control-sm js-sort-filter" id="sortFilter">
+          <option value="created_at_desc">Newest First</option>
+          <option value="created_at_asc">Oldest First</option>
+          <option value="name_asc">Name A-Z</option>
+          <option value="name_desc">Name Z-A</option>
+          <option value="bytes_desc">Size (Largest)</option>
+          <option value="bytes_asc">Size (Smallest)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Live Search -->
+    <div class="subbar-search">
+      <div class="search-input-wrapper">
+        <input type="text" class="form-control form-control-sm js-search-input" placeholder="Search media by name..." />
+        <button type="button" class="search-clear-btn js-search-clear d-none" title="Clear search">×</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. PROGRESS BAR (XHR UPLOAD) -->
+  <div class="media-progress-container js-progress-container d-none">
+    <div class="media-progress-info">
+      <span class="js-progress-label">Uploading...</span>
+      <span class="js-progress-percent">0%</span>
+    </div>
+    <div class="media-progress-track">
+      <div class="media-progress-bar js-progress-bar" style="width: 0%;"></div>
+    </div>
+  </div>
+
+  <!-- 4. BULK ACTIONS BAR (Visible when items selected) -->
+  <div class="media-bulk-bar js-bulk-bar d-none">
+    <span class="bulk-count js-bulk-count">0 items selected</span>
+    <div class="bulk-actions">
+      <% if (typeof isPicker !== 'undefined' && isPicker) { %>
+        <button type="button" class="btn btn-sm btn-primary js-bulk-insert-btn">Insert Selected</button>
+      <% } %>
+      <button type="button" class="btn btn-sm btn-danger js-bulk-delete-btn">Delete Selected</button>
+      <button type="button" class="btn btn-sm btn-secondary js-bulk-clear-btn">Clear Selection</button>
+    </div>
+  </div>
+
+  <!-- 5. THREE-COLUMN WORKSPACE BODY -->
+  <div class="media-workspace">
+    
+    <!-- LEFT: FOLDER TREE SIDEBAR -->
+    <aside class="media-sidebar js-sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">FOLDERS</span>
+      </div>
+      <div class="sidebar-tree js-folder-tree-container">
+        <!-- Rendered dynamically by MediaBrowser.js -->
+        <div class="tree-loading text-muted p-2">Loading folders...</div>
+      </div>
+    </aside>
+
+    <!-- MIDDLE: GRID & DROPZONE AREA -->
+    <main class="media-content-area js-dropzone-container">
+      <!-- Dropzone Overlay -->
+      <div class="media-dropzone-overlay js-dropzone-overlay d-none">
+        <div class="dropzone-box">
+          <span class="dropzone-icon">📂</span>
+          <p class="dropzone-text">Drop images or files here to upload</p>
+        </div>
+      </div>
+
+      <!-- Assets Grid -->
+      <div class="media-grid js-media-grid">
+        <!-- Cards rendered dynamically by MediaBrowser.js -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="media-empty-state js-empty-state d-none">
+        <div class="empty-icon">📁</div>
+        <p class="empty-title">This folder is empty</p>
+        <p class="empty-subtitle">Drag and drop files here, or click the <strong>Upload</strong> button above.</p>
+        <div class="mt-3">
+          <button type="button" class="btn btn-primary js-empty-upload-btn">
+            <i class="ti ti-upload me-1"></i> Upload Image Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Pagination / Load More Footer -->
+      <div class="media-grid-footer js-grid-footer d-none">
+        <span class="footer-count js-footer-count">Showing 0 of 0 items</span>
+        <button type="button" class="btn btn-sm btn-outline js-load-more-btn d-none">Load More Assets</button>
+      </div>
+    </main>
+
+    <!-- RIGHT: ASSET INSPECTOR PANEL -->
+    <aside class="media-inspector js-inspector-panel">
+      <div class="inspector-empty js-inspector-empty">
+        <span class="text-muted">Select an item to view details</span>
+      </div>
+
+      <div class="inspector-content js-inspector-content d-none">
+        <div class="inspector-header">
+          <span class="inspector-title">DETAILS</span>
+        </div>
+
+        <!-- Large Preview -->
+        <div class="inspector-preview-box">
+          <img src="" alt="" class="inspector-preview-img js-inspector-preview" />
+          <div class="inspector-file-icon js-inspector-file-icon d-none">📄</div>
+        </div>
+
+        <!-- Action Buttons (Picker or Standalone) -->
+        <div class="inspector-actions">
+          <% if (typeof isPicker !== 'undefined' && isPicker) { %>
+            <button type="button" class="btn btn-primary btn-block js-inspector-insert-btn">
+              Choose / Insert Image
+            </button>
+          <% } %>
+          <div class="btn-group-row">
+            <button type="button" class="btn btn-sm btn-outline-secondary js-inspector-rename-btn" title="Rename asset">Rename</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary js-inspector-replace-btn" title="Replace file">Replace</button>
+            <input type="file" class="d-none js-replace-file-input" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,application/pdf" />
+          </div>
+          <div class="btn-group-row">
+            <a href="#" target="_blank" class="btn btn-sm btn-secondary js-inspector-view-btn">View Full</a>
+            <button type="button" class="btn btn-sm btn-outline js-inspector-copy-btn" title="Copy URL">Copy URL</button>
+            <button type="button" class="btn btn-sm btn-danger js-inspector-delete-btn" title="Delete">Delete</button>
+          </div>
+        </div>
+
+        <!-- Metadata Form -->
+        <div class="inspector-meta">
+          <div class="form-group mb-2">
+            <label class="form-label-sm">File Name</label>
+            <input type="text" class="form-control form-control-sm js-inspector-name" readonly />
+          </div>
+
+          <div class="meta-row">
+            <div>
+              <span class="meta-label">Format:</span>
+              <span class="meta-val js-inspector-format">-</span>
+            </div>
+            <div>
+              <span class="meta-label">Size:</span>
+              <span class="meta-val js-inspector-size">-</span>
+            </div>
+          </div>
+
+          <div class="meta-row">
+            <div>
+              <span class="meta-label">Dimensions:</span>
+              <span class="meta-val js-inspector-dimensions">-</span>
+            </div>
+            <div>
+              <span class="meta-label">Date:</span>
+              <span class="meta-val js-inspector-date">-</span>
+            </div>
+          </div>
+
+          <!-- Alt Text (Multilingual) -->
+          <div class="form-group mt-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <label class="form-label-sm" for="inspectorAlt">Alt Text (<span class="js-alt-lang-badge">en</span>)</label>
+              <select class="form-select-sm js-inspector-alt-lang" style="width: auto;">
+                <option value="en">EN</option>
+                <option value="vi">VI</option>
+              </select>
+            </div>
+            <input type="text" class="form-control form-control-sm js-inspector-alt" id="inspectorAlt" placeholder="Image description..." />
+            <button type="button" class="btn btn-sm btn-secondary mt-1 js-inspector-save-alt">Save Alt</button>
+          </div>
+
+          <!-- Usage -->
+          <div class="inspector-usage mt-3">
+            <label class="form-label-sm">Where Used (Usage)</label>
+            <div class="usage-list js-inspector-usage">
+              <span class="text-muted small">Not used in any items yet</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+

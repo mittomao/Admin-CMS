@@ -1,0 +1,33 @@
+<div class="modal fade" id="dirtyConfirmModal" tabindex="-1" aria-labelledby="dirtyConfirmModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header py-2 px-3 bg-warning-subtle border-bottom">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-warning-emphasis" id="dirtyConfirmModalLabel">
+          <i class="ti ti-alert-triangle fs-3 text-warning"></i>
+          <span>Thay đổi chưa được lưu</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-3">
+        <p class="mb-2">Bạn có các thay đổi trường dữ liệu chưa được lưu trong phiên bản hiện tại.</p>
+        <p class="text-muted small mb-0">Nếu bạn chuyển sang ngôn ngữ hoặc phiên bản khác ngay bây giờ, các thay đổi chưa lưu sẽ bị mất. Bạn muốn làm gì?</p>
+      </div>
+
+      <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" id="btnDirtyCancel">
+          Hủy (Ở lại)
+        </button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-danger btn-sm" id="btnDirtyDiscard">
+            Bỏ qua thay đổi
+          </button>
+          <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="btnDirtySaveAndContinue">
+            <i class="ti ti-device-floppy"></i> Lưu và tiếp tục
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

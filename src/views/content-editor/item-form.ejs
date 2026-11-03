@@ -3,13 +3,19 @@
   const sections = template && template.sections ? template.sections : [];
   const tplIcon = template && template.icon ? template.icon : 'ti ti-file-text';
   const tplName = template && template.displayName ? template.displayName : (template ? template.name : 'Unknown');
+  const lang = typeof currentLang !== 'undefined' ? currentLang : 'vi';
+  const ver = typeof currentVersion !== 'undefined' ? currentVersion : 1;
+  const langs = typeof languagesList !== 'undefined' ? languagesList : [{ code: 'vi', name: 'Tiếng Việt', hasContent: true }];
+  const vers = typeof versionsList !== 'undefined' ? versionsList : [{ version: 1 }];
 %>
-<form id="itemEditForm" class="d-flex flex-column h-100" data-item-id="<%= item._id %>">
+<form id="itemEditForm" class="d-flex flex-column h-100" data-item-id="<%= item._id %>" data-lang="<%= lang %>" data-version="<%= ver %>">
   <!-- Hidden Form Metadata -->
   <input type="hidden" name="id" id="formItemId" value="<%= item._id %>" />
+  <input type="hidden" name="lang" id="formCurrentLang" value="<%= lang %>" />
+  <input type="hidden" name="version" id="formCurrentVersion" value="<%= ver %>" />
   <input type="hidden" name="expectedUpdatedAt" id="formExpectedUpdatedAt" value="<%= item.updatedAt ? new Date(item.updatedAt).toISOString() : '' %>" />
 
-  <!-- 1. Item Header Overview Bar -->
+  <!-- 1. Item Header Overview Bar with Language & Version Switchers -->
   <div class="card-header bg-white border-bottom py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
       <span class="avatar avatar-sm bg-blue-lt rounded">
@@ -33,20 +39,97 @@
       </div>
     </div>
 
-    <!-- Quick Status Badges -->
-    <div class="d-flex align-items-center gap-2">
+    <!-- Right Controls: Language & Version Selector + Action Badges -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <!-- Language Switcher Dropdown -->
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" id="langDropdownBtn">
+          <i class="ti ti-world text-primary"></i>
+          <span class="fw-semibold text-uppercase"><%= lang %></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width: 200px;">
+          <li class="dropdown-header text-uppercase text-muted small py-1">Ngôn ngữ hệ thống</li>
+          <% langs.forEach(l => { %>
+            <li>
+              <a class="dropdown-item d-flex align-items-center justify-content-between lang-switcher-item <%= l.code === lang ? 'active' : '' %>" 
+                 href="#" data-lang-code="<%= l.code %>">
+                <span class="d-flex align-items-center gap-2">
+                  <i class="<%= l.icon || 'ti ti-world' %> text-muted"></i>
+                  <span><%= l.name %> (<%= l.code %>)</span>
+                </span>
+                <% if (l.hasContent) { %>
+                  <span class="badge bg-green-lt text-green small" title="Đã có nội dung"><i class="ti ti-check"></i></span>
+                <% } else { %>
+                  <span class="badge bg-secondary-lt text-muted small" title="Chưa có nội dung">Trống</span>
+                <% } %>
+              </a>
+            </li>
+          <% }) %>
+          <li><hr class="dropdown-divider my-1"></li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="#" id="btnHeaderAddLanguage">
+              <i class="ti ti-world-plus"></i> Thêm ngôn ngữ mới...
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Version Switcher Dropdown -->
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" id="versionDropdownBtn">
+          <i class="ti ti-stack-2 text-azure"></i>
+          <span class="fw-semibold">v<%= ver %></span>
+          <span class="text-muted small">(<%= vers.length %>)</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width: 220px;">
+          <li class="dropdown-header text-uppercase text-muted small py-1">Phiên bản (<%= lang.toUpperCase() %>)</li>
+          <% if (vers.length === 0) { %>
+            <li class="px-3 py-2 text-muted small">Chưa có phiên bản nào.</li>
+          <% } else { %>
+            <% vers.forEach(v => { %>
+              <li>
+                <a class="dropdown-item d-flex align-items-center justify-content-between version-switcher-item <%= v.version === ver ? 'active' : '' %>" 
+                   href="#" data-version="<%= v.version %>">
+                  <div>
+                    <span class="fw-bold">Version <%= v.version %></span>
+                    <% if (v.note) { %>
+                      <div class="text-muted small text-truncate" style="max-width: 130px;"><%= v.note %></div>
+                    <% } %>
+                  </div>
+                  <% if (v.version === ver) { %>
+                    <span class="badge bg-primary text-white"><i class="ti ti-check"></i></span>
+                  <% } %>
+                </a>
+              </li>
+            <% }) %>
+          <% } %>
+          <li><hr class="dropdown-divider my-1"></li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="#" id="btnHeaderAddVersion">
+              <i class="ti ti-file-plus"></i> Thêm phiên bản mới...
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-secondary" href="#" id="btnHeaderViewHistory">
+              <i class="ti ti-history"></i> Lịch sử phiên bản...
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Quick Status Badges -->
       <span id="dirtyIndicator" class="badge bg-warning-lt d-none">
         <i class="ti ti-pencil me-1"></i>Unsaved Changes
       </span>
-      <span class="badge bg-green-lt">
-        <i class="ti ti-check me-1"></i>Master (v1)
-      </span>
+
       <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="quickSaveBtn">
         <i class="ti ti-device-floppy"></i>
         <span>Save</span>
       </button>
     </div>
   </div>
+
+
 
   <!-- 2. Form Body (Scrollable Sections) -->
   <div class="card-body p-3 overflow-auto flex-fill" style="max-height: calc(100vh - 280px);">
@@ -137,6 +220,11 @@
       <span class="font-monospace" id="footerUpdatedAt">
         <%= item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'N/A' %>
       </span>
+      <% if (typeof versionInfo !== 'undefined' && versionInfo && versionInfo.note) { %>
+        <span class="ms-2 badge bg-azure-lt text-azure">
+          <i class="ti ti-note me-1"></i><%= versionInfo.note %>
+        </span>
+      <% } %>
     </div>
     <div class="d-flex align-items-center gap-2">
       <button type="button" class="btn btn-outline-secondary btn-sm" id="btnDiscardChanges">
@@ -149,4 +237,3 @@
     </div>
   </div>
 </form>
-

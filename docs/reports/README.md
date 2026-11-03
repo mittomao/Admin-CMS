@@ -17,4 +17,6 @@ Mỗi file báo cáo hoàn thành một giai đoạn phải tuân theo cấu tr�
 - `phase-01-report.md` - Đang tổng hợp từ kết quả GĐ 1
 - `phase-02-report.md` - Đang tổng hợp từ kết quả GĐ 2
 - `phase-03-report.md` - Đang tổng hợp từ kết quả GĐ 3
+- [`phase-04-report.md`](./phase-04-report.md) - **Hoàn thành** (2026-11-03) - Quản lý Phiên bản & Đa ngôn ngữ
+- [`phase-05-report.md`](./phase-05-report.md) - **Hoàn thành** (2026-11-03) - Thư viện Đa phương tiện & Trình soạn thảo Văn bản (Media Library & Rich Text)
 

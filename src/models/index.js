@@ -3,6 +3,8 @@ const User = require('./User');
 const LaunchpadApp = require('./LaunchpadApp');
 const Template = require('./Template');
 const Item = require('./Item');
+const Language = require('./Language');
+const Media = require('./Media');
 
 module.exports = {
   Role,
@@ -10,4 +12,6 @@ module.exports = {
   LaunchpadApp,
   Template,
   Item,
+  Language,
+  Media,
 };

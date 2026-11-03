@@ -51,7 +51,16 @@ Tầng `aclService.js` cung cấp hàm chuẩn kiểm tra quyền của user tr�
 
 ---
 
-## 4. Bảo vệ Headless Delivery API & Layout Service
+## 4. Bảo mật Tải lên & Phục vụ Tệp tin (Media Upload & Serving Security)
+- **Kiểm tra Magic Bytes nhị phân:** Không chỉ dựa vào đuôi mở rộng file (`.jpg`, `.png`) hay MIME type do client khai báo. Mọi file upload đều được quét Magic Bytes thực tế (`src/utils/fileSniffer.js`), ngăn chặn kẻ xấu đổi đuôi file mã độc thực thi (`.exe`, `.sh`, `.php` đổi thành `.jpg`).
+- **Khử độc file SVG (SVG Sanitization):** File vector SVG bản chất là XML text có nguy cơ chứa mã JavaScript độc hại. Mọi tệp SVG tải lên đều được tự động làm sạch qua `sanitize-html` loại bỏ thẻ `<script>`, `onload`, `onclick`, `javascript:`.
+- **Chống duyệt thư mục (Path Traversal Guard):** Tầng lưu trữ `LocalStorageProvider` chuẩn hóa đường dẫn với `path.resolve` và kiểm tra nghiêm ngặt `filePath.startsWith(baseDir)`, triệt tiêu hoàn toàn nguy cơ đọc/ghi file tùy ý ra ngoài thư mục `storage/`.
+- **Giới hạn kích thước:** Server áp dụng Multer memory limit tối đa 10MB/tệp; Client hỗ trợ nén canvas HTML5 trước khi truyền tải qua mạng.
+- **HTTP Caching an toàn:** Endpoint `GET /media/file/:id` sinh mã băm `ETag` (file size + mtime + thumb flag), kích hoạt HTTP 304 Not Modified tiết kiệm băng thông và tăng tốc tải tài nguyên.
+
+---
+
+## 5. Bảo vệ Headless Delivery API & Layout Service
 - **Phân ly dữ liệu tuyệt đối:** Delivery API và Layout Service chỉ được đọc từ `items_web`; không bao giờ truy vấn `items_master`.
 - **Chống DDoS / Brute Force:** Áp dụng `express-rate-limit` giới hạn số lượt request tối đa trên mỗi IP trong cửa sổ thời gian (ví dụ 100 req/phút).
 - **Cấu hình CORS:** Chỉ cho phép các domain Frontend React được cấu hình trong biến môi trường (`CORS_ALLOWED_ORIGINS`).

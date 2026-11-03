@@ -1,0 +1,44 @@
+<div class="modal fade" id="addVersionModal" tabindex="-1" aria-labelledby="addVersionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header py-2 px-3 bg-light border-bottom">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="addVersionModalLabel">
+          <i class="ti ti-file-plus text-primary fs-3"></i>
+          <span>Thêm Phiên Bản Mới</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="addVersionForm">
+        <div class="modal-body p-3">
+          <div class="mb-3">
+            <label class="form-label required">Ngôn ngữ áp dụng:</label>
+            <input type="text" class="form-control" id="addVersionLang" name="lang" value="vi" readonly />
+            <div class="form-text small">Phiên bản mới sẽ được tạo trong ngôn ngữ này.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label required">Sao chép nội dung từ:</label>
+            <select class="form-select" id="addVersionCopyFrom" name="copyFromVersion">
+              <!-- Dynamically populated -->
+            </select>
+            <div class="form-text small">Mặc định sao chép nội dung và cấu hình Presentation từ phiên bản mới nhất.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Ghi chú phiên bản (Tùy chọn):</label>
+            <input type="text" class="form-control" id="addVersionNote" name="note" placeholder="Ví dụ: Cập nhật thông tin quý 4, sửa lỗi chính tả..." />
+          </div>
+        </div>
+
+        <div class="modal-footer py-2 px-3 bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="btnSubmitAddVersion">
+            <i class="ti ti-plus"></i> Tạo Phiên Bản
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

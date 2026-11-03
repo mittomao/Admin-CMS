@@ -32,4 +32,9 @@
 | **DEC-022** | Quy tắc Khớp Dynamic Placeholder Keys (`column-{*}`) | GĐ 6 | 2026-11-03 | Đang áp dụng | [`DEC-022-dynamic-placeholder-matching.md`](./DEC-022-dynamic-placeholder-matching.md) |
 | **DEC-023** | Xử lý Datasource Chưa Publish: Cảnh báo mềm (Warning) | GĐ 8 | 2026-11-03 | Đang áp dụng | [`DEC-023-publish-datasource-warning.md`](./DEC-023-publish-datasource-warning.md) |
 | **DEC-024** | Quản lý Layout/Rendering như Item Hệ thống trong Content Editor | GĐ 6 | 2026-11-03 | Đang áp dụng | [`DEC-024-presentation-items-in-content-tree.md`](./DEC-024-presentation-items-in-content-tree.md) |
+| **DEC-025** | Khôi phục Phiên bản Bằng Cách Tạo Version Mới | GĐ 4 | 2026-11-03 | Đang áp dụng | [`DEC-025-version-restore-creates-new-version.md`](./DEC-025-version-restore-creates-new-version.md) |
+| **DEC-026** | Tự động Sao chép Final Layout khi Tạo Version Mới | GĐ 4, 6 | 2026-11-03 | Đang áp dụng | [`DEC-026-final-presentation-copy-on-version-creation.md`](./DEC-026-final-presentation-copy-on-version-creation.md) |
+| **DEC-027** | Thuật toán Phân giải Trường 3 Cấp độ & Fallback | GĐ 4 | 2026-11-03 | Đang áp dụng | [`DEC-027-three-level-field-resolution.md`](./DEC-027-three-level-field-resolution.md) |
+| **DEC-028** | Đối chiếu Kiến trúc & Kế thừa Module Media Library + Rich Text Editor | GĐ 5 | 2026-11-03 | Đang áp dụng | [`DEC-028-media-richtext-reference.md`](./DEC-028-media-richtext-reference.md) |
+| **DEC-029** | Thiết lập Ngôn ngữ Mặc định Toàn hệ thống là `vi` và Bỏ Cảnh báo Ngôn ngữ Trống | GĐ 4.1 | 2026-11-03 | Đang áp dụng | [`DEC-029-default-language-vi-and-silent-empty-language.md`](./DEC-029-default-language-vi-and-silent-empty-language.md) |
 

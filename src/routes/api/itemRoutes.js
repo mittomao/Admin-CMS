@@ -10,6 +10,9 @@ router.use(requireAuth);
 // Read operations
 router.get('/search', contentEditorController.searchItems);
 router.get('/:id/children', contentEditorController.getTreeNodes);
+router.get('/:id/languages', contentEditorController.getItemLanguages);
+router.get('/:id/versions', contentEditorController.getItemVersions);
+router.get('/:id/compare', contentEditorController.compareVersions);
 
 // Mutating operations with CSRF protection
 router.post('/', csrfMiddleware.verifyToken, contentEditorController.createItem);
@@ -21,6 +24,12 @@ router.post('/:id/move', csrfMiddleware.verifyToken, contentEditorController.mov
 router.post('/:id/sort', csrfMiddleware.verifyToken, contentEditorController.sortItem);
 router.post('/:id/reset-standard-value', csrfMiddleware.verifyToken, contentEditorController.resetFieldStandardValue);
 router.delete('/:id', csrfMiddleware.verifyToken, contentEditorController.deleteItem);
+
+// Version & Language mutations (GĐ 4)
+router.post('/:id/versions', csrfMiddleware.verifyToken, contentEditorController.addVersion);
+router.post('/:id/languages', csrfMiddleware.verifyToken, contentEditorController.addLanguage);
+router.delete('/:id/versions/:lang/:version', csrfMiddleware.verifyToken, contentEditorController.deleteVersion);
+router.post('/:id/versions/:lang/:version/restore', csrfMiddleware.verifyToken, contentEditorController.restoreVersion);
 
 module.exports = router;
 

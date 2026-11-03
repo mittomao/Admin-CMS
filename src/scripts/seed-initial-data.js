@@ -6,6 +6,8 @@ const Role = require('../models/Role');
 const LaunchpadApp = require('../models/LaunchpadApp');
 const Template = require('../models/Template');
 const Item = require('../models/Item');
+const Language = require('../models/Language');
+const Media = require('../models/Media');
 
 const getMaskedUri = (uri) => (uri ? uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@') : '');
 
@@ -112,7 +114,7 @@ const seedData = async () => {
         icon: 'ti ti-photo',
         iconBg: 'green',
         group: 'Content Editing',
-        url: '#',
+        url: '/admin/media-library',
         sortOrder: 30,
         allowedRoles: [rolesMap['Administrator'], rolesMap['Author'], rolesMap['Editor']],
       },
@@ -206,6 +208,37 @@ const seedData = async () => {
       );
     }
     logger.info(`Seeded ${appsConfig.length} Launchpad applications.`);
+
+    // 4.1 Seed System Languages (GĐ 4)
+    const languagesConfig = [
+      {
+        code: 'vi',
+        name: 'Vietnamese',
+        nativeName: 'Tiếng Việt',
+        icon: 'ti ti-world',
+        isDefault: true,
+        active: true,
+        sortOrder: 10,
+      },
+      {
+        code: 'en',
+        name: 'English',
+        nativeName: 'English',
+        icon: 'ti ti-world',
+        isDefault: false,
+        active: true,
+        sortOrder: 20,
+      },
+    ];
+
+    for (const lang of languagesConfig) {
+      await Language.findOneAndUpdate(
+        { code: lang.code },
+        lang,
+        { upsert: true, new: true }
+      );
+    }
+    logger.info(`Seeded ${languagesConfig.length} System Languages (en, vi).`);
 
     // 5. Seed Core Templates
     const templatesConfig = [
@@ -410,6 +443,25 @@ const seedData = async () => {
         path: '/sitecore',
         sortOrder: 10,
         fields: {},
+        sharedFields: {},
+        languages: [
+          {
+            code: 'vi',
+            unversionedFields: {},
+            versions: [
+              {
+                version: 1,
+                fields: {},
+                createdBy: adminUser._id,
+                note: 'Phiên bản khởi tạo tiếng Việt',
+              },
+            ],
+          },
+        ],
+        presentation: {
+          shared: { devices: [] },
+          final: [],
+        },
         createdBy: adminUser._id,
       });
       logger.info('Created Root node: /sitecore');
@@ -438,6 +490,25 @@ const seedData = async () => {
           path: bPath,
           sortOrder: b.sortOrder,
           fields: {},
+          sharedFields: {},
+          languages: [
+            {
+              code: 'vi',
+              unversionedFields: {},
+              versions: [
+                {
+                  version: 1,
+                  fields: {},
+                  createdBy: adminUser._id,
+                  note: 'Phiên bản khởi tạo tiếng Việt',
+                },
+              ],
+            },
+          ],
+          presentation: {
+            shared: { devices: [] },
+            final: [],
+          },
           createdBy: adminUser._id,
         });
         logger.info(`Created Branch node: ${bPath}`);
@@ -464,9 +535,97 @@ const seedData = async () => {
           isFeatured: true,
           publishDate: new Date().toISOString().split('T')[0],
         },
+        sharedFields: {},
+        languages: [
+          {
+            code: 'vi',
+            unversionedFields: {},
+            versions: [
+              {
+                version: 1,
+                fields: {
+                  title: 'Chào mừng bạn đến với Sitecore CMS',
+                  summary: 'Trải nghiệm quản trị nội dung phân cấp tương tự Sitecore XM.',
+                  body: '<p>Chào mừng bạn đến với hệ thống CMS mới! Bạn có thể chỉnh sửa các item, tạo các node con và điều hướng cây nội dung.</p>',
+                  isFeatured: true,
+                  publishDate: new Date().toISOString().split('T')[0],
+                },
+                createdBy: adminUser._id,
+                note: 'Phiên bản khởi tạo tiếng Việt',
+              },
+            ],
+          },
+          {
+            code: 'en',
+            unversionedFields: {},
+            versions: [
+              {
+                version: 1,
+                fields: {
+                  title: 'Welcome to Sitecore CMS',
+                  summary: 'A modern Sitecore-like CMS experience with hierarchical tree management.',
+                  body: '<p>Welcome to your new CMS! You can edit items, create child nodes, and navigate the content tree.</p>',
+                  isFeatured: true,
+                  publishDate: new Date().toISOString().split('T')[0],
+                },
+                createdBy: adminUser._id,
+                note: 'Initial Seed Version',
+              },
+            ],
+          },
+        ],
+        presentation: {
+          shared: { devices: [] },
+          final: [],
+        },
         createdBy: adminUser._id,
       });
       logger.info(`Created Sample Page node: ${homePath}`);
+    }
+
+    // 8. Seed Media Library Root & Folders
+    let mediaRoot = await Media.findOne({ path: '/sitecore/media library', isDeleted: false });
+    if (!mediaRoot) {
+      mediaRoot = await Media.create({
+        name: 'media library',
+        displayName: 'Media Library',
+        isFolder: true,
+        parentId: null,
+        ancestors: [],
+        path: '/sitecore/media library',
+        createdBy: adminUser._id,
+      });
+      logger.info('Created Media Library root node.');
+    }
+
+    const sampleBannersPath = '/sitecore/media library/banners';
+    let bannersFolder = await Media.findOne({ path: sampleBannersPath, isDeleted: false });
+    if (!bannersFolder) {
+      bannersFolder = await Media.create({
+        name: 'banners',
+        displayName: 'Banners',
+        isFolder: true,
+        parentId: mediaRoot._id,
+        ancestors: [mediaRoot._id],
+        path: sampleBannersPath,
+        createdBy: adminUser._id,
+      });
+      logger.info('Created Media Library subfolder: Banners');
+    }
+
+    const editorUploadsPath = '/sitecore/media library/editor-uploads';
+    let editorUploadsFolder = await Media.findOne({ path: editorUploadsPath, isDeleted: false });
+    if (!editorUploadsFolder) {
+      editorUploadsFolder = await Media.create({
+        name: 'editor-uploads',
+        displayName: 'Editor Uploads',
+        isFolder: true,
+        parentId: mediaRoot._id,
+        ancestors: [mediaRoot._id],
+        path: editorUploadsPath,
+        createdBy: adminUser._id,
+      });
+      logger.info('Created Media Library subfolder: Editor Uploads');
     }
 
     logger.info('Seed completed successfully!');

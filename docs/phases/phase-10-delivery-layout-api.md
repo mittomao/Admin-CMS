@@ -83,3 +83,6 @@ Không thay đổi schema (truy vấn trực tiếp trên `items_web`).
 ## Ghi chú / Kết quả
 *(Chưa bắt đầu - Chờ phê duyệt `APPROVE GĐ 10`)*
 
+> [!NOTE]
+> **Nhắc nhở GĐ 4.1 / DEC-029:** Ngôn ngữ mặc định toàn hệ thống hiện tại là `vi`. Khi gọi Content Delivery API (`/api/v1/content/*`) và Layout Service (`GET /api/v1/layout?path=...`) mà client không gửi param `lang`, endpoint phải tự động mặc định ngôn ngữ là `vi` (thay vì `en`). Thử nghiệm DoD cũng cần kiểm tra với `lang=vi` làm chuẩn mặc định.
+

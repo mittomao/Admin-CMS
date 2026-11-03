@@ -1,5 +1,6 @@
 const itemService = require('../../services/itemService');
 const templateService = require('../../services/templateService');
+const versionService = require('../../services/versionService');
 const treeHelper = require('../../utils/treeHelper');
 const ribbonConfig = require('../../config/ribbon');
 const logger = require('../../utils/logger');
@@ -23,13 +24,24 @@ const contentEditorController = {
         selectedItem = (await itemService.getByPath('/sitecore/content/home')) || (await itemService.getRoot());
       }
 
+      const lang = req.query.lang || 'vi';
+      const version = parseInt(req.query.version, 10) || 1;
+      let schemaData = null;
+
+      if (selectedItem) {
+        schemaData = await itemService.getItemWithRenderSchema(selectedItem._id, lang, version);
+      }
+
       const breadcrumbs = selectedItem ? await itemService.getPathBreadcrumb(selectedItem) : [];
       const templates = await templateService.list();
 
       res.render('content-editor/index', {
         title: selectedItem ? `${selectedItem.displayName || selectedItem.name} - Content Editor` : 'Content Editor',
         currentPath: '/admin/content-editor',
-        selectedItem,
+        selectedItem: schemaData ? schemaData.item : selectedItem,
+        schemaData,
+        currentLang: lang,
+        currentVersion: version,
         breadcrumbs,
         templates,
         ribbon: ribbonConfig,
@@ -42,21 +54,21 @@ const contentEditorController = {
   },
 
   /**
-   * GET /admin/content-editor/item/:id/form
-   * Returns partial HTML of the item editing form
+   * GET /admin/content-editor/item/:id/form?lang=&version=
+   * Returns partial HTML of the item editing form for specific language and version
    */
   async getItemFormPartial(req, res) {
     try {
       const { id } = req.params;
-      const schemaData = await itemService.getItemWithRenderSchema(id);
+      const lang = req.query.lang || 'vi';
+      const version = parseInt(req.query.version, 10) || 1;
+
+      const schemaData = await itemService.getItemWithRenderSchema(id, lang, version);
       if (!schemaData) {
-        return res.status(404).render('partials/alerts', {
-          alertType: 'danger',
-          alertMessage: 'Item not found or has been removed.',
-        });
+        return res.status(404).send('<div class="alert alert-danger m-3">Item not found or has been removed.</div>');
       }
 
-      const { item, resolvedTemplate } = schemaData;
+      const { item, resolvedTemplate, languagesList, versionsList, hasLanguage, hasVersion, versionInfo } = schemaData;
       const breadcrumbs = await itemService.getPathBreadcrumb(item);
 
       res.render('content-editor/item-form', {
@@ -64,10 +76,92 @@ const contentEditorController = {
         item,
         template: resolvedTemplate,
         breadcrumbs,
+        currentLang: lang,
+        currentVersion: version,
+        languagesList,
+        versionsList,
+        hasLanguage,
+        hasVersion,
+        versionInfo,
       });
     } catch (error) {
       logger.error(`Error loading item form partial: ${error.message}`);
       res.status(500).send(`<div class="alert alert-danger m-3">Error loading form: ${error.message}</div>`);
+    }
+  },
+
+  /**
+   * GET /admin/content-editor/item/:id/versions?lang=
+   * Returns partial HTML for the Version History modal / pane
+   */
+  async getVersionsHistoryPartial(req, res) {
+    try {
+      const { id } = req.params;
+      const lang = req.query.lang || 'vi';
+      const item = await itemService.getById(id);
+      if (!item) {
+        return res.status(404).send('<div class="alert alert-danger m-3">Item not found.</div>');
+      }
+
+      const versions = await versionService.listVersions(id, lang);
+      const languages = await versionService.listLanguages(id);
+
+      res.render('content-editor/modals/version-history-modal', {
+        layout: false,
+        item,
+        currentLang: lang,
+        versions,
+        languages,
+      });
+    } catch (error) {
+      logger.error(`Error loading versions history partial: ${error.message}`);
+      res.status(500).send(`<div class="alert alert-danger m-3">Error loading version history: ${error.message}</div>`);
+    }
+  },
+
+  /**
+   * GET /admin/content-editor/item/:id/compare?lang=&v1=&v2=
+   * Returns partial HTML comparing two versions with visual diff
+   */
+  async getCompareVersionsPartial(req, res) {
+    try {
+      const { id } = req.params;
+      const lang = req.query.lang || 'vi';
+      const item = await itemService.getById(id);
+      if (!item) {
+        return res.status(404).send('<div class="alert alert-danger m-3">Item not found.</div>');
+      }
+
+      const versions = await versionService.listVersions(id, lang);
+      let v1 = parseInt(req.query.v1, 10);
+      let v2 = parseInt(req.query.v2, 10);
+
+      // Default compare: latest vs previous
+      if (!v1 || !v2) {
+        if (versions.length >= 2) {
+          v2 = versions[0].version; // latest
+          v1 = versions[1].version; // previous
+        } else if (versions.length === 1) {
+          v1 = versions[0].version;
+          v2 = versions[0].version;
+        } else {
+          v1 = 1;
+          v2 = 1;
+        }
+      }
+
+      const compareData = await versionService.compareVersions(id, lang, v1, v2);
+
+      res.render('content-editor/modals/compare-versions-modal', {
+        layout: false,
+        item,
+        currentLang: lang,
+        versions,
+        compareData,
+      });
+    } catch (error) {
+      logger.error(`Error loading compare partial: ${error.message}`);
+      res.status(500).send(`<div class="alert alert-danger m-3">Error loading comparison: ${error.message}</div>`);
     }
   },
 
@@ -197,25 +291,30 @@ const contentEditorController = {
 
   /**
    * PUT /api/items/:id/fields
-   * Update item fields with optimistic locking
+   * Update item fields with optimistic locking and multi-version / multi-language support
    */
   async updateFields(req, res) {
     try {
       const { id } = req.params;
-      const { fields, expectedUpdatedAt } = req.body;
+      const { fields, expectedUpdatedAt, lang, version } = req.body;
       const userId = req.session?.user?.id;
 
-      const updatedItem = await itemService.updateFields(
+      const langCode = lang || req.query.lang || null;
+      const versionNumber = version || req.query.version || null;
+
+      const updatedResult = await itemService.updateFields(
         id,
         fields,
         expectedUpdatedAt,
-        userId
+        userId,
+        langCode,
+        versionNumber
       );
 
       res.json({
         success: true,
         message: 'Item saved successfully.',
-        data: updatedItem,
+        data: updatedResult,
       });
     } catch (error) {
       const statusCode = error.statusCode || 400;
@@ -224,6 +323,163 @@ const contentEditorController = {
         message: error.message,
         details: error.details,
       });
+    }
+  },
+
+  /**
+   * GET /api/items/:id/languages
+   */
+  async getItemLanguages(req, res) {
+    try {
+      const { id } = req.params;
+      const languages = await versionService.listLanguages(id);
+      res.json({ success: true, data: languages });
+    } catch (error) {
+      res.status(error.statusCode || 400).json({ success: false, message: error.message });
+    }
+  },
+
+  /**
+   * GET /api/items/:id/versions?lang=
+   */
+  async getItemVersions(req, res) {
+    try {
+      const { id } = req.params;
+      const lang = req.query.lang || 'vi';
+      const versions = await versionService.listVersions(id, lang);
+      res.json({ success: true, data: versions });
+    } catch (error) {
+      res.status(error.statusCode || 400).json({ success: false, message: error.message });
+    }
+  },
+
+  /**
+   * POST /api/items/:id/versions
+   */
+  async addVersion(req, res) {
+    try {
+      const { id } = req.params;
+      const { lang = 'vi', copyFromVersion = null, note = '' } = req.body;
+      const user = req.session?.user;
+
+      if (!itemService.canPerform(user, null, 'version:create')) {
+        return res.status(403).json({ success: false, message: 'Bạn không có quyền tạo phiên bản mới.' });
+      }
+
+      const result = await versionService.addVersion(id, lang, {
+        copyFromVersion,
+        userId: user?.id,
+        note,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: `Đã tạo thành công Phiên bản ${result.version} cho ngôn ngữ [${result.language}].`,
+        data: result,
+      });
+    } catch (error) {
+      res.status(error.statusCode || 400).json({ success: false, message: error.message });
+    }
+  },
+
+  /**
+   * POST /api/items/:id/languages
+   */
+  async addLanguage(req, res) {
+    try {
+      const { id } = req.params;
+      const { lang, copyFromLang = null, copyFromVersion = 1, note = '' } = req.body;
+      const user = req.session?.user;
+
+      if (!itemService.canPerform(user, null, 'version:create')) {
+        return res.status(403).json({ success: false, message: 'Bạn không có quyền thêm ngôn ngữ mới.' });
+      }
+
+      const result = await versionService.addLanguageVersion(id, lang, {
+        copyFromLang,
+        copyFromVersion,
+        userId: user?.id,
+        note,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: `Đã thêm thành công ngôn ngữ [${result.language}] cho Item.`,
+        data: result,
+      });
+    } catch (error) {
+      res.status(error.statusCode || 400).json({ success: false, message: error.message });
+    }
+  },
+
+  /**
+   * DELETE /api/items/:id/versions/:lang/:version
+   */
+  async deleteVersion(req, res) {
+    try {
+      const { id, lang, version } = req.params;
+      const user = req.session?.user;
+
+      if (!itemService.canPerform(user, null, 'version:delete')) {
+        return res.status(403).json({ success: false, message: 'Bạn không có quyền xóa phiên bản.' });
+      }
+
+      const result = await versionService.deleteVersion(id, lang, version);
+
+      res.json({
+        success: true,
+        message: `Đã xóa Phiên bản ${result.deletedVersion} của ngôn ngữ [${result.language}].`,
+        data: result,
+      });
+    } catch (error) {
+      res.status(error.statusCode || 400).json({ success: false, message: error.message });
+    }
+  },
+
+  /**
+   * POST /api/items/:id/versions/:lang/:version/restore
+   */
+  async restoreVersion(req, res) {
+    try {
+      const { id, lang, version } = req.params;
+      const user = req.session?.user;
+
+      if (!itemService.canPerform(user, null, 'version:restore')) {
+        return res.status(403).json({ success: false, message: 'Bạn không có quyền khôi phục phiên bản.' });
+      }
+
+      const result = await versionService.restoreVersion(id, lang, version, {
+        userId: user?.id,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: `Đã khôi phục nội dung từ Phiên bản ${version} thành Phiên bản mới ${result.version}.`,
+        data: result,
+      });
+    } catch (error) {
+      res.status(error.statusCode || 400).json({ success: false, message: error.message });
+    }
+  },
+
+  /**
+   * GET /api/items/:id/compare?lang=&v1=&v2=
+   */
+  async compareVersions(req, res) {
+    try {
+      const { id } = req.params;
+      const lang = req.query.lang || 'vi';
+      const v1 = req.query.v1;
+      const v2 = req.query.v2;
+
+      const compareData = await versionService.compareVersions(id, lang, v1, v2);
+
+      res.json({
+        success: true,
+        data: compareData,
+      });
+    } catch (error) {
+      res.status(error.statusCode || 400).json({ success: false, message: error.message });
     }
   },
 

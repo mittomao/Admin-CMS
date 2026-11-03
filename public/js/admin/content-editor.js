@@ -3,6 +3,9 @@
  * Sitecore XM-style Tree, Ribbon Controls, Form Validation & Optimistic Locking
  */
 
+import { MediaPicker } from './media-picker.js';
+import { initRichTextEditors } from './tinymce-config.js';
+
 // Helper to get CSRF Token from meta tag
 const getCsrfToken = () => {
   const meta = document.querySelector('meta[name="csrf-token"]');
@@ -15,7 +18,16 @@ let currentItemId = window.__INITIAL_ITEM_ID__ || null;
 let currentViewMode = 'content'; // 'content' or 'folder'
 let isFormDirty = false;
 
+// Version & Language State (GĐ 4)
+const initialUrlParams = new URLSearchParams(window.location.search);
+let currentLang = (initialUrlParams.get('lang') || 'vi').toLowerCase();
+let currentVersion = parseInt(initialUrlParams.get('version'), 10) || 1;
+
 document.addEventListener('DOMContentLoaded', () => {
+  window.__markFormDirty = () => {
+    isFormDirty = true;
+    updateDirtyState(true);
+  };
   initContentTree();
   initRibbonEvents();
   initWorkspaceEvents();
@@ -165,9 +177,12 @@ function updateTreeStatus(text) {
 // ==========================================
 // 2. Workspace Content Loading
 // ==========================================
-async function loadItemWorkspace(itemId, mode = 'content') {
+async function loadItemWorkspace(itemId, mode = 'content', lang = null, version = null) {
   const workspace = document.getElementById('editorWorkspace');
   if (!workspace || !itemId) return;
+
+  if (lang) currentLang = lang.toLowerCase();
+  if (version) currentVersion = parseInt(version, 10);
 
   workspace.innerHTML = `
     <div class="d-flex justify-content-center align-items-center py-5">
@@ -177,9 +192,10 @@ async function loadItemWorkspace(itemId, mode = 'content') {
   `;
 
   try {
+    const query = `?lang=${encodeURIComponent(currentLang)}&version=${encodeURIComponent(currentVersion)}`;
     const endpoint = mode === 'folder'
-      ? `/admin/content-editor/item/${itemId}/folder-view`
-      : `/admin/content-editor/item/${itemId}/form`;
+      ? `/admin/content-editor/item/${itemId}/folder-view${query}`
+      : `/admin/content-editor/item/${itemId}/form${query}`;
 
     const res = await fetch(endpoint, {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -191,6 +207,16 @@ async function loadItemWorkspace(itemId, mode = 'content') {
 
     const html = await res.text();
     workspace.innerHTML = html;
+
+    // Read active values from form dataset if rendered
+    const renderedForm = document.getElementById('itemEditForm');
+    if (renderedForm) {
+      currentLang = (renderedForm.getAttribute('data-lang') || currentLang).toLowerCase();
+      currentVersion = parseInt(renderedForm.getAttribute('data-version'), 10) || currentVersion;
+    }
+
+    // Reflect in URL without page reload
+    window.history.pushState(null, '', `/admin/content-editor/${itemId}?lang=${currentLang}&version=${currentVersion}`);
 
     // Reset dirty state
     isFormDirty = false;
@@ -275,6 +301,31 @@ async function handleRibbonAction(action) {
 
     case 'sort-last':
       handleSortItem('last');
+      break;
+
+    // GĐ 4: Version & Language Ribbon Actions
+    case 'add-version':
+      openAddVersionModal();
+      break;
+
+    case 'version-history-modal':
+      openVersionHistoryModal();
+      break;
+
+    case 'compare-versions-modal':
+      openCompareVersionsModal();
+      break;
+
+    case 'restore-version-modal':
+      openVersionHistoryModal();
+      break;
+
+    case 'delete-version-modal':
+      openDeleteVersionModal();
+      break;
+
+    case 'add-language-modal':
+      openAddLanguageModal();
       break;
   }
 }
@@ -385,11 +436,127 @@ function attachItemFormEvents() {
       }
     });
   });
+
+  // Language Switcher items (GĐ 4)
+  const langItems = form.querySelectorAll('.lang-switcher-item');
+  langItems.forEach((itemLink) => {
+    itemLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetLang = itemLink.getAttribute('data-lang-code');
+      if (targetLang === currentLang) return;
+
+      const doSwitch = () => {
+        loadItemWorkspace(currentItemId, currentViewMode, targetLang, 1);
+      };
+
+      if (isFormDirty) {
+        showDirtyConfirmModal(doSwitch);
+      } else {
+        doSwitch();
+      }
+    });
+  });
+
+  // Version Switcher items (GĐ 4)
+  const versionItems = form.querySelectorAll('.version-switcher-item');
+  versionItems.forEach((verLink) => {
+    verLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetVer = parseInt(verLink.getAttribute('data-version'), 10);
+      if (targetVer === currentVersion) return;
+
+      const doSwitch = () => {
+        loadItemWorkspace(currentItemId, currentViewMode, currentLang, targetVer);
+      };
+
+      if (isFormDirty) {
+        showDirtyConfirmModal(doSwitch);
+      } else {
+        doSwitch();
+      }
+    });
+  });
+
+  // Header quick buttons
+  const btnHeaderAddVersion = form.querySelector('#btnHeaderAddVersion');
+  if (btnHeaderAddVersion) {
+    btnHeaderAddVersion.addEventListener('click', (e) => {
+      e.preventDefault();
+      openAddVersionModal();
+    });
+  }
+
+  const btnHeaderAddLanguage = form.querySelector('#btnHeaderAddLanguage');
+  if (btnHeaderAddLanguage) {
+    btnHeaderAddLanguage.addEventListener('click', (e) => {
+      e.preventDefault();
+      openAddLanguageModal();
+    });
+  }
+
+  const btnHeaderViewHistory = form.querySelector('#btnHeaderViewHistory');
+  if (btnHeaderViewHistory) {
+    btnHeaderViewHistory.addEventListener('click', (e) => {
+      e.preventDefault();
+      openVersionHistoryModal();
+    });
+  }
+
+
+
+  // Media Library Integration: Image Field Browse & Clear
+  form.querySelectorAll('.field-container').forEach((container) => {
+    const browseBtn = container.querySelector('.js-image-browse-btn');
+    const clearBtn = container.querySelector('.js-image-clear-btn');
+    const input = container.querySelector('.js-image-field-input');
+    const previewBox = container.querySelector('.js-image-preview-box');
+    const previewImg = container.querySelector('.js-image-preview-img');
+
+    if (browseBtn && input) {
+      browseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        MediaPicker.open({
+          type: 'image',
+          onSelect: (assets) => {
+            if (!assets || assets.length === 0) return;
+            const asset = assets[0];
+            input.value = asset._id;
+            if (previewBox && previewImg) {
+              previewImg.src = `/media/file/${asset._id}?thumb=1`;
+              previewBox.classList.remove('d-none');
+            }
+            isFormDirty = true;
+            updateDirtyState(true);
+          }
+        });
+      });
+    }
+
+    if (clearBtn && input) {
+      clearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        input.value = '';
+        if (previewBox) {
+          previewBox.classList.add('d-none');
+        }
+        isFormDirty = true;
+        updateDirtyState(true);
+      });
+    }
+  });
+
+  // Rich Text Editor TinyMCE 6 Integration
+  initRichTextEditors(form, { csrfToken: getCsrfToken() });
 }
 
 async function submitItemForm() {
   const form = document.getElementById('itemEditForm');
   if (!form || !currentItemId) return;
+
+  // Đồng bộ nội dung từ các TinyMCE iframes về thẻ textarea
+  if (typeof tinymce !== 'undefined') {
+    tinymce.triggerSave();
+  }
 
   const formData = new FormData(form);
   const fields = {};
@@ -418,7 +585,12 @@ async function submitItemForm() {
         'Content-Type': 'application/json',
         'X-CSRF-Token': getCsrfToken(),
       },
-      body: JSON.stringify({ fields, expectedUpdatedAt }),
+      body: JSON.stringify({
+        fields,
+        expectedUpdatedAt,
+        lang: currentLang,
+        version: currentVersion,
+      }),
     });
 
     const result = await res.json();
@@ -1080,4 +1252,414 @@ function showToast(message, type = 'info') {
     toastEl.classList.remove('show');
     toastEl.addEventListener('transitionend', () => toastEl.remove());
   }, 4000);
+}
+
+// ==========================================
+// 10. GĐ 4: Version & Language Operations
+// ==========================================
+
+/**
+ * Show system modal asking user how to handle unsaved changes
+ */
+function showDirtyConfirmModal(onProceed) {
+  const modalEl = document.getElementById('dirtyConfirmModal');
+  if (!modalEl || typeof bootstrap === 'undefined') {
+    if (confirm('Bạn có thay đổi chưa lưu. Tiếp tục chuyển mà không lưu?')) {
+      onProceed();
+    }
+    return;
+  }
+
+  const bsModal = new bootstrap.Modal(modalEl);
+
+  const btnDiscard = document.getElementById('btnDirtyDiscard');
+  const btnSave = document.getElementById('btnDirtySaveAndContinue');
+
+  const cleanListeners = () => {
+    if (btnDiscard) btnDiscard.replaceWith(btnDiscard.cloneNode(true));
+    if (btnSave) btnSave.replaceWith(btnSave.cloneNode(true));
+  };
+
+  cleanListeners();
+
+  const freshBtnDiscard = document.getElementById('btnDirtyDiscard');
+  const freshBtnSave = document.getElementById('btnDirtySaveAndContinue');
+
+  freshBtnDiscard.addEventListener('click', () => {
+    bsModal.hide();
+    isFormDirty = false;
+    updateDirtyState(false);
+    onProceed();
+  });
+
+  freshBtnSave.addEventListener('click', async () => {
+    freshBtnSave.disabled = true;
+    try {
+      await submitItemForm();
+      bsModal.hide();
+      onProceed();
+    } catch (err) {
+      showToast('Lỗi khi lưu: ' + err.message, 'danger');
+    } finally {
+      freshBtnSave.disabled = false;
+    }
+  });
+
+  bsModal.show();
+}
+
+/**
+ * Open Modal to Add a new Version
+ */
+async function openAddVersionModal() {
+  if (!currentItemId) return;
+  const modalEl = document.getElementById('addVersionModal');
+  if (!modalEl || typeof bootstrap === 'undefined') return;
+
+  const langInput = document.getElementById('addVersionLang');
+  if (langInput) langInput.value = currentLang;
+
+  const copySelect = document.getElementById('addVersionCopyFrom');
+  if (copySelect) {
+    copySelect.innerHTML = '<option value="">Đang tải danh sách version...</option>';
+    try {
+      const res = await fetch(`/api/items/${currentItemId}/versions?lang=${encodeURIComponent(currentLang)}`);
+      const result = await res.json();
+      if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+        copySelect.innerHTML = `
+          <option value="">(Mặc định: Sao chép từ version mới nhất v${result.data[0].version})</option>
+          <option value="empty">(Bản trống - Không sao chép trường nào)</option>
+          ${result.data.map((v) => `<option value="${v.version}">Version ${v.version} (${v.note || 'Không có ghi chú'})</option>`).join('')}
+        `;
+      } else {
+        copySelect.innerHTML = '<option value="empty">(Tạo phiên bản trống)</option>';
+      }
+    } catch (err) {
+      copySelect.innerHTML = '<option value="">(Mặc định)</option>';
+    }
+  }
+
+  const form = document.getElementById('addVersionForm');
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitAddVersion');
+      if (btn) btn.disabled = true;
+
+      const copyVal = copySelect ? copySelect.value : null;
+      const noteVal = document.getElementById('addVersionNote')?.value || '';
+
+      try {
+        const res = await fetch(`/api/items/${currentItemId}/versions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfToken(),
+          },
+          body: JSON.stringify({
+            lang: currentLang,
+            copyFromVersion: copyVal || null,
+            note: noteVal,
+          }),
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Không thể tạo phiên bản mới.');
+        }
+
+        const bsModal = bootstrap.Modal.getInstance(modalEl);
+        if (bsModal) bsModal.hide();
+
+        showToast(result.message, 'success');
+        // Load newly created version
+        await loadItemWorkspace(currentItemId, currentViewMode, currentLang, result.data.version);
+      } catch (err) {
+        showToast(err.message, 'danger');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    };
+  }
+
+  const bsModal = new bootstrap.Modal(modalEl);
+  bsModal.show();
+}
+
+/**
+ * Open Modal to Add a new Language translation
+ */
+async function openAddLanguageModal(preselectedLang = null) {
+  if (!currentItemId) return;
+  const modalEl = document.getElementById('addLanguageModal');
+  if (!modalEl || typeof bootstrap === 'undefined') return;
+
+  const langSelect = document.getElementById('addLanguageSelect');
+  if (langSelect) {
+    langSelect.innerHTML = '<option value="">Đang tải danh sách ngôn ngữ...</option>';
+    try {
+      const [allLangsRes, itemLangsRes] = await Promise.all([
+        fetch('/api/languages'),
+        fetch(`/api/items/${currentItemId}/languages`),
+      ]);
+
+      const allLangs = (await allLangsRes.json()).data || [];
+      const itemLangs = (await itemLangsRes.json()).data || [];
+      const itemLangSet = new Set(itemLangs.filter((l) => l.hasContent).map((l) => l.code.toLowerCase()));
+
+      const available = allLangs.filter((l) => !itemLangSet.has(l.code.toLowerCase()));
+
+      if (available.length === 0) {
+        langSelect.innerHTML = '<option value="">Item đã có đầy đủ tất cả các ngôn ngữ!</option>';
+      } else {
+        langSelect.innerHTML = available
+          .map((l) => `<option value="${l.code}" ${preselectedLang && preselectedLang.toLowerCase() === l.code ? 'selected' : ''}>${l.name} (${l.code})</option>`)
+          .join('');
+      }
+
+      // Populate copyFrom options
+      const copySelect = document.getElementById('addLanguageCopyFrom');
+      if (copySelect) {
+        const sourceOptions = itemLangs.filter((l) => l.hasContent);
+        copySelect.innerHTML = `
+          <option value="">(Không sao chép - Tạo bản dịch trống)</option>
+          ${sourceOptions.map((l) => `<option value="${l.code}" ${l.code === currentLang ? 'selected' : ''}>${l.name} (${l.code})</option>`).join('')}
+        `;
+      }
+    } catch (err) {
+      langSelect.innerHTML = '<option value="vi">Vietnamese (vi)</option>';
+    }
+  }
+
+  const form = document.getElementById('addLanguageForm');
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitAddLanguage');
+      if (btn) btn.disabled = true;
+
+      const chosenLang = langSelect ? langSelect.value : '';
+      const copyFromLang = document.getElementById('addLanguageCopyFrom')?.value || null;
+      const note = document.getElementById('addLanguageNote')?.value || '';
+
+      if (!chosenLang) {
+        showToast('Vui lòng chọn một ngôn ngữ.', 'warning');
+        if (btn) btn.disabled = false;
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/items/${currentItemId}/languages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfToken(),
+          },
+          body: JSON.stringify({
+            lang: chosenLang,
+            copyFromLang,
+            note,
+          }),
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Không thể thêm ngôn ngữ mới.');
+        }
+
+        const bsModal = bootstrap.Modal.getInstance(modalEl);
+        if (bsModal) bsModal.hide();
+
+        showToast(result.message, 'success');
+        // Switch to the newly added language
+        await loadItemWorkspace(currentItemId, currentViewMode, chosenLang, 1);
+      } catch (err) {
+        showToast(err.message, 'danger');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    };
+  }
+
+  const bsModal = new bootstrap.Modal(modalEl);
+  bsModal.show();
+}
+
+/**
+ * Open Modal to View Version History
+ */
+async function openVersionHistoryModal() {
+  if (!currentItemId) return;
+
+  try {
+    const res = await fetch(`/admin/content-editor/item/${currentItemId}/versions?lang=${encodeURIComponent(currentLang)}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    if (!res.ok) throw new Error('Không thể tải lịch sử phiên bản.');
+
+    const html = await res.text();
+    const dynamicContainer = document.getElementById('dynamicModalsContainer');
+    if (dynamicContainer) dynamicContainer.innerHTML = html;
+
+    const modalEl = document.getElementById('versionHistoryModal');
+    if (!modalEl || typeof bootstrap === 'undefined') return;
+
+    const bsModal = new bootstrap.Modal(modalEl);
+
+    // Attach actions inside history table
+    modalEl.querySelectorAll('.btn-action-view-version').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const ver = parseInt(btn.getAttribute('data-version'), 10);
+        bsModal.hide();
+        loadItemWorkspace(currentItemId, currentViewMode, currentLang, ver);
+      });
+    });
+
+    modalEl.querySelectorAll('.btn-action-restore-version').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const ver = parseInt(btn.getAttribute('data-version'), 10);
+        if (!confirm(`Khôi phục nội dung từ Version ${ver}? Thao tác này sẽ tạo một Version mới chứa nội dung của Version ${ver}.`)) {
+          return;
+        }
+
+        try {
+          const restoreRes = await fetch(`/api/items/${currentItemId}/versions/${currentLang}/${ver}/restore`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': getCsrfToken(),
+            },
+          });
+          const result = await restoreRes.json();
+          if (!restoreRes.ok || !result.success) throw new Error(result.message || 'Lỗi khi khôi phục.');
+
+          bsModal.hide();
+          showToast(result.message, 'success');
+          await loadItemWorkspace(currentItemId, currentViewMode, currentLang, result.data.version);
+        } catch (err) {
+          showToast(err.message, 'danger');
+        }
+      });
+    });
+
+    modalEl.querySelectorAll('.btn-action-delete-version').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const ver = parseInt(btn.getAttribute('data-version'), 10);
+        openDeleteVersionModal(ver);
+        bsModal.hide();
+      });
+    });
+
+    const btnAddFromHist = document.getElementById('btnModalAddVersionFromHistory');
+    if (btnAddFromHist) {
+      btnAddFromHist.addEventListener('click', () => {
+        bsModal.hide();
+        openAddVersionModal();
+      });
+    }
+
+    const btnCompareFromHist = document.getElementById('btnModalCompareFromHistory');
+    if (btnCompareFromHist) {
+      btnCompareFromHist.addEventListener('click', () => {
+        bsModal.hide();
+        openCompareVersionsModal();
+      });
+    }
+
+    bsModal.show();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+/**
+ * Open Modal to Compare two Versions
+ */
+async function openCompareVersionsModal(v1 = null, v2 = null) {
+  if (!currentItemId) return;
+
+  try {
+    let url = `/admin/content-editor/item/${currentItemId}/compare?lang=${encodeURIComponent(currentLang)}`;
+    if (v1 && v2) url += `&v1=${v1}&v2=${v2}`;
+
+    const res = await fetch(url, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    if (!res.ok) throw new Error('Không thể tải màn hình so sánh.');
+
+    const html = await res.text();
+    const dynamicContainer = document.getElementById('dynamicModalsContainer');
+    if (dynamicContainer) dynamicContainer.innerHTML = html;
+
+    const modalEl = document.getElementById('compareVersionsModal');
+    if (!modalEl || typeof bootstrap === 'undefined') return;
+
+    const bsModal = new bootstrap.Modal(modalEl);
+
+    const btnRefresh = document.getElementById('btnRefreshCompare');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => {
+        const selV1 = document.getElementById('compareSelectV1')?.value;
+        const selV2 = document.getElementById('compareSelectV2')?.value;
+        bsModal.hide();
+        openCompareVersionsModal(selV1, selV2);
+      });
+    }
+
+    bsModal.show();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+/**
+ * Open Modal to Delete a Version
+ */
+function openDeleteVersionModal(targetVersion = null) {
+  if (!currentItemId) return;
+  const verToDelete = targetVersion || currentVersion;
+
+  const modalEl = document.getElementById('deleteVersionModal');
+  if (!modalEl || typeof bootstrap === 'undefined') return;
+
+  const titleEl = document.getElementById('deleteVersionTitle');
+  if (titleEl) titleEl.textContent = `Version ${verToDelete}`;
+
+  const langEl = document.getElementById('deleteVersionLang');
+  if (langEl) langEl.textContent = currentLang.toUpperCase();
+
+  const btnConfirm = document.getElementById('btnConfirmDeleteVersion');
+  if (btnConfirm) {
+    btnConfirm.onclick = async () => {
+      btnConfirm.disabled = true;
+      try {
+        const res = await fetch(`/api/items/${currentItemId}/versions/${currentLang}/${verToDelete}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfToken(),
+          },
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Không thể xóa phiên bản.');
+        }
+
+        const bsModal = bootstrap.Modal.getInstance(modalEl);
+        if (bsModal) bsModal.hide();
+
+        showToast(result.message, 'success');
+        // Switch to fallback version
+        await loadItemWorkspace(currentItemId, currentViewMode, currentLang, result.data.fallbackVersion);
+      } catch (err) {
+        showToast(err.message, 'danger');
+      } finally {
+        btnConfirm.disabled = false;
+      }
+    };
+  }
+
+  const bsModal = new bootstrap.Modal(modalEl);
+  bsModal.show();
 }

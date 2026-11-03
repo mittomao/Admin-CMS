@@ -110,6 +110,8 @@ describe('itemService - Content Editor Business Logic', () => {
       contentItem._id.toString(),
       homeItem._id.toString(),
     ]);
+    expect(newItem.languages[0].code).toBe('vi');
+    expect(newItem.languages[0].versions[0].version).toBe(1);
   });
 
   test('createFromTemplate rejects duplicate sibling names', async () => {

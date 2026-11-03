@@ -11,5 +11,7 @@ router.get('/:id', requireAuth, contentEditorController.index);
 router.get('/item/:id/form', requireAuth, contentEditorController.getItemFormPartial);
 router.get('/item/:id/folder-view', requireAuth, contentEditorController.getItemFolderViewPartial);
 router.get('/item/:id/insert-options', requireAuth, contentEditorController.getInsertOptions);
+router.get('/item/:id/versions', requireAuth, contentEditorController.getVersionsHistoryPartial);
+router.get('/item/:id/compare', requireAuth, contentEditorController.getCompareVersionsPartial);
 
 module.exports = router;

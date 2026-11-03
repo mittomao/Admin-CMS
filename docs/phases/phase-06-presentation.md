@@ -108,3 +108,6 @@ Xây dựng hệ thống quản lý Presentation (Layout, Rendering, Placeholder
 ## Ghi chú / Kết quả
 *(Chưa bắt đầu - Chờ phê duyệt `APPROVE GĐ 6`)*
 
+> [!NOTE]
+> **Nhắc nhở GĐ 4.1 / DEC-029:** Ngôn ngữ mặc định toàn hệ thống hiện tại là `vi`. Khi triển khai `presentationService.getFinalPresentation(item, device, lang, version)` và giao diện biên tập Presentation Details, tham số `lang` khi bỏ trống phải tự động mặc định là `vi` (thay vì `en`). Final presentation lưu theo từng language/version phải tôn trọng cơ chế này.
+

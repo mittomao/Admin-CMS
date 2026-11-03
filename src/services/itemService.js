@@ -3,6 +3,7 @@ const Item = require('../models/Item');
 const Template = require('../models/Template');
 const { getFieldHandler } = require('../fields');
 const templateService = require('./templateService');
+const versionService = require('./versionService');
 
 class ConflictError extends Error {
   constructor(message) {
@@ -26,11 +27,28 @@ const itemService = {
   ValidationError,
 
   /**
-   * Permission check placeholder (will be fully integrated with ACL in GĐ 6)
+   * Permission check placeholder (will be fully integrated with ACL in GĐ 7)
    */
-  canPerform(user, _item, _action) {
+  canPerform(user, _item, action) {
     if (!user) return false;
-    // By default in GĐ 2, any authenticated user can view and edit items
+    const userRoles = Array.isArray(user.roles)
+      ? user.roles.map((r) => (r.name ? r.name : r.toString()))
+      : [];
+
+    const isAdmin = userRoles.includes('Administrator');
+    const isEditor = userRoles.includes('Editor');
+    const isAuthor = userRoles.includes('Author');
+
+    if (isAdmin) return true;
+
+    if (action === 'version:delete') {
+      return isEditor; // Only admin or editor can delete versions
+    }
+
+    if (action === 'version:create' || action === 'version:restore') {
+      return isAuthor || isEditor;
+    }
+
     return true;
   },
 
@@ -87,18 +105,19 @@ const itemService = {
   },
 
   /**
-   * Get an item with resolved inherited template and calculated field values (handling dynamic standard values)
+   * Get an item with resolved inherited template and calculated field values (handling dynamic standard values and versioning)
    */
-  async getItemWithRenderSchema(id) {
+  async getItemWithRenderSchema(id, langCode = 'vi', versionNumber = 1) {
     const item = await this.getById(id);
     if (!item) return null;
 
     const resolvedTemplate = await templateService.resolveTemplate(item.templateId._id || item.templateId);
     const standardValues = await templateService.resolveStandardValues(item.templateId._id || item.templateId);
 
-    const rawFields = item.fields instanceof Map
-      ? Object.fromEntries(item.fields)
-      : (item.fields || {});
+    // Resolve multilingual & versioned fields
+    const resolvedResult = await versionService.resolveFields(item, langCode, versionNumber);
+    const resolvedFields = resolvedResult.fields;
+    const origins = resolvedResult.origins;
 
     // Augment resolved fields with current effective values and standard value flags
     if (resolvedTemplate && resolvedTemplate.sections) {
@@ -108,39 +127,43 @@ const itemService = {
             const fieldId = f._id.toString();
             const fieldName = f.name;
 
-            // Check if explicitly overridden on item
-            const hasExplicitValue = rawFields[fieldId] !== undefined || rawFields[fieldName] !== undefined;
+            const origin = origins[fieldId] || origins[fieldName] || 'standard';
+            const isUsingStandardValue = origin === 'standard';
+            const hasExplicitValue = !isUsingStandardValue;
 
             let effectiveValue = '';
-            let isUsingStandardValue = false;
-
-            if (hasExplicitValue) {
-              effectiveValue = rawFields[fieldId] !== undefined ? rawFields[fieldId] : rawFields[fieldName];
+            if (resolvedFields[fieldId] !== undefined) {
+              effectiveValue = resolvedFields[fieldId];
+            } else if (resolvedFields[fieldName] !== undefined) {
+              effectiveValue = resolvedFields[fieldName];
             } else {
-              // Dynamic Standard Value inheritance: read from template chain
-              if (standardValues[fieldId] !== undefined) {
-                effectiveValue = standardValues[fieldId];
-                isUsingStandardValue = true;
-              } else if (standardValues[fieldName] !== undefined) {
-                effectiveValue = standardValues[fieldName];
-                isUsingStandardValue = true;
-              } else {
-                effectiveValue = f.defaultValue !== undefined ? f.defaultValue : '';
-              }
+              effectiveValue = f.defaultValue !== undefined ? f.defaultValue : '';
             }
 
             f.effectiveValue = effectiveValue;
             f.isUsingStandardValue = isUsingStandardValue;
             f.hasExplicitValue = hasExplicitValue;
+            f.origin = origin;
           }
         }
       }
     }
 
+    // Retrieve languages and versions lists
+    const languagesList = await versionService.listLanguages(item._id);
+    const versionsList = await versionService.listVersions(item._id, langCode);
+
     return {
       item,
       resolvedTemplate,
       standardValues,
+      lang: (langCode || 'vi').toLowerCase().trim(),
+      version: parseInt(versionNumber, 10) || 1,
+      versionInfo: resolvedResult.versionInfo,
+      languagesList,
+      versionsList,
+      hasLanguage: resolvedResult.hasLanguage,
+      hasVersion: resolvedResult.hasVersion,
     };
   },
 
@@ -299,11 +322,20 @@ const itemService = {
 
     // Initialize default fields from template definitions
     const fields = {};
+    const sharedFields = {};
+    const versionedFields = {};
+
     if (template.sections) {
       for (const sec of template.sections) {
         if (sec.fields) {
           for (const f of sec.fields) {
-            fields[f.name] = f.defaultValue !== undefined ? f.defaultValue : '';
+            const defaultVal = f.defaultValue !== undefined ? f.defaultValue : '';
+            fields[f.name] = defaultVal;
+            if (f.shared) {
+              sharedFields[f._id.toString()] = defaultVal;
+            } else {
+              versionedFields[f._id.toString()] = defaultVal;
+            }
           }
         }
       }
@@ -318,6 +350,26 @@ const itemService = {
       path: newPath,
       sortOrder,
       fields,
+      sharedFields,
+      languages: [
+        {
+          code: 'vi',
+          unversionedFields: {},
+          versions: [
+            {
+              version: 1,
+              fields: versionedFields,
+              createdBy: userId,
+              updatedBy: userId,
+              note: 'Initial version',
+            },
+          ],
+        },
+      ],
+      presentation: {
+        shared: { devices: [] },
+        final: [],
+      },
       createdBy: userId,
       updatedBy: userId,
     });
@@ -326,9 +378,13 @@ const itemService = {
   },
 
   /**
-   * Update item fields with Optimistic Locking and field validation
+   * Update item fields with Optimistic Locking and field validation (supports versioning)
    */
-  async updateFields(id, rawFields = {}, expectedUpdatedAt = null, userId = null) {
+  async updateFields(id, rawFields = {}, expectedUpdatedAt = null, userId = null, langCode = null, versionNumber = null) {
+    if (langCode && versionNumber) {
+      return versionService.updateFields(id, langCode, versionNumber, rawFields, expectedUpdatedAt, { userId });
+    }
+
     const item = await Item.findOne({ _id: id, deleted: false });
     if (!item) {
       throw new ValidationError('Item not found or has been deleted.');
@@ -502,10 +558,17 @@ const itemService = {
     const newPath = `${parent.path === '/' ? '' : parent.path}/${candidateName}`;
     const ancestors = [...(parent.ancestors || []), parent._id];
 
-    // Clone fields
+    // Clone fields, sharedFields, languages, and presentation
     const clonedFields = sourceItem.fields instanceof Map
       ? Object.fromEntries(sourceItem.fields)
       : { ...sourceItem.fields };
+
+    const clonedSharedFields = sourceItem.sharedFields instanceof Map
+      ? Object.fromEntries(sourceItem.sharedFields)
+      : { ...(sourceItem.sharedFields || {}) };
+
+    const clonedLanguages = sourceItem.languages ? JSON.parse(JSON.stringify(sourceItem.languages)) : [];
+    const clonedPresentation = sourceItem.presentation ? JSON.parse(JSON.stringify(sourceItem.presentation)) : { shared: { devices: [] }, final: [] };
 
     const newItem = await Item.create({
       name: candidateName,
@@ -516,6 +579,9 @@ const itemService = {
       path: newPath,
       sortOrder: (sourceItem.sortOrder || 100) + 10,
       fields: clonedFields,
+      sharedFields: clonedSharedFields,
+      languages: clonedLanguages,
+      presentation: clonedPresentation,
       createdBy: userId,
       updatedBy: userId,
     });
@@ -541,6 +607,11 @@ const itemService = {
     const clonedFields = child.fields instanceof Map
       ? Object.fromEntries(child.fields)
       : { ...child.fields };
+    const clonedSharedFields = child.sharedFields instanceof Map
+      ? Object.fromEntries(child.sharedFields)
+      : { ...(child.sharedFields || {}) };
+    const clonedLanguages = child.languages ? JSON.parse(JSON.stringify(child.languages)) : [];
+    const clonedPresentation = child.presentation ? JSON.parse(JSON.stringify(child.presentation)) : { shared: { devices: [] }, final: [] };
 
     const newChild = await Item.create({
       name: child.name,
@@ -551,6 +622,9 @@ const itemService = {
       path: childPath,
       sortOrder: child.sortOrder,
       fields: clonedFields,
+      sharedFields: clonedSharedFields,
+      languages: clonedLanguages,
+      presentation: clonedPresentation,
       createdBy: userId,
       updatedBy: userId,
     });

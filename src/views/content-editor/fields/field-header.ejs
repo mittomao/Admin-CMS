@@ -3,6 +3,15 @@
     <%= field.title || field.name %>
   </label>
   <div class="d-flex align-items-center gap-1">
+    <% if (field.shared) { %>
+      <span class="badge bg-blue-lt text-blue" style="font-size: 0.65rem;" title="Shared Field: Dùng chung cho mọi ngôn ngữ và phiên bản.">
+        <i class="ti ti-world me-1"></i>[shared]
+      </span>
+    <% } else if (field.unversioned) { %>
+      <span class="badge bg-orange-lt text-orange" style="font-size: 0.65rem;" title="Unversioned Field: Dùng chung cho tất cả các phiên bản của ngôn ngữ này.">
+        <i class="ti ti-language me-1"></i>[unversioned]
+      </span>
+    <% } %>
     <% if (field.origin && field.origin.isInherited) { %>
       <span class="badge bg-purple-lt text-purple" style="font-size: 0.65rem;" title="Inherited from <%= field.origin.templateName %>">
         <i class="ti ti-git-fork me-1"></i><%= field.origin.templateName %>

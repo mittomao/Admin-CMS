@@ -11,7 +11,8 @@
     "format": "prettier --write \"src/**/*.{js,json,ejs}\" \"public/**/*.{css,js}\"",
     "test": "jest --detectOpenHandles --forceExit",
     "seed": "node src/scripts/seed-initial-data.js",
-    "migrate": "node src/scripts/migrate-to-field-ids.js"
+    "migrate": "node src/scripts/migrate-to-versions-languages.js",
+    "migrate:field-ids": "node src/scripts/migrate-to-field-ids.js"
   },
   "keywords": [
     "cms",
@@ -36,7 +37,9 @@
     "helmet": "^8.0.0",
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
     "sanitize-html": "2.13.0",
+    "sharp": "^0.33.5",
     "winston": "^3.17.0"
   },
   "devDependencies": {

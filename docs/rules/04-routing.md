@@ -26,7 +26,7 @@ flowchart TD
 - **Đặc điểm:** Chỉ render và trả về một đoạn HTML của phân vùng giao diện cụ thể (không có header/taskbar bên ngoài).
 - **Trường hợp sử dụng:**
   - Click vào một node trên Cây nội dung: client gửi AJAX lấy toàn bộ form chỉnh sửa `item-form.ejs` hoặc lưới thư mục `folder-view.ejs` và đưa thẳng vào `#editor-workspace` mà không reload trang.
-  - Mở các cửa sổ modal phức tạp: ví dụ `GET /admin/content-editor/item/:id/presentation` trả về nội dung của `details-modal.ejs`.
+  - Mở các cửa sổ modal phức tạp: ví dụ `GET /admin/content-editor/item/:id/presentation` trả về nội dung của `details-modal.ejs`, hoặc `GET /admin/media/picker` trả về modal picker chọn media.
 
 ### 3. JSON Endpoints
 Chia làm 2 nhóm mục tiêu rõ ràng:
@@ -50,6 +50,10 @@ Chia làm 2 nhóm mục tiêu rõ ràng:
   - `POST /admin/content-editor/item/:id/presentation`: Lưu cấu hình Presentation.
   - `POST /admin/content-editor/item/:id/presentation/reset`: Reset về Standard Presentation.
   - `GET /admin/content-editor/item/:id/presentation/preview`: Trả về JSON layout preview.
+  - `GET /api/media/folders`, `POST /api/media/folders`: Quản lý cây thư mục media.
+  - `GET /api/media/assets`, `POST /api/media/upload`: Tải lên và duyệt danh sách media có phân trang/lọc.
+  - `PUT /api/media/assets/:id`, `POST /api/media/move/:id`, `DELETE /api/media/assets/:id`: Cập nhật metadata, di chuyển và xóa media.
+  - `GET /media/file/:id`: Phục vụ tệp tĩnh bảo mật kèm HTTP Cache-Control & ETag 304 (`?thumb=1` cho ảnh thu nhỏ).
 
 #### b. Headless Delivery API & Layout Service (`/api/v1/...`)
 - **Đặc điểm:** RESTful JSON dành riêng cho ứng dụng Frontend bên ngoài (React/Next.js/Mobile App), đọc dữ liệu độc quyền từ collection `items_web`.

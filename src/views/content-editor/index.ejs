@@ -125,11 +125,26 @@
 
       <!-- Workspace Body (Dynamic Fragment Content Swapped via AJAX) -->
       <div class="workspace-content-body flex-fill overflow-auto p-3" id="editorWorkspace">
-        <% if (selectedItem) { %>
+        <% if (selectedItem && typeof schemaData !== 'undefined' && schemaData) { %>
+          <%- include('./item-form', {
+            item: schemaData.item,
+            template: schemaData.resolvedTemplate,
+            breadcrumbs: breadcrumbs,
+            currentLang: typeof currentLang !== 'undefined' ? currentLang : 'vi',
+            currentVersion: typeof currentVersion !== 'undefined' ? currentVersion : 1,
+            languagesList: schemaData.languagesList,
+            versionsList: schemaData.versionsList,
+            hasLanguage: schemaData.hasLanguage,
+            hasVersion: schemaData.hasVersion,
+            versionInfo: schemaData.versionInfo
+          }) %>
+        <% } else if (selectedItem) { %>
           <%- include('./item-form', {
             item: selectedItem,
             template: selectedItem.templateId,
-            breadcrumbs: breadcrumbs
+            breadcrumbs: breadcrumbs,
+            currentLang: typeof currentLang !== 'undefined' ? currentLang : 'vi',
+            currentVersion: typeof currentVersion !== 'undefined' ? currentVersion : 1
           }) %>
         <% } else { %>
           <div class="empty py-5 text-center">
@@ -152,11 +167,20 @@
 <%- include('./modals/rename-modal') %>
 <%- include('./modals/move-modal') %>
 <%- include('./modals/delete-modal') %>
+<%- include('./modals/add-version-modal') %>
+<%- include('./modals/add-language-modal') %>
+<%- include('./modals/delete-version-modal') %>
+<%- include('./modals/dirty-confirm-modal') %>
+<%- include('../admin/media/modals/media-picker-modal') %>
+<div id="dynamicModalsContainer"></div>
 
 <!-- Pass Selected Item Initial ID to Client Script -->
 <script>
   window.__INITIAL_ITEM_ID__ = "<%= selectedItem ? selectedItem._id : '' %>";
 </script>
+
+<!-- External TinyMCE 6 Community Edition via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6.8.3/tinymce.min.js"></script>
 
 <!-- External Fancytree Dependencies via CDN -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.fancytree@2.38.3/dist/skin-win8/ui.fancytree.min.css">

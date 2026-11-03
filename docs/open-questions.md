@@ -74,3 +74,77 @@ Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp v
 - **Lựa chọn B:** Làm ngay Experience Editor WYSIWYG cùng lúc ở GĐ 6.
 - **Lý do đề xuất:** Làm WYSIWYG in-line cho headless React rất tốn thời gian (cần iframe bridge, postMessage sync, content editable tags), trong khi MVP headless chỉ cần Layout Service trả JSON chính xác cho frontend.
 
+---
+
+### 9. Lựa chọn Storage Provider mặc định cho GĐ 5 (Local Disk vs Cloudinary)
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ User chốt)
+- **Quyết định liên quan:** [DEC-028](decisions/DEC-028-media-richtext-reference.md), [phase-05-reference-mapping.md](phases/phase-05-reference-mapping.md)
+- **Lựa chọn A (Đề xuất mặc định):** Triển khai lớp trừu tượng `StorageProvider` với **`LocalStorageProvider` làm mặc định** (lưu đĩa nội bộ tại `storage/uploads/YYYY/MM/`, tạo thumbnail tự động bằng `sharp`). Thiết kế sẵn adapter interface để có thể cấu hình `CloudinaryStorageProvider` qua biến `.env` sau này mà không sửa đổi nghiệp vụ.
+- **Lựa chọn B:** Bắt buộc tích hợp trực tiếp Cloudinary SDK ngay từ đầu bằng tài khoản Cloudinary của người dùng.
+- **Lý do đề xuất:** Giúp hệ thống tự vận hành độc lập (self-contained), không phụ thuộc mạng hay tài khoản ngoài, chạy test Jest/CI cực nhanh và tránh bị rate limit (500 req/giờ của Cloudinary free tier).
+
+---
+
+### 10. Kiểm tra Magic Bytes nhị phân khi Upload: Dùng thư viện hay Sniffing Buffer nội bộ?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ User chốt)
+- **Quyết định liên quan:** [DEC-028](decisions/DEC-028-media-richtext-reference.md), [docs/rules/05-security.md](rules/05-security.md)
+- **Lựa chọn A (Đề xuất mặc định):** Xây dựng **Sniffing Buffer nội bộ thuần Node.js** (đọc vài bytes đầu file kiểm tra chữ ký chuẩn của JPEG `FF D8 FF`, PNG `89 50 4E 47`, GIF `47 49 46 38`, WebP `52 49 46 46`, PDF `25 50 44 46`), không cần cài thêm thư viện ngoài; đồng thời dùng `sanitize-html` để làm sạch SVG.
+- **Lựa chọn B:** Cài đặt package bên ngoài `file-type`.
+- **Lý do đề xuất:** Không phát sinh thêm package ngoài (thư viện `file-type` hiện là Pure ESM có thể gây xung đột với CommonJS của dự án), đáp ứng trọn vẹn yêu cầu bảo mật chống đổi đuôi file giả mạo (.exe/.php -> .jpg).
+
+---
+
+### 11. Thư mục đích mặc định cho tệp tải lên từ Rich Text Editor (Paste / Drag-Drop)
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ User chốt)
+- **Quyết định liên quan:** [DEC-028](decisions/DEC-028-media-richtext-reference.md)
+- **Lựa chọn A (Đề xuất mặc định):** Tự động lưu vào thư mục hệ thống chuyên biệt: `/sitecore/media library/Editor Uploads/YYYY/MM/`.
+- **Lựa chọn B:** Lưu thẳng vào thư mục gốc `/sitecore/media library/`.
+- **Lựa chọn C:** Yêu cầu người dùng chọn thư mục đích mỗi lần paste/kéo ảnh.
+- **Lý do đề xuất:** Tránh làm rác và lộn xộn thư mục gốc Media Library, phân tách rõ ràng tài nguyên được upload nhanh qua bài viết và tài nguyên được biên tập có chủ đích trong Media Library.
+
+---
+
+### 12. Phương thức Tải Thư viện TinyMCE 6 cho Rich Text Editor
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ User chốt)
+- **Quyết định liên quan:** [DEC-028](decisions/DEC-028-media-richtext-reference.md)
+- **Lựa chọn A (Đề xuất mặc định):** Tải bản TinyMCE 6 Community Edition chính thức từ CDN jsDelivr (`https://cdn.jsdelivr.net/npm/tinymce@6.8.3/tinymce.min.js`), loại bỏ hoàn toàn liên kết demo `flmngr.com`.
+- **Lựa chọn B:** Cài đặt npm package `tinymce` và copy tài nguyên tĩnh vào thư mục `public/vendor/tinymce`.
+- **Lý do đề xuất:** jsDelivr CDN nhẹ, nhanh, ổn định, không làm tăng dung lượng Git repository, hoàn toàn miễn phí và không có rủi ro phụ thuộc demo bên thứ ba.
+
+---
+
+### 13. Cơ chế Lưu trữ Hình ảnh trong Nội dung Rich Text HTML
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ User chốt)
+- **Quyết định liên quan:** [DEC-013](decisions/DEC-013-sanitize-html-server.md), [DEC-028](decisions/DEC-028-media-richtext-reference.md)
+- **Lựa chọn A (Đề xuất mặc định):** Thẻ `<img>` lưu thuộc tính bất biến: `<img src="/media/file/:id" data-media-id=":id" alt="..." />`. Khi xuất ra Layout Service (GĐ 10) hoặc render preview, hệ thống gọi hàm `resolveRichText(html)` để phân giải link động.
+- **Lựa chọn B:** Chỉ lưu đường dẫn cứng `src="https://..."` như dự án blog cũ.
+- **Lý do đề xuất:** Nếu media bị di chuyển thư mục, đổi tên hoặc thay thế tệp (replace), định danh `data-media-id` vẫn giữ liên kết nguyên vẹn không bao giờ bị gãy hình ảnh (broken image).
+
+---
+
+### 14. Cơ chế Chèn Liên kết Nội bộ (Internal Link) tới Item trong Rich Text
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ User chốt)
+- **Quyết định liên quan:** [DEC-028](decisions/DEC-028-media-richtext-reference.md)
+- **Lựa chọn A (Đề xuất mặc định):** Xây dựng hộp thoại Modal chọn Item từ cây nội dung (tái sử dụng cấu trúc Fancytree), chèn thẻ `<a href="/sitecore/content/..." data-item-id=":id">`.
+- **Lựa chọn B:** Chỉ cho phép người dùng nhập tay đường dẫn URL vào hộp thoại Link chuẩn của TinyMCE.
+- **Lý do đề xuất:** Biên tập viên dễ dàng duyệt cây để chọn trang đích mà không cần nhớ đường dẫn URL, và khi item đích đổi slug/path thì `data-item-id` vẫn giúp hàm `resolveRichText` sửa link chính xác.
+
+---
+
+### 15. Quy tắc Xử lý khi Phát hiện Tệp tin Trùng lặp (Checksum Match)
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ User chốt)
+- **Quyết định liên quan:** [DEC-028](decisions/DEC-028-media-richtext-reference.md)
+- **Lựa chọn A (Đề xuất mặc định):** Khi upload, hệ thống tính hash SHA-256. Nếu trong cùng thư mục đã có file cùng checksum, hiển thị thông báo phát hiện trùng và cho phép người dùng chọn: **"Dùng lại file hiện có"** hoặc **"Tải lên bản sao mới"** (sinh tên `filename (1).ext`).
+- **Lựa chọn B:** Tự động ghi đè tệp tin cũ không hỏi.
+- **Lựa chọn C:** Chặn cứng (báo lỗi không cho upload).
+- **Lý do đề xuất:** Tiết kiệm dung lượng lưu trữ, giúp người dùng nhận biết tránh trùng lặp nhưng vẫn linh hoạt cho phép tạo bản sao nếu họ muốn.
+
+---
+
+### 16. Hành vi Xóa Item Media đối với Tệp tin Vật lý trên Đĩa
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ User chốt)
+- **Quyết định liên quan:** [DEC-028](decisions/DEC-028-media-richtext-reference.md), [phase-09-recycle-bin-audit.md](phases/phase-09-recycle-bin-audit.md)
+- **Lựa chọn A (Đề xuất mặc định):** Chỉ thực hiện **Soft Delete** (đánh dấu `isDeleted: true`, gán `deletedAt`), giữ nguyên tệp vật lý trên đĩa. Việc dọn dẹp vĩnh viễn tệp vật lý sẽ được thực hiện khi người dùng dọn Thùng rác (Recycle Bin - GĐ 9).
+- **Lựa chọn B:** Xóa vĩnh viễn file vật lý trên đĩa ngay lập tức khi xóa item.
+- **Lý do đề xuất:** Bảo vệ dữ liệu chống thao tác xóa nhầm của người dùng, đảm bảo khả năng khôi phục (Restore) nguyên vẹn từ Recycle Bin ở Giai đoạn 9.
+

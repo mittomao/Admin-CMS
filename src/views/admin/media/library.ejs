@@ -1,0 +1,30 @@
+<div class="desktop-window media-library-window">
+  <div class="window-header">
+    <div class="window-title">
+      <span class="window-icon">📁</span>
+      <span class="window-name">Media Library</span>
+    </div>
+    <div class="window-actions">
+      <a href="/admin/launchpad" class="window-btn close-btn" title="Back to Launchpad">✕</a>
+    </div>
+  </div>
+
+  <div class="window-body p-0">
+    <%- include('partials/media-browser-core', { browserId: 'mediaPageBrowser', isPicker: false }) %>
+  </div>
+</div>
+
+<script type="module">
+  import { MediaBrowser } from '/js/admin/media-browser.js';
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    const rootEl = document.getElementById('mediaPageBrowser');
+    if (rootEl) {
+      window._pageMediaBrowser = new MediaBrowser(rootEl, {
+        csrfToken: '<%= csrfToken %>'
+      });
+      window._pageMediaBrowser.init();
+    }
+  });
+</script>
+

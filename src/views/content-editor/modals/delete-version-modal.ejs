@@ -1,0 +1,28 @@
+<div class="modal fade" id="deleteVersionModal" tabindex="-1" aria-labelledby="deleteVersionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2 px-3 bg-danger-subtle border-bottom">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-danger" id="deleteVersionModalLabel">
+          <i class="ti ti-alert-triangle fs-3"></i>
+          <span>Xóa Phiên Bản</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-3">
+        <p class="mb-2">Bạn có chắc chắn muốn xóa <strong id="deleteVersionTitle">Version X</strong> của ngôn ngữ <strong id="deleteVersionLang" class="text-uppercase">EN</strong> không?</p>
+        <div class="alert alert-warning py-2 px-2 small mb-0">
+          <i class="ti ti-info-circle me-1"></i>Hành động này không thể hoàn tác. Không thể xóa nếu đây là phiên bản duy nhất còn lại.
+        </div>
+      </div>
+
+      <div class="modal-footer py-2 px-3 bg-light">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-danger btn-sm d-flex align-items-center gap-1" id="btnConfirmDeleteVersion">
+          <i class="ti ti-trash"></i> Xóa vĩnh viễn
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

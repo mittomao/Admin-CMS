@@ -20,8 +20,12 @@ const authRoutes = require('./routes/admin/authRoutes');
 const launchpadRoutes = require('./routes/admin/launchpadRoutes');
 const contentEditorRoutes = require('./routes/admin/contentEditorRoutes');
 const templateManagerRoutes = require('./routes/admin/templateManagerRoutes');
+const adminMediaRoutes = require('./routes/admin/mediaRoutes');
 const itemRoutes = require('./routes/api/itemRoutes');
 const templateRoutes = require('./routes/api/templateRoutes');
+const languageRoutes = require('./routes/api/languageRoutes');
+const apiMediaRoutes = require('./routes/api/mediaRoutes');
+const mediaController = require('./controllers/admin/mediaController');
 const csrfMiddleware = require('./middlewares/csrfMiddleware');
 
 const app = express();
@@ -100,12 +104,19 @@ app.get('/', (req, res) => {
 });
 
 // 9. Admin App & API Routes
+// Public media file serving
+app.get('/media/file/:id', (req, res, next) => mediaController.serveFile(req, res, next));
+
 app.use('/admin', authRoutes);
 app.use('/admin/launchpad', launchpadRoutes);
 app.use('/admin/content-editor', contentEditorRoutes);
 app.use('/admin/template-manager', templateManagerRoutes);
+app.use('/admin/media-library', adminMediaRoutes);
+app.use('/admin/media', adminMediaRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/languages', languageRoutes);
+app.use('/api/media', apiMediaRoutes);
 
 // 10. Error Handling
 app.use(notFoundHandler);

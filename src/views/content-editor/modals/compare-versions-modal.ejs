@@ -1,0 +1,130 @@
+<div class="modal fade" id="compareVersionsModal" tabindex="-1" aria-labelledby="compareVersionsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2 px-3 bg-light border-bottom">
+        <div class="d-flex align-items-center gap-2">
+          <i class="ti ti-columns text-primary fs-3"></i>
+          <div>
+            <h5 class="modal-title m-0" id="compareVersionsModalLabel">
+              So sánh Phiên bản — <%= item.displayName || item.name %>
+            </h5>
+            <div class="text-muted small">
+              Ngôn ngữ: <strong class="text-uppercase"><%= currentLang %></strong> | 
+              Tổng số trường khác biệt: 
+              <span class="badge <%= compareData.totalDifferences > 0 ? 'bg-warning' : 'bg-green' %>">
+                <%= compareData.totalDifferences %> trường
+              </span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Controls bar to switch compare versions -->
+      <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label m-0 fw-bold small text-muted">Bản gốc (A):</label>
+            <select class="form-select form-select-sm" id="compareSelectV1" style="width: 140px;">
+              <% versions.forEach(v => { %>
+                <option value="<%= v.version %>" <%= v.version === compareData.v1 ? 'selected' : '' %>>
+                  Version <%= v.version %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+
+          <i class="ti ti-arrow-right text-muted"></i>
+
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label m-0 fw-bold small text-muted">Bản so sánh (B):</label>
+            <select class="form-select form-select-sm" id="compareSelectV2" style="width: 140px;">
+              <% versions.forEach(v => { %>
+                <option value="<%= v.version %>" <%= v.version === compareData.v2 ? 'selected' : '' %>>
+                  Version <%= v.version %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btnRefreshCompare">
+          <i class="ti ti-refresh"></i> Cập nhật so sánh
+        </button>
+      </div>
+
+      <div class="modal-body p-3">
+        <% if (compareData.totalDifferences === 0) { %>
+          <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+            <i class="ti ti-circle-check fs-2"></i>
+            <div>Hai phiên bản này hoàn toàn giống nhau, không có sự khác biệt về nội dung các trường.</div>
+          </div>
+        <% } %>
+
+        <div class="diff-container">
+          <% (compareData.sections || []).forEach(sec => { %>
+            <div class="card mb-3 border shadow-2xs">
+              <div class="card-header bg-light py-2 px-3 fw-bold d-flex align-items-center justify-content-between">
+                <span class="d-flex align-items-center gap-2">
+                  <i class="ti ti-layout-navbar-expand text-primary"></i>
+                  <span><%= sec.sectionName %></span>
+                </span>
+                <span class="badge bg-secondary-lt font-monospace small"><%= sec.fields.length %> fields</span>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-vcenter card-table table-bordered mb-0">
+                    <thead class="table-light small">
+                      <tr>
+                        <th style="width: 25%;">Trường dữ liệu</th>
+                        <th style="width: 37.5%;">Bản gốc: Version <%= compareData.v1 %></th>
+                        <th style="width: 37.5%;">Bản đích: Version <%= compareData.v2 %></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% sec.fields.forEach(f => { %>
+                        <tr class="<%= f.isDifferent ? 'table-warning-subtle' : '' %>">
+                          <td>
+                            <div class="fw-semibold text-dark"><%= f.title %></div>
+                            <div class="text-muted small font-monospace"><%= f.fieldName %> (<%= f.type %>)</div>
+                            <div class="mt-1 d-flex gap-1 flex-wrap">
+                              <% if (f.shared) { %>
+                                <span class="badge bg-blue-lt small">[shared]</span>
+                              <% } else if (f.unversioned) { %>
+                                <span class="badge bg-orange-lt small">[unversioned]</span>
+                              <% } %>
+                              <% if (f.isDifferent) { %>
+                                <span class="badge bg-warning text-dark small"><i class="ti ti-pencil me-1"></i><%= f.summary %></span>
+                              <% } else { %>
+                                <span class="badge bg-secondary-lt small text-muted">Giống nhau</span>
+                              <% } %>
+                            </div>
+                          </td>
+                          <td class="diff-pane bg-light-subtle">
+                            <div class="diff-content p-2 rounded border bg-white small" style="min-height: 42px;">
+                              <%- f.diffHtmlA %>
+                            </div>
+                          </td>
+                          <td class="diff-pane bg-light-subtle">
+                            <div class="diff-content p-2 rounded border bg-white small" style="min-height: 42px;">
+                              <%- f.diffHtmlB %>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="modal-footer py-2 px-3 bg-light">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
