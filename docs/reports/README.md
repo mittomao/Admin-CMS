@@ -19,4 +19,5 @@ Mỗi file báo cáo hoàn thành một giai đoạn phải tuân theo cấu tr�
 - `phase-03-report.md` - Đang tổng hợp từ kết quả GĐ 3
 - [`phase-04-report.md`](./phase-04-report.md) - **Hoàn thành** (2026-11-03) - Quản lý Phiên bản & Đa ngôn ngữ
 - [`phase-05-report.md`](./phase-05-report.md) - **Hoàn thành** (2026-11-03) - Thư viện Đa phương tiện & Trình soạn thảo Văn bản (Media Library & Rich Text)
+- [`phase-06-report.md`](./phase-06-report.md) - **Hoàn thành** (2026-11-04) - Quản trị Headless Presentation (Layout, Rendering, Placeholders & Presentation Details)
 

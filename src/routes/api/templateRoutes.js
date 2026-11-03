@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const templateManagerController = require('../../controllers/admin/templateManagerController');
+const presentationController = require('../../controllers/admin/presentationController');
 const { requireAuth } = require('../../middlewares/authMiddleware');
 const csrfMiddleware = require('../../middlewares/csrfMiddleware');
 
@@ -12,6 +13,7 @@ router.get('/', templateManagerController.list);
 router.get('/:id', templateManagerController.getById);
 router.get('/:id/resolved', templateManagerController.getResolved);
 router.get('/:id/usage', templateManagerController.getUsage);
+router.get('/:id/standard-presentation', presentationController.getTemplateStandardPresentation);
 
 // Mutating Endpoints with CSRF Protection
 router.post('/', csrfMiddleware.verifyToken, templateManagerController.create);
@@ -23,6 +25,7 @@ router.post('/:id/duplicate', csrfMiddleware.verifyToken, templateManagerControl
 router.put('/:id/base-templates', csrfMiddleware.verifyToken, templateManagerController.setBaseTemplates);
 router.put('/:id/standard-values', csrfMiddleware.verifyToken, templateManagerController.setStandardValues);
 router.put('/:id/insert-options', csrfMiddleware.verifyToken, templateManagerController.setInsertOptions);
+router.put('/:id/standard-presentation', csrfMiddleware.verifyToken, presentationController.setTemplateStandardPresentation);
 
 // Sections Management
 router.post('/:id/sections', csrfMiddleware.verifyToken, templateManagerController.addSection);

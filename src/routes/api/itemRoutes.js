@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const contentEditorController = require('../../controllers/admin/contentEditorController');
+const presentationController = require('../../controllers/admin/presentationController');
 const { requireAuth } = require('../../middlewares/authMiddleware');
 const csrfMiddleware = require('../../middlewares/csrfMiddleware');
 
@@ -13,6 +14,7 @@ router.get('/:id/children', contentEditorController.getTreeNodes);
 router.get('/:id/languages', contentEditorController.getItemLanguages);
 router.get('/:id/versions', contentEditorController.getItemVersions);
 router.get('/:id/compare', contentEditorController.compareVersions);
+router.get('/:id/presentation', presentationController.getPresentationJson);
 
 // Mutating operations with CSRF protection
 router.post('/', csrfMiddleware.verifyToken, contentEditorController.createItem);
@@ -30,6 +32,10 @@ router.post('/:id/versions', csrfMiddleware.verifyToken, contentEditorController
 router.post('/:id/languages', csrfMiddleware.verifyToken, contentEditorController.addLanguage);
 router.delete('/:id/versions/:lang/:version', csrfMiddleware.verifyToken, contentEditorController.deleteVersion);
 router.post('/:id/versions/:lang/:version/restore', csrfMiddleware.verifyToken, contentEditorController.restoreVersion);
+
+// Presentation operations (GĐ 6)
+router.put('/:id/presentation', csrfMiddleware.verifyToken, presentationController.savePresentation);
+router.post('/:id/presentation/reset', csrfMiddleware.verifyToken, presentationController.resetPresentation);
 
 module.exports = router;
 

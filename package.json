@@ -11,6 +11,7 @@
     "format": "prettier --write \"src/**/*.{js,json,ejs}\" \"public/**/*.{css,js}\"",
     "test": "jest --detectOpenHandles --forceExit",
     "seed": "node src/scripts/seed-initial-data.js",
+    "seed:presentation": "node src/scripts/seed-presentation-data.js",
     "migrate": "node src/scripts/migrate-to-versions-languages.js",
     "migrate:field-ids": "node src/scripts/migrate-to-field-ids.js"
   },

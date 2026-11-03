@@ -327,6 +327,42 @@ async function handleRibbonAction(action) {
     case 'add-language-modal':
       openAddLanguageModal();
       break;
+
+    // GĐ 6: Presentation Ribbon Actions
+    case 'presentation:details':
+      if (window.PresentationDetails) {
+        window.PresentationDetails.open(currentItemId, { lang: currentLang, version: currentVersion });
+      }
+      break;
+
+    case 'presentation:reset':
+      if (confirm('Bạn có chắc chắn muốn khôi phục Presentation về cấu hình mặc định của Template?')) {
+        const metaCsrf = document.querySelector('meta[name="csrf-token"]');
+        fetch(`/api/items/${currentItemId}/presentation/reset`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': metaCsrf ? metaCsrf.getAttribute('content') : '',
+          },
+          body: JSON.stringify({ scope: 'all', lang: currentLang, version: currentVersion }),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.success) {
+              showToast('Đã khôi phục Presentation về mặc định!');
+            } else {
+              showToast(data.message || 'Lỗi khôi phục.', 'error');
+            }
+          })
+          .catch((err) => showToast(err.message, 'error'));
+      }
+      break;
+
+    case 'presentation:preview-json':
+      if (window.PresentationDetails) {
+        window.PresentationDetails.openPreviewJson(currentItemId, { lang: currentLang, version: currentVersion });
+      }
+      break;
   }
 }
 

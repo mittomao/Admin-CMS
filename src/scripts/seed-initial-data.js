@@ -628,6 +628,10 @@ const seedData = async () => {
       logger.info('Created Media Library subfolder: Editor Uploads');
     }
 
+    // 9. Seed Presentation System Items (GĐ 6)
+    const { seedPresentationData } = require('./seed-presentation-data');
+    await seedPresentationData();
+
     logger.info('Seed completed successfully!');
     await mongoose.disconnect();
     process.exit(0);

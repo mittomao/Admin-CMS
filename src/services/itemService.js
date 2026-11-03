@@ -49,6 +49,14 @@ const itemService = {
       return isAuthor || isEditor;
     }
 
+    if (action === 'presentation:write') {
+      return isAdmin || isEditor || isAuthor;
+    }
+
+    if (action === 'presentation:read') {
+      return true;
+    }
+
     return true;
   },
 

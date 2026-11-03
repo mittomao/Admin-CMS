@@ -13,7 +13,7 @@ flowchart TD
     GD2 --> GD3["GĐ 3: Template Manager<br/>(Hoàn thành)"]
     GD2 & GD3 --> GD4["GĐ 4: Version & Ngôn ngữ<br/>(Hoàn thành)"]
     GD2 & GD3 --> GD5["GĐ 5: Media Library<br/>(Hoàn thành)"]
-    GD2 & GD3 & GD4 & GD5 --> GD6["GĐ 6: Presentation (Headless)<br/>(Chưa bắt đầu)"]
+    GD2 & GD3 & GD4 & GD5 --> GD6["GĐ 6: Presentation (Headless)<br/>(Hoàn thành)"]
     GD1 & GD2 & GD6 --> GD7["GĐ 7: Bảo mật nâng cao (ACL)<br/>(Chưa bắt đầu)"]
     GD2 & GD4 & GD6 & GD7 --> GD8["GĐ 8: Workflow & Publish<br/>(Chưa bắt đầu)"]
     GD2 & GD8 --> GD9["GĐ 9: Recycle Bin & Audit<br/>(Chưa bắt đầu)"]
@@ -34,7 +34,7 @@ flowchart TD
 | **3** | Template Manager (Fields, Kế thừa) | **Hoàn thành** | 2 | [`phase-03-template-manager.md`](./phase-03-template-manager.md) | 2026-11-03 | 2026-11-03 | Xong Template builder, Base Templates cycle detection, Standard Values, Insert Options |
 | **4** | Quản lý Phiên bản & Đa ngôn ngữ | **Hoàn thành** | 2, 3 | [`phase-04-versions-languages.md`](./phase-04-versions-languages.md) | 2026-11-03 | 2026-11-03 | Xong Version/Language, 3 cấp trường, schema Presentation, Ribbon Versions, Diff compare |
 | **5** | Media Library & Media Picker Modal | **Hoàn thành** | 2, 3 | [`phase-05-media-library.md`](./phase-05-media-library.md) | 2026-11-03 | 2026-11-03 | Cây thư mục media, sharp resize thumbnail, Media Picker modal, TinyMCE 6, Canvas compression, magic bytes |
-| **6** | Presentation (Layout, Rendering, Placeholders) | **Chưa bắt đầu** | 2, 3, 4, 5 | [`phase-06-presentation.md`](./phase-06-presentation.md) | - | - | Giai đoạn mới kiến trúc Headless: SortableJS, Standard Presentation, Delta Override |
+| **6** | Presentation (Layout, Rendering, Placeholders) | **Hoàn thành** | 2, 3, 4, 5 | [`phase-06-presentation.md`](./phase-06-presentation.md) | 2026-11-04 | 2026-11-04 | Xong Headless Presentation: Devices, Layouts, Renderings, Placeholder Settings, SortableJS, Standard Presentation, Delta Override |
 | **7** | Bảo mật nâng cao & Phân quyền ACL | **Chưa bắt đầu** | 1, 2, 6 | [`phase-07-item-acl.md`](./phase-07-item-acl.md) | - | - | Đánh số lại từ GĐ 6 cũ; bổ sung phân quyền Presentation Details |
 | **8** | Workflow Engine, Workbox & Publishing | **Chưa bắt đầu** | 2, 4, 6, 7 | [`phase-08-workflow-publish.md`](./phase-08-workflow-publish.md) | - | - | Đánh số lại từ GĐ 7 cũ; publish Item, Presentation và cảnh báo Datasource |
 | **9** | Thùng rác (Recycle Bin) & Audit Log | **Chưa bắt đầu** | 2, 8 | [`phase-09-recycle-bin-audit.md`](./phase-09-recycle-bin-audit.md) | - | - | Đánh số lại từ GĐ 8 cũ; audit log biến động Presentation & kiểm tra toàn vẹn xoá |

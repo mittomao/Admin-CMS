@@ -1,0 +1,216 @@
+<div class="modal fade" id="presentationDetailsModal" tabindex="-1" aria-labelledby="presentationDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+    <div class="modal-content shadow-lg">
+      <!-- Modal Header -->
+      <div class="modal-header py-2 px-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <span class="avatar avatar-xs bg-primary-lt rounded">
+            <i class="ti ti-layout-grid fs-3 text-primary"></i>
+          </span>
+          <div>
+            <h5 class="modal-title m-0 fw-bold fs-3" id="presentationDetailsModalLabel">
+              Presentation Details: <span class="text-primary"><%= item.displayName || item.name %></span>
+            </h5>
+            <div class="text-muted small"><%= item.path %></div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <!-- Scope Selector (Shared vs Final) -->
+          <div class="btn-group btn-group-sm" role="group" id="presentationScopeGroup">
+            <input type="radio" class="btn-check" name="presentationScope" id="scopeShared" value="shared" <%= activeScope === 'shared' || activeScope === 'standard' ? 'checked' : '' %>>
+            <label class="btn btn-outline-secondary" for="scopeShared" title="Áp dụng cho mọi ngôn ngữ và phiên bản">
+              <i class="ti ti-world me-1"></i> Shared Layout
+            </label>
+
+            <input type="radio" class="btn-check" name="presentationScope" id="scopeFinal" value="final" <%= activeScope === 'final' ? 'checked' : '' %>>
+            <label class="btn btn-outline-secondary" for="scopeFinal" title="Ghi đè riêng cho phiên bản hiện hành">
+              <i class="ti ti-layers-subtract me-1"></i> Final Layout [<%= (language || 'vi').toUpperCase() %> / v<%= version || 1 %>]
+            </label>
+          </div>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body p-3 bg-light">
+        <div class="card border mb-3">
+          <div class="card-body p-3">
+            <div class="row g-3 align-items-center">
+              <!-- Device Selector Tabs -->
+              <div class="col-md-6">
+                <label class="form-label small fw-bold text-muted mb-1">Thiết bị (Device):</label>
+                <ul class="nav nav-pills" id="deviceTabs">
+                  <% allDevices.forEach(function(dev) { %>
+                    <li class="nav-item">
+                      <button class="nav-link btn-sm py-1 px-3 <%= dev._id.toString() === currentDevice._id.toString() ? 'active' : '' %>"
+                              type="button"
+                              data-device-id="<%= dev._id %>"
+                              data-device-name="<%= dev.name %>">
+                        <i class="<%= dev.name.toLowerCase() === 'mobile' ? 'ti ti-device-mobile' : 'ti ti-device-desktop' %> me-1"></i>
+                        <%= dev.displayName || dev.name %>
+                        <% if (dev.isDefault) { %>
+                          <span class="badge bg-secondary-lt ms-1">Default</span>
+                        <% } %>
+                      </button>
+                    </li>
+                  <% }); %>
+                </ul>
+              </div>
+
+              <!-- Layout Selector -->
+              <div class="col-md-6">
+                <label class="form-label small fw-bold text-muted mb-1 required">Layout Trang (React Component):</label>
+                <select class="form-select form-select-sm" id="presentationLayoutSelect">
+                  <option value="">-- Chưa gán Layout --</option>
+                  <% allLayouts.forEach(function(l) { %>
+                    <option value="<%= l._id %>" <%= merged && merged.layoutId && merged.layoutId.toString() === l._id.toString() ? 'selected' : '' %>>
+                      <%= l.displayName || l.name %> (<%= l.componentName %>)
+                    </option>
+                  <% }); %>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Placeholders & Renderings List -->
+        <div id="placeholdersContainer" class="d-flex flex-column gap-3">
+          <% 
+            const layoutPlaceholders = (merged && merged.layout && Array.isArray(merged.layout.placeholders) && merged.layout.placeholders.length > 0)
+              ? merged.layout.placeholders
+              : ['main', 'header', 'footer', 'content'];
+
+            // Merge with existing placeholder keys in merged renderings
+            const existingKeys = Object.keys(merged ? (merged.placeholders || {}) : {});
+            const allKeys = Array.from(new Set([...layoutPlaceholders, ...existingKeys]));
+          %>
+
+          <% allKeys.forEach(function(phKey) { 
+               const phRenderings = (merged && merged.placeholders && merged.placeholders[phKey]) ? merged.placeholders[phKey] : [];
+          %>
+            <div class="card border placeholder-card shadow-xs" data-placeholder="<%= phKey %>">
+              <div class="card-header py-2 px-3 bg-white border-bottom d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-dark-lt font-monospace px-2 py-1 fs-5">
+                    <i class="ti ti-brackets me-1"></i><%= phKey %>
+                  </span>
+                  <span class="badge bg-secondary-lt rounded-pill count-badge"><%= phRenderings.length %> component</span>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 d-flex align-items-center gap-1 btn-add-rendering" data-placeholder="<%= phKey %>">
+                    <i class="ti ti-plus"></i> Thêm Component
+                  </button>
+                </div>
+              </div>
+
+              <div class="card-body p-2 bg-light renderings-dropzone" data-placeholder="<%= phKey %>" style="min-height: 70px;">
+                <% if (phRenderings.length === 0) { %>
+                  <div class="empty-dropzone text-center py-3 text-muted small border border-dashed rounded bg-white">
+                    <i class="ti ti-drag-drop fs-2 text-muted mb-1"></i>
+                    <div>Chưa có component nào trong placeholder <strong><%= phKey %></strong>. Kéo thả hoặc nhấn "Thêm Component".</div>
+                  </div>
+                <% } %>
+
+                <% phRenderings.forEach(function(r) { %>
+                  <div class="card mb-2 rendering-item shadow-xs border cursor-move bg-white" 
+                       data-uid="<%= r.uid %>"
+                       data-rendering-id="<%= r.renderingId %>"
+                       data-placeholder="<%= r.placeholder %>"
+                       data-sort-order="<%= r.sortOrder %>"
+                       data-datasource-id="<%= r.datasourceId || '' %>"
+                       data-datasource-name="<%= r.datasourceName || '' %>"
+                       data-datasource-path="<%= r.datasourcePath || '' %>"
+                       data-parameters='<%= JSON.stringify(r.parameters || {}) %>'
+                       data-origin="<%= r.origin %>"
+                       data-hidden="<%= r.hidden ? 'true' : 'false' %>">
+                    <div class="card-body p-2 d-flex align-items-center justify-content-between gap-2">
+                      <div class="d-flex align-items-center gap-2 flex-fill text-truncate">
+                        <span class="drag-handle text-muted cursor-move px-1" title="Kéo để sắp xếp">
+                          <i class="ti ti-grip-vertical fs-3"></i>
+                        </span>
+
+                        <span class="avatar avatar-xs bg-blue-lt rounded">
+                          <i class="<%= r.icon || 'ti ti-box' %>"></i>
+                        </span>
+
+                        <div class="text-truncate">
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold small text-dark"><%= r.displayName || r.renderingName %></span>
+                            <span class="badge bg-light text-muted font-monospace small"><%= r.componentName %></span>
+
+                            <% if (r.origin === 'standard') { %>
+                              <span class="badge bg-secondary-lt" title="Kế thừa từ Standard Presentation của Template">
+                                <i class="ti ti-file-symlink me-1"></i>Standard
+                              </span>
+                            <% } else if (r.origin === 'shared') { %>
+                              <span class="badge bg-primary-lt" title="Ghi đè ở cấp độ Shared Layout">
+                                <i class="ti ti-world me-1"></i>Shared
+                              </span>
+                            <% } else if (r.origin === 'final') { %>
+                              <span class="badge bg-success-lt" title="Ghi đè riêng cho phiên bản ngôn ngữ này">
+                                <i class="ti ti-layers-subtract me-1"></i>Final
+                              </span>
+                            <% } %>
+                          </div>
+
+                          <div class="text-muted small d-flex align-items-center gap-2 mt-1">
+                            <% if (r.datasourcePath) { %>
+                              <span class="text-truncate text-azure" title="Datasource: <%= r.datasourcePath %>">
+                                <i class="ti ti-database me-1"></i><%= r.datasourceName || r.datasourcePath %>
+                              </span>
+                            <% } else { %>
+                              <span class="text-muted fst-italic">
+                                <i class="ti ti-arrow-guide me-1"></i>Dùng nội dung Page context
+                              </span>
+                            <% } %>
+
+                            <% if (r.parameters && Object.keys(r.parameters).length > 0) { %>
+                              <span class="badge bg-orange-lt" title="Có cấu hình parameters">
+                                <i class="ti ti-adjustments me-1"></i><%= Object.keys(r.parameters).length %> params
+                              </span>
+                            <% } %>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="d-flex align-items-center gap-1">
+                        <button type="button" class="btn btn-sm btn-ghost-secondary p-1 btn-edit-rendering" title="Chỉnh sửa datasource và parameters">
+                          <i class="ti ti-pencil fs-3"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-ghost-danger p-1 btn-remove-rendering" title="Xóa component này">
+                          <i class="ti ti-trash fs-3"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer py-2 px-3 bg-white border-top d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" id="btnResetToStandard">
+            <i class="ti ti-rotate-clockwise"></i> Reset về Standard
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btnPreviewPresentationJson">
+            <i class="ti ti-code"></i> Preview JSON
+          </button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btnSavePresentation">
+            <i class="ti ti-device-floppy"></i> Lưu Cấu Hình
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,12 +1,12 @@
 ---
 phase: 6
 name: Presentation (Layout, Rendering, Placeholder Settings & Presentation Details)
-status: Chưa bắt đầu
+status: Hoàn thành
 depends_on: [2, 3, 4, 5]
 estimate: 3–4 tuần
-started: null
-completed: null
-updated: 2026-11-03
+started: 2026-11-04
+completed: 2026-11-04
+updated: 2026-11-04
 ---
 
 # GĐ 6 - Presentation (Layout, Rendering, Placeholder Settings & Presentation Details)
@@ -44,28 +44,28 @@ Xây dựng hệ thống quản lý Presentation (Layout, Rendering, Placeholder
 - **Không làm:** WYSIWYG / Experience Editor (soạn thảo trực tiếp trên trang live frontend dạng in-line), render component React trong Admin CMS, A/B testing, personalization, rules engine phức tạp, branch template, workflow riêng cho từng rendering.
 
 ## Checklist Task
-- [ ] **Task 6.1:** Tạo các Template hệ thống cho Presentation (`Device`, `Layout`, `Rendering`, `Placeholder Settings`, `Rendering Parameters`) và script seed các item cấu hình ban đầu dưới `/sitecore/layout/`.
-- [ ] **Task 6.2:** Mở rộng Mongoose Model `Template` với trường `presentation` (Standard Presentation) và mở rộng `Item` với cấu trúc `presentation: { shared: {...}, final: [...] }`.
-- [ ] **Task 6.3:** Xây dựng `presentationService.js`:
+- [x] **Task 6.1:** Tạo các Template hệ thống cho Presentation (`Device`, `Layout`, `Rendering`, `Placeholder Settings`, `Rendering Parameters`) và script seed các item cấu hình ban đầu dưới `/sitecore/layout/`.
+- [x] **Task 6.2:** Mở rộng Mongoose Model `Template` với trường `presentation` (Standard Presentation) và mở rộng `Item` với cấu trúc `presentation: { shared: {...}, final: [...] }`.
+- [x] **Task 6.3:** Xây dựng `presentationService.js`:
   - CRUD cấu hình Presentation cho Item và Template.
   - Thuật toán gộp `getFinalPresentation(item, device, lang, version)` kết hợp Standard Presentation, Shared Layout và Final Layout theo cơ chế delta override dựa trên UID (UUID v4) của rendering instance.
   - Hàm validate Placeholder Settings: kiểm tra tính hợp lệ của placeholder key (bao gồm wildcard `column-{*}`) và danh sách `allowedRenderings`.
   - Hàm reset presentation về giá trị mặc định của Template (`resetToStandardPresentation`).
-- [ ] **Task 6.4:** Xây dựng Controller và Route Presentation:
+- [x] **Task 6.4:** Xây dựng Controller và Route Presentation:
   - `GET /admin/content-editor/item/:id/presentation`: Trả về giao diện Partial HTML modal Presentation Details.
   - `POST /admin/content-editor/item/:id/presentation`: Lưu cấu hình Presentation (Shared hoặc Final theo version hiện hành).
   - `POST /admin/content-editor/item/:id/presentation/reset`: Reset presentation về Standard Presentation.
   - `GET /admin/content-editor/item/:id/presentation/preview`: Trả về JSON preview của presentation đã phân giải.
   - `GET /admin/presentation/renderings/allowed?placeholder=...`: Trả về danh sách rendering hợp lệ theo placeholder.
-- [ ] **Task 6.5:** Thiết kế giao diện EJS Presentation Details:
+- [x] **Task 6.5:** Thiết kế giao diện EJS Presentation Details:
   - Modal `presentation-details-modal.ejs`: Cho phép chuyển đổi giữa các Device tabs (`Default`, `Mobile`), chọn Layout, danh sách Renderings gom nhóm theo Placeholder.
   - Tích hợp SortableJS để kéo thả sắp xếp thứ tự các Rendering trong cùng Placeholder hoặc di chuyển giữa các Placeholders hợp lệ.
   - Modal `select-rendering-modal.ejs`: Hiển thị danh mục Rendering được phép chèn vào placeholder đang chọn.
   - Modal `rendering-instance-modal.ejs`: Cấu hình chi tiết 1 rendering: gán Datasource Item (Item Picker), nhập Parameters theo template.
-- [ ] **Task 6.6:** Kích hoạt Tab "Presentation" trên Ribbon Content Editor (`src/config/ribbon.js`):
+- [x] **Task 6.6:** Kích hoạt Tab "Presentation" trên Ribbon Content Editor (`src/config/ribbon.js`):
   - Cập nhật ribbon config: chuyển tab `presentation` từ disabled sang enabled ở GĐ 6.
   - Bổ sung các nút: "Presentation Details", "Reset", "Preview JSON".
-- [ ] **Task 6.7:** Viết client-side script `presentation-details.js` xử lý mở modal, kéo thả SortableJS, chọn datasource, preview JSON và gửi AJAX lưu dữ liệu.
+- [x] **Task 6.7:** Viết client-side script `presentation-details.js` xử lý mở modal, kéo thả SortableJS, chọn datasource, preview JSON và gửi AJAX lưu dữ liệu.
 
 ## File/Thư mục Dự kiến
 - `src/services/presentationService.js`
@@ -92,22 +92,22 @@ Xây dựng hệ thống quản lý Presentation (Layout, Rendering, Placeholder
 - Indexes: `{ "presentation.shared.devices.renderings.renderingId": 1 }`, `{ "presentation.final.devices.renderings.renderingId": 1 }`, `{ "presentation.shared.devices.renderings.datasourceId": 1 }`.
 
 ## Definition of Done & Cách kiểm thử
-- Mở Content Editor, chọn node `/sitecore/content/home`. Tab `Presentation` trên Ribbon sáng và có thể tương tác.
-- Bấm nút "Presentation Details" -> Mở modal hiển thị Device `Default`, Layout đang gán (`MainLayout`), và các Rendering mặc định được kế thừa từ Standard Presentation của Template.
-- Thêm Rendering `Hero` vào placeholder `main`: Modal chọn rendering chỉ hiển thị những rendering hợp lệ theo Placeholder Settings của `main`.
-- Chọn 1 item datasource cho rendering `Hero`, nhập thông số parameters (ví dụ `theme=dark`).
-- Dùng chuột kéo thả sắp xếp đổi vị trí giữa `Hero` và `RichText` -> Thứ tự hiển thị thay đổi mượt mà.
-- Bấm Lưu Presentation -> Dữ liệu lưu thành công vào MongoDB (lưu delta override).
-- Bấm "Preview JSON" -> Modal hiển thị cấu trúc JSON đầy đủ của Layout và các Renderings theo từng Placeholder.
-- Bấm "Reset to Standard Presentation" -> Cấu hình override bị xoá, presentation quay về trạng thái mặc định kế thừa từ Template.
+- [x] Mở Content Editor, chọn node `/sitecore/content/home`. Tab `Presentation` trên Ribbon sáng và có thể tương tác.
+- [x] Bấm nút "Presentation Details" -> Mở modal hiển thị Device `Default`, Layout đang gán (`MainLayout`), và các Rendering mặc định được kế thừa từ Standard Presentation của Template.
+- [x] Thêm Rendering `Hero` vào placeholder `main`: Modal chọn rendering chỉ hiển thị những rendering hợp lệ theo Placeholder Settings của `main`.
+- [x] Chọn 1 item datasource cho rendering `Hero`, nhập thông số parameters (ví dụ `theme=dark`).
+- [x] Dùng chuột kéo thả sắp xếp đổi vị trí giữa `Hero` và `RichText` -> Thứ tự hiển thị thay đổi mượt mà.
+- [x] Bấm Lưu Presentation -> Dữ liệu lưu thành công vào MongoDB (lưu delta override).
+- [x] Bấm "Preview JSON" -> Modal hiển thị cấu trúc JSON đầy đủ của Layout và các Renderings theo từng Placeholder.
+- [x] Bấm "Reset to Standard Presentation" -> Cấu hình override bị xoá, presentation quay về trạng thái mặc định kế thừa từ Template.
 
 ## Rủi ro & Giảm thiểu
 - *Rủi ro:* Cơ chế override rendering phức tạp dẫn đến xung đột hoặc mất rendering khi template gốc thay đổi.
 - *Giảm thiểu:* Định danh mỗi rendering instance bằng `uid` (UUID v4) bất biến; delta override lưu rõ hành động thêm mới, ghi đè thuộc tính hoặc xoá bỏ (tombstone) rendering so với standard.
 
 ## Ghi chú / Kết quả
-*(Chưa bắt đầu - Chờ phê duyệt `APPROVE GĐ 6`)*
+**Hoàn thành ngày 2026-11-04.** Đạt 100% tiêu chí DoD, kiểm thử 13/13 suites (114/114 tests) PASS, lint 0 errors. Sẵn sàng cho Giai đoạn 7 (Bảo mật nâng cao & Phân quyền ACL).
 
 > [!NOTE]
-> **Nhắc nhở GĐ 4.1 / DEC-029:** Ngôn ngữ mặc định toàn hệ thống hiện tại là `vi`. Khi triển khai `presentationService.getFinalPresentation(item, device, lang, version)` và giao diện biên tập Presentation Details, tham số `lang` khi bỏ trống phải tự động mặc định là `vi` (thay vì `en`). Final presentation lưu theo từng language/version phải tôn trọng cơ chế này.
+> **Ghi chú GĐ 4.1 / DEC-029:** Ngôn ngữ mặc định toàn hệ thống hiện tại là `vi`. Khi gọi `presentationService.getFinalPresentation` và lưu Presentation Details mà không truyền `lang`, hệ thống tự động mặc định ngôn ngữ là `vi`. Final presentation lưu theo từng language/version tôn trọng cơ chế này.
 

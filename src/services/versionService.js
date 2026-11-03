@@ -318,6 +318,7 @@ const versionService = {
           version: nextVersion,
           devices: clonedDevices,
         });
+        item.markModified('presentation');
       }
     }
 
@@ -409,6 +410,7 @@ const versionService = {
           version: 1,
           devices: JSON.parse(JSON.stringify(srcPres.devices)),
         });
+        item.markModified('presentation');
       }
     }
 
@@ -463,6 +465,7 @@ const versionService = {
       item.presentation.final = item.presentation.final.filter(
         (p) => !(p.language === code && p.version === vNum)
       );
+      item.markModified('presentation');
     }
 
     await item.save();

@@ -211,6 +211,24 @@ const itemSchema = new mongoose.Schema(
             }
           });
         }
+        const cleanDeviceRenderings = (devices) => {
+          if (!Array.isArray(devices)) return;
+          devices.forEach((d) => {
+            if (Array.isArray(d.renderings)) {
+              d.renderings.forEach((r) => {
+                if (r.parameters instanceof Map) {
+                  r.parameters = Object.fromEntries(r.parameters);
+                }
+              });
+            }
+          });
+        };
+        if (ret.presentation) {
+          if (ret.presentation.shared) cleanDeviceRenderings(ret.presentation.shared.devices);
+          if (Array.isArray(ret.presentation.final)) {
+            ret.presentation.final.forEach((f) => cleanDeviceRenderings(f.devices));
+          }
+        }
         return ret;
       },
     },
@@ -230,6 +248,24 @@ const itemSchema = new mongoose.Schema(
             }
           });
         }
+        const cleanDeviceRenderings = (devices) => {
+          if (!Array.isArray(devices)) return;
+          devices.forEach((d) => {
+            if (Array.isArray(d.renderings)) {
+              d.renderings.forEach((r) => {
+                if (r.parameters instanceof Map) {
+                  r.parameters = Object.fromEntries(r.parameters);
+                }
+              });
+            }
+          });
+        };
+        if (ret.presentation) {
+          if (ret.presentation.shared) cleanDeviceRenderings(ret.presentation.shared.devices);
+          if (Array.isArray(ret.presentation.final)) {
+            ret.presentation.final.forEach((f) => cleanDeviceRenderings(f.devices));
+          }
+        }
         return ret;
       },
     },
@@ -246,6 +282,10 @@ itemSchema.index({ name: 'text', displayName: 'text' });
 itemSchema.index({ 'languages.code': 1 });
 itemSchema.index({ 'languages.versions.version': 1 });
 itemSchema.index({ _id: 1, 'languages.code': 1, 'languages.versions.version': 1 });
+itemSchema.index({ 'presentation.shared.devices.renderings.renderingId': 1 });
+itemSchema.index({ 'presentation.final.devices.renderings.renderingId': 1 });
+itemSchema.index({ 'presentation.shared.devices.renderings.datasourceId': 1 });
+itemSchema.index({ 'presentation.final.devices.renderings.datasourceId': 1 });
 
 /**
  * Instance helper to get a field's value checking fieldId first, then fieldName (legacy support)

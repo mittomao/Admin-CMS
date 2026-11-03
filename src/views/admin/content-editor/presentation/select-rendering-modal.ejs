@@ -1,0 +1,38 @@
+<div class="modal fade" id="selectRenderingModal" tabindex="-1" aria-labelledby="selectRenderingModalLabel" aria-hidden="true" style="z-index: 1055;">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header py-2 px-3 bg-light border-bottom">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="selectRenderingModalLabel">
+          <i class="ti ti-components text-primary fs-3"></i>
+          <span>Thêm Component vào Placeholder: <span class="text-primary font-monospace" id="selectRenderingPlaceholderTitle"></span></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-3">
+        <!-- Search filter -->
+        <div class="mb-3">
+          <div class="input-icon">
+            <span class="input-icon-addon">
+              <i class="ti ti-search"></i>
+            </span>
+            <input type="text" class="form-control form-control-sm" id="searchRenderingInput" placeholder="Tìm component theo tên hoặc React component..." autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Renderings Grid -->
+        <div class="row g-2 overflow-auto" id="renderingsGridContainer" style="max-height: 380px;">
+          <div class="col-12 text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+            <div>Đang tải danh sách components được phép...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer py-2 px-3 bg-light">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+      </div>
+    </div>
+  </div>
+</div>
+

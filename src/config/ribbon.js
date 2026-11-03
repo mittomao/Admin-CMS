@@ -251,9 +251,45 @@ const ribbonConfig = {
       id: 'presentation',
       title: 'Presentation',
       isActive: false,
-      isDisabled: true,
-      phaseNotice: 'Will be enabled in GĐ 9 (Headless Layout & Presentation Details)',
-      groups: [],
+      isDisabled: false,
+      groups: [
+        {
+          id: 'layout-details',
+          title: 'Layout',
+          actions: [
+            {
+              id: 'btn-presentation-details',
+              title: 'Details',
+              icon: 'ti ti-layout-grid',
+              size: 'large',
+              action: 'presentation:details',
+              tooltip: 'Mở cửa sổ quản trị Presentation Details (Bố cục, Devices, Renderings)',
+            },
+            {
+              id: 'btn-presentation-reset',
+              title: 'Reset',
+              icon: 'ti ti-rotate-clockwise',
+              size: 'small',
+              action: 'presentation:reset',
+              tooltip: 'Khôi phục bố cục về Standard Presentation của Template',
+            },
+          ],
+        },
+        {
+          id: 'dev-preview',
+          title: 'Developer',
+          actions: [
+            {
+              id: 'btn-presentation-preview-json',
+              title: 'Preview JSON',
+              icon: 'ti ti-code',
+              size: 'large',
+              action: 'presentation:preview-json',
+              tooltip: 'Xem cấu trúc JSON Layout Service trả về cho React Frontend',
+            },
+          ],
+        },
+      ],
     },
     {
       id: 'security',
