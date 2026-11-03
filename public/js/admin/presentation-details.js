@@ -17,6 +17,29 @@ window.PresentationDetails = (function () {
 
   // Helper toast notification
   function showToast(message, type = 'success') {
+    const container = document.getElementById('adminToastContainer');
+    if (container) {
+      const toastType = type === 'error' ? 'danger' : type;
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast align-items-center text-bg-${toastType} border-0 show shadow-sm mb-2`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body small fw-medium">
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+      container.appendChild(toastEl);
+      setTimeout(() => {
+        toastEl.classList.remove('show');
+        toastEl.addEventListener('transitionend', () => toastEl.remove());
+      }, 4000);
+      return;
+    }
     if (window.Toast && typeof window.Toast[type] === 'function') {
       window.Toast[type](message);
     } else {
@@ -28,6 +51,11 @@ window.PresentationDetails = (function () {
    * Open Presentation Details Modal for an item
    */
   async function open(itemId, opts = {}) {
+    if (!itemId) {
+      showToast('Vui lòng chọn một item trước khi mở Presentation Details.', 'warning');
+      return;
+    }
+
     currentItemId = itemId;
     currentLang = opts.lang || window.currentLang || 'vi';
     currentVersion = opts.version || window.currentVersion || 1;
@@ -60,7 +88,14 @@ window.PresentationDetails = (function () {
 
       // Initialize Bootstrap Modal
       const modalEl = document.getElementById('presentationDetailsModal');
-      const bsModal = new window.bootstrap.Modal(modalEl);
+      if (!modalEl) {
+        throw new Error('Không tìm thấy element #presentationDetailsModal.');
+      }
+      const ModalClass = (window.bootstrap && window.bootstrap.Modal) || (typeof bootstrap !== 'undefined' && bootstrap.Modal);
+      if (!ModalClass) {
+        throw new Error('Bootstrap Modal không khả dụng trên trang.');
+      }
+      const bsModal = new ModalClass(modalEl);
       bsModal.show();
 
       // Setup SortableJS & events
@@ -75,6 +110,11 @@ window.PresentationDetails = (function () {
    * Open standalone Preview JSON modal
    */
   async function openPreviewJson(itemId, opts = {}) {
+    if (!itemId) {
+      showToast('Vui lòng chọn một item trước khi xem Preview JSON.', 'warning');
+      return;
+    }
+
     const lang = opts.lang || window.currentLang || 'vi';
     const version = opts.version || window.currentVersion || 1;
     const deviceId = opts.deviceId || '';
@@ -85,6 +125,9 @@ window.PresentationDetails = (function () {
       )}&version=${encodeURIComponent(version)}${deviceId ? `&device=${encodeURIComponent(deviceId)}` : ''}`;
 
       const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}`);
+      }
       const html = await res.text();
 
       let previewWrapper = document.getElementById('previewJsonModalWrapper');
@@ -96,7 +139,14 @@ window.PresentationDetails = (function () {
       previewWrapper.innerHTML = html;
 
       const modalEl = document.getElementById('previewPresentationJsonModal');
-      const bsModal = new window.bootstrap.Modal(modalEl);
+      if (!modalEl) {
+        throw new Error('Không tìm thấy element #previewPresentationJsonModal.');
+      }
+      const ModalClass = (window.bootstrap && window.bootstrap.Modal) || (typeof bootstrap !== 'undefined' && bootstrap.Modal);
+      if (!ModalClass) {
+        throw new Error('Bootstrap Modal không khả dụng trên trang.');
+      }
+      const bsModal = new ModalClass(modalEl);
       bsModal.show();
 
       const copyBtn = document.getElementById('btnCopyPresentationJson');
@@ -304,6 +354,33 @@ window.PresentationDetails = (function () {
     if (saveBtn) {
       saveBtn.addEventListener('click', async () => {
         await saveCurrentPresentation(modalEl);
+      });
+    }
+
+    // 8. Browse Layout in Tree button
+    const browseLayoutBtn = modalEl.querySelector('#btnBrowseLayout');
+    if (browseLayoutBtn && window.ItemPicker) {
+      browseLayoutBtn.addEventListener('click', () => {
+        const layoutSelect = modalEl.querySelector('#presentationLayoutSelect');
+        window.ItemPicker.open({
+          title: 'Chọn Layout Component từ cây /sitecore/layout/Layouts',
+          rootPath: '/sitecore/layout/Layouts',
+          allowedTemplate: 'Layout',
+          selectedId: layoutSelect?.value || null,
+          onSelect: (item) => {
+            if (item && layoutSelect) {
+              const val = item._id || item.id;
+              let opt = layoutSelect.querySelector(`option[value="${val}"]`);
+              if (!opt) {
+                opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = `${item.displayName || item.name}`;
+                layoutSelect.appendChild(opt);
+              }
+              layoutSelect.value = val;
+            }
+          },
+        });
       });
     }
   }

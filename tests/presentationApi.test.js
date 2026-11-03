@@ -232,6 +232,22 @@ describe('GĐ 6: Presentation API & Endpoints', () => {
     expect(putRes.body.success).toBe(true);
   });
 
+  test('GET /admin/content-editor/item/:id/presentation returns modal partial HTML without shell layout', async () => {
+    const res = await adminAgent.get(`/admin/content-editor/item/${testItem._id}/presentation`);
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('id="presentationDetailsModal"');
+    expect(res.text).not.toContain('<!DOCTYPE html>');
+    expect(res.text).not.toContain('<html');
+  });
+
+  test('GET /admin/content-editor/item/:id/presentation/preview returns preview JSON modal partial HTML without shell layout', async () => {
+    const res = await adminAgent.get(`/admin/content-editor/item/${testItem._id}/presentation/preview`);
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('id="previewPresentationJsonModal"');
+    expect(res.text).not.toContain('<!DOCTYPE html>');
+    expect(res.text).not.toContain('<html');
+  });
+
   test('Security: unauthenticated requests are blocked', async () => {
     const res = await anonymousAgent.get(`/api/items/${testItem._id}/presentation`);
     expect(res.status).toBe(401);

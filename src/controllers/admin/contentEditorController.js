@@ -1,6 +1,7 @@
 const itemService = require('../../services/itemService');
 const templateService = require('../../services/templateService');
 const versionService = require('../../services/versionService');
+const Item = require('../../models/Item');
 const treeHelper = require('../../utils/treeHelper');
 const ribbonConfig = require('../../config/ribbon');
 const logger = require('../../utils/logger');
@@ -219,7 +220,12 @@ const contentEditorController = {
       const { id } = req.params;
 
       if (!id || id === 'root') {
-        const root = await itemService.getRoot();
+        let root;
+        if (req.query.path) {
+          root = await itemService.getByPath(req.query.path);
+        } else {
+          root = await itemService.getRoot();
+        }
         if (root) {
           const directChildren = await itemService.getChildren(root._id);
           const rootNode = treeHelper.toFancytreeNode(root, directChildren.length > 0, root.templateId);
@@ -262,6 +268,17 @@ const contentEditorController = {
     try {
       const { parentId, templateId, name, displayName } = req.body;
       const userId = req.session?.user?.id;
+      const user = req.session?.user;
+
+      const parent = await Item.findById(parentId).lean();
+      if (parent && parent.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (!itemService.canPerform(user, parent, 'presentation:write')) {
+          return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền tạo item trong nhánh Layout (yêu cầu quyền presentation:write).',
+          });
+        }
+      }
 
       const newItem = await itemService.createFromTemplate(
         parentId,
@@ -298,6 +315,17 @@ const contentEditorController = {
       const { id } = req.params;
       const { fields, expectedUpdatedAt, lang, version } = req.body;
       const userId = req.session?.user?.id;
+      const user = req.session?.user;
+
+      const targetItem = await Item.findById(id).lean();
+      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+          return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền chỉnh sửa item trong nhánh Layout (yêu cầu quyền presentation:write).',
+          });
+        }
+      }
 
       const langCode = lang || req.query.lang || null;
       const versionNumber = version || req.query.version || null;
@@ -491,6 +519,17 @@ const contentEditorController = {
       const { id } = req.params;
       const { name, displayName } = req.body;
       const userId = req.session?.user?.id;
+      const user = req.session?.user;
+
+      const targetItem = await Item.findById(id).lean();
+      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+          return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền đổi tên item trong nhánh Layout (yêu cầu quyền presentation:write).',
+          });
+        }
+      }
 
       const item = await itemService.rename(id, name, displayName, userId);
 
@@ -516,6 +555,17 @@ const contentEditorController = {
       const { id } = req.params;
       const { targetParentId, withSubitems } = req.body;
       const userId = req.session?.user?.id;
+      const user = req.session?.user;
+
+      const targetItem = await Item.findById(id).lean();
+      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+          return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền nhân bản item trong nhánh Layout (yêu cầu quyền presentation:write).',
+          });
+        }
+      }
 
       const copy = await itemService.duplicate(
         id,
@@ -576,6 +626,17 @@ const contentEditorController = {
       const { id } = req.params;
       const { targetParentId } = req.body;
       const userId = req.session?.user?.id;
+      const user = req.session?.user;
+
+      const targetItem = await Item.findById(id).lean();
+      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+          return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền di chuyển item trong nhánh Layout (yêu cầu quyền presentation:write).',
+          });
+        }
+      }
 
       const movedItem = await itemService.moveTo(id, targetParentId, userId);
 
@@ -624,6 +685,17 @@ const contentEditorController = {
     try {
       const { id } = req.params;
       const userId = req.session?.user?.id;
+      const user = req.session?.user;
+
+      const targetItem = await Item.findById(id).lean();
+      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+          return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền xoá item trong nhánh Layout (yêu cầu quyền presentation:write).',
+          });
+        }
+      }
 
       await itemService.delete(id, userId);
 

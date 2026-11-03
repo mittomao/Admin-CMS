@@ -74,11 +74,16 @@ window.ItemPicker = (function () {
     `;
 
     try {
-      const res = await fetch('/api/items/root/children');
-      const data = await res.json();
+      const rootUrl = options.rootPath
+        ? `/api/items/root/children?path=${encodeURIComponent(options.rootPath)}`
+        : '/api/items/root/children';
 
-      if (!data.success || !Array.isArray(data.data)) {
-        container.innerHTML = '<div class="alert alert-warning m-2">Không thể tải danh sách items.</div>';
+      const res = await fetch(rootUrl);
+      const data = await res.json();
+      const itemsList = Array.isArray(data) ? data : (data.data || []);
+
+      if (!itemsList || itemsList.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning m-2">Không tìm thấy thư mục hoặc item nào.</div>';
         return;
       }
 
@@ -86,7 +91,7 @@ window.ItemPicker = (function () {
       const listEl = document.createElement('ul');
       listEl.className = 'list-unstyled m-0';
 
-      data.data.forEach((item) => {
+      itemsList.forEach((item) => {
         listEl.appendChild(createTreeNode(item));
       });
 
@@ -98,25 +103,34 @@ window.ItemPicker = (function () {
 
   function createTreeNode(item) {
     const li = document.createElement('li');
+    const itemId = item.key || item._id || item.id;
+    const itemPath = item.data?.path || item.path || '';
+    const itemDisplayName = item.title || item.displayName || item.name || '';
+    const templateName = item.data?.templateName || item.templateName || '';
+
     li.className = 'tree-item py-1';
-    li.setAttribute('data-id', item._id || item.id);
-    li.setAttribute('data-path', item.path || '');
-    li.setAttribute('data-name', (item.displayName || item.name || '').toLowerCase());
+    li.setAttribute('data-id', itemId);
+    li.setAttribute('data-path', itemPath);
+    li.setAttribute('data-name', itemDisplayName.toLowerCase());
+    li.setAttribute('data-template', templateName);
 
-    const isSelected = selectedItem && (selectedItem.id === item._id || selectedItem._id === item._id);
+    const isSelected = selectedItem && (selectedItem.id === itemId || selectedItem._id === itemId);
+    const hasChildren = item.lazy !== false && item.hasChildren !== false && !item.isLeaf;
 
-    const hasChildren = item.hasChildren !== false && !item.isLeaf;
+    // Check if this item is allowed to be picked as the final value
+    const isAllowedType = !options.allowedTemplate || templateName === options.allowedTemplate;
 
     const row = document.createElement('div');
-    row.className = `d-flex align-items-center gap-1 px-2 py-1 rounded cursor-pointer tree-row ${
+    row.className = `d-flex align-items-center gap-1 px-2 py-1 rounded tree-row ${
       isSelected ? 'bg-primary-lt text-primary fw-bold' : 'hover-bg-light'
     }`;
-    row.style.cursor = 'pointer';
+    row.style.cursor = isAllowedType ? 'pointer' : 'default';
 
     // Expand icon
     const toggle = document.createElement('span');
-    toggle.className = 'tree-toggle text-muted text-center';
+    toggle.className = 'tree-toggle text-muted text-center cursor-pointer';
     toggle.style.width = '18px';
+    toggle.style.cursor = 'pointer';
     toggle.innerHTML = hasChildren ? '<i class="ti ti-chevron-right fs-4"></i>' : '<span style="display:inline-block; width:14px;"></span>';
 
     // Item icon
@@ -125,19 +139,31 @@ window.ItemPicker = (function () {
 
     // Item text
     const label = document.createElement('span');
-    label.className = 'tree-label small flex-fill text-truncate';
-    label.textContent = item.displayName || item.name;
+    label.className = `tree-label small flex-fill text-truncate ${!isAllowedType ? 'text-muted fst-italic' : ''}`;
+    label.textContent = itemDisplayName;
 
-    row.appendChild(toggle);
-    row.appendChild(icon);
-    row.appendChild(label);
+    // Badge showing template type if allowedTemplate is specified
+    if (templateName) {
+      const typeBadge = document.createElement('span');
+      typeBadge.className = `badge font-monospace ${isAllowedType ? 'bg-blue-lt' : 'bg-light text-muted'}`;
+      typeBadge.style.fontSize = '0.65rem';
+      typeBadge.textContent = templateName;
+      row.appendChild(toggle);
+      row.appendChild(icon);
+      row.appendChild(label);
+      row.appendChild(typeBadge);
+    } else {
+      row.appendChild(toggle);
+      row.appendChild(icon);
+      row.appendChild(label);
+    }
+
     li.appendChild(row);
 
     let childrenLoaded = false;
     let subUl = null;
 
-    toggle.addEventListener('click', async (e) => {
-      e.stopPropagation();
+    const toggleChildren = async () => {
       if (!hasChildren) return;
 
       if (!subUl) {
@@ -157,11 +183,12 @@ window.ItemPicker = (function () {
         if (!childrenLoaded) {
           subUl.innerHTML = '<li class="text-muted small ps-2 py-1"><i class="ti ti-loader animate-spin"></i> Đang tải...</li>';
           try {
-            const res = await fetch(`/api/items/${item._id || item.id}/children`);
+            const res = await fetch(`/api/items/${itemId}/children`);
             const json = await res.json();
+            const children = Array.isArray(json) ? json : (json.data || []);
             subUl.innerHTML = '';
-            if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-              json.data.forEach((child) => {
+            if (children.length > 0) {
+              children.forEach((child) => {
                 subUl.appendChild(createTreeNode(child));
               });
             } else {
@@ -173,20 +200,32 @@ window.ItemPicker = (function () {
           }
         }
       }
+    };
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleChildren();
     });
 
     row.addEventListener('click', () => {
+      if (!isAllowedType) {
+        // If not selectable, clicking expands/collapses folder for convenience
+        toggleChildren();
+        return;
+      }
+
       document.querySelectorAll('#itemPickerTreeContainer .tree-row').forEach((r) => {
         r.classList.remove('bg-primary-lt', 'text-primary', 'fw-bold');
       });
       row.classList.add('bg-primary-lt', 'text-primary', 'fw-bold');
 
       selectedItem = {
-        _id: item._id || item.id,
-        id: item._id || item.id,
-        name: item.name,
-        displayName: item.displayName || item.name,
-        path: item.path,
+        _id: itemId,
+        id: itemId,
+        name: item.name || itemDisplayName,
+        displayName: itemDisplayName,
+        path: itemPath,
+        templateName,
       };
 
       updateSelectedUI();

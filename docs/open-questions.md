@@ -148,3 +148,17 @@ Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp v
 - **Lựa chọn B:** Xóa vĩnh viễn file vật lý trên đĩa ngay lập tức khi xóa item.
 - **Lý do đề xuất:** Bảo vệ dữ liệu chống thao tác xóa nhầm của người dùng, đảm bảo khả năng khôi phục (Restore) nguyên vẹn từ Recycle Bin ở Giai đoạn 9.
 
+---
+
+### 17. Vị trí Lưu trữ của Devices và Placeholder Settings trong Cây Nội dung
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ PO chốt)
+- **Quyết định liên quan:** [DEC-024](decisions/DEC-024-presentation-items-in-content-tree.md), [DEC-030](decisions/DEC-030-layout-tree-structure-and-node-protection.md)
+- **Lựa chọn A (Đề xuất mặc định):** Đặt trực tiếp dưới nhánh `/sitecore/layout` làm các node cùng cấp:
+  - `/sitecore/layout/Layouts` (sortOrder: 100)
+  - `/sitecore/layout/Renderings` (sortOrder: 200)
+  - `/sitecore/layout/Devices` (sortOrder: 300)
+  - `/sitecore/layout/Placeholder Settings` (sortOrder: 400)
+- **Lựa chọn B:** Chỉ giữ `Layouts` và `Renderings` dưới `/sitecore/layout`; chuyển `Devices` và `Placeholder Settings` sang nhánh `/sitecore/system/` (ví dụ `/sitecore/system/Settings/Devices`).
+- **Lý do đề xuất:** Gom trọn vẹn toàn bộ cấu hình Presentation vào duy nhất một nhánh gốc `/sitecore/layout`, chuẩn theo cấu trúc truyền thống của Sitecore, giúp phân quyền `presentation:write` tập trung, rõ ràng và nhất quán.
+
+

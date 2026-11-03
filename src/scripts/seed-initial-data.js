@@ -468,12 +468,13 @@ const seedData = async () => {
     }
 
     // First-level branches under /sitecore:
-    // /sitecore/content, /sitecore/media library, /sitecore/templates, /sitecore/system
+    // /sitecore/content, /sitecore/layout, /sitecore/media library, /sitecore/templates, /sitecore/system
     const branches = [
       { name: 'content', displayName: 'Content', sortOrder: 100 },
-      { name: 'media library', displayName: 'Media Library', sortOrder: 200 },
-      { name: 'templates', displayName: 'Templates', sortOrder: 300 },
-      { name: 'system', displayName: 'System', sortOrder: 400 },
+      { name: 'layout', displayName: 'Layout', sortOrder: 200 },
+      { name: 'media library', displayName: 'Media Library', sortOrder: 300 },
+      { name: 'templates', displayName: 'Templates', sortOrder: 400 },
+      { name: 'system', displayName: 'System', sortOrder: 500 },
     ];
 
     const branchesMap = {};

@@ -27,6 +27,7 @@ class PresentationController {
       );
 
       res.render('admin/content-editor/presentation/details-modal', {
+        layout: false,
         ...details,
         user,
         csrfToken: req.csrfToken ? req.csrfToken() : '',
@@ -56,6 +57,7 @@ class PresentationController {
       const merged = await presentationService.getFinalPresentation(id, device, lang, version);
 
       res.render('admin/content-editor/presentation/preview-json-modal', {
+        layout: false,
         merged,
         jsonString: JSON.stringify(merged, null, 2),
       });

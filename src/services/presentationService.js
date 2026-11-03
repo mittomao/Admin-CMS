@@ -75,6 +75,14 @@ const presentationService = {
       }).lean();
     }
 
+    if (!device) {
+      // Find any first device under /sitecore/layout/Devices
+      device = await Item.findOne({
+        path: { $regex: new RegExp('^/sitecore/layout/Devices/[^/]+$', 'i') },
+        deleted: false,
+      }).lean();
+    }
+
     return device;
   },
 
@@ -103,13 +111,19 @@ const presentationService = {
   },
 
   /**
-   * Get all active Layouts in CMS
+   * Get all active Layouts in CMS (recursively under /sitecore/layout/Layouts/)
    */
   async getAllLayouts() {
-    const layouts = await Item.find({
-      path: { $regex: new RegExp('^/sitecore/layout/Layouts/[^/]+$', 'i') },
+    const layoutTemplate = await Template.findOne({ name: 'Layout' });
+    const query = {
+      path: { $regex: new RegExp('^/sitecore/layout/Layouts/', 'i') },
       deleted: false,
-    })
+    };
+    if (layoutTemplate) {
+      query.templateId = layoutTemplate._id;
+    }
+
+    const layouts = await Item.find(query)
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
@@ -131,13 +145,19 @@ const presentationService = {
   },
 
   /**
-   * Get all active Renderings in CMS
+   * Get all active Renderings in CMS (recursively under /sitecore/layout/Renderings/)
    */
   async getAllRenderings() {
-    const renderings = await Item.find({
-      path: { $regex: new RegExp('^/sitecore/layout/Renderings/[^/]+$', 'i') },
+    const renderingTemplate = await Template.findOne({ name: 'Rendering' });
+    const query = {
+      path: { $regex: new RegExp('^/sitecore/layout/Renderings/', 'i') },
       deleted: false,
-    })
+    };
+    if (renderingTemplate) {
+      query.templateId = renderingTemplate._id;
+    }
+
+    const renderings = await Item.find(query)
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
@@ -444,8 +464,11 @@ const presentationService = {
     }
 
     const allDevices = await this.getAllDevices();
-    const currentDevice = await this.resolveDevice(deviceIdOrName);
-    const targetDeviceIdStr = currentDevice?._id.toString();
+    let currentDevice = await this.resolveDevice(deviceIdOrName);
+    if (!currentDevice && allDevices.length > 0) {
+      currentDevice = allDevices[0];
+    }
+    const targetDeviceIdStr = currentDevice?._id ? currentDevice._id.toString() : null;
 
     const normalizedLang = (lang || 'vi').toLowerCase().trim();
     const normalizedVer = parseInt(version, 10) || 1;
@@ -471,7 +494,9 @@ const presentationService = {
     if (hasFinal) activeScope = 'final';
     else if (hasShared) activeScope = 'shared';
 
-    const merged = await this.getFinalPresentation(item, currentDevice._id, normalizedLang, normalizedVer);
+    const merged = currentDevice?._id
+      ? await this.getFinalPresentation(item, currentDevice._id, normalizedLang, normalizedVer)
+      : { layout: null, placeholders: {} };
     const allLayouts = await this.getAllLayouts();
     const allPlaceholderSettings = await this.getAllPlaceholderSettings();
 
@@ -495,6 +520,60 @@ const presentationService = {
       language: normalizedLang,
       version: normalizedVer,
     };
+  },
+
+  /**
+   * Validate Presentation configuration:
+   * Enforces that Layout must be under /sitecore/layout/Layouts (Template Layout)
+   * and Renderings must be under /sitecore/layout/Renderings (Template Rendering)
+   */
+  async validatePresentation(presentationData) {
+    if (!presentationData) return;
+    const { layoutId, renderings = [] } = presentationData;
+
+    if (layoutId) {
+      const layoutItem = await Item.findOne({ _id: layoutId, deleted: false })
+        .populate('templateId')
+        .lean();
+      if (!layoutItem) {
+        throw new ValidationError(`Layout [${layoutId}] không tồn tại.`);
+      }
+      if (!layoutItem.path.toLowerCase().startsWith('/sitecore/layout/layouts')) {
+        throw new ValidationError(
+          `Layout [${layoutItem.name}] phải nằm dưới cây /sitecore/layout/Layouts (hiện tại: ${layoutItem.path}).`
+        );
+      }
+      const tplName = layoutItem.templateId?.name || '';
+      if (tplName !== 'Layout') {
+        throw new ValidationError(
+          `Item [${layoutItem.name}] không phải là Layout hợp lệ (Template: ${tplName}).`
+        );
+      }
+    }
+
+    if (Array.isArray(renderings)) {
+      for (let i = 0; i < renderings.length; i++) {
+        const r = renderings[i];
+        if (!r.renderingId) continue;
+        const renderingItem = await Item.findOne({ _id: r.renderingId, deleted: false })
+          .populate('templateId')
+          .lean();
+        if (!renderingItem) {
+          throw new ValidationError(`Component Rendering [${r.renderingId}] không tồn tại.`);
+        }
+        if (!renderingItem.path.toLowerCase().startsWith('/sitecore/layout/renderings')) {
+          throw new ValidationError(
+            `Rendering [${renderingItem.name}] phải nằm dưới cây /sitecore/layout/Renderings (hiện tại: ${renderingItem.path}).`
+          );
+        }
+        const tplName = renderingItem.templateId?.name || '';
+        if (tplName !== 'Rendering') {
+          throw new ValidationError(
+            `Item [${renderingItem.name}] không phải là Rendering hợp lệ (Template: ${tplName}).`
+          );
+        }
+      }
+    }
   },
 
   /**
@@ -528,7 +607,10 @@ const presentationService = {
       throw new ValidationError('Thiếu Device ID cho cấu hình Presentation.');
     }
 
-    // 2. Validate and sanitize rendering instances
+    // 2. Validate Presentation items (Layout must be in Layouts, Renderings in Renderings)
+    await this.validatePresentation(presentationData);
+
+    // 3. Validate and sanitize rendering instances
     const cleanRenderings = [];
     for (let i = 0; i < renderings.length; i++) {
       const r = renderings[i];
@@ -715,6 +797,8 @@ const presentationService = {
       template.presentation = { devices: [] };
     }
 
+    await this.validatePresentation({ layoutId, renderings });
+
     const cleanRenderings = [];
     for (let i = 0; i < renderings.length; i++) {
       const r = renderings[i];
@@ -759,30 +843,32 @@ const presentationService = {
    * Integrity Check: get all usage of a Layout or Rendering
    */
   async getUsage(layoutOrRenderingId) {
-    const id = layoutOrRenderingId.toString();
+    const idStr = layoutOrRenderingId.toString();
+    const idObj = mongoose.Types.ObjectId.isValid(idStr) ? new mongoose.Types.ObjectId(idStr) : null;
+    const queryIds = idObj ? [idStr, idObj] : [idStr];
 
     // Check templates
     const templatesWithLayout = await Template.find({
-      'presentation.devices.layoutId': id,
+      'presentation.devices.layoutId': { $in: queryIds },
     }, { name: 1, displayName: 1 }).lean();
 
     const templatesWithRendering = await Template.find({
-      'presentation.devices.renderings.renderingId': id,
+      'presentation.devices.renderings.renderingId': { $in: queryIds },
     }, { name: 1, displayName: 1 }).lean();
 
     // Check items (shared + final)
     const itemsWithLayout = await Item.find({
       $or: [
-        { 'presentation.shared.devices.layoutId': id },
-        { 'presentation.final.devices.layoutId': id },
+        { 'presentation.shared.devices.layoutId': { $in: queryIds } },
+        { 'presentation.final.devices.layoutId': { $in: queryIds } },
       ],
       deleted: false,
     }, { path: 1, name: 1, displayName: 1 }).lean();
 
     const itemsWithRendering = await Item.find({
       $or: [
-        { 'presentation.shared.devices.renderings.renderingId': id },
-        { 'presentation.final.devices.renderings.renderingId': id },
+        { 'presentation.shared.devices.renderings.renderingId': { $in: queryIds } },
+        { 'presentation.final.devices.renderings.renderingId': { $in: queryIds } },
       ],
       deleted: false,
     }, { path: 1, name: 1, displayName: 1 }).lean();
@@ -794,7 +880,7 @@ const presentationService = {
       itemsWithRendering.length;
 
     return {
-      id,
+      id: idStr,
       inUse: totalUsage > 0,
       totalUsage,
       templates: [...templatesWithLayout, ...templatesWithRendering],

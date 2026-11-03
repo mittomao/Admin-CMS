@@ -37,4 +37,6 @@
 | **DEC-027** | Thuật toán Phân giải Trường 3 Cấp độ & Fallback | GĐ 4 | 2026-11-03 | Đang áp dụng | [`DEC-027-three-level-field-resolution.md`](./DEC-027-three-level-field-resolution.md) |
 | **DEC-028** | Đối chiếu Kiến trúc & Kế thừa Module Media Library + Rich Text Editor | GĐ 5 | 2026-11-03 | Đang áp dụng | [`DEC-028-media-richtext-reference.md`](./DEC-028-media-richtext-reference.md) |
 | **DEC-029** | Thiết lập Ngôn ngữ Mặc định Toàn hệ thống là `vi` và Bỏ Cảnh báo Ngôn ngữ Trống | GĐ 4.1 | 2026-11-03 | Đang áp dụng | [`DEC-029-default-language-vi-and-silent-empty-language.md`](./DEC-029-default-language-vi-and-silent-empty-language.md) |
+| **DEC-030** | Cấu trúc Cây Item Layout, Thư mục Nhóm và Cơ chế Bảo vệ Node Hệ thống | GĐ 6 | 2026-11-04 | Đang áp dụng | [`DEC-030-layout-tree-structure-and-node-protection.md`](./DEC-030-layout-tree-structure-and-node-protection.md) |
+
 

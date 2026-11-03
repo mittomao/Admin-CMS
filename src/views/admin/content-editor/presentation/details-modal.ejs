@@ -44,7 +44,7 @@
                 <ul class="nav nav-pills" id="deviceTabs">
                   <% allDevices.forEach(function(dev) { %>
                     <li class="nav-item">
-                      <button class="nav-link btn-sm py-1 px-3 <%= dev._id.toString() === currentDevice._id.toString() ? 'active' : '' %>"
+                      <button class="nav-link btn-sm py-1 px-3 <%= (currentDevice && dev._id && currentDevice._id && dev._id.toString() === currentDevice._id.toString()) ? 'active' : '' %>"
                               type="button"
                               data-device-id="<%= dev._id %>"
                               data-device-name="<%= dev.name %>">
@@ -62,14 +62,19 @@
               <!-- Layout Selector -->
               <div class="col-md-6">
                 <label class="form-label small fw-bold text-muted mb-1 required">Layout Trang (React Component):</label>
-                <select class="form-select form-select-sm" id="presentationLayoutSelect">
-                  <option value="">-- Chưa gán Layout --</option>
-                  <% allLayouts.forEach(function(l) { %>
-                    <option value="<%= l._id %>" <%= merged && merged.layoutId && merged.layoutId.toString() === l._id.toString() ? 'selected' : '' %>>
-                      <%= l.displayName || l.name %> (<%= l.componentName %>)
-                    </option>
-                  <% }); %>
-                </select>
+                <div class="input-group input-group-sm">
+                  <select class="form-select" id="presentationLayoutSelect">
+                    <option value="">-- Chưa gán Layout --</option>
+                    <% allLayouts.forEach(function(l) { %>
+                      <option value="<%= l._id %>" <%= merged && merged.layoutId && merged.layoutId.toString() === l._id.toString() ? 'selected' : '' %>>
+                        <%= l.displayName || l.name %> (<%= l.componentName %>)
+                      </option>
+                    <% }); %>
+                  </select>
+                  <button class="btn btn-outline-secondary" type="button" id="btnBrowseLayout" title="Duyệt cây Layouts">
+                    <i class="ti ti-folder-search"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

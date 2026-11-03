@@ -77,3 +77,23 @@ itemSchema.index({ isDeleted: 1 });
 - Theo quyết định kiến trúc [`DEC-015`](../decisions/DEC-015-immutable-field-id.md), CMS không lưu giá trị field theo `fieldName` dễ bị đổi mà lưu theo chuỗi `fieldId` (`field._id.toString()`) bất biến của Schema Field.
 - Cung cấp cơ chế dual-key fallback để tương thích với dữ liệu cũ khi tra cứu hoặc di trú.
 
+---
+
+## 4. Cấu trúc Cây Hệ thống Chuẩn & Bảo vệ Node (DEC-030)
+Cây nội dung khởi tạo với các node gốc bất biến:
+```
+sitecore
+├── content                    (/sitecore/content - chứa các trang và site)
+├── layout                     (/sitecore/layout - chứa Presentation, xem DEC-030)
+│   ├── Layouts                (/sitecore/layout/layouts - chứa Layout items & folders)
+│   ├── Renderings             (/sitecore/layout/renderings - chứa Rendering items & folders)
+│   ├── Devices                (/sitecore/layout/devices)
+│   └── Placeholder Settings   (/sitecore/layout/placeholder settings)
+├── media library              (/sitecore/media library - chứa assets)
+├── system                     (/sitecore/system - cấu hình hệ thống)
+└── templates                  (/sitecore/templates - định nghĩa schema)
+```
+- **Node Hệ thống Cốt lõi:** Bị cấm đổi tên, di chuyển và xóa (`/sitecore`, `/sitecore/content`, `/sitecore/layout`, `/sitecore/media library`, `/sitecore/system`, `/sitecore/templates`, và các sub-root của layout: `layouts`, `renderings`, `devices`, `placeholder settings`).
+- **Phân quyền Presentation:** Mọi thao tác ghi dưới `/sitecore/layout/*` yêu cầu quyền `presentation:write`.
+
+

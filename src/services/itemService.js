@@ -22,24 +22,61 @@ class ValidationError extends Error {
   }
 }
 
+const PROTECTED_SYSTEM_PATHS = new Set([
+  '/sitecore',
+  '/sitecore/content',
+  '/sitecore/media library',
+  '/sitecore/system',
+  '/sitecore/templates',
+  '/sitecore/layout',
+  '/sitecore/layout/layouts',
+  '/sitecore/layout/renderings',
+  '/sitecore/layout/devices',
+  '/sitecore/layout/placeholder settings',
+]);
+
+function isProtectedSystemPath(path) {
+  if (!path) return false;
+  return PROTECTED_SYSTEM_PATHS.has(path.toLowerCase().trim());
+}
+
 const itemService = {
   ConflictError,
   ValidationError,
+  isProtectedSystemPath,
 
   /**
    * Permission check placeholder (will be fully integrated with ACL in GĐ 7)
    */
-  canPerform(user, _item, action) {
+  canPerform(user, item, action) {
     if (!user) return false;
     const userRoles = Array.isArray(user.roles)
       ? user.roles.map((r) => (r.name ? r.name : r.toString()))
       : [];
 
     const isAdmin = userRoles.includes('Administrator');
+    const isDeveloper = userRoles.includes('Developer');
     const isEditor = userRoles.includes('Editor');
     const isAuthor = userRoles.includes('Author');
 
     if (isAdmin) return true;
+
+    // Check actions on items under /sitecore/layout/
+    const isLayoutTreeItem = item && item.path && item.path.toLowerCase().startsWith('/sitecore/layout');
+    if (isLayoutTreeItem) {
+      if (action === 'item:read' || action === 'presentation:read') {
+        return true;
+      }
+      return isDeveloper;
+    }
+
+    if (action === 'presentation:write') {
+      return isAdmin || isDeveloper;
+    }
+
+    if (action === 'presentation:read') {
+      return true;
+    }
 
     if (action === 'version:delete') {
       return isEditor; // Only admin or editor can delete versions
@@ -47,14 +84,6 @@ const itemService = {
 
     if (action === 'version:create' || action === 'version:restore') {
       return isAuthor || isEditor;
-    }
-
-    if (action === 'presentation:write') {
-      return isAdmin || isEditor || isAuthor;
-    }
-
-    if (action === 'presentation:read') {
-      return true;
     }
 
     return true;
@@ -293,6 +322,12 @@ const itemService = {
       throw new ValidationError('Template not found.');
     }
 
+    // Leaf items under presentation cannot have children created manually
+    const parentTemplate = await Template.findById(parent.templateId);
+    if (parentTemplate && ['Layout', 'Rendering', 'Device', 'Placeholder Settings'].includes(parentTemplate.name)) {
+      throw new ValidationError(`Không thể tạo item con dưới ${parentTemplate.name} item.`);
+    }
+
     // Verify insert options if defined on parent template
     const allowedInsertOptions = await templateService.getInsertOptions(parent._id);
     if (allowedInsertOptions && allowedInsertOptions.length > 0) {
@@ -475,8 +510,8 @@ const itemService = {
       throw new ValidationError('Item not found.');
     }
 
-    if (!item.parentId) {
-      throw new ValidationError('Cannot rename the root item.');
+    if (!item.parentId || isProtectedSystemPath(item.path)) {
+      throw new ValidationError(`Không thể đổi tên node hệ thống: '${item.displayName || item.name}' (${item.path}).`);
     }
 
     const newName = this.cleanItemName(newRawName);
@@ -659,8 +694,8 @@ const itemService = {
       throw new ValidationError('Item not found.');
     }
 
-    if (!item.parentId) {
-      throw new ValidationError('Cannot move the root item.');
+    if (!item.parentId || isProtectedSystemPath(item.path)) {
+      throw new ValidationError(`Không thể di chuyển node hệ thống: '${item.displayName || item.name}' (${item.path}).`);
     }
 
     if (item._id.toString() === targetParentId.toString()) {
@@ -735,8 +770,33 @@ const itemService = {
       throw new ValidationError('Item not found or already deleted.');
     }
 
-    if (!item.parentId) {
-      throw new ValidationError('Cannot delete the root item.');
+    if (!item.parentId || isProtectedSystemPath(item.path)) {
+      throw new ValidationError(`Không thể xoá node hệ thống: '${item.displayName || item.name}' (${item.path}).`);
+    }
+
+    // Check usage if deleting a Layout, Rendering, or Folder containing them
+    const presentationService = require('./presentationService');
+    const itemsToCheck = await Item.find({
+      $or: [{ _id: item._id }, { ancestors: item._id }],
+      deleted: false,
+    }).populate('templateId').lean();
+
+    for (const target of itemsToCheck) {
+      const tplName = target.templateId?.name;
+      if (tplName === 'Layout' || tplName === 'Rendering') {
+        const usage = await presentationService.getUsage(target._id);
+        if (usage.inUse) {
+          const tplNames = usage.templates.map((t) => t.displayName || t.name).join(', ');
+          const itemPaths = usage.items.map((i) => i.path).join(', ');
+          const details = [];
+          if (tplNames) details.push(`Template: [${tplNames}]`);
+          if (itemPaths) details.push(`Item: [${itemPaths}]`);
+
+          throw new ValidationError(
+            `Không thể xóa '${item.name}' vì component '${target.name}' đang được sử dụng trong ${usage.totalUsage} cấu hình Presentation (${details.join('; ')}).`
+          );
+        }
+      }
     }
 
     item.deleted = true;

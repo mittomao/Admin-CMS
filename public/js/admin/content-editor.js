@@ -366,16 +366,30 @@ async function handleRibbonAction(action) {
   }
 }
 
+const PROTECTED_SYSTEM_PATHS = [
+  '/sitecore',
+  '/sitecore/content',
+  '/sitecore/media library',
+  '/sitecore/system',
+  '/sitecore/templates',
+  '/sitecore/layout',
+  '/sitecore/layout/layouts',
+  '/sitecore/layout/renderings',
+  '/sitecore/layout/devices',
+  '/sitecore/layout/placeholder settings',
+];
+
 function updateRibbonContext(node) {
-  const isRoot = !node.parent || node.parent.key === 'root_node' || (node.data && node.data.path === '/sitecore');
+  const nodePath = (node.data && node.data.path ? node.data.path.toLowerCase().trim() : '');
+  const isProtected = !node.parent || node.parent.key === 'root_node' || PROTECTED_SYSTEM_PATHS.includes(nodePath);
 
   const btnDelete = document.getElementById('btn-delete');
   const btnRename = document.getElementById('btn-rename');
   const btnMoveTo = document.getElementById('btn-move-to');
 
-  if (btnDelete) btnDelete.disabled = isRoot;
-  if (btnRename) btnRename.disabled = isRoot;
-  if (btnMoveTo) btnMoveTo.disabled = isRoot;
+  if (btnDelete) btnDelete.disabled = isProtected;
+  if (btnRename) btnRename.disabled = isProtected;
+  if (btnMoveTo) btnMoveTo.disabled = isProtected;
 }
 
 // ==========================================

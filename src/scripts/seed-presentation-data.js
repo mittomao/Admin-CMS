@@ -3,34 +3,107 @@ const Template = require('../models/Template');
 const Item = require('../models/Item');
 const logger = require('../utils/logger');
 
+let isDryRunMode = false;
+
 /**
- * Helper to ensure a template exists by name (idempotent)
+ * Helper to ensure a template exists by name (idempotent & dry-run capable)
  */
 async function ensureTemplate(data) {
+  const dryRun = isDryRunMode;
   let tpl = await Template.findOne({ name: data.name });
   if (!tpl) {
+    if (dryRun) {
+      logger.info(`[DRY-RUN] Sẽ tạo Template: ${data.name}`);
+      return new Template({ _id: new mongoose.Types.ObjectId(), ...data });
+    }
     tpl = await Template.create(data);
     logger.info(`[Presentation Seed] Created Template: ${data.name}`);
   } else {
+    let updated = false;
     // Update sections if needed
     if (data.sections && (!tpl.sections || tpl.sections.length === 0)) {
       tpl.sections = data.sections;
-      await tpl.save();
+      updated = true;
+    }
+    if (data.icon && tpl.icon !== data.icon) {
+      tpl.icon = data.icon;
+      updated = true;
+    }
+    if (data.isSystem !== undefined && tpl.isSystem !== data.isSystem) {
+      tpl.isSystem = data.isSystem;
+      updated = true;
+    }
+    if (data.insertOptions && Array.isArray(data.insertOptions)) {
+      tpl.insertOptions = data.insertOptions;
+      updated = true;
+    }
+    if (updated) {
+      if (dryRun) {
+        logger.info(`[DRY-RUN] Sẽ cập nhật Template: ${data.name}`);
+      } else {
+        await tpl.save();
+      }
     }
   }
   return tpl;
 }
 
 /**
- * Helper to ensure an item exists by path (idempotent)
+ * Helper to ensure an item exists by path or name+template (idempotent, relocatable & dry-run capable)
  */
 async function ensureItem(data) {
+  const dryRun = isDryRunMode;
+  // 1. Try finding by current target path
   let item = await Item.findOne({ path: data.path });
+
+  // 2. If not found by new path, check if it exists by name + templateId under /sitecore/layout
+  if (!item && data.name && data.templateId) {
+    item = await Item.findOne({
+      name: data.name,
+      templateId: data.templateId,
+      path: { $regex: new RegExp('^/sitecore/layout', 'i') },
+      deleted: false,
+    });
+  }
+
+  // 3. Or if it's a folder under /sitecore/layout with the same name and parentId
+  if (!item && data.name && data.parentId) {
+    item = await Item.findOne({ name: data.name, parentId: data.parentId, deleted: false });
+  }
+
   if (!item) {
+    if (dryRun) {
+      logger.info(`[DRY-RUN] Sẽ tạo Item: ${data.path}`);
+      return new Item({ _id: new mongoose.Types.ObjectId(), ...data });
+    }
     item = await Item.create(data);
     logger.info(`[Presentation Seed] Created Item: ${data.path}`);
   } else {
     let updated = false;
+    if (item.path !== data.path) {
+      item.path = data.path;
+      updated = true;
+    }
+    if (data.parentId && item.parentId?.toString() !== data.parentId?.toString()) {
+      item.parentId = data.parentId;
+      updated = true;
+    }
+    if (data.ancestors && JSON.stringify(item.ancestors) !== JSON.stringify(data.ancestors)) {
+      item.ancestors = data.ancestors;
+      updated = true;
+    }
+    if (data.sortOrder !== undefined && item.sortOrder !== data.sortOrder) {
+      item.sortOrder = data.sortOrder;
+      updated = true;
+    }
+    if (data.templateId && item.templateId?.toString() !== data.templateId?.toString()) {
+      item.templateId = data.templateId;
+      updated = true;
+    }
+    if (data.displayName && item.displayName !== data.displayName) {
+      item.displayName = data.displayName;
+      updated = true;
+    }
     if (data.fields) {
       item.fields = data.fields;
       updated = true;
@@ -40,7 +113,12 @@ async function ensureItem(data) {
       updated = true;
     }
     if (updated) {
-      await item.save();
+      if (dryRun) {
+        logger.info(`[DRY-RUN] Sẽ cập nhật/di chuyển Item: ${data.path} (ID: ${item._id})`);
+      } else {
+        await item.save();
+        logger.info(`[Presentation Seed] Updated/Relocated Item: ${data.path} (ID: ${item._id})`);
+      }
     }
   }
   return item;
@@ -49,8 +127,10 @@ async function ensureItem(data) {
 /**
  * Main seeding function for GĐ 6 Presentation
  */
-async function seedPresentationData() {
-  logger.info('=== BẮT ĐẦU SEED HỆ THỐNG PRESENTATION (GĐ 6) ===');
+async function seedPresentationData(options = {}) {
+  isDryRunMode = Boolean(options.dryRun);
+  const dryRun = isDryRunMode;
+  logger.info(`=== BẮT ĐẦU SEED HỆ THỐNG PRESENTATION (GĐ 6)${dryRun ? ' [DRY-RUN]' : ''} ===`);
 
   // 1. Tìm hoặc lấy root item (/sitecore)
   const sitecoreRoot = await Item.findOne({ path: '/sitecore' });
@@ -65,6 +145,26 @@ async function seedPresentationData() {
   }
 
   // 2. Tạo các System Templates cho Presentation
+  const layoutFolderTemplate = await ensureTemplate({
+    name: 'Layout Folder',
+    displayName: 'Layout Folder',
+    icon: 'ti ti-folder',
+    isSystem: true,
+    description: 'Thư mục phân cấp chứa Layout',
+    sections: [],
+    insertOptions: [],
+  });
+
+  const renderingFolderTemplate = await ensureTemplate({
+    name: 'Rendering Folder',
+    displayName: 'Rendering Folder',
+    icon: 'ti ti-folder',
+    isSystem: true,
+    description: 'Thư mục phân cấp chứa Rendering',
+    sections: [],
+    insertOptions: [],
+  });
+
   const deviceTemplate = await ensureTemplate({
     name: 'Device',
     displayName: 'Device',
@@ -144,6 +244,21 @@ async function seedPresentationData() {
     ],
   });
 
+  // Cập nhật Insert Options cho các System Template của Presentation
+  layoutFolderTemplate.insertOptions = [layoutFolderTemplate._id, layoutTemplate._id];
+  renderingFolderTemplate.insertOptions = [renderingFolderTemplate._id, renderingTemplate._id];
+  layoutTemplate.insertOptions = [];
+  renderingTemplate.insertOptions = [];
+
+  if (!dryRun) {
+    await layoutFolderTemplate.save();
+    await renderingFolderTemplate.save();
+    await layoutTemplate.save();
+    await renderingTemplate.save();
+  } else {
+    logger.info('[DRY-RUN] Sẽ cập nhật Insert Options cho Layout Folder, Rendering Folder, Layout, Rendering');
+  }
+
   // 3. Tạo cấu trúc thư mục dưới /sitecore/layout/
   const layoutRoot = await ensureItem({
     name: 'layout',
@@ -152,7 +267,27 @@ async function seedPresentationData() {
     parentId: sitecoreRoot._id,
     ancestors: [sitecoreRoot._id],
     path: '/sitecore/layout',
-    sortOrder: 300,
+    sortOrder: 200,
+  });
+
+  const layoutsFolder = await ensureItem({
+    name: 'Layouts',
+    displayName: 'Layouts',
+    templateId: layoutFolderTemplate._id,
+    parentId: layoutRoot._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id],
+    path: '/sitecore/layout/Layouts',
+    sortOrder: 100,
+  });
+
+  const renderingsFolder = await ensureItem({
+    name: 'Renderings',
+    displayName: 'Renderings',
+    templateId: renderingFolderTemplate._id,
+    parentId: layoutRoot._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id],
+    path: '/sitecore/layout/Renderings',
+    sortOrder: 200,
   });
 
   const devicesFolder = await ensureItem({
@@ -162,26 +297,6 @@ async function seedPresentationData() {
     parentId: layoutRoot._id,
     ancestors: [sitecoreRoot._id, layoutRoot._id],
     path: '/sitecore/layout/Devices',
-    sortOrder: 100,
-  });
-
-  const layoutsFolder = await ensureItem({
-    name: 'Layouts',
-    displayName: 'Layouts',
-    templateId: folderTemplate._id,
-    parentId: layoutRoot._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id],
-    path: '/sitecore/layout/Layouts',
-    sortOrder: 200,
-  });
-
-  const renderingsFolder = await ensureItem({
-    name: 'Renderings',
-    displayName: 'Renderings',
-    templateId: folderTemplate._id,
-    parentId: layoutRoot._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id],
-    path: '/sitecore/layout/Renderings',
     sortOrder: 300,
   });
 
@@ -193,6 +308,17 @@ async function seedPresentationData() {
     ancestors: [sitecoreRoot._id, layoutRoot._id],
     path: '/sitecore/layout/Placeholder Settings',
     sortOrder: 400,
+  });
+
+  // Feature Folder chứa các rendering mẫu dưới Renderings
+  const featureFolder = await ensureItem({
+    name: 'Feature',
+    displayName: 'Feature Renderings',
+    templateId: renderingFolderTemplate._id,
+    parentId: renderingsFolder._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
+    path: '/sitecore/layout/Renderings/Feature',
+    sortOrder: 100,
   });
 
   // 4. Tạo các Devices mẫu
@@ -255,14 +381,14 @@ async function seedPresentationData() {
     },
   });
 
-  // 6. Tạo các Renderings mẫu
+  // 6. Tạo các Renderings mẫu (đặt trong thư mục Feature)
   const heroRendering = await ensureItem({
     name: 'Hero',
     displayName: 'Hero Banner',
     templateId: renderingTemplate._id,
-    parentId: renderingsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
-    path: '/sitecore/layout/Renderings/Hero',
+    parentId: featureFolder._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id, featureFolder._id],
+    path: '/sitecore/layout/Renderings/Feature/Hero',
     sortOrder: 100,
     fields: {
       componentName: 'HeroBanner',
@@ -280,9 +406,9 @@ async function seedPresentationData() {
     name: 'RichText',
     displayName: 'Rich Text Content',
     templateId: renderingTemplate._id,
-    parentId: renderingsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
-    path: '/sitecore/layout/Renderings/RichText',
+    parentId: featureFolder._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id, featureFolder._id],
+    path: '/sitecore/layout/Renderings/Feature/RichText',
     sortOrder: 200,
     fields: {
       componentName: 'RichTextContent',
@@ -300,9 +426,9 @@ async function seedPresentationData() {
     name: 'Promo',
     displayName: 'Promo Card',
     templateId: renderingTemplate._id,
-    parentId: renderingsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
-    path: '/sitecore/layout/Renderings/Promo',
+    parentId: featureFolder._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id, featureFolder._id],
+    path: '/sitecore/layout/Renderings/Feature/Promo',
     sortOrder: 300,
     fields: {
       componentName: 'PromoCard',
@@ -320,9 +446,9 @@ async function seedPresentationData() {
     name: 'Navigation',
     displayName: 'Site Navigation',
     templateId: renderingTemplate._id,
-    parentId: renderingsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
-    path: '/sitecore/layout/Renderings/Navigation',
+    parentId: featureFolder._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id, featureFolder._id],
+    path: '/sitecore/layout/Renderings/Feature/Navigation',
     sortOrder: 400,
     fields: {
       componentName: 'SiteNavigation',
@@ -469,12 +595,28 @@ async function seedPresentationData() {
         },
       ],
     };
-    await pageTemplate.save();
-    logger.info('[Presentation Seed] Configured Standard Presentation on Page Template');
+    if (!dryRun) {
+      await pageTemplate.save();
+      logger.info('[Presentation Seed] Configured Standard Presentation on Page Template');
+    } else {
+      logger.info('[DRY-RUN] Sẽ cấu hình Standard Presentation trên Page Template');
+    }
   }
 
-  logger.info('=== HOÀN TẤT SEED HỆ THỐNG PRESENTATION THÀNH CÔNG ===');
+  logger.info(`=== HOÀN TẤT SEED HỆ THỐNG PRESENTATION THÀNH CÔNG${dryRun ? ' [DRY-RUN]' : ''} ===`);
   return {
+    layoutFolderTemplate,
+    renderingFolderTemplate,
+    deviceTemplate,
+    layoutTemplate,
+    renderingTemplate,
+    placeholderSettingsTemplate,
+    layoutRoot,
+    layoutsFolder,
+    renderingsFolder,
+    devicesFolder,
+    placeholdersFolder,
+    featureFolder,
     defaultDevice,
     mobileDevice,
     mainLayout,
@@ -488,12 +630,20 @@ async function seedPresentationData() {
 module.exports = { seedPresentationData };
 
 if (require.main === module) {
-  require('dotenv').config();
-  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/sitecore_cms';
+  const env = require('../config/env');
+  const mongoUri = env.MONGO_URI;
+  const isDryRun = process.argv.includes('--dry-run');
+
+  logger.warn('========================================================================');
+  logger.warn('[CẢNH BÁO SAO LƯU DỮ LIỆU]: Trước khi chạy seed trên production/staging:');
+  logger.warn('1. Tạo bản backup database: mongodump --uri="<mongo_uri>" --out=./backup');
+  logger.warn('2. Cách rollback nếu cần: mongorestore --uri="<mongo_uri>" --drop ./backup');
+  logger.warn('========================================================================');
+
   mongoose
     .connect(mongoUri)
     .then(async () => {
-      await seedPresentationData();
+      await seedPresentationData({ dryRun: isDryRun });
       await mongoose.disconnect();
       process.exit(0);
     })

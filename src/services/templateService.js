@@ -257,15 +257,34 @@ const templateService = {
     if (!itemIdOrTemplateId) return [];
 
     let templateId = itemIdOrTemplateId;
+    let item = null;
     // Check if passed argument is an itemId
-    const item = await Item.findById(itemIdOrTemplateId).lean();
-    if (item && item.templateId) {
-      templateId = item.templateId;
+    if (mongoose.Types.ObjectId.isValid(itemIdOrTemplateId)) {
+      item = await Item.findById(itemIdOrTemplateId).lean();
+      if (item && item.templateId) {
+        templateId = item.templateId;
+      }
+    }
+
+    // Special insert options for specific system nodes by path
+    if (item && item.path) {
+      const p = item.path.toLowerCase().trim();
+      if (p === '/sitecore/layout/devices') {
+        return Template.find({ name: 'Device' }).select('name displayName icon description').lean();
+      }
+      if (p === '/sitecore/layout/placeholder settings') {
+        return Template.find({ name: 'Placeholder Settings' }).select('name displayName icon description').lean();
+      }
     }
 
     const resolved = await this.resolveTemplate(templateId);
     if (!resolved) {
       return Template.find().select('name displayName icon description').sort({ name: 1 }).lean();
+    }
+
+    // Leaf items under presentation cannot have children created manually
+    if (['Layout', 'Rendering', 'Device', 'Placeholder Settings'].includes(resolved.name)) {
+      return [];
     }
 
     // If current template defines insert options, use them

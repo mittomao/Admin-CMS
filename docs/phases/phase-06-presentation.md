@@ -25,6 +25,8 @@ updated: 2026-11-04
 - [`docs/decisions/DEC-021-presentation-delta-resolution.md`](../decisions/DEC-021-presentation-delta-resolution.md)
 - [`docs/decisions/DEC-022-dynamic-placeholder-matching.md`](../decisions/DEC-022-dynamic-placeholder-matching.md)
 - [`docs/decisions/DEC-024-presentation-items-in-content-tree.md`](../decisions/DEC-024-presentation-items-in-content-tree.md)
+- [`docs/decisions/DEC-030-layout-tree-structure-and-node-protection.md`](../decisions/DEC-030-layout-tree-structure-and-node-protection.md)
+
 
 ## Mục tiêu
 Xây dựng hệ thống quản lý Presentation (Layout, Rendering, Placeholder Settings) theo phong cách Sitecore cho kiến trúc Headless: lưu cấu hình bố cục trang, phân giải component cho React frontend (giống Sitecore JSS/Layout Service), hỗ trợ Standard Presentation kế thừa từ Template, phân định Shared Layout và Final Layout (theo phiên bản/ngôn ngữ), và giao diện biên tập Presentation Details trực quan với SortableJS.
@@ -66,6 +68,15 @@ Xây dựng hệ thống quản lý Presentation (Layout, Rendering, Placeholder
   - Cập nhật ribbon config: chuyển tab `presentation` từ disabled sang enabled ở GĐ 6.
   - Bổ sung các nút: "Presentation Details", "Reset", "Preview JSON".
 - [x] **Task 6.7:** Viết client-side script `presentation-details.js` xử lý mở modal, kéo thả SortableJS, chọn datasource, preview JSON và gửi AJAX lưu dữ liệu.
+- [x] **Task 6.8 (Bổ sung GĐ 6):** Chuẩn hóa Cây Item `Layout` trong Content Tree & Cơ chế Bảo vệ (DEC-030):
+  - Khởi tạo System Templates: `Layout Folder`, `Rendering Folder` (`isSystem: true`, icon `ti ti-folder`).
+  - Thiết lập Insert Options nghiêm ngặt: `Layouts`/`Layout Folder` -> `[Layout Folder, Layout]`; `Renderings`/`Rendering Folder` -> `[Rendering Folder, Rendering]`; `Layout`/`Rendering` item không cho tạo con.
+  - Phân cấp cây: `/sitecore/layout/Layouts`, `/sitecore/layout/Renderings/Feature`, `/sitecore/layout/Devices`, `/sitecore/layout/Placeholder Settings`.
+  - Bảo vệ các node hệ thống cốt lõi khỏi rename, move, delete ở cả tầng service lẫn giao diện Ribbon.
+  - Kiểm tra đệ quy chống xóa component hoặc thư mục chứa component đang được Template hoặc Item sử dụng (`getUsage`).
+  - Phân quyền: Mọi thao tác ghi dưới nhánh `/sitecore/layout/*` yêu cầu quyền `presentation:write` (Administrator, Developer).
+  - Modal Presentation Details tích hợp `ItemPicker` duyệt theo `rootPath` và `allowedTemplate`.
+
 
 ## File/Thư mục Dự kiến
 - `src/services/presentationService.js`
@@ -100,13 +111,17 @@ Xây dựng hệ thống quản lý Presentation (Layout, Rendering, Placeholder
 - [x] Bấm Lưu Presentation -> Dữ liệu lưu thành công vào MongoDB (lưu delta override).
 - [x] Bấm "Preview JSON" -> Modal hiển thị cấu trúc JSON đầy đủ của Layout và các Renderings theo từng Placeholder.
 - [x] Bấm "Reset to Standard Presentation" -> Cấu hình override bị xoá, presentation quay về trạng thái mặc định kế thừa từ Template.
+- [x] Nhánh cây `/sitecore/layout` hiển thị đầy đủ `Layouts`, `Renderings`, `Devices`, `Placeholder Settings` với thư mục con `Feature`.
+- [x] Các node hệ thống cốt lõi bị khóa không cho rename, move, delete; các nút tương ứng trên Ribbon bị disabled.
+- [x] Cố gắng xóa rendering hoặc thư mục chứa rendering đang dùng bị chặn báo lỗi 400 kèm chi tiết.
+- [x] Người dùng vai trò Author bị chặn 403 khi cố tạo/sửa/xóa dưới `/sitecore/layout`.
 
 ## Rủi ro & Giảm thiểu
 - *Rủi ro:* Cơ chế override rendering phức tạp dẫn đến xung đột hoặc mất rendering khi template gốc thay đổi.
 - *Giảm thiểu:* Định danh mỗi rendering instance bằng `uid` (UUID v4) bất biến; delta override lưu rõ hành động thêm mới, ghi đè thuộc tính hoặc xoá bỏ (tombstone) rendering so với standard.
 
 ## Ghi chú / Kết quả
-**Hoàn thành ngày 2026-11-04.** Đạt 100% tiêu chí DoD, kiểm thử 13/13 suites (114/114 tests) PASS, lint 0 errors. Sẵn sàng cho Giai đoạn 7 (Bảo mật nâng cao & Phân quyền ACL).
+**Hoàn thành ngày 2026-11-04.** Đạt 100% tiêu chí DoD, kiểm thử 14/14 suites (128/128 tests) PASS, lint 0 errors. Sẵn sàng cho Giai đoạn 7 (Bảo mật nâng cao & Phân quyền ACL).
 
 > [!NOTE]
 > **Ghi chú GĐ 4.1 / DEC-029:** Ngôn ngữ mặc định toàn hệ thống hiện tại là `vi`. Khi gọi `presentationService.getFinalPresentation` và lưu Presentation Details mà không truyền `lang`, hệ thống tự động mặc định ngôn ngữ là `vi`. Final presentation lưu theo từng language/version tôn trọng cơ chế này.
