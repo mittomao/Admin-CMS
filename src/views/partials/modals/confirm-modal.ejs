@@ -1,0 +1,33 @@
+<!-- Global Destructive Action Confirmation Modal -->
+<div class="modal modal-blur fade" id="adminConfirmModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg border-0">
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-status bg-danger"></div>
+      <div class="modal-body text-center py-4">
+        <i class="ti ti-alert-triangle text-danger fs-1 mb-2"></i>
+        <h3 id="adminConfirmModalTitle" class="fw-bold">Bạn có chắc chắn?</h3>
+        <div class="text-muted small" id="adminConfirmModalMessage">
+          Thao tác này sẽ xóa bản ghi và không thể hoàn tác nếu không có quyền khôi phục.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="w-100">
+          <div class="row g-2">
+            <div class="col">
+              <button type="button" class="btn btn-outline-secondary w-100 btn-sm py-2" data-bs-dismiss="modal" id="adminConfirmModalCancelBtn">
+                Hủy Bỏ
+              </button>
+            </div>
+            <div class="col">
+              <button type="button" class="btn btn-danger w-100 btn-sm py-2" id="adminConfirmModalConfirmBtn">
+                Đồng Ý Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

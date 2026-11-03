@@ -1,17 +1,24 @@
-<div class="sc-error-container">
-  <div class="sc-error-badge" style="color: #ef4444;">500</div>
-  <h1 class="sc-error-title"><%= title || 'Internal Server Error' %></h1>
-  <p class="sc-error-desc">
-    <%= message || 'An unexpected error occurred while processing your request. Please contact your system administrator.' %>
+<div class="empty py-5 text-center">
+  <div class="empty-icon mb-3">
+    <div style="font-size: 72px; font-weight: 800; color: var(--tblr-danger, #d63939); line-height: 1;">500</div>
+  </div>
+  <p class="empty-title fw-bold fs-1"><%= typeof title !== 'undefined' ? title : 'Internal Server Error' %></p>
+  <p class="empty-subtitle text-muted">
+    <%= typeof message !== 'undefined' ? message : 'Đã xảy ra lỗi không mong muốn trong quá trình xử lý yêu cầu.' %>
   </p>
-  <div>
-    <a href="/admin/launchpad" class="sc-btn sc-btn--primary">Return to Launchpad</a>
-    <a href="javascript:location.reload()" class="sc-btn sc-btn--secondary" style="margin-left: 8px;">Reload Page</a>
+  <div class="empty-action d-flex align-items-center justify-content-center gap-2 mt-4">
+    <a href="/admin/launchpad" class="btn btn-primary btn-sm px-3 py-2 d-inline-flex align-items-center gap-1 shadow-sm">
+      <i class="ti ti-layout-grid"></i>
+      <span>Về Launchpad</span>
+    </a>
+    <a href="javascript:location.reload()" class="btn btn-outline-secondary btn-sm px-3 py-2 d-inline-flex align-items-center gap-1 shadow-sm">
+      <i class="ti ti-rotate-clockwise"></i>
+      <span>Tải Lại Trang</span>
+    </a>
   </div>
   <% if (typeof stack !== 'undefined' && stack) { %>
-    <div class="sc-stack-trace">
+    <div class="card card-body bg-dark text-white text-start mt-4 mx-auto p-3" style="max-width: 800px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre-wrap;">
       <%= stack %>
     </div>
   <% } %>
 </div>
-

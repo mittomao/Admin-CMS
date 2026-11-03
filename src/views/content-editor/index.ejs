@@ -1,130 +1,167 @@
-<div class="sc-editor-container">
-  <!-- Ribbon Tabs -->
-  <div class="sc-ribbon-tabs">
-    <div class="sc-ribbon-tab active">Home</div>
-    <div class="sc-ribbon-tab">Navigate</div>
-    <div class="sc-ribbon-tab">Review</div>
-    <div class="sc-ribbon-tab">Publish</div>
-    <div class="sc-ribbon-tab">Versions</div>
-    <div class="sc-ribbon-tab">Configure</div>
-    <div class="sc-ribbon-tab">Presentation</div>
-    <div class="sc-ribbon-tab">Security</div>
-    <div class="sc-ribbon-tab">View</div>
-  </div>
+<div class="content-editor-container d-flex flex-column h-100" style="min-height: calc(100vh - 120px);">
+  <!-- 1. Sitecore Data-driven Ribbon Toolbar -->
+  <%- include('../partials/ribbon') %>
 
-  <!-- Ribbon Action Bar -->
-  <div class="sc-ribbon-toolbar">
-    <div class="sc-ribbon-group">
-      <button class="sc-ribbon-btn" onclick="alert('Save feature will be connected to API in GĐ 2');">
-        <span class="sc-ribbon-btn-icon">💾</span>
-        <span>Save</span>
-      </button>
-    </div>
-
-    <div class="sc-ribbon-group">
-      <button class="sc-ribbon-btn" onclick="alert('Insert item modal will be implemented in GĐ 2');">
-        <span class="sc-ribbon-btn-icon">➕</span>
-        <span>Insert</span>
-      </button>
-      <button class="sc-ribbon-btn" onclick="alert('Duplicate feature will be implemented in GĐ 2');">
-        <span class="sc-ribbon-btn-icon">📋</span>
-        <span>Duplicate</span>
-      </button>
-      <button class="sc-ribbon-btn" onclick="alert('Rename modal will be implemented in GĐ 2');">
-        <span class="sc-ribbon-btn-icon">✏️</span>
-        <span>Rename</span>
-      </button>
-      <button class="sc-ribbon-btn" onclick="alert('Delete item feature will be implemented in GĐ 2');">
-        <span class="sc-ribbon-btn-icon">❌</span>
-        <span>Delete</span>
-      </button>
-      <button class="sc-ribbon-btn" onclick="alert('Move feature will be implemented in GĐ 2');">
-        <span class="sc-ribbon-btn-icon">📦</span>
-        <span>Move</span>
-      </button>
-      <button class="sc-ribbon-btn" onclick="alert('Sort feature will be implemented in GĐ 2');">
-        <span class="sc-ribbon-btn-icon">↕️</span>
-        <span>Sort</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- 3-Pane Workspace -->
-  <div class="sc-editor-main">
-    <!-- Left Pane: Tree View Placeholder -->
-    <div class="sc-editor-tree-pane">
-      <div class="sc-tree-search-bar">
-        <input type="text" class="sc-search-input" placeholder="Search tree (GĐ 2)..." disabled>
-      </div>
-      <div class="sc-tree-content-area">
-        <div class="sc-tree-node-mock" style="padding-left: 0px;">
-          <span>🌐</span>
-          <span>sitecore</span>
-        </div>
-        <div class="sc-tree-node-mock" style="padding-left: 16px;">
-          <span>📁</span>
-          <span>content</span>
-        </div>
-        <div class="sc-tree-node-mock selected" style="padding-left: 32px;">
-          <span>🏠</span>
-          <span>home</span>
-        </div>
-        <div class="sc-tree-node-mock" style="padding-left: 16px;">
-          <span>🖼️</span>
-          <span>media library</span>
-        </div>
-        <div class="sc-tree-node-mock" style="padding-left: 16px;">
-          <span>📋</span>
-          <span>templates</span>
-        </div>
-        <div class="sc-tree-node-mock" style="padding-left: 16px;">
-          <span>⚙️</span>
-          <span>system</span>
+  <!-- 2. Main Content Editor Layout (Split Pane: Left Tree + Center Workspace) -->
+  <div class="d-flex flex-fill overflow-hidden border-top">
+    <!-- Left Pane: Content Tree Navigation -->
+    <aside
+      class="content-tree-pane bg-white border-end d-flex flex-column flex-shrink-0"
+      id="contentTreePane"
+      style="width: 320px; min-width: 260px; max-width: 500px;"
+    >
+      <!-- Tree Filter / Search Bar -->
+      <div class="p-2 border-bottom bg-light-subtle">
+        <div class="input-icon">
+          <span class="input-icon-addon">
+            <i class="ti ti-search text-muted"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            id="treeSearchInput"
+            placeholder="Search items in tree..."
+            autocomplete="off"
+          />
+          <span class="input-icon-addon cursor-pointer d-none" id="clearTreeSearch">
+            <i class="ti ti-x text-muted"></i>
+          </span>
         </div>
       </div>
-    </div>
 
-    <!-- Center/Right Pane: Item Form Placeholder -->
-    <div class="sc-editor-form-pane">
-      <div class="sc-form-header">
-        <div class="sc-item-headline">
-          <div class="sc-item-icon">🏠</div>
-          <div>
-            <div class="sc-item-title">home</div>
-            <div class="sc-item-path">/sitecore/content/home</div>
+      <!-- Quick Action Toolbar for Tree -->
+      <div class="px-2 py-1 border-bottom bg-white d-flex align-items-center justify-content-between small text-muted">
+        <span class="fw-semibold text-uppercase font-monospace" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+          Content Tree
+        </span>
+        <div class="d-flex align-items-center gap-1">
+          <button
+            type="button"
+            class="btn btn-sm btn-ghost-secondary p-1"
+            id="btnCollapseAllTree"
+            title="Collapse All"
+          >
+            <i class="ti ti-arrows-collapse fs-3"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-ghost-secondary p-1"
+            id="btnReloadTree"
+            title="Reload Tree"
+          >
+            <i class="ti ti-refresh fs-3"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Results Dropdown List (Overlay when searching) -->
+      <div id="treeSearchResults" class="list-group list-group-flush border-bottom d-none overflow-auto" style="max-height: 220px;"></div>
+
+      <!-- Fancytree Container -->
+      <div class="p-2 flex-fill overflow-auto tree-scrollable-container" id="fancytreeContainer">
+        <div id="contentTree" class="fancytree-plain"></div>
+      </div>
+
+      <!-- Tree Footer Status -->
+      <div class="p-2 border-top bg-light-subtle d-flex align-items-center justify-content-between text-muted small" style="font-size: 0.72rem;">
+        <span id="treeStatusText">Ready</span>
+        <span class="badge bg-secondary-lt font-monospace">Master DB</span>
+      </div>
+    </aside>
+
+    <!-- Center Workspace Pane: Breadcrumbs + View Mode + Form/Folder View -->
+    <main class="content-workspace-pane flex-fill d-flex flex-column bg-light-subtle overflow-hidden">
+      <!-- Workspace Action Bar (Breadcrumbs + Mode Toggle) -->
+      <div class="workspace-top-bar bg-white border-bottom px-3 py-2 d-flex align-items-center justify-content-between gap-2 flex-wrap">
+        <!-- Breadcrumb Path Trail -->
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb m-0" id="workspaceBreadcrumb">
+            <% if (breadcrumbs && breadcrumbs.length > 0) { %>
+              <% breadcrumbs.forEach((bItem, bIdx) => { %>
+                <% if (bIdx === breadcrumbs.length - 1) { %>
+                  <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">
+                    <%= bItem.displayName || bItem.name %>
+                  </li>
+                <% } else { %>
+                  <li class="breadcrumb-item">
+                    <a href="#" class="breadcrumb-jump-link text-decoration-none" data-item-id="<%= bItem._id %>">
+                      <%= bItem.displayName || bItem.name %>
+                    </a>
+                  </li>
+                <% } %>
+              <% }) %>
+            <% } else { %>
+              <li class="breadcrumb-item active">/sitecore</li>
+            <% } %>
+          </ol>
+        </nav>
+
+        <!-- View Mode Switcher (Content / Folder) -->
+        <div class="d-flex align-items-center gap-1">
+          <div class="btn-group btn-group-sm" role="group" aria-label="View Mode">
+            <button
+              type="button"
+              class="btn btn-outline-secondary active d-flex align-items-center gap-1"
+              id="btnModeContent"
+              data-mode="content"
+              title="Content Editing Form"
+            >
+              <i class="ti ti-forms"></i>
+              <span>Content</span>
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary d-flex align-items-center gap-1"
+              id="btnModeFolder"
+              data-mode="folder"
+              title="Child Items Grid"
+            >
+              <i class="ti ti-layout-grid"></i>
+              <span>Folder</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Section: Quick Info -->
-      <div class="sc-section-card">
-        <div class="sc-section-header">Quick Info</div>
-        <div class="sc-section-body">
-          <p style="font-size: 12px; color: #64748b; line-height: 1.6;">
-            <strong>Item ID:</strong> <code>67c52b000000000000000001</code><br>
-            <strong>Template:</strong> Sample Item (Standard Template)<br>
-            <strong>Created:</strong> 2026-11-03 09:00:00 by <code>sitecore\admin</code><br>
-            <strong>Version:</strong> 1 (en)
-          </p>
-        </div>
-      </div>
-
-      <!-- Section: Data Fields Placeholder -->
-      <div class="sc-section-card">
-        <div class="sc-section-header">Content Data</div>
-        <div class="sc-section-body">
-          <div class="sc-field-group">
-            <label class="sc-field-label">Title (Single-Line Text)</label>
-            <input type="text" class="sc-field-input" value="Welcome to Sitecore Experience Management" placeholder="Enter title...">
+      <!-- Workspace Body (Dynamic Fragment Content Swapped via AJAX) -->
+      <div class="workspace-content-body flex-fill overflow-auto p-3" id="editorWorkspace">
+        <% if (selectedItem) { %>
+          <%- include('./item-form', {
+            item: selectedItem,
+            template: selectedItem.templateId,
+            breadcrumbs: breadcrumbs
+          }) %>
+        <% } else { %>
+          <div class="empty py-5 text-center">
+            <div class="empty-icon text-muted">
+              <i class="ti ti-pointer fs-1"></i>
+            </div>
+            <p class="empty-title">No Item Selected</p>
+            <p class="empty-subtitle text-muted">
+              Select an item from the content tree on the left to view or edit its fields.
+            </p>
           </div>
-
-          <div class="sc-field-group">
-            <label class="sc-field-label">Text (Rich Text)</label>
-            <textarea class="sc-field-input sc-field-textarea" placeholder="Enter HTML body content...">Welcome to our Sitecore XM-like Content Management System. In GĐ 2, dynamic fields and TinyMCE rich-text editor will be rendered here dynamically based on the Item's Template.</textarea>
-          </div>
-        </div>
+        <% } %>
       </div>
-    </div>
+    </main>
   </div>
 </div>
 
+<!-- Modals for Ribbon Operations -->
+<%- include('./modals/insert-modal') %>
+<%- include('./modals/rename-modal') %>
+<%- include('./modals/move-modal') %>
+<%- include('./modals/delete-modal') %>
+
+<!-- Pass Selected Item Initial ID to Client Script -->
+<script>
+  window.__INITIAL_ITEM_ID__ = "<%= selectedItem ? selectedItem._id : '' %>";
+</script>
+
+<!-- External Fancytree Dependencies via CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.fancytree@2.38.3/dist/skin-win8/ui.fancytree.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery.fancytree@2.38.3/dist/jquery.fancytree-all-deps.min.js"></script>
+
+<!-- Content Editor Client Script -->
+<script type="module" src="/js/admin/content-editor.js"></script>

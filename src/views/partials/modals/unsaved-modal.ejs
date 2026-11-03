@@ -1,0 +1,33 @@
+<!-- Unsaved Changes Warning Modal -->
+<div class="modal modal-blur fade" id="adminUnsavedModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg border-0">
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-status bg-warning"></div>
+      <div class="modal-body text-center py-4">
+        <i class="ti ti-alert-circle text-warning fs-1 mb-2"></i>
+        <h3 class="fw-bold">Thay Đổi Chưa Lưu</h3>
+        <div class="text-muted small">
+          Bạn có thay đổi chưa được lưu trên biểu mẫu này. Nếu rời đi bây giờ, các thay đổi sẽ bị mất.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="w-100">
+          <div class="row g-2">
+            <div class="col">
+              <button type="button" class="btn btn-outline-danger w-100 btn-sm py-2" id="adminUnsavedLeaveBtn">
+                Rời Đi
+              </button>
+            </div>
+            <div class="col">
+              <button type="button" class="btn btn-primary w-100 btn-sm py-2" data-bs-dismiss="modal">
+                Ở Lại Trang
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

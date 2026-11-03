@@ -1,0 +1,67 @@
+<div class="launchpad-wrapper">
+  <% if (typeof groupedApps !== 'undefined' && Object.keys(groupedApps).length > 0) { %>
+    <% Object.keys(groupedApps).forEach(function(groupName) { 
+        const meta = (typeof groupMetaMap !== 'undefined' && groupMetaMap[groupName]) 
+          ? groupMetaMap[groupName] 
+          : { icon: 'ti ti-apps', colorClass: 'text-primary', subtitle: 'Danh mục ứng dụng chuyên biệt' };
+        const appsInGroup = groupedApps[groupName];
+    %>
+      <!-- Tier 1: Main Container Card -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <i class="<%= meta.icon %> <%= meta.colorClass %> fs-3"></i>
+            <div>
+              <h3 class="card-title fw-bold m-0"><%= groupName %></h3>
+              <div class="text-muted small"><%= meta.subtitle %></div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-lt"><%= appsInGroup.length %> ứng dụng</span>
+          </div>
+        </div>
+
+        <!-- Tier 2: Sub-Card / Launchpad Tiles Grid -->
+        <div class="card-body p-3">
+          <div class="row g-3">
+            <% appsInGroup.forEach(function(app) { %>
+              <div class="col-6 col-md-4 col-xl-3">
+                <% if (app.url && app.url !== '#' && !app.isStub) { %>
+                  <a href="<%= app.url %>" class="card card-link card-link-pop h-100 border text-decoration-none p-3 shadow-sm app-tile-card">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                      <span class="avatar avatar-md bg-<%= app.iconBg || 'primary' %>-lt text-<%= app.iconBg || 'primary' %> rounded-3 flex-shrink-0">
+                        <i class="<%= app.icon %> fs-2"></i>
+                      </span>
+                      <div class="overflow-hidden">
+                        <h4 class="m-0 fw-bold text-heading text-truncate"><%= app.name %></h4>
+                      </div>
+                    </div>
+                    <p class="text-muted small mb-0 line-clamp-2"><%= app.description %></p>
+                  </a>
+                <% } else { %>
+                  <div class="card card-link card-link-pop h-100 border text-decoration-none p-3 shadow-sm app-tile-card" style="cursor: pointer;" onclick="alert('<%= app.name %> sẽ được phát triển trong các giai đoạn tiếp theo');">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                      <span class="avatar avatar-md bg-<%= app.iconBg || 'secondary' %>-lt text-<%= app.iconBg || 'secondary' %> rounded-3 flex-shrink-0">
+                        <i class="<%= app.icon %> fs-2"></i>
+                      </span>
+                      <div class="overflow-hidden">
+                        <h4 class="m-0 fw-bold text-heading text-truncate"><%= app.name %></h4>
+                      </div>
+                    </div>
+                    <p class="text-muted small mb-0 line-clamp-2"><%= app.description %></p>
+                  </div>
+                <% } %>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  <% } else { %>
+    <div class="empty py-5 text-center">
+      <div class="empty-icon mb-3"><i class="ti ti-folder-off fs-1 text-muted"></i></div>
+      <p class="empty-title fw-bold">Không tìm thấy ứng dụng</p>
+      <p class="empty-subtitle text-muted">Không có ứng dụng nào được kích hoạt hoặc phân quyền cho tài khoản của bạn.</p>
+    </div>
+  <% } %>
+</div>

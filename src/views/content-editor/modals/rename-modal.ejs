@@ -1,0 +1,51 @@
+<div class="modal fade" id="renameItemModal" tabindex="-1" aria-labelledby="renameItemModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="renameItemModalLabel">
+          <i class="ti ti-cursor-text text-primary"></i>
+          <span>Rename Item</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="renameItemForm">
+        <div class="modal-body">
+          <input type="hidden" id="renameItemId" name="id" />
+
+          <div class="mb-3">
+            <label class="form-label required" for="renameInputName">Technical Name</label>
+            <input
+              type="text"
+              class="form-control font-monospace"
+              id="renameInputName"
+              name="name"
+              required
+              pattern="^[a-zA-Z0-9_-]+$"
+            />
+            <div class="form-text small text-muted">
+              Changing technical name will also update the materialized path for all child items.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="renameInputDisplayName">Display Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="renameInputDisplayName"
+              name="displayName"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1" id="btnSubmitRename">
+            <i class="ti ti-check"></i>
+            <span>Apply</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

@@ -1,12 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" data-bs-theme="light">
 <head>
   <%- include('../partials/head') %>
+  <%- style %>
 </head>
-<body style="background-color: #1e2b37; display: flex; align-items: center; justify-content: center; height: 100vh;">
-  <main style="width: 100%; max-width: 400px; padding: 20px;">
-    <%- body %>
-  </main>
+<body class="d-flex flex-column" style="background-color: #0f172a; min-height: 100vh;">
+  <div class="page page-center my-auto py-5">
+    <div class="container container-tight py-4">
+      <%- body %>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
+  <script type="module" src="/js/admin.js"></script>
+  <%- script %>
 </body>
 </html>
-

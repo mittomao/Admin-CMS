@@ -552,16 +552,16 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
   - *Không làm:* Chưa làm phân quyền chi tiết từng nút trong cây (ACL theo Item để sang GĐ 6).
 - **Phụ thuộc:** GĐ 0.
 - **Danh sách Task:**
-  - [ ] **Task 1.1:** Định nghĩa Mongoose Model `User` (`src/models/User.js`) và `Role` (`src/models/Role.js`).
-  - [ ] **Task 1.2:** Định nghĩa Mongoose Model `LaunchpadApp` (`src/models/LaunchpadApp.js`) chứa thông tin icon, tên, mô tả, nhóm, URL, và danh sách Role được phép truy cập.
-  - [ ] **Task 1.3:** Cấu hình session `src/config/session.js` sử dụng `express-session` và `connect-mongo`.
-  - [ ] **Task 1.4:** Xây dựng `authService.js` xử lý logic xác thực đăng nhập, so sánh mật khẩu băm, và cập nhật `lastLogin`.
-  - [ ] **Task 1.5:** Xây dựng `authController.js` và routes `src/routes/admin/authRoutes.js` (`GET /admin/login`, `POST /admin/login`, `POST /admin/logout`).
-  - [ ] **Task 1.6:** Thiết kế giao diện EJS đăng nhập `src/views/admin/auth/login.ejs` (logo Sitecore, form nhập username/password, thông báo lỗi).
-  - [ ] **Task 1.7:** Xây dựng `authMiddleware.js` bảo vệ toàn bộ các route tiền tố `/admin/*` (chuyển hướng về `/admin/login` nếu chưa đăng nhập).
-  - [ ] **Task 1.8:** Xây dựng `launchpadController.js` và route `src/routes/admin/launchpadRoutes.js` (`GET /admin/launchpad`).
-  - [ ] **Task 1.9:** Thiết kế giao diện Launchpad `src/views/admin/launchpad/index.ejs` hiển thị danh sách ứng dụng chia nhóm (Content Editing, Media, Control Panel) dựa trên role của user hiện tại.
-  - [ ] **Task 1.10:** Viết script seed data `src/scripts/seed-initial-data.js` khởi tạo các role mặc định (`Administrator`, `Author`, `Editor`) và tài khoản `admin` / `admin123`.
+  - [x] **Task 1.1:** Định nghĩa Mongoose Model `User` (`src/models/User.js`) và `Role` (`src/models/Role.js`).
+  - [x] **Task 1.2:** Định nghĩa Mongoose Model `LaunchpadApp` (`src/models/LaunchpadApp.js`) chứa thông tin icon, tên, mô tả, nhóm, URL, và danh sách Role được phép truy cập.
+  - [x] **Task 1.3:** Cấu hình session `src/config/session.js` sử dụng `express-session` và `connect-mongo`.
+  - [x] **Task 1.4:** Xây dựng `authService.js` xử lý logic xác thực đăng nhập, so sánh mật khẩu băm, và cập nhật `lastLogin`.
+  - [x] **Task 1.5:** Xây dựng `authController.js` và routes `src/routes/admin/authRoutes.js` (`GET /admin/login`, `POST /admin/login`, `POST /admin/logout`).
+  - [x] **Task 1.6:** Thiết kế giao diện EJS đăng nhập `src/views/admin/auth/login.ejs` (logo Sitecore, form nhập username/password, thông báo lỗi).
+  - [x] **Task 1.7:** Xây dựng `authMiddleware.js` bảo vệ toàn bộ các route tiền tố `/admin/*` (chuyển hướng về `/admin/login` nếu chưa đăng nhập).
+  - [x] **Task 1.8:** Xây dựng `launchpadController.js` và route `src/routes/admin/launchpadRoutes.js` (`GET /admin/launchpad`).
+  - [x] **Task 1.9:** Thiết kế giao diện Launchpad `src/views/admin/launchpad/index.ejs` hiển thị danh sách ứng dụng chia nhóm (Content Editing, Media, Control Panel) dựa trên role của user hiện tại.
+  - [x] **Task 1.10:** Viết script seed data `src/scripts/seed-initial-data.js` khởi tạo các role mặc định (`Administrator`, `Author`, `Editor`) và tài khoản `admin` / `admin123`.
 - **File/Thư mục dự kiến:**
   - `src/models/User.js`, `src/models/Role.js`, `src/models/LaunchpadApp.js`
   - `src/config/session.js`
@@ -589,7 +589,7 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
   - *Rủi ro:* Lỗ hổng session fixation hoặc mất session khi restart server.
   - *Giảm thiểu:* Thiết lập cookie options an toàn (`httpOnly: true`, `sameSite: 'lax'`, `maxAge`), lưu session bền vững trong MongoDB qua `connect-mongo`.
 - **Ước tính thời gian:** 1.5 ngày làm việc.
-- **Trạng thái:** Chưa bắt đầu.
+- **Trạng thái:** Hoàn thành.
 
 ---
 
@@ -600,31 +600,36 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
   - *Không làm:* Chưa làm Versioning/Ngôn ngữ (mặc định xử lý version 1 ngôn ngữ `en`); chưa xử lý Base Template phức tạp; chưa có ACL.
 - **Phụ thuộc:** GĐ 1.
 - **Danh sách Task:**
-  - [ ] **Task 2.1:** Xây dựng Mongoose Model `Item` (`src/models/Item.js`) với các trường: `name`, `displayName`, `templateId`, `parentId`, `ancestors`, `path`, `sortOrder`, `sharedFields`, `languages`.
-  - [ ] **Task 2.2:** Xây dựng Mongoose Model `Template` (`src/models/Template.js`) cơ bản phục vụ cho việc tạo item.
-  - [ ] **Task 2.3:** Tạo hạt giống dữ liệu ban đầu cho cây Sitecore: Node Root (`/sitecore`), các node nhánh chuẩn (`/sitecore/content`, `/sitecore/media library`, `/sitecore/templates`, `/sitecore/system`), và node trang chủ mẫu (`/sitecore/content/home`).
-  - [ ] **Task 2.4:** Xây dựng `itemService.js` với các phương thức nghiệp vụ: `getChildren(parentId)`, `getItemById(id)`, `getItemByPath(path)`, `createItem(data)`, `updateItemFields(id, fields)`, `deleteItem(id)`, `renameItem(id, newName)`, `moveItem(id, newParentId)`, `duplicateItem(id)`.
-  - [ ] **Task 2.5:** Xây dựng `treeHelper.js` chuyển đổi danh sách Item từ MongoDB sang định dạng JSON chuẩn của Fancytree (`{ title, key, folder, lazy, icon }`).
-  - [ ] **Task 2.6:** Xây dựng các route và controller Content Editor:
-    - `GET /admin/content-editor`: Render giao diện 3 vùng (Ribbon, Tree container, Workspace container).
-    - `GET /admin/content-editor/tree/nodes`: Trả về mảng JSON các node con theo `parentId` phục vụ lazy loading cây.
-    - `GET /admin/content-editor/item/:id/partial`: Trả về HTML partial chứa form soạn thảo của Item tương ứng.
-    - `POST /admin/content-editor/item/:id/save`: AJAX lưu giá trị các trường.
-    - `POST /admin/content-editor/item/insert`: AJAX tạo item mới.
-    - `POST /admin/content-editor/item/:id/rename`: AJAX đổi tên item.
-    - `POST /admin/content-editor/item/:id/delete`: AJAX xóa item.
-    - `POST /admin/content-editor/item/:id/duplicate`: AJAX nhân bản item.
-    - `POST /admin/content-editor/item/:id/move`: AJAX di chuyển item sang cha mới.
-  - [ ] **Task 2.7:** Thiết kế giao diện EJS Content Editor:
-    - `src/views/admin/content-editor/index.ejs`: Khung chính chia cột layout có resizer kéo giãn chiều rộng.
-    - `src/views/partials/ribbon.ejs`: Tab "Home" với các nút: Insert, Save, Duplicate, Rename, Delete, Move, Sort.
-    - `src/views/admin/content-editor/item-form.ejs`: Form soạn thảo render các trường của Item theo từng Section.
-    - `src/views/admin/content-editor/modals/insert-modal.ejs`: Modal chọn tên và chọn Template khi ấn Insert.
-  - [ ] **Task 2.8:** Viết mã Client-side JS (`src/public/js/content-editor.js`):
-    - Tích hợp thư viện Fancytree kết nối endpoint lazy loading.
-    - Bắt sự kiện click node -> gửi Fetch request lấy partial form HTML nạp vào vùng soạn thảo.
+  - [x] **Task 2.1:** Xây dựng Mongoose Model `Item` (`src/models/Item.js`) với các trường: `name`, `displayName`, `templateId`, `parentId`, `ancestors`, `path`, `sortOrder`, `fields`, `deleted`, `createdBy`, `updatedBy`.
+  - [x] **Task 2.2:** Xây dựng Mongoose Model `Template` (`src/models/Template.js`) cơ bản phục vụ cho việc tạo item (sections, fields, field types, insertOptions).
+  - [x] **Task 2.3:** Tạo hạt giống dữ liệu ban đầu cho cây Sitecore: Node Root (`/sitecore`), các node nhánh chuẩn (`/sitecore/content`, `/sitecore/media library`, `/sitecore/templates`, `/sitecore/system`), và node trang chủ mẫu (`/sitecore/content/home`).
+  - [x] **Task 2.4:** Xây dựng `itemService.js` với các phương thức nghiệp vụ: `getChildren(parentId)`, `getItemById(id)`, `getItemByPath(path)`, `createItem(data)`, `updateItemFields(id, fields)`, `deleteItem(id)`, `renameItem(id, newName)`, `moveItem(id, newParentId)`, `duplicateItem(id)`, `sort(id, direction)`, `search(keyword)`.
+  - [x] **Task 2.5:** Xây dựng `treeHelper.js` chuyển đổi danh sách Item từ MongoDB sang định dạng JSON chuẩn của Fancytree (`{ title, key, folder, lazy, icon, data }`).
+  - [x] **Task 2.6:** Xây dựng các route và controller Content Editor:
+    - `GET /admin/content-editor` và `GET /admin/content-editor/:id`: Render giao diện 3 vùng (Ribbon, Tree container, Workspace container).
+    - `GET /api/items/:id/children`: Trả về mảng JSON các node con theo `parentId` phục vụ lazy loading cây.
+    - `GET /admin/content-editor/item/:id/form`: Trả về HTML partial chứa form soạn thảo của Item tương ứng.
+    - `GET /admin/content-editor/item/:id/folder-view`: Trả về HTML partial dạng lưới tile danh sách con.
+    - `GET /admin/content-editor/item/:id/insert-options`: Trả về danh sách template được phép tạo con.
+    - `POST /api/items`: AJAX tạo item mới.
+    - `PUT /api/items/:id/fields`: AJAX lưu giá trị các trường kèm Optimistic Locking (409 Conflict).
+    - `POST /api/items/:id/rename`: AJAX đổi tên item và cập nhật materialized path toàn bộ cây con.
+    - `POST /api/items/:id/delete`: AJAX xóa mềm item và toàn bộ con cháu.
+    - `POST /api/items/:id/duplicate`: AJAX nhân bản item và tùy chọn nhân bản toàn bộ con cháu.
+    - `POST /api/items/:id/move`: AJAX di chuyển item sang cha mới có thuật toán phát hiện vòng lặp (cycle detection).
+    - `POST /api/items/:id/sort`: AJAX sắp xếp thứ tự anh em (up, down, first, last).
+  - [x] **Task 2.7:** Thiết kế giao diện EJS Content Editor:
+    - `src/views/content-editor/index.ejs`: Khung chính chia cột layout cây bên trái và workspace bên phải.
+    - `src/views/partials/ribbon.ejs`: Data-driven Ribbon với Tab "Home" hoạt động đầy đủ: Write (Save, Refresh), Insert, Operations (Duplicate, Copy, Move, Delete), Rename, Sorting. Các tab khác disabled kèm thông báo giai đoạn.
+    - `src/views/content-editor/item-form.ejs`: Form soạn thảo render các trường của Item theo từng Section accordion.
+    - `src/views/content-editor/folder-view.ejs`: Giao diện xem thư mục dạng lưới thẻ con.
+    - `src/views/content-editor/fields/*.ejs`: Thư viện partial cho từng field type cơ bản (Single-Line Text, Multi-Line Text, Rich Text, Checkbox, Date, Number, Droplist, Image).
+    - `src/views/content-editor/modals/*.ejs`: Modal Insert, Rename, Move, Delete.
+  - [x] **Task 2.8:** Viết mã Client-side JS (`public/js/admin/content-editor.js`):
+    - Tích hợp thư viện Fancytree kết nối endpoint lazy loading, hỗ trợ kéo thả dnd5.
+    - Bắt sự kiện click node -> gửi Fetch request lấy partial form HTML nạp vào workspace mà không reload trang.
     - Bắt sự kiện ấn nút trên Ribbon -> thực hiện các hành động AJAX tương ứng và tự động cập nhật lại node trên cây.
-    - Tích hợp bộ gõ TinyMCE cho trường Rich Text.
+    - Theo dõi dirty form (`isDirty`), cảnh báo khi rời trang hoặc chuyển node chưa lưu.
 - **File/Thư mục dự kiến:**
   - `src/models/Item.js`, `src/models/Template.js`
   - `src/services/itemService.js`, `src/utils/treeHelper.js`
@@ -661,7 +666,7 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
   - *Rủi ro:* Cập nhật cây khi có nhiều cấp con bị lệch đường dẫn `path` hoặc mảng `ancestors`.
   - *Giảm thiểu:* Viết hàm đệ quy cập nhật toàn bộ cây con khi di chuyển hoặc đổi tên node cha trong `itemService.js`.
 - **Ước tính thời gian:** 3 ngày làm việc.
-- **Trạng thái:** Chưa bắt đầu.
+- **Trạng thái:** Hoàn thành.
 
 ---
 
@@ -1123,8 +1128,8 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
 | Giai đoạn | Tên giai đoạn | Trạng thái | Ngày bắt đầu | Ngày hoàn thành | Ghi chú |
 | :---: | :--- | :---: | :---: | :---: | :--- |
 | **GĐ 0** | Khởi tạo nền tảng & Layout Shell | **Hoàn thành** | 2026-11-03 | 2026-11-03 | Hoàn tất cấu trúc dự án, layout shell, CSS Sitecore và smoke tests |
-| **GĐ 1** | Nền tảng xác thực & Launchpad | **Chưa bắt đầu** | - | - | Chờ phê duyệt |
-| **GĐ 2** | Content Editor MVP (Cây, CRUD, Ribbon Home) | **Chưa bắt đầu** | - | - | Chờ phê duyệt |
+| **GĐ 1** | Nền tảng xác thực & Launchpad | **Hoàn thành** | 2026-11-03 | 2026-11-03 | Đã xong User/Role model, Session MongoStore, Auth Middleware, Màn hình Login Sitecore, dynamic Launchpad theo role, Seed script |
+| **GĐ 2** | Content Editor MVP (Cây, CRUD, Ribbon Home) | **Hoàn thành** | 2026-11-03 | 2026-11-03 | Đã xong Item/Template model, Fancytree lazy-load + dnd5, Partial HTML Form, Ribbon Home CRUD, Optimistic locking 409, Rich Text sanitize |
 | **GĐ 3** | Template Manager (Fields, Kế thừa, Insert Options) | **Chưa bắt đầu** | - | - | Chờ phê duyệt |
 | **GĐ 4** | Quản lý Phiên bản & Đa ngôn ngữ | **Chưa bắt đầu** | - | - | Chờ phê duyệt |
 | **GĐ 5** | Media Library & Media Picker Modal | **Chưa bắt đầu** | - | - | Chờ phê duyệt |
@@ -1179,6 +1184,14 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
 - **[2026-11-03] - Quyết định Layout Engine (GĐ 0):** Sử dụng **`express-ejs-layouts`** để tách biệt shell master layout (`shell.ejs`) và layout auth (`auth.ejs`), hỗ trợ trích xuất block styles/scripts tự động.
 - **[2026-11-03] - Quyết định Kiến trúc CSS (GĐ 0):** Xây dựng bằng CSS thuần theo module `variables.css` (biến màu Sitecore navy, red, xám, và pastel tiles), `base.css`, `layout.css`, `components.css`. Không phụ thuộc Tailwind/Bootstrap.
 - **[2026-11-03] - Quyết định Quản lý Kết nối MongoDB (GĐ 0):** Không block server crash khi MongoDB chưa bật trong môi trường dev; endpoint `/health` trả về trạng thái thực tế (`connected` hoặc `disconnected`) với graceful reconnection.
+- **[2026-11-03] - Quyết định Quản lý Session & Lưu trữ (GĐ 1):** Sử dụng `express-session` kết hợp `connect-mongo` lưu trữ session tập trung trong collection `sessions` của MongoDB, fallback sang `MemoryStore` trong môi trường test/dev khi Mongo chưa kết nối; cấu hình cookie `httpOnly: true`, `sameSite: 'lax'`, thời hạn 24h.
+- **[2026-11-03] - Quyết định Mã hóa Mật khẩu (GĐ 1):** Sử dụng `bcryptjs` với salt rounds = 10, đóng gói phương thức tĩnh `hashPassword` và phương thức instance `comparePassword` trực tiếp trong User Mongoose schema.
+- **[2026-11-03] - Quyết định Phân quyền Hiển thị Launchpad (GĐ 1):** Administrator được xem toàn bộ ứng dụng; các role khác (Author, Editor...) chỉ thấy ứng dụng nếu `allowedRoles` trống hoặc chứa role của user. Fallback sang danh mục default apps nếu database chưa seed.
+- **[2026-11-03] - Quyết định Thư viện Cây Fancytree & Kéo thả (GĐ 2):** Sử dụng Fancytree CDN kết hợp extension `dnd5` (HTML5 native Drag & Drop) để hỗ trợ lazy-load qua AJAX `/api/items/:id/children` và kéo thả di chuyển node mà không phụ thuộc jQuery UI nặng nề.
+- **[2026-11-03] - Quyết định Khóa Lạc quan Optimistic Locking (GĐ 2):** Kiểm tra `updatedAt` gửi lên từ client (`expectedUpdatedAt`). Nếu bản ghi trên DB có `updatedAt` khác biệt, trả về HTTP `409 Conflict` để bảo vệ dữ liệu chống ghi đè chéo session.
+- **[2026-11-03] - Quyết định Sanitize HTML Rich Text (GĐ 2):** Sử dụng `sanitize-html` (phiên bản CJS tương thích) tại tầng server (`src/fields/index.js`), lọc bỏ toàn bộ các thẻ script, iframe, inline event handler nguy hiểm để triệt tiêu Stored XSS.
+- **[2026-11-03] - Quyết định Kiểm tra Vòng lặp khi Move Item (GĐ 2):** Kiểm tra `targetParent.ancestors` không được chứa `item._id`, chặn hoàn toàn việc di chuyển một node cha vào bên trong node con cháu của chính nó.
+- **[2026-11-03] - Quyết định Quy tắc Insert Options (GĐ 2):** Nếu Template của node cha đã cấu hình `insertOptions`, chỉ cho phép tạo các template nằm trong danh sách; nếu chưa cấu hình (mảng rỗng), mặc định cho phép chọn toàn bộ Template hiện có.
 
 ---
 

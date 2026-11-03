@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const launchpadController = require('../../controllers/admin/launchpadController');
+const { requireAuth } = require('../../middlewares/authMiddleware');
 
-// In GĐ 1, authMiddleware will protect this route
-router.get('/', launchpadController.getLaunchpad);
+router.get('/', requireAuth, launchpadController.getLaunchpad);
 
 module.exports = router;
-

@@ -1,0 +1,20 @@
+<div class="mb-3 field-container" data-field-name="<%= field.name %>">
+  <label class="form-label <%= field.required ? 'required' : '' %>">
+    <%= field.title || field.name %>
+  </label>
+  <div class="input-icon">
+    <span class="input-icon-addon">
+      <i class="ti ti-typography text-muted"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control item-field-input"
+      name="fields[<%= field.name %>]"
+      value="<%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '') %>"
+      <%= field.required ? 'required' : '' %>
+      placeholder="Enter <%= (field.title || field.name).toLowerCase() %>..."
+    />
+  </div>
+  <div class="invalid-feedback"></div>
+</div>
+

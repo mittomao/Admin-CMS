@@ -1,0 +1,46 @@
+<div class="modal fade" id="moveItemModal" tabindex="-1" aria-labelledby="moveItemModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="moveItemModalLabel">
+          <i class="ti ti-arrows-move text-primary"></i>
+          <span>Move Item</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="moveItemForm">
+        <div class="modal-body">
+          <input type="hidden" id="moveItemId" name="id" />
+
+          <div class="mb-3">
+            <label class="form-label text-muted small">Moving Item</label>
+            <div class="p-2 bg-light-subtle rounded border d-flex align-items-center gap-2">
+              <i class="ti ti-file-text text-azure"></i>
+              <span class="fw-semibold font-monospace" id="moveItemCurrentPath">/path</span>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label required">Select Destination Parent</label>
+            <div id="moveTreePickerContainer" class="border rounded p-2 bg-white" style="max-height: 220px; overflow-y: auto;">
+              <!-- Mini Tree for picking destination -->
+              <div id="movePickerTree"></div>
+            </div>
+            <input type="hidden" id="moveTargetParentId" name="targetParentId" required />
+            <div class="form-text small text-muted mt-1">
+              Note: An item cannot be moved into itself or into one of its own subitems.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1" id="btnSubmitMove">
+            <i class="ti ti-arrows-move"></i>
+            <span>Move</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

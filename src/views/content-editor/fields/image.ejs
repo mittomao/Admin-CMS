@@ -1,0 +1,28 @@
+<div class="mb-3 field-container" data-field-name="<%= field.name %>">
+  <label class="form-label <%= field.required ? 'required' : '' %>">
+    <%= field.title || field.name %>
+  </label>
+  <div class="input-group">
+    <span class="input-group-text">
+      <i class="ti ti-photo text-muted"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control item-field-input"
+      name="fields[<%= field.name %>]"
+      value="<%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '') %>"
+      <%= field.required ? 'required' : '' %>
+      placeholder="Enter image URL or path..."
+    />
+    <button class="btn btn-outline-secondary disabled" type="button" title="Media Picker modal will be enabled in GĐ 5">
+      Browse...
+    </button>
+  </div>
+  <% if (value) { %>
+    <div class="mt-2 p-1 border rounded bg-light text-center" style="max-width: 200px;">
+      <img src="<%= value %>" alt="Preview" class="img-fluid rounded" style="max-height: 100px;" onerror="this.style.display='none'" />
+    </div>
+  <% } %>
+  <div class="invalid-feedback"></div>
+</div>
+

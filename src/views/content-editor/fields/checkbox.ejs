@@ -1,0 +1,16 @@
+<div class="mb-3 field-container" data-field-name="<%= field.name %>">
+  <label class="form-check form-switch mt-2">
+    <input
+      type="checkbox"
+      class="form-check-input item-field-input"
+      name="fields[<%= field.name %>]"
+      value="true"
+      <%= (value === true || value === 'true' || (!value && field.defaultValue === true)) ? 'checked' : '' %>
+    />
+    <span class="form-check-label fw-semibold">
+      <%= field.title || field.name %>
+    </span>
+  </label>
+  <div class="invalid-feedback"></div>
+</div>
+

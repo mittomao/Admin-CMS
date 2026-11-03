@@ -1,0 +1,14 @@
+<div class="mb-3 field-container" data-field-name="<%= field.name %>">
+  <label class="form-label <%= field.required ? 'required' : '' %>">
+    <%= field.title || field.name %>
+  </label>
+  <textarea
+    class="form-control item-field-input"
+    name="fields[<%= field.name %>]"
+    rows="4"
+    <%= field.required ? 'required' : '' %>
+    placeholder="Enter <%= (field.title || field.name).toLowerCase() %>..."
+  ><%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '') %></textarea>
+  <div class="invalid-feedback"></div>
+</div>
+

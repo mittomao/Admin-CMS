@@ -1,0 +1,19 @@
+<div class="mb-3 field-container" data-field-name="<%= field.name %>">
+  <label class="form-label <%= field.required ? 'required' : '' %>">
+    <%= field.title || field.name %>
+  </label>
+  <div class="input-icon">
+    <span class="input-icon-addon">
+      <i class="ti ti-numbers text-muted"></i>
+    </span>
+    <input
+      type="number"
+      class="form-control item-field-input"
+      name="fields[<%= field.name %>]"
+      value="<%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue !== undefined ? field.defaultValue : '') %>"
+      <%= field.required ? 'required' : '' %>
+    />
+  </div>
+  <div class="invalid-feedback"></div>
+</div>
+

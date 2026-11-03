@@ -1,19 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" data-bs-theme="light">
 <head>
   <%- include('../partials/head') %>
+  <%- style %>
 </head>
-<body>
-  <div class="sc-app-shell">
-    <%- include('../partials/topbar') %>
-    <%- include('../partials/flash') %>
-    
-    <main class="sc-viewport">
-      <%- body %>
-    </main>
-    
-    <%- include('../partials/taskbar') %>
+<body class="layout-fluid">
+  <div class="page">
+    <div class="page-wrapper">
+      <%- include('../partials/topbar') %>
+      <%- include('../partials/flash') %>
+
+      <main class="page-body">
+        <div class="container-xl">
+          <%- body %>
+        </div>
+      </main>
+    </div>
   </div>
+
+  <%- include('../partials/taskbar') %>
+
+  <!-- Global Toast Notification Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;" id="adminToastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Global Modals -->
+  <%- include('../partials/modals/confirm-modal') %>
+  <%- include('../partials/modals/unsaved-modal') %>
+
+  <!-- Tabler Core JS (Bootstrap 5 Bundle included) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
+  <!-- Admin CMS Runtime Controller -->
+  <script type="module" src="/js/admin.js"></script>
+  <%- script %>
 </body>
 </html>
-

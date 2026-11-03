@@ -1,0 +1,18 @@
+<%
+  const options = field.source
+    ? field.source.split('\n').map(s => s.trim()).filter(Boolean)
+    : [];
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>">
+  <label class="form-label <%= field.required ? 'required' : '' %>">
+    <%= field.title || field.name %>
+  </label>
+  <select class="form-select item-field-input" name="fields[<%= field.name %>]" <%= field.required ? 'required' : '' %>>
+    <option value="">-- Select option --</option>
+    <% options.forEach(opt => { %>
+      <option value="<%= opt %>" <%= value === opt ? 'selected' : '' %>><%= opt %></option>
+    <% }) %>
+  </select>
+  <div class="invalid-feedback"></div>
+</div>
+

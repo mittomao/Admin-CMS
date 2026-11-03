@@ -1,0 +1,211 @@
+/**
+ * Data-driven Ribbon Configuration for Content Editor
+ * Supports Sitecore tabs & groups hierarchy.
+ */
+const ribbonConfig = {
+  activeTab: 'home',
+  tabs: [
+    {
+      id: 'home',
+      title: 'Home',
+      isActive: true,
+      isDisabled: false,
+      groups: [
+        {
+          id: 'write',
+          title: 'Write',
+          actions: [
+            {
+              id: 'btn-save',
+              title: 'Save',
+              icon: 'ti ti-device-floppy',
+              size: 'large',
+              tooltip: 'Save item fields (Ctrl+S)',
+              action: 'save',
+            },
+            {
+              id: 'btn-refresh',
+              title: 'Refresh',
+              icon: 'ti ti-refresh',
+              size: 'small',
+              tooltip: 'Reload current item',
+              action: 'refresh',
+            },
+          ],
+        },
+        {
+          id: 'insert',
+          title: 'Insert',
+          actions: [
+            {
+              id: 'btn-insert-template',
+              title: 'Insert from template',
+              icon: 'ti ti-file-plus',
+              size: 'large',
+              tooltip: 'Create new child item under current node',
+              action: 'insert-modal',
+            },
+          ],
+        },
+        {
+          id: 'operations',
+          title: 'Operations',
+          actions: [
+            {
+              id: 'btn-duplicate',
+              title: 'Duplicate',
+              icon: 'ti ti-copy',
+              size: 'small',
+              tooltip: 'Duplicate this item and its subitems',
+              action: 'duplicate',
+            },
+            {
+              id: 'btn-copy-to',
+              title: 'Copy To',
+              icon: 'ti ti-clipboard-copy',
+              size: 'small',
+              tooltip: 'Copy this item to another parent',
+              action: 'copy-modal',
+            },
+            {
+              id: 'btn-move-to',
+              title: 'Move To',
+              icon: 'ti ti-arrows-move',
+              size: 'small',
+              tooltip: 'Move this item to another parent node',
+              action: 'move-modal',
+            },
+            {
+              id: 'btn-delete',
+              title: 'Delete',
+              icon: 'ti ti-trash',
+              size: 'large',
+              isDestructive: true,
+              tooltip: 'Soft delete this item',
+              action: 'delete-modal',
+            },
+          ],
+        },
+        {
+          id: 'rename',
+          title: 'Rename',
+          actions: [
+            {
+              id: 'btn-rename',
+              title: 'Rename',
+              icon: 'ti ti-cursor-text',
+              size: 'large',
+              tooltip: 'Change technical name and display name',
+              action: 'rename-modal',
+            },
+          ],
+        },
+        {
+          id: 'sorting',
+          title: 'Sorting',
+          actions: [
+            {
+              id: 'btn-sort-up',
+              title: 'Up',
+              icon: 'ti ti-arrow-up',
+              size: 'small',
+              tooltip: 'Move item up within siblings',
+              action: 'sort-up',
+            },
+            {
+              id: 'btn-sort-down',
+              title: 'Down',
+              icon: 'ti ti-arrow-down',
+              size: 'small',
+              tooltip: 'Move item down within siblings',
+              action: 'sort-down',
+            },
+            {
+              id: 'btn-sort-first',
+              title: 'First',
+              icon: 'ti ti-arrow-bar-to-up',
+              size: 'small',
+              tooltip: 'Move item to first position',
+              action: 'sort-first',
+            },
+            {
+              id: 'btn-sort-last',
+              title: 'Last',
+              icon: 'ti ti-arrow-bar-to-down',
+              size: 'small',
+              tooltip: 'Move item to last position',
+              action: 'sort-last',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'navigate',
+      title: 'Navigate',
+      isActive: false,
+      isDisabled: true,
+      phaseNotice: 'Will be enabled in GĐ 10 (Full-Text Search & Tree Quick Navigation)',
+      groups: [],
+    },
+    {
+      id: 'review',
+      title: 'Review',
+      isActive: false,
+      isDisabled: true,
+      phaseNotice: 'Will be enabled in GĐ 7 (Workflow Engine & Approval)',
+      groups: [],
+    },
+    {
+      id: 'publish',
+      title: 'Publish',
+      isActive: false,
+      isDisabled: true,
+      phaseNotice: 'Will be enabled in GĐ 7 (Publishing Master to Web)',
+      groups: [],
+    },
+    {
+      id: 'versions',
+      title: 'Versions',
+      isActive: false,
+      isDisabled: true,
+      phaseNotice: 'Will be enabled in GĐ 4 (Multilingual & Version History)',
+      groups: [],
+    },
+    {
+      id: 'configure',
+      title: 'Configure',
+      isActive: false,
+      isDisabled: true,
+      phaseNotice: 'Will be enabled in GĐ 3 (Template Manager & Insert Options)',
+      groups: [],
+    },
+    {
+      id: 'presentation',
+      title: 'Presentation',
+      isActive: false,
+      isDisabled: true,
+      phaseNotice: 'Will be enabled in GĐ 9 (Headless Layout & Presentation Details)',
+      groups: [],
+    },
+    {
+      id: 'security',
+      title: 'Security',
+      isActive: false,
+      isDisabled: true,
+      phaseNotice: 'Will be enabled in GĐ 6 (Item ACL & Access Viewer)',
+      groups: [],
+    },
+    {
+      id: 'view',
+      title: 'View',
+      isActive: false,
+      isDisabled: true,
+      phaseNotice: 'Standard view settings',
+      groups: [],
+    },
+  ],
+};
+
+module.exports = ribbonConfig;
+

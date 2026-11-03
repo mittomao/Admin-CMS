@@ -1,0 +1,93 @@
+<%
+  const activeRibbonTab = typeof ribbon !== 'undefined' && ribbon.activeTab ? ribbon.activeTab : 'home';
+  const tabs = typeof ribbon !== 'undefined' && ribbon.tabs ? ribbon.tabs : [];
+%>
+<div class="ribbon-container border-bottom bg-white shadow-xs">
+  <!-- Ribbon Navigation Tabs -->
+  <ul class="nav nav-tabs ribbon-nav-tabs px-3 pt-1 border-0" id="ribbonTabs" role="tablist">
+    <% tabs.forEach(tab => { %>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link text-uppercase font-weight-bold px-3 py-1 <%= tab.isActive ? 'active text-primary' : '' %> <%= tab.isDisabled ? 'disabled text-muted opacity-60' : '' %>"
+          id="ribbon-tab-<%= tab.id %>"
+          data-bs-toggle="tab"
+          data-bs-target="#ribbon-pane-<%= tab.id %>"
+          type="button"
+          role="tab"
+          <%= tab.isDisabled ? 'disabled' : '' %>
+          <% if (tab.phaseNotice) { %>
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            title="<%= tab.phaseNotice %>"
+          <% } %>
+        >
+          <%= tab.title %>
+        </button>
+      </li>
+    <% }) %>
+  </ul>
+
+  <!-- Ribbon Tab Panes / Action Toolbars -->
+  <div class="tab-content ribbon-content-panel p-2 bg-light-subtle" id="ribbonTabContent">
+    <% tabs.forEach(tab => { %>
+      <div
+        class="tab-pane fade <%= tab.isActive ? 'show active' : '' %>"
+        id="ribbon-pane-<%= tab.id %>"
+        role="tabpanel"
+      >
+        <% if (tab.groups && tab.groups.length > 0) { %>
+          <div class="d-flex align-items-stretch flex-wrap gap-2">
+            <% tab.groups.forEach((group, idx) => { %>
+              <div class="ribbon-group d-flex flex-column justify-content-between px-2 py-1 bg-white border rounded shadow-2xs">
+                <!-- Group Actions -->
+                <div class="d-flex align-items-center gap-1 ribbon-group-actions">
+                  <% group.actions.forEach(act => { %>
+                    <% if (act.size === 'large') { %>
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary ribbon-btn-large d-flex flex-column align-items-center justify-content-center p-1 <%= act.isDestructive ? 'hover-danger text-danger' : '' %>"
+                        id="<%= act.id %>"
+                        data-action="<%= act.action %>"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        title="<%= act.tooltip %>"
+                        style="min-width: 58px; height: 54px; font-size: 0.75rem;"
+                      >
+                        <i class="<%= act.icon %> fs-2 mb-1"></i>
+                        <span class="text-truncate" style="max-width: 64px;"><%= act.title %></span>
+                      </button>
+                    <% } else { %>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-ghost-secondary ribbon-btn-small d-flex align-items-center gap-1 px-2 py-1"
+                        id="<%= act.id %>"
+                        data-action="<%= act.action %>"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        title="<%= act.tooltip %>"
+                        style="font-size: 0.8rem;"
+                      >
+                        <i class="<%= act.icon %>"></i>
+                        <span><%= act.title %></span>
+                      </button>
+                    <% } %>
+                  <% }) %>
+                </div>
+                <!-- Group Footer Label -->
+                <div class="ribbon-group-title text-center text-muted border-top mt-1 pt-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <%= group.title %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="py-2 px-3 text-muted small d-flex align-items-center gap-2">
+            <i class="ti ti-info-circle text-azure"></i>
+            <span><%= tab.phaseNotice || 'This ribbon section is planned for upcoming CMS milestones.' %></span>
+          </div>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+</div>
+

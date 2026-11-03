@@ -1,0 +1,143 @@
+<%
+  const itemFields = item.fields instanceof Map ? Object.fromEntries(item.fields) : (item.fields || {});
+  const sections = template && template.sections ? template.sections : [];
+  const tplIcon = template && template.icon ? template.icon : 'ti ti-file-text';
+  const tplName = template && template.displayName ? template.displayName : (template ? template.name : 'Unknown');
+%>
+<form id="itemEditForm" class="d-flex flex-column h-100" data-item-id="<%= item._id %>">
+  <!-- Hidden Form Metadata -->
+  <input type="hidden" name="id" id="formItemId" value="<%= item._id %>" />
+  <input type="hidden" name="expectedUpdatedAt" id="formExpectedUpdatedAt" value="<%= item.updatedAt ? new Date(item.updatedAt).toISOString() : '' %>" />
+
+  <!-- 1. Item Header Overview Bar -->
+  <div class="card-header bg-white border-bottom py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="avatar avatar-sm bg-blue-lt rounded">
+        <i class="<%= tplIcon %> fs-2"></i>
+      </span>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h3 class="card-title m-0 fw-bold fs-3 text-dark" id="headerDisplayName">
+            <%= item.displayName || item.name %>
+          </h3>
+          <span class="badge bg-secondary-lt font-monospace text-muted" id="headerTechnicalName">
+            <%= item.name %>
+          </span>
+          <span class="badge bg-azure-lt">
+            <i class="<%= tplIcon %> me-1"></i><%= tplName %>
+          </span>
+        </div>
+        <div class="text-muted small mt-1 font-monospace" style="font-size: 0.75rem;">
+          <i class="ti ti-folder me-1"></i><%= item.path %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Status Badges -->
+    <div class="d-flex align-items-center gap-2">
+      <span id="dirtyIndicator" class="badge bg-warning-lt d-none">
+        <i class="ti ti-pencil me-1"></i>Unsaved Changes
+      </span>
+      <span class="badge bg-green-lt">
+        <i class="ti ti-check me-1"></i>Master (v1)
+      </span>
+      <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="quickSaveBtn">
+        <i class="ti ti-device-floppy"></i>
+        <span>Save</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. Form Body (Scrollable Sections) -->
+  <div class="card-body p-3 overflow-auto flex-fill" style="max-height: calc(100vh - 280px);">
+    <% if (sections.length === 0 || sections.every(s => !s.fields || s.fields.length === 0)) { %>
+      <div class="empty py-4 text-center">
+        <div class="empty-icon text-muted">
+          <i class="ti ti-folder-open fs-1"></i>
+        </div>
+        <p class="empty-title">No Editable Fields</p>
+        <p class="empty-subtitle text-muted">
+          This item template (<%= tplName %>) does not define any content fields. You can create subitems or organize nodes under it.
+        </p>
+      </div>
+    <% } else { %>
+      <div class="accordion" id="itemSectionsAccordion">
+        <% sections.forEach((section, sIndex) => { %>
+          <% if (section.fields && section.fields.length > 0) { %>
+            <div class="accordion-item mb-2 border rounded shadow-2xs">
+              <h2 class="accordion-header" id="heading-<%= section._id %>">
+                <button
+                  class="accordion-button <%= sIndex === 0 ? '' : 'collapsed' %> py-2 px-3 fw-semibold bg-light-subtle"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapse-<%= section._id %>"
+                  aria-expanded="<%= sIndex === 0 ? 'true' : 'false' %>"
+                  aria-controls="collapse-<%= section._id %>"
+                >
+                  <i class="ti ti-layout-navbar-expand me-2 text-primary"></i>
+                  <span><%= section.name %></span>
+                  <span class="badge bg-secondary-lt ms-2 font-monospace" style="font-size: 0.65rem;">
+                    <%= section.fields.length %> <%= section.fields.length === 1 ? 'field' : 'fields' %>
+                  </span>
+                </button>
+              </h2>
+              <div
+                id="collapse-<%= section._id %>"
+                class="accordion-collapse collapse <%= sIndex === 0 ? 'show' : '' %>"
+                aria-labelledby="heading-<%= section._id %>"
+              >
+                <div class="accordion-body p-3">
+                  <% section.fields.forEach(field => { %>
+                    <%
+                      const val = itemFields[field.name];
+                      const fieldType = field.type;
+                    %>
+                    <% if (fieldType === 'Single-Line Text') { %>
+                      <%- include('./fields/single-line-text', { field, value: val }) %>
+                    <% } else if (fieldType === 'Multi-Line Text') { %>
+                      <%- include('./fields/multi-line-text', { field, value: val }) %>
+                    <% } else if (fieldType === 'Rich Text') { %>
+                      <%- include('./fields/rich-text', { field, value: val }) %>
+                    <% } else if (fieldType === 'Checkbox') { %>
+                      <%- include('./fields/checkbox', { field, value: val }) %>
+                    <% } else if (fieldType === 'Date') { %>
+                      <%- include('./fields/date', { field, value: val }) %>
+                    <% } else if (fieldType === 'Number') { %>
+                      <%- include('./fields/number', { field, value: val }) %>
+                    <% } else if (fieldType === 'Droplist') { %>
+                      <%- include('./fields/droplist', { field, value: val }) %>
+                    <% } else if (fieldType === 'Image') { %>
+                      <%- include('./fields/image', { field, value: val }) %>
+                    <% } else { %>
+                      <%- include('./fields/single-line-text', { field, value: val }) %>
+                    <% } %>
+                  <% }) %>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- 3. Form Footer Bar -->
+  <div class="card-footer bg-light-subtle py-2 px-3 border-top d-flex align-items-center justify-content-between">
+    <div class="text-muted small">
+      <i class="ti ti-clock me-1"></i>Last updated:
+      <span class="font-monospace" id="footerUpdatedAt">
+        <%= item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'N/A' %>
+      </span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="btnDiscardChanges">
+        Discard
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="btnFooterSave">
+        <i class="ti ti-device-floppy"></i>
+        <span>Save Changes</span>
+      </button>
+    </div>
+  </div>
+</form>
+

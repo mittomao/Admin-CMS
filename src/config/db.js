@@ -4,13 +4,19 @@ const logger = require('../utils/logger');
 
 let isConnected = false;
 
+// Helper to sanitize connection string for safe logging
+const getMaskedUri = (uri) => {
+  if (!uri) return 'undefined';
+  return uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@');
+};
+
 const connectDB = async () => {
   try {
     mongoose.set('strictQuery', true);
 
     mongoose.connection.on('connected', () => {
       isConnected = true;
-      logger.info('MongoDB connection established successfully.');
+      logger.info(`MongoDB connection established successfully to [${getMaskedUri(env.MONGO_URI)}].`);
     });
 
     mongoose.connection.on('error', (err) => {
@@ -24,11 +30,12 @@ const connectDB = async () => {
     });
 
     await mongoose.connect(env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 15000,
+      maxPoolSize: 10,
     });
   } catch (error) {
     isConnected = false;
-    logger.error(`Failed to connect to MongoDB at ${env.MONGO_URI}: ${error.message}`);
+    logger.error(`Failed to connect to MongoDB at [${getMaskedUri(env.MONGO_URI)}]: ${error.message}`);
     if (env.isProd) {
       process.exit(1);
     }
@@ -53,4 +60,3 @@ module.exports = {
   disconnectDB,
   getConnectionStatus,
 };
-

@@ -1,0 +1,77 @@
+<div class="card card-md shadow-lg border-0 rounded-4 overflow-hidden">
+  <!-- Header Bar -->
+  <div class="card-body text-center p-4 border-bottom" style="background-color: var(--tblr-dark, #1e293b); border-bottom: 3px solid var(--sc-red) !important;">
+    <div class="d-inline-flex align-items-center justify-content-center shadow-sm mb-3" style="width: 44px; height: 44px; background-color: var(--sc-red); border-radius: 8px; color: #ffffff; font-weight: 800; font-size: 24px;">
+      S
+    </div>
+    <h1 class="h3 fw-bold text-white mb-1" style="letter-spacing: 0.3px;">Sitecore Experience Management</h1>
+    <div class="text-white-50 small">Content Management System</div>
+  </div>
+
+  <!-- Form Body -->
+  <div class="card-body p-4">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
+        <i class="ti ti-alert-circle fs-2 flex-shrink-0"></i>
+        <div class="small fw-medium"><%= error %></div>
+      </div>
+    <% } %>
+
+    <form action="/admin/login" method="POST" autocomplete="off">
+      <input type="hidden" name="returnUrl" value="<%= typeof returnUrl !== 'undefined' ? returnUrl : '/admin/launchpad' %>">
+
+      <!-- Username -->
+      <div class="mb-3">
+        <label for="username" class="form-label fw-bold mb-1 required">User name</label>
+        <div class="input-icon">
+          <span class="input-icon-addon">
+            <i class="ti ti-user text-muted"></i>
+          </span>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            class="form-control form-control-sm" 
+            value="<%= typeof username !== 'undefined' ? username : '' %>" 
+            placeholder="Nhập tên tài khoản..." 
+            required 
+            autofocus
+          >
+          <div class="invalid-feedback">Vui lòng nhập tên tài khoản.</div>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-4">
+        <label for="password" class="form-label fw-bold mb-1 required">Password</label>
+        <div class="input-icon">
+          <span class="input-icon-addon">
+            <i class="ti ti-lock text-muted"></i>
+          </span>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-control form-control-sm" 
+            placeholder="Nhập mật khẩu..." 
+            required
+          >
+          <div class="invalid-feedback">Vui lòng nhập mật khẩu.</div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-footer">
+        <button type="submit" class="btn btn-primary w-100 py-2 d-inline-flex align-items-center justify-content-center gap-1 shadow-sm" style="background-color: var(--sc-red); border-color: var(--sc-red);">
+          <i class="ti ti-login fs-2"></i>
+          <span class="fw-bold">Log in</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Footer Info -->
+  <div class="card-footer bg-light text-center py-2 text-muted small border-top">
+    Tài khoản quản trị mặc định: <code>admin</code> / <code>admin123</code>
+  </div>
+</div>

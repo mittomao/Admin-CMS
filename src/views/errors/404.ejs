@@ -1,12 +1,19 @@
-<div class="sc-error-container">
-  <div class="sc-error-badge">404</div>
-  <h1 class="sc-error-title">Item or Page Not Found</h1>
-  <p class="sc-error-desc">
-    The requested item or URL <code><%= currentPath %></code> could not be found in the current content database. It may have been moved, renamed, or deleted.
+<div class="empty py-5 text-center">
+  <div class="empty-icon mb-3">
+    <div style="font-size: 72px; font-weight: 800; color: var(--sc-red); line-height: 1;">404</div>
+  </div>
+  <p class="empty-title fw-bold fs-1">Item or Page Not Found</p>
+  <p class="empty-subtitle text-muted">
+    Đường dẫn <code><%= currentPath %></code> không tồn tại trên hệ thống hoặc đã bị di chuyển, đổi tên, hoặc xóa vào thùng rác.
   </p>
-  <div>
-    <a href="/admin/launchpad" class="sc-btn sc-btn--primary">Return to Launchpad</a>
-    <a href="/admin/content-editor" class="sc-btn sc-btn--secondary" style="margin-left: 8px;">Content Editor</a>
+  <div class="empty-action d-flex align-items-center justify-content-center gap-2 mt-4">
+    <a href="/admin/launchpad" class="btn btn-primary btn-sm px-3 py-2 d-inline-flex align-items-center gap-1 shadow-sm">
+      <i class="ti ti-layout-grid"></i>
+      <span>Về Launchpad</span>
+    </a>
+    <a href="/admin/content-editor" class="btn btn-outline-secondary btn-sm px-3 py-2 d-inline-flex align-items-center gap-1 shadow-sm">
+      <i class="ti ti-article"></i>
+      <span>Content Editor</span>
+    </a>
   </div>
 </div>
-

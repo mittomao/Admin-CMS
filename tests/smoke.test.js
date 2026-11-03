@@ -1,7 +1,7 @@
 const request = require('supertest');
 const app = require('../src/app');
 
-describe('GĐ 0 - Smoke Tests', () => {
+describe('Smoke Tests', () => {
   it('GET /health should return 200 and health status JSON', async () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
@@ -16,20 +16,17 @@ describe('GĐ 0 - Smoke Tests', () => {
     expect(res.headers.location).toBe('/admin/launchpad');
   });
 
-  it('GET /admin/launchpad should return 200 with Sitecore Launchpad UI', async () => {
-    const res = await request(app).get('/admin/launchpad');
+  it('GET /admin/login should return 200 with Sitecore Login page', async () => {
+    const res = await request(app).get('/admin/login');
     expect(res.status).toBe(200);
-    expect(res.text).toContain('Sitecore Launchpad');
-    expect(res.text).toContain('Content Editing');
-    expect(res.text).toContain('Content Editor');
+    expect(res.text).toContain('Sitecore Experience Management');
+    expect(res.text).toContain('User name');
   });
 
-  it('GET /admin/content-editor should return 200 with Ribbon and 3-pane UI', async () => {
-    const res = await request(app).get('/admin/content-editor');
-    expect(res.status).toBe(200);
-    expect(res.text).toContain('Content Editor');
-    expect(res.text).toContain('Ribbon');
-    expect(res.text).toContain('sitecore');
+  it('GET /admin/launchpad without session should redirect to /admin/login', async () => {
+    const res = await request(app).get('/admin/launchpad');
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toContain('/admin/login');
   });
 
   it('GET /api/unknown-endpoint should return 404 JSON', async () => {
@@ -46,4 +43,3 @@ describe('GĐ 0 - Smoke Tests', () => {
     expect(res.text).toContain('Item or Page Not Found');
   });
 });
-
