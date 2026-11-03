@@ -36,7 +36,7 @@ const itemSchema = new mongoose.Schema(
       type: Number,
       default: 100,
     },
-    // Dynamic fields mapping (fieldId or fieldName -> value)
+    // Dynamic fields mapping: keyed by immutable fieldId (string), with fallback to fieldName for legacy data
     fields: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,
@@ -77,7 +77,6 @@ const itemSchema = new mongoose.Schema(
     toJSON: {
       virtuals: true,
       transform: (doc, ret) => {
-        // Convert Mongoose Map to standard plain Object for ease of client consumption
         if (ret.fields instanceof Map) {
           ret.fields = Object.fromEntries(ret.fields);
         }
@@ -104,7 +103,21 @@ itemSchema.index({ templateId: 1 });
 itemSchema.index({ deleted: 1 });
 itemSchema.index({ name: 'text', displayName: 'text' });
 
+/**
+ * Instance helper to get a field's value checking fieldId first, then fieldName
+ */
+itemSchema.methods.getFieldValue = function (fieldId, fieldName) {
+  if (!this.fields) return undefined;
+  const map = this.fields instanceof Map ? this.fields : new Map(Object.entries(this.fields));
+  if (fieldId && map.has(fieldId.toString())) {
+    return map.get(fieldId.toString());
+  }
+  if (fieldName && map.has(fieldName)) {
+    return map.get(fieldName);
+  }
+  return undefined;
+};
+
 const Item = mongoose.model('Item', itemSchema);
 
 module.exports = Item;
-

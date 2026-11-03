@@ -45,24 +45,24 @@ const contentEditorController = {
    * GET /admin/content-editor/item/:id/form
    * Returns partial HTML of the item editing form
    */
-  async getItemFormPartial(req, res, next) {
+  async getItemFormPartial(req, res) {
     try {
       const { id } = req.params;
-      const item = await itemService.getById(id);
-      if (!item) {
+      const schemaData = await itemService.getItemWithRenderSchema(id);
+      if (!schemaData) {
         return res.status(404).render('partials/alerts', {
           alertType: 'danger',
           alertMessage: 'Item not found or has been removed.',
         });
       }
 
+      const { item, resolvedTemplate } = schemaData;
       const breadcrumbs = await itemService.getPathBreadcrumb(item);
-      const template = item.templateId;
 
       res.render('content-editor/item-form', {
         layout: false,
         item,
-        template,
+        template: resolvedTemplate,
         breadcrumbs,
       });
     } catch (error) {
@@ -375,6 +375,38 @@ const contentEditorController = {
         success: true,
         message: 'Item deleted successfully.',
         deletedId: id,
+      });
+    } catch (error) {
+      const statusCode = error.statusCode || 400;
+      res.status(statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  },
+
+  /**
+   * POST /api/items/:id/reset-standard-value
+   */
+  async resetFieldStandardValue(req, res) {
+    try {
+      const { id } = req.params;
+      const { fieldId } = req.body;
+      const userId = req.session?.user?.id;
+
+      if (!fieldId) {
+        return res.status(400).json({
+          success: false,
+          message: 'fieldId is required.',
+        });
+      }
+
+      const schemaData = await itemService.resetFieldToStandardValue(id, fieldId, userId);
+
+      res.json({
+        success: true,
+        message: 'Field successfully reset to standard value.',
+        data: schemaData,
       });
     } catch (error) {
       const statusCode = error.statusCode || 400;

@@ -19,6 +19,7 @@ router.post('/:id/duplicate', csrfMiddleware.verifyToken, contentEditorControlle
 router.post('/:id/copy', csrfMiddleware.verifyToken, contentEditorController.copyItem);
 router.post('/:id/move', csrfMiddleware.verifyToken, contentEditorController.moveItem);
 router.post('/:id/sort', csrfMiddleware.verifyToken, contentEditorController.sortItem);
+router.post('/:id/reset-standard-value', csrfMiddleware.verifyToken, contentEditorController.resetFieldStandardValue);
 router.delete('/:id', csrfMiddleware.verifyToken, contentEditorController.deleteItem);
 
 module.exports = router;

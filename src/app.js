@@ -19,7 +19,9 @@ require('./models');
 const authRoutes = require('./routes/admin/authRoutes');
 const launchpadRoutes = require('./routes/admin/launchpadRoutes');
 const contentEditorRoutes = require('./routes/admin/contentEditorRoutes');
+const templateManagerRoutes = require('./routes/admin/templateManagerRoutes');
 const itemRoutes = require('./routes/api/itemRoutes');
+const templateRoutes = require('./routes/api/templateRoutes');
 const csrfMiddleware = require('./middlewares/csrfMiddleware');
 
 const app = express();
@@ -101,7 +103,9 @@ app.get('/', (req, res) => {
 app.use('/admin', authRoutes);
 app.use('/admin/launchpad', launchpadRoutes);
 app.use('/admin/content-editor', contentEditorRoutes);
+app.use('/admin/template-manager', templateManagerRoutes);
 app.use('/api/items', itemRoutes);
+app.use('/api/templates', templateRoutes);
 
 // 10. Error Handling
 app.use(notFoundHandler);

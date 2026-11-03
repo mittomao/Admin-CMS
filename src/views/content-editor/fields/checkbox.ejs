@@ -1,16 +1,39 @@
-<div class="mb-3 field-container" data-field-name="<%= field.name %>">
-  <label class="form-check form-switch mt-2">
-    <input
-      type="checkbox"
-      class="form-check-input item-field-input"
-      name="fields[<%= field.name %>]"
-      value="true"
-      <%= (value === true || value === 'true' || (!value && field.defaultValue === true)) ? 'checked' : '' %>
-    />
-    <span class="form-check-label fw-semibold">
-      <%= field.title || field.name %>
-    </span>
-  </label>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <div class="d-flex align-items-center justify-content-between mt-1 mb-2">
+    <label class="form-check form-switch m-0 d-flex align-items-center gap-2">
+      <input
+        type="checkbox"
+        class="form-check-input item-field-input"
+        name="fields[<%= field.name %>]"
+        value="true"
+        <%= (value === true || value === 'true' || (!value && field.defaultValue === true)) ? 'checked' : '' %>
+      />
+      <span class="form-check-label fw-semibold">
+        <%= field.title || field.name %>
+      </span>
+    </label>
+    <div class="d-flex align-items-center gap-1">
+      <% if (field.origin && field.origin.isInherited) { %>
+        <span class="badge bg-purple-lt text-purple" style="font-size: 0.65rem;" title="Inherited from <%= field.origin.templateName %>">
+          <i class="ti ti-git-fork me-1"></i><%= field.origin.templateName %>
+        </span>
+      <% } %>
+      <% if (field.isUsingStandardValue) { %>
+        <span class="badge bg-teal-lt text-teal" style="font-size: 0.65rem;" title="Using dynamic Standard Value from template">
+          <i class="ti ti-sparkles me-1"></i>Standard Value
+        </span>
+      <% } else if (field.hasExplicitValue) { %>
+        <button type="button" 
+                class="btn btn-ghost-secondary btn-icon btn-sm py-0 px-1 btn-reset-std-val" 
+                data-field-id="<%= field._id %>" 
+                data-field-name="<%= field.name %>"
+                title="Reset to Standard Value"
+                style="height: 20px; width: 20px;">
+          <i class="ti ti-rotate-2 text-warning" style="font-size: 0.75rem;"></i>
+        </button>
+      <% } %>
+    </div>
+  </div>
   <div class="invalid-feedback"></div>
 </div>
 

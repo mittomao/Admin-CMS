@@ -1,0 +1,209 @@
+<%
+  const sections = resolved && resolved.sections ? resolved.sections : (template && template.sections ? template.sections : []);
+%>
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
+    <div>
+      <h4 class="card-title m-0 fw-bold fs-3 text-dark">Data Schema Builder</h4>
+      <p class="text-muted small m-0">Define sections and fields for this template. Drag handles to reorder.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="builderAddSectionBtn">
+        <i class="ti ti-plus"></i>
+        <span>Add Section</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body p-3">
+    <% if (sections.length === 0) { %>
+      <div class="empty py-4 text-center">
+        <div class="empty-icon text-muted"><i class="ti ti-layout-navbar-expand fs-1"></i></div>
+        <p class="empty-title">No Sections Defined</p>
+        <p class="empty-subtitle text-muted">Click "Add Section" above to organize fields for this template.</p>
+      </div>
+    <% } else { %>
+      <!-- Sections Sortable Container -->
+      <div class="accordion" id="builderSectionsContainer">
+        <% sections.forEach((section, sIdx) => { %>
+          <%
+            const isSectionInherited = section.origin && section.origin.isInherited;
+          %>
+          <div
+            class="accordion-item mb-3 border rounded shadow-2xs builder-section-item"
+            data-section-id="<%= section._id %>"
+          >
+            <!-- Section Header -->
+            <div class="accordion-header bg-light-subtle d-flex align-items-center justify-content-between p-2 border-bottom">
+              <div class="d-flex align-items-center gap-2 flex-fill">
+                <span class="section-drag-handle cursor-grab text-muted px-1" title="Drag to reorder section">
+                  <i class="ti ti-grip-vertical fs-3"></i>
+                </span>
+                <button
+                  class="accordion-button py-1 px-2 fw-bold text-dark bg-transparent border-0 shadow-none d-flex align-items-center gap-2 flex-fill"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#sec-collapse-<%= section._id %>"
+                  aria-expanded="true"
+                >
+                  <i class="ti ti-folder text-primary"></i>
+                  <span><%= section.name %></span>
+                  <span class="badge bg-secondary-lt ms-2 font-monospace" style="font-size: 0.65rem;">
+                    <%= section.fields ? section.fields.length : 0 %> <%= section.fields && section.fields.length === 1 ? 'field' : 'fields' %>
+                  </span>
+                  <% if (isSectionInherited) { %>
+                    <span class="badge bg-purple-lt" title="Section originated from base template">
+                      <i class="ti ti-git-fork me-1"></i>Inherited: <%= section.origin.templateName %>
+                    </span>
+                  <% } %>
+                </button>
+              </div>
+
+              <!-- Section Operations -->
+              <div class="d-flex align-items-center gap-1 pe-2">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-ghost-primary p-1 btn-add-field-to-section"
+                  data-section-id="<%= section._id %>"
+                  data-section-name="<%= section.name %>"
+                  title="Add Field to <%= section.name %>"
+                >
+                  <i class="ti ti-plus fs-3"></i>
+                </button>
+                <% if (!isSectionInherited) { %>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-ghost-secondary p-1 btn-edit-section"
+                    data-section-id="<%= section._id %>"
+                    data-section-name="<%= section.name %>"
+                    data-section-sort="<%= section.sortOrder %>"
+                    title="Edit Section Name"
+                  >
+                    <i class="ti ti-pencil fs-3"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-ghost-danger p-1 btn-delete-section"
+                    data-section-id="<%= section._id %>"
+                    data-section-name="<%= section.name %>"
+                    title="Delete Section"
+                  >
+                    <i class="ti ti-trash fs-3"></i>
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Section Fields List -->
+            <div id="sec-collapse-<%= section._id %>" class="accordion-collapse collapse show">
+              <div class="accordion-body p-2">
+                <div
+                  class="builder-fields-list list-group list-group-flush"
+                  data-section-id="<%= section._id %>"
+                  style="min-height: 48px;"
+                >
+                  <% if (!section.fields || section.fields.length === 0) { %>
+                    <div class="text-center py-2 text-muted small empty-fields-placeholder">
+                      No fields in this section. Click <i class="ti ti-plus text-primary"></i> above to add a field.
+                    </div>
+                  <% } else { %>
+                    <% section.fields.forEach(field => { %>
+                      <%
+                        const isFieldInherited = field.origin && field.origin.isInherited;
+                      %>
+                      <div
+                        class="list-group-item d-flex align-items-center justify-content-between p-2 rounded border mb-1 bg-white builder-field-item shadow-2xs"
+                        data-field-id="<%= field._id %>"
+                        data-field-name="<%= field.name %>"
+                        data-section-id="<%= section._id %>"
+                      >
+                        <div class="d-flex align-items-center gap-2 overflow-hidden flex-fill">
+                          <% if (!isFieldInherited) { %>
+                            <span class="field-drag-handle cursor-grab text-muted px-1" title="Drag to reorder field">
+                              <i class="ti ti-grip-vertical"></i>
+                            </span>
+                          <% } else { %>
+                            <span class="text-muted px-1" title="Inherited from base template (cannot drag)">
+                              <i class="ti ti-lock" style="font-size: 0.8rem;"></i>
+                            </span>
+                          <% } %>
+
+                          <span class="badge bg-blue-lt font-monospace text-uppercase" style="font-size: 0.65rem; min-width: 90px;">
+                            <%= field.type %>
+                          </span>
+
+                          <div class="text-truncate">
+                            <span class="fw-bold text-dark"><%= field.title || field.name %></span>
+                            <span class="font-monospace text-muted small ms-1">(<%= field.name %>)</span>
+                            <% if (field.required) { %>
+                              <span class="badge bg-red-lt ms-1" style="font-size: 0.6rem;">Required</span>
+                            <% } %>
+                            <% if (field.shared) { %>
+                              <span class="badge bg-cyan-lt ms-1" style="font-size: 0.6rem;">Shared</span>
+                            <% } %>
+                            <% if (isFieldInherited) { %>
+                              <span class="badge bg-purple-lt ms-1" style="font-size: 0.6rem;">
+                                <i class="ti ti-git-fork me-1"></i>From: <%= field.origin.templateName %>
+                              </span>
+                            <% } %>
+                          </div>
+                        </div>
+
+                        <!-- Field Actions -->
+                        <div class="d-flex align-items-center gap-1 ms-2">
+                          <% if (isFieldInherited) { %>
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-outline-purple py-0 px-2 btn-override-field"
+                              data-field-name="<%= field.name %>"
+                              data-field-title="<%= field.title %>"
+                              data-field-type="<%= field.type %>"
+                              data-section-id="<%= section._id %>"
+                              title="Override this field definition in current template"
+                              style="font-size: 0.72rem;"
+                            >
+                              <i class="ti ti-replace me-1"></i>Override
+                            </button>
+                          <% } else { %>
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-ghost-secondary p-1 btn-edit-field"
+                              data-field-id="<%= field._id %>"
+                              data-field-name="<%= field.name %>"
+                              data-field-title="<%= field.title %>"
+                              data-field-type="<%= field.type %>"
+                              data-field-required="<%= field.required %>"
+                              data-field-default="<%= field.defaultValue %>"
+                              data-field-source="<%= field.source %>"
+                              data-field-shared="<%= field.shared %>"
+                              data-field-help="<%= field.helpText %>"
+                              data-section-id="<%= section._id %>"
+                              title="Edit Field"
+                            >
+                              <i class="ti ti-pencil"></i>
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-ghost-danger p-1 btn-delete-field"
+                              data-field-id="<%= field._id %>"
+                              data-field-name="<%= field.name %>"
+                              data-section-id="<%= section._id %>"
+                              title="Delete Field"
+                            >
+                              <i class="ti ti-trash"></i>
+                            </button>
+                          <% } %>
+                        </div>
+                      </div>
+                    <% }) %>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>
+

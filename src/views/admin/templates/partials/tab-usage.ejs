@@ -1,0 +1,100 @@
+<%
+  const u = typeof usage !== 'undefined' && usage ? usage : { itemsCount: 0, sampleItems: [], inheritingTemplates: [], canDelete: true };
+%>
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
+    <div>
+      <h4 class="card-title m-0 fw-bold fs-3 text-dark">Template Usage & Dependencies</h4>
+      <p class="text-muted small m-0">Audit which content items and child templates depend on this template.</p>
+    </div>
+    <div>
+      <% if (template.isSystem) { %>
+        <span class="badge bg-azure-lt fs-3 p-2"><i class="ti ti-lock me-1"></i>Protected System Template</span>
+      <% } else if (u.canDelete) { %>
+        <span class="badge bg-green-lt fs-3 p-2"><i class="ti ti-check me-1"></i>Safe to Delete (0 Dependencies)</span>
+      <% } else { %>
+        <span class="badge bg-warning-lt fs-3 p-2"><i class="ti ti-alert-triangle me-1"></i>In Use (Cannot Delete)</span>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card-body p-3">
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6">
+        <div class="card card-sm bg-light-subtle border p-3">
+          <div class="d-flex align-items-center gap-3">
+            <span class="avatar bg-blue-lt rounded"><i class="ti ti-files fs-2"></i></span>
+            <div>
+              <div class="text-muted small font-monospace">Content Items Using Template</div>
+              <div class="h2 m-0 fw-bold text-dark"><%= u.itemsCount %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card card-sm bg-light-subtle border p-3">
+          <div class="d-flex align-items-center gap-3">
+            <span class="avatar bg-purple-lt rounded"><i class="ti ti-git-fork fs-2"></i></span>
+            <div>
+              <div class="text-muted small font-monospace">Templates Inheriting This Base</div>
+              <div class="h2 m-0 fw-bold text-dark"><%= u.inheritingTemplates ? u.inheritingTemplates.length : 0 %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items List -->
+    <h5 class="fw-bold mb-2 text-dark">Sample Content Items</h5>
+    <% if (!u.sampleItems || u.sampleItems.length === 0) { %>
+      <div class="p-3 bg-light-subtle rounded border text-muted small mb-4">
+        No content items are currently based on this template.
+      </div>
+    <% } else { %>
+      <div class="table-responsive mb-4 border rounded">
+        <table class="table table-vcenter card-table table-striped">
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th>Materialized Path</th>
+              <th>Last Modified</th>
+              <th class="w-1">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% u.sampleItems.forEach(item => { %>
+              <tr>
+                <td class="fw-bold"><%= item.displayName || item.name %></td>
+                <td class="font-monospace small text-muted"><%= item.path %></td>
+                <td class="small text-muted"><%= item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'N/A' %></td>
+                <td>
+                  <a href="/admin/content-editor/<%= item._id %>" class="btn btn-sm btn-outline-secondary" target="_blank" title="Open in Content Editor">
+                    <i class="ti ti-external-link"></i>
+                  </a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <!-- Inheriting Templates List -->
+    <h5 class="fw-bold mb-2 text-dark">Inheriting Templates</h5>
+    <% if (!u.inheritingTemplates || u.inheritingTemplates.length === 0) { %>
+      <div class="p-3 bg-light-subtle rounded border text-muted small">
+        No other templates inherit from this template.
+      </div>
+    <% } else { %>
+      <div class="d-flex flex-wrap gap-2">
+        <% u.inheritingTemplates.forEach(t => { %>
+          <a href="/admin/template-manager/<%= t._id %>" class="badge bg-purple-lt p-2 d-flex align-items-center gap-2 border text-decoration-none">
+            <i class="<%= t.icon || 'ti ti-file-text' %> fs-2"></i>
+            <span class="fs-3 fw-semibold"><%= t.displayName || t.name %></span>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>
+

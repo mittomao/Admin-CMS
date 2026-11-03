@@ -39,12 +39,28 @@ const fieldSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    shared: {
+      type: Boolean,
+      default: false,
+    },
+    unversioned: {
+      type: Boolean,
+      default: false,
+    },
+    helpText: {
+      type: String,
+      default: '',
+    },
+    validation: {
+      type: String,
+      default: '',
+    },
     sortOrder: {
       type: Number,
       default: 100,
     },
   },
-  { _id: true }
+  { _id: true, timestamps: true }
 );
 
 const sectionSchema = new mongoose.Schema(
@@ -60,7 +76,7 @@ const sectionSchema = new mongoose.Schema(
     },
     fields: [fieldSchema],
   },
-  { _id: true }
+  { _id: true, timestamps: true }
 );
 
 const templateSchema = new mongoose.Schema(
@@ -83,33 +99,66 @@ const templateSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
-    sections: [sectionSchema],
-    insertOptions: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Template',
-      },
-    ],
-    // Placeholders for GĐ 3 (Template Manager)
+    isSystem: {
+      type: Boolean,
+      default: false,
+    },
     baseTemplates: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Template',
       },
     ],
+    sections: [sectionSchema],
+    // Key: fieldId (String of field._id), Value: default value
     standardValues: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,
       default: {},
     },
+    insertOptions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Template',
+      },
+    ],
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
   },
   {
     timestamps: true,
     collection: 'templates',
+    toJSON: {
+      virtuals: true,
+      transform: (doc, ret) => {
+        if (ret.standardValues instanceof Map) {
+          ret.standardValues = Object.fromEntries(ret.standardValues);
+        }
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (doc, ret) => {
+        if (ret.standardValues instanceof Map) {
+          ret.standardValues = Object.fromEntries(ret.standardValues);
+        }
+        return ret;
+      },
+    },
   }
 );
 
-// unique: true on name already creates an index
+templateSchema.index({ baseTemplates: 1 });
+templateSchema.index({ isSystem: 1 });
 
 const Template = mongoose.model('Template', templateSchema);
 

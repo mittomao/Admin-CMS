@@ -1,0 +1,105 @@
+<%
+  const sections = resolved && resolved.sections ? resolved.sections : [];
+  const stdValues = resolved && resolved.standardValues ? resolved.standardValues : {};
+%>
+<form id="templateStandardValuesForm">
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="card-title m-0 fw-bold fs-3 text-dark">Standard Values</h4>
+        <p class="text-muted small m-0">
+          Default values automatically applied to new items and dynamically inherited when not explicitly overridden.
+        </p>
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btnSaveStandardValues">
+        <i class="ti ti-device-floppy"></i>
+        <span>Save Standard Values</span>
+      </button>
+    </div>
+
+    <div class="card-body p-3">
+      <% if (sections.length === 0 || sections.every(s => !s.fields || s.fields.length === 0)) { %>
+        <div class="empty py-4 text-center">
+          <div class="empty-icon text-muted"><i class="ti ti-forms fs-1"></i></div>
+          <p class="empty-title">No Fields Available</p>
+          <p class="empty-subtitle text-muted">Add fields to this template in the Builder tab before setting standard values.</p>
+        </div>
+      <% } else { %>
+        <div class="accordion" id="stdValuesAccordion">
+          <% sections.forEach((section, sIdx) => { %>
+            <% if (section.fields && section.fields.length > 0) { %>
+              <div class="accordion-item mb-2 border rounded shadow-2xs">
+                <h2 class="accordion-header" id="std-heading-<%= section._id %>">
+                  <button
+                    class="accordion-button <%= sIdx === 0 ? '' : 'collapsed' %> py-2 px-3 fw-semibold bg-light-subtle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#std-collapse-<%= section._id %>"
+                  >
+                    <i class="ti ti-folder text-primary me-2"></i>
+                    <span><%= section.name %></span>
+                    <% if (section.origin && section.origin.isInherited) { %>
+                      <span class="badge bg-purple-lt ms-2" style="font-size: 0.65rem;">
+                        Inherited: <%= section.origin.templateName %>
+                      </span>
+                    <% } %>
+                  </button>
+                </h2>
+                <div id="std-collapse-<%= section._id %>" class="accordion-collapse collapse <%= sIdx === 0 ? 'show' : '' %>">
+                  <div class="accordion-body p-3">
+                    <% section.fields.forEach(field => { %>
+                      <%
+                        const fieldId = field._id.toString();
+                        const val = stdValues[fieldId] !== undefined ? stdValues[fieldId] : (stdValues[field.name] !== undefined ? stdValues[field.name] : field.defaultValue);
+                        const hasStd = stdValues[fieldId] !== undefined || stdValues[field.name] !== undefined;
+                      %>
+                      <div class="mb-3 border-bottom pb-2">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                          <span class="text-muted small">
+                            Field ID: <code class="font-monospace"><%= field._id %></code>
+                          </span>
+                          <% if (hasStd) { %>
+                            <span class="badge bg-green-lt" style="font-size: 0.65rem;">
+                              <i class="ti ti-check me-1"></i>Default Active
+                            </span>
+                          <% } %>
+                        </div>
+                        <% if (field.type === 'Single-Line Text') { %>
+                          <%- include('../../../content-editor/fields/single-line-text', { field, value: val }) %>
+                        <% } else if (field.type === 'Multi-Line Text') { %>
+                          <%- include('../../../content-editor/fields/multi-line-text', { field, value: val }) %>
+                        <% } else if (field.type === 'Rich Text') { %>
+                          <%- include('../../../content-editor/fields/rich-text', { field, value: val }) %>
+                        <% } else if (field.type === 'Checkbox') { %>
+                          <%- include('../../../content-editor/fields/checkbox', { field, value: val }) %>
+                        <% } else if (field.type === 'Date') { %>
+                          <%- include('../../../content-editor/fields/date', { field, value: val }) %>
+                        <% } else if (field.type === 'Number') { %>
+                          <%- include('../../../content-editor/fields/number', { field, value: val }) %>
+                        <% } else if (field.type === 'Droplist') { %>
+                          <%- include('../../../content-editor/fields/droplist', { field, value: val }) %>
+                        <% } else if (field.type === 'Image') { %>
+                          <%- include('../../../content-editor/fields/image', { field, value: val }) %>
+                        <% } else { %>
+                          <%- include('../../../content-editor/fields/single-line-text', { field, value: val }) %>
+                        <% } %>
+                      </div>
+                    <% }) %>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="card-footer bg-light-subtle py-2 px-3 border-top d-flex justify-content-end">
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+        <i class="ti ti-device-floppy"></i>
+        <span>Save Standard Values</span>
+      </button>
+    </div>
+  </div>
+</form>
+

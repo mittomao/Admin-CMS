@@ -1,0 +1,67 @@
+<%
+  const currentOptions = (template.insertOptions || []).map(opt => (opt._id ? opt._id.toString() : opt.toString()));
+  const allTpls = typeof allTemplates !== 'undefined' ? allTemplates : [];
+%>
+<form id="templateInsertOptionsForm">
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="card-title m-0 fw-bold fs-3 text-dark">Insert Options</h4>
+        <p class="text-muted small m-0">
+          Restrict which templates content authors are permitted to create as child items under items of this template.
+        </p>
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btnSaveInsertOptions">
+        <i class="ti ti-device-floppy"></i>
+        <span>Save Insert Options</span>
+      </button>
+    </div>
+
+    <div class="card-body p-3">
+      <div class="mb-3" style="max-width: 320px;">
+        <div class="input-icon">
+          <span class="input-icon-addon"><i class="ti ti-search text-muted"></i></span>
+          <input type="text" class="form-control form-control-sm" id="insertOptionsSearch" placeholder="Filter templates..." />
+        </div>
+      </div>
+
+      <div class="row row-cards g-2" id="insertOptionsGrid">
+        <% allTpls.forEach(t => { %>
+          <%
+            const tId = t._id.toString();
+            const isChecked = currentOptions.includes(tId);
+          %>
+          <div class="col-sm-6 col-md-4 insert-option-col" data-tpl-name="<%= t.name.toLowerCase() %>" data-tpl-display="<%= (t.displayName || '').toLowerCase() %>">
+            <label class="card card-sm card-link-pop h-100 p-2 cursor-pointer border <%= isChecked ? 'border-primary bg-primary-lt' : '' %>">
+              <div class="d-flex align-items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="insertOptions[]"
+                  value="<%= t._id %>"
+                  class="form-check-input m-0 insert-option-checkbox"
+                  <%= isChecked ? 'checked' : '' %>
+                />
+                <i class="<%= t.icon || 'ti ti-file-text' %> fs-2 text-primary"></i>
+                <div class="overflow-hidden">
+                  <div class="fw-semibold text-truncate small text-dark"><%= t.displayName || t.name %></div>
+                  <div class="text-muted font-monospace" style="font-size: 0.65rem;"><%= t.name %></div>
+                </div>
+              </div>
+            </label>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="card-footer bg-light-subtle py-2 px-3 border-top d-flex justify-content-between align-items-center">
+      <span class="text-muted small">
+        If no insert options are selected, authors can choose from all available templates by default.
+      </span>
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+        <i class="ti ti-device-floppy"></i>
+        <span>Save Insert Options</span>
+      </button>
+    </div>
+  </div>
+</form>
+

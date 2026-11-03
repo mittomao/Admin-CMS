@@ -172,7 +172,7 @@ const seedData = async () => {
         icon: 'ti ti-layout-grid',
         iconBg: 'red',
         group: 'Control Panel & Maintenance',
-        url: '#',
+        url: '/admin/template-manager',
         sortOrder: 10,
         allowedRoles: [rolesMap['Administrator']],
       },
@@ -210,9 +210,43 @@ const seedData = async () => {
     // 5. Seed Core Templates
     const templatesConfig = [
       {
+        name: '_BasePage',
+        displayName: 'Base Page',
+        icon: 'ti ti-template',
+        description: 'Base template providing standard SEO metadata for pages',
+        isSystem: true,
+        sections: [
+          {
+            name: 'SEO & Metadata',
+            sortOrder: 5,
+            fields: [
+              {
+                name: 'metaTitle',
+                title: 'Meta Title',
+                type: 'Single-Line Text',
+                required: false,
+                defaultValue: '',
+                helpText: 'Search engine title tag',
+                sortOrder: 10,
+              },
+              {
+                name: 'metaDescription',
+                title: 'Meta Description',
+                type: 'Multi-Line Text',
+                required: false,
+                defaultValue: '',
+                helpText: 'Brief summary for search engine snippet',
+                sortOrder: 20,
+              },
+            ],
+          },
+        ],
+      },
+      {
         name: 'Folder',
         displayName: 'Folder',
         icon: 'ti ti-folder',
+        isSystem: true,
         description: 'A structural folder item to organize other items',
         sections: [
           {
@@ -226,6 +260,7 @@ const seedData = async () => {
         name: 'Page',
         displayName: 'Page',
         icon: 'ti ti-file-text',
+        isSystem: false,
         description: 'Standard content page with rich body and metadata',
         sections: [
           {
@@ -340,12 +375,23 @@ const seedData = async () => {
       templatesMap[t.name] = tpl._id;
     }
 
-    // Set insert options for templates
+    // Set base templates and insert options for templates
+    const basePageTpl = await Template.findById(templatesMap['_BasePage']);
+    let metaTitleFieldId = null;
+    if (basePageTpl && basePageTpl.sections[0] && basePageTpl.sections[0].fields[0]) {
+      metaTitleFieldId = basePageTpl.sections[0].fields[0]._id.toString();
+      basePageTpl.standardValues = {
+        [metaTitleFieldId]: 'Default Sitecore XM Page',
+      };
+      await basePageTpl.save();
+    }
+
+    await Template.findByIdAndUpdate(templatesMap['Page'], {
+      baseTemplates: [templatesMap['_BasePage']],
+      insertOptions: [templatesMap['Page'], templatesMap['Sample Item']],
+    });
     await Template.findByIdAndUpdate(templatesMap['Folder'], {
       insertOptions: [templatesMap['Folder'], templatesMap['Page'], templatesMap['Sample Item']],
-    });
-    await Template.findByIdAndUpdate(templatesMap['Page'], {
-      insertOptions: [templatesMap['Page'], templatesMap['Sample Item']],
     });
     await Template.findByIdAndUpdate(templatesMap['Sample Item'], {
       insertOptions: [templatesMap['Sample Item']],

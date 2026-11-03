@@ -1,0 +1,71 @@
+<%
+  const currentBaseIds = (template.baseTemplates || []).map(b => (b._id ? b._id.toString() : b.toString()));
+  const allTpls = typeof allTemplates !== 'undefined' ? allTemplates.filter(t => t._id.toString() !== template._id.toString()) : [];
+  const resolvedBaseTemplates = resolved && resolved.baseTemplates ? resolved.baseTemplates : [];
+%>
+<form id="templateInheritanceForm">
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="card-title m-0 fw-bold fs-3 text-dark">Template Inheritance</h4>
+        <p class="text-muted small m-0">
+          Inherit sections and fields from one or more Base Templates (e.g., SEO, Page Metadata).
+        </p>
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btnSaveBaseTemplates">
+        <i class="ti ti-device-floppy"></i>
+        <span>Save Base Templates</span>
+      </button>
+    </div>
+
+    <div class="card-body p-3">
+      <!-- Active Base Templates Summary -->
+      <h5 class="fw-bold mb-2 text-dark">Active Base Templates</h5>
+      <% if (resolvedBaseTemplates.length === 0) { %>
+        <div class="p-3 bg-light-subtle rounded border text-muted small mb-4">
+          <i class="ti ti-info-circle me-1 text-azure"></i>
+          This template does not inherit from any base templates. Select one or more below.
+        </div>
+      <% } else { %>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <% resolvedBaseTemplates.forEach(b => { %>
+            <div class="badge bg-purple-lt p-2 d-flex align-items-center gap-2 border">
+              <i class="<%= b.icon || 'ti ti-template' %> fs-2"></i>
+              <span class="fs-3 fw-semibold"><%= b.displayName || b.name %></span>
+              <span class="font-monospace opacity-75 small">(<%= b.name %>)</span>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <!-- Base Templates Selector Grid -->
+      <h5 class="fw-bold mb-2 text-dark">Select Base Templates</h5>
+      <div class="row row-cards g-2">
+        <% allTpls.forEach(t => { %>
+          <%
+            const isBase = currentBaseIds.includes(t._id.toString());
+          %>
+          <div class="col-sm-6 col-md-4">
+            <label class="card card-sm card-link-pop h-100 p-2 cursor-pointer border <%= isBase ? 'border-purple bg-purple-lt' : '' %>">
+              <div class="d-flex align-items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="baseTemplateIds[]"
+                  value="<%= t._id %>"
+                  class="form-check-input m-0 base-tpl-checkbox"
+                  <%= isBase ? 'checked' : '' %>
+                />
+                <i class="<%= t.icon || 'ti ti-file-text' %> fs-2 text-purple"></i>
+                <div class="overflow-hidden">
+                  <div class="fw-semibold text-truncate small text-dark"><%= t.displayName || t.name %></div>
+                  <div class="text-muted font-monospace" style="font-size: 0.65rem;"><%= t.name %></div>
+                </div>
+              </div>
+            </label>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</form>
+

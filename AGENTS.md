@@ -677,24 +677,24 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
   - *Không làm:* Chưa làm Validation Rules nâng cao bằng Regex tùy biến phức tạp.
 - **Phụ thuộc:** GĐ 2.
 - **Danh sách Task:**
-  - [ ] **Task 3.1:** Hoàn thiện Mongoose Schema `Template` (`src/models/Template.js`) hỗ trợ mảng `sections`, `fields`, `baseTemplateIds`, `standardValues`, và `insertOptions`.
-  - [ ] **Task 3.2:** Xây dựng `templateService.js`:
+  - [x] **Task 3.1:** Hoàn thiện Mongoose Schema `Template` (`src/models/Template.js`) hỗ trợ mảng `sections`, `fields`, `baseTemplateIds`, `standardValues`, và `insertOptions`.
+  - [x] **Task 3.2:** Xây dựng `templateService.js`:
     - `getAllTemplates()`: Lấy danh sách template trong hệ thống.
     - `getTemplateWithInheritance(templateId)`: Thu thập toàn bộ section và field từ chính template đó và đệ quy lên tất cả các base templates.
     - `createTemplate(data)`, `updateTemplate(id, data)`, `deleteTemplate(id)`.
     - `saveStandardValues(templateId, values)`.
     - `setInsertOptions(templateId, allowedTemplateIds)`.
-  - [ ] **Task 3.3:** Xây dựng `templateManagerController.js` và route `src/routes/admin/templateManagerRoutes.js`:
+  - [x] **Task 3.3:** Xây dựng `templateManagerController.js` và route `src/routes/admin/templateManagerRoutes.js`:
     - `GET /admin/template-manager`: Giao diện danh sách và cây template.
     - `GET /admin/template-manager/:id`: Chi tiết màn hình thiết kế template (Sections, Fields).
     - `POST /admin/template-manager/save`: Lưu cấu trúc template.
     - `POST /admin/template-manager/:id/standard-values`: Lưu giá trị mặc định.
     - `POST /admin/template-manager/:id/insert-options`: Cập nhật insert options.
-  - [ ] **Task 3.4:** Thiết kế giao diện EJS Template Manager:
+  - [x] **Task 3.4:** Thiết kế giao diện EJS Template Manager:
     - `src/views/admin/templates/manager.ejs`: Cây template nằm dưới nhánh `/sitecore/templates`.
     - `src/views/admin/templates/builder.ejs`: Bảng thiết kế Section và Field cho phép thêm/sửa/xóa trường nhanh, chọn loại trường từ dropdown.
     - `src/views/admin/templates/modals/insert-options-modal.ejs`: Hộp thoại chọn template con được phép tạo.
-  - [ ] **Task 3.5:** Tích hợp kế thừa trường vào Content Editor:
+  - [x] **Task 3.5:** Tích hợp kế thừa trường vào Content Editor:
     - Cập nhật `itemService.getItemWithRenderSchema(itemId)` để merge toàn bộ trường của Template và Base Templates, điền giá trị từ Item hoặc fallback về Standard Values nếu trường đang trống.
     - Cập nhật Modal "Insert Item" trên Content Editor: Chỉ hiển thị các template được chỉ định trong `insertOptions` của item hiện tại.
 - **File/Thư mục dự kiến:**
@@ -725,7 +725,7 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
   - *Rủi ro:* Kế thừa vòng tròn (Circular Inheritance: Template A kế thừa B, B kế thừa A) gây tràn bộ nhớ đệ quy.
   - *Giảm thiểu:* Kiểm tra phát hiện chu trình (Cycle Detection) trong `templateService` trước khi cho phép lưu danh sách `baseTemplateIds`.
 - **Ước tính thời gian:** 2.5 ngày làm việc.
-- **Trạng thái:** Chưa bắt đầu.
+- **Trạng thái:** Hoàn thành.
 
 ---
 
@@ -830,7 +830,7 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
   - *Rủi ro:* Người dùng tải lên mã độc trá hình (ví dụ file `.php`, `.exe` đổi đuôi thành `.jpg`).
   - *Giảm thiểu:* Kiểm tra MIME-type thực tế dựa trên magic bytes thay vì chỉ dựa vào phần mở rộng tệp tin; lưu tệp ngoài thư mục thực thi công khai và stream qua controller.
 - **Ước tính thời gian:** 2.5 ngày làm việc.
-- **Trạng thái:** Chưa bắt đầu.
+- **Trạng thái:** Hoàn thành.
 
 ---
 
@@ -1192,6 +1192,10 @@ Mô hình hóa định nghĩa trường giống hệt Sitecore (Section -> Field
 - **[2026-11-03] - Quyết định Sanitize HTML Rich Text (GĐ 2):** Sử dụng `sanitize-html` (phiên bản CJS tương thích) tại tầng server (`src/fields/index.js`), lọc bỏ toàn bộ các thẻ script, iframe, inline event handler nguy hiểm để triệt tiêu Stored XSS.
 - **[2026-11-03] - Quyết định Kiểm tra Vòng lặp khi Move Item (GĐ 2):** Kiểm tra `targetParent.ancestors` không được chứa `item._id`, chặn hoàn toàn việc di chuyển một node cha vào bên trong node con cháu của chính nó.
 - **[2026-11-03] - Quyết định Quy tắc Insert Options (GĐ 2):** Nếu Template của node cha đã cấu hình `insertOptions`, chỉ cho phép tạo các template nằm trong danh sách; nếu chưa cấu hình (mảng rỗng), mặc định cho phép chọn toàn bộ Template hiện có.
+- **[2026-11-03] - Quyết định Lưu trữ Giá trị Field theo Immutable Field ID (GĐ 3):** Chuyển đổi khóa lưu trữ giá trị field từ `fieldName` sang `fieldId` (`_id.toString()`) bất biến của Field Schema. Cung cấp cơ chế dual-key fallback và script di trú dữ liệu tự động `npm run migrate`.
+- **[2026-11-03] - Quyết định Thuật toán Kế thừa Đa cấp & Chống Chu trình (GĐ 3):** `resolveTemplate` duyệt đệ quy đa cấp Base Templates theo thứ tự sâu nhất đến nông nhất, gộp sections trùng tên, con ghi đè field trùng tên của cha, gán nhãn `origin` (kế thừa từ template nào) và kiểm tra Cycle Detection chặn vòng lặp phụ thuộc (ví dụ A ← B ← A) với giới hạn độ sâu 10 cấp.
+- **[2026-11-03] - Quyết định Standard Values Động (GĐ 3):** Giá trị mặc định (Standard Values) không gán tĩnh cố định vào item khi khởi tạo mà được tính toán động tại thời điểm đọc; nếu người dùng chưa ghi đè field, sửa Standard Value ở Template sẽ ngay lập tức phản ánh sang toàn bộ các Content Item thuộc Template đó. Hỗ trợ nút "Reset to Standard Value" để biên tập viên khôi phục giá trị mặc định.
+- **[2026-11-03] - Quyết định Bảo vệ Xóa An toàn Cho Template (GĐ 3):** Chặn xóa template nếu `isSystem === true`, hoặc đang có Content Items đang dùng template đó, hoặc có Template khác đang kế thừa (`baseTemplates`).
 
 ---
 

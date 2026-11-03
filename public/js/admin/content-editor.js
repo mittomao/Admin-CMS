@@ -328,6 +328,43 @@ function attachItemFormEvents() {
       updateDirtyState(true);
     });
   });
+
+  // Reset field to Standard Value
+  const resetBtns = form.querySelectorAll('.btn-reset-std-val');
+  resetBtns.forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const fieldId = btn.getAttribute('data-field-id');
+      const fieldName = btn.getAttribute('data-field-name') || 'Field';
+
+      if (!confirm(`Reset "${fieldName}" to its standard value from the template?`)) {
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/items/${currentItemId}/reset-standard-value`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfToken(),
+          },
+          body: JSON.stringify({ fieldId }),
+        });
+
+        const result = await res.json();
+        if (!res.ok) {
+          throw new Error(result.message || 'Failed to reset field');
+        }
+
+        showToast('Field has been reset to its template standard value.', 'success');
+        await loadItemWorkspace(currentItemId, currentViewMode);
+      } catch (err) {
+        showToast(err.message, 'danger');
+        btn.disabled = false;
+      }
+    });
+  });
 }
 
 async function submitItemForm() {

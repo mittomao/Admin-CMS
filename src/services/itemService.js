@@ -56,9 +56,121 @@ const itemService = {
    */
   async getById(id) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
-    return Item.findOne({ _id: id, deleted: false })
+    const item = await Item.findOne({ _id: id, deleted: false })
       .populate('templateId')
       .lean();
+    if (!item) return null;
+
+    // Provide dual-key access for ease of use in tests, EJS, and APIs
+    if (item.fields && item.templateId) {
+      const tpl = item.templateId;
+      const rawFields = item.fields instanceof Map
+        ? Object.fromEntries(item.fields)
+        : (item.fields || {});
+      const enrichedFields = { ...rawFields };
+
+      if (tpl.sections) {
+        for (const sec of tpl.sections) {
+          if (sec.fields) {
+            for (const f of sec.fields) {
+              const fieldIdStr = f._id.toString();
+              if (rawFields[fieldIdStr] !== undefined && rawFields[f.name] === undefined) {
+                enrichedFields[f.name] = rawFields[fieldIdStr];
+              }
+            }
+          }
+        }
+      }
+      item.fields = enrichedFields;
+    }
+    return item;
+  },
+
+  /**
+   * Get an item with resolved inherited template and calculated field values (handling dynamic standard values)
+   */
+  async getItemWithRenderSchema(id) {
+    const item = await this.getById(id);
+    if (!item) return null;
+
+    const resolvedTemplate = await templateService.resolveTemplate(item.templateId._id || item.templateId);
+    const standardValues = await templateService.resolveStandardValues(item.templateId._id || item.templateId);
+
+    const rawFields = item.fields instanceof Map
+      ? Object.fromEntries(item.fields)
+      : (item.fields || {});
+
+    // Augment resolved fields with current effective values and standard value flags
+    if (resolvedTemplate && resolvedTemplate.sections) {
+      for (const sec of resolvedTemplate.sections) {
+        if (sec.fields) {
+          for (const f of sec.fields) {
+            const fieldId = f._id.toString();
+            const fieldName = f.name;
+
+            // Check if explicitly overridden on item
+            const hasExplicitValue = rawFields[fieldId] !== undefined || rawFields[fieldName] !== undefined;
+
+            let effectiveValue = '';
+            let isUsingStandardValue = false;
+
+            if (hasExplicitValue) {
+              effectiveValue = rawFields[fieldId] !== undefined ? rawFields[fieldId] : rawFields[fieldName];
+            } else {
+              // Dynamic Standard Value inheritance: read from template chain
+              if (standardValues[fieldId] !== undefined) {
+                effectiveValue = standardValues[fieldId];
+                isUsingStandardValue = true;
+              } else if (standardValues[fieldName] !== undefined) {
+                effectiveValue = standardValues[fieldName];
+                isUsingStandardValue = true;
+              } else {
+                effectiveValue = f.defaultValue !== undefined ? f.defaultValue : '';
+              }
+            }
+
+            f.effectiveValue = effectiveValue;
+            f.isUsingStandardValue = isUsingStandardValue;
+            f.hasExplicitValue = hasExplicitValue;
+          }
+        }
+      }
+    }
+
+    return {
+      item,
+      resolvedTemplate,
+      standardValues,
+    };
+  },
+
+  /**
+   * Reset an item field back to its standard value (removes explicit override)
+   */
+  async resetFieldToStandardValue(id, fieldId, userId = null) {
+    const item = await Item.findOne({ _id: id, deleted: false });
+    if (!item) throw new ValidationError('Item not found.');
+
+    const fieldsMap = item.fields instanceof Map
+      ? item.fields
+      : new Map(Object.entries(item.fields || {}));
+
+    fieldsMap.delete(fieldId.toString());
+
+    // Also remove fieldName key if present
+    const resolvedTemplate = await templateService.resolveTemplate(item.templateId);
+    const fieldDef = resolvedTemplate?.sections?.flatMap((s) => s.fields)?.find(
+      (f) => f._id.toString() === fieldId.toString()
+    );
+    if (fieldDef) {
+      fieldsMap.delete(fieldDef.name);
+    }
+
+    item.fields = fieldsMap;
+    item.updatedBy = userId;
+    await item.save();
+
+    return this.getItemWithRenderSchema(item._id);
   },
 
   /**
@@ -233,24 +345,28 @@ const itemService = {
       }
     }
 
-    // 2. Fetch template schema to validate and sanitize values
-    const template = await Template.findById(item.templateId);
-    if (!template) {
+    // 2. Fetch resolved template schema (including inherited fields) to validate and sanitize values
+    const resolvedTemplate = await templateService.resolveTemplate(item.templateId);
+    if (!resolvedTemplate) {
       throw new ValidationError('Template definition for this item is missing.');
     }
 
     const fieldDefinitions = new Map();
-    if (template.sections) {
-      for (const sec of template.sections) {
+    if (resolvedTemplate.sections) {
+      for (const sec of resolvedTemplate.sections) {
         if (sec.fields) {
           for (const f of sec.fields) {
+            fieldDefinitions.set(f._id.toString(), f);
             fieldDefinitions.set(f.name, f);
+            fieldDefinitions.set(f.name.toLowerCase(), f);
           }
         }
       }
     }
 
-    const updatedFields = item.fields ? Object.fromEntries(item.fields) : {};
+    const updatedFields = item.fields instanceof Map
+      ? Object.fromEntries(item.fields)
+      : (item.fields ? { ...item.fields } : {});
     const validationErrors = {};
 
     for (const [key, rawValue] of Object.entries(rawFields)) {
@@ -259,9 +375,15 @@ const itemService = {
         const handler = getFieldHandler(fieldDef.type);
         const error = handler.validate(rawValue, fieldDef);
         if (error) {
-          validationErrors[key] = error;
+          validationErrors[fieldDef.name] = error;
         } else {
-          updatedFields[key] = handler.sanitize(rawValue);
+          const sanitizedVal = handler.sanitize(rawValue);
+          // Store by immutable fieldId (Option 1)
+          updatedFields[fieldDef._id.toString()] = sanitizedVal;
+          // Clean legacy fieldName key if present to complete migration
+          if (updatedFields[fieldDef.name] !== undefined && fieldDef.name !== fieldDef._id.toString()) {
+            delete updatedFields[fieldDef.name];
+          }
         }
       } else {
         // Unknown or custom field, preserve as string

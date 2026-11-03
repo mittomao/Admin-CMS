@@ -1,7 +1,5 @@
-<div class="mb-3 field-container" data-field-name="<%= field.name %>">
-  <label class="form-label <%= field.required ? 'required' : '' %>">
-    <%= field.title || field.name %>
-  </label>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
   <div class="input-group">
     <span class="input-group-text">
       <i class="ti ti-photo text-muted"></i>

@@ -89,7 +89,11 @@
                 <div class="accordion-body p-3">
                   <% section.fields.forEach(field => { %>
                     <%
-                      const val = itemFields[field.name];
+                      const val = field.effectiveValue !== undefined
+                        ? field.effectiveValue
+                        : (itemFields[field._id ? field._id.toString() : ''] !== undefined
+                            ? itemFields[field._id.toString()]
+                            : itemFields[field.name]);
                       const fieldType = field.type;
                     %>
                     <% if (fieldType === 'Single-Line Text') { %>

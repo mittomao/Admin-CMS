@@ -1,10 +1,5 @@
-<div class="mb-3 field-container" data-field-name="<%= field.name %>">
-  <div class="d-flex justify-content-between align-items-center mb-1">
-    <label class="form-label mb-0 <%= field.required ? 'required' : '' %>">
-      <%= field.title || field.name %>
-    </label>
-    <span class="badge bg-blue-lt text-uppercase font-monospace" style="font-size: 0.65rem;">Rich Text</span>
-  </div>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
   <textarea
     class="form-control item-field-input rich-editor"
     name="fields[<%= field.name %>]"

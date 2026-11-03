@@ -1,0 +1,76 @@
+<div class="modal fade" id="templateMetaModal" tabindex="-1" aria-labelledby="templateMetaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="templateMetaModalLabel">
+          <i class="ti ti-layout-grid-add text-primary"></i>
+          <span id="templateMetaModalTitle">Template Details</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="templateMetaForm">
+        <input type="hidden" id="metaTemplateId" name="id" />
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label required" for="metaTemplateName">Technical Name</label>
+            <input
+              type="text"
+              class="form-control font-monospace"
+              id="metaTemplateName"
+              name="name"
+              required
+              placeholder="e.g. BlogPost, ProductPage, _BaseSEO"
+              pattern="^[a-zA-Z0-9_-]+$"
+            />
+            <div class="form-text small text-muted">Only alphanumeric characters, dashes, and underscores.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="metaTemplateDisplayName">Display Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="metaTemplateDisplayName"
+              name="displayName"
+              placeholder="e.g. Blog Post, Product Page"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="metaTemplateIcon">Tabler Icon Class</label>
+            <div class="input-icon">
+              <span class="input-icon-addon"><i class="ti ti-icons text-muted"></i></span>
+              <input
+                type="text"
+                class="form-control"
+                id="metaTemplateIcon"
+                name="icon"
+                value="ti ti-file-text"
+                placeholder="e.g. ti ti-file-text, ti ti-article, ti ti-template"
+              />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="metaTemplateDescription">Description</label>
+            <textarea
+              class="form-control"
+              id="metaTemplateDescription"
+              name="description"
+              rows="3"
+              placeholder="Explain the purpose and intended use of this template..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1" id="btnSubmitTemplateMeta">
+            <i class="ti ti-check"></i>
+            <span>Save Details</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
