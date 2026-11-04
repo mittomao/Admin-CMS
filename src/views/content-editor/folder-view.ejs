@@ -38,7 +38,7 @@
         <% children.forEach(child => { %>
           <%
             const tpl = child.templateId || {};
-            const icon = tpl.icon || 'ti ti-file-text';
+            const resolvedIcon = typeof resolveItemIcon === 'function' ? resolveItemIcon(child, tpl) : (tpl.icon || 'page');
             const tplName = tpl.displayName || tpl.name || 'Item';
           %>
           <div class="col-sm-6 col-md-4 col-lg-3">
@@ -48,8 +48,8 @@
               title="Open <%= child.displayName || child.name %>"
             >
               <div class="card-body p-3 d-flex align-items-start gap-3">
-                <span class="avatar bg-blue-lt rounded flex-shrink-0">
-                  <i class="<%= icon %> fs-2"></i>
+                <span class="avatar bg-light border rounded flex-shrink-0 d-flex align-items-center justify-content-center p-1" style="width: 40px; height: 40px;">
+                  <%- typeof renderIconHtml === 'function' ? renderIconHtml(resolvedIcon, 28) : `<img src="/img/icons/page.svg" width="28" height="28" />` %>
                 </span>
                 <div class="flex-fill overflow-hidden">
                   <div class="fw-bold text-truncate text-dark" title="<%= child.displayName || child.name %>">

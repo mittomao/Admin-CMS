@@ -5,6 +5,7 @@ const User = require('../models/User');
 const { getFieldHandler } = require('../fields');
 const templateService = require('./templateService');
 const versionService = require('./versionService');
+const { resolveItemIcon, getIconUrl } = require('../config/icons');
 
 class ConflictError extends Error {
   constructor(message) {
@@ -1171,14 +1172,24 @@ const itemService = {
     const q = query.trim();
     const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 
-    return Item.find({
+    const items = await Item.find({
       deleted: false,
       $or: [{ name: regex }, { displayName: regex }],
     })
-      .select('name displayName path templateId sortOrder')
-      .populate('templateId', 'name icon')
+      .select('name displayName path templateId icon sortOrder')
+      .populate('templateId', 'name displayName icon')
       .limit(limit)
       .lean();
+
+    return items.map((it) => {
+      const iconKey = resolveItemIcon(it, it.templateId);
+      return {
+        ...it,
+        icon: iconKey,
+        iconKey,
+        iconUrl: getIconUrl(iconKey),
+      };
+    });
   },
 };
 

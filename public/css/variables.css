@@ -46,6 +46,16 @@
   --sc-danger: #ef4444;
   --sc-info: #3b82f6;
 
+  /* CMS Item Icon Colors */
+  --color-icon-folder: #f59f00;
+  --color-icon-content: #206bc4;
+  --color-icon-page: #4299e1;
+  --color-icon-layout: #6366f1;
+  --color-icon-placeholder: #0ca678;
+  --color-icon-rendering: #ae3ec9;
+  --color-icon-template: #d63939;
+  --color-icon-media: #2fb344;
+
   /* Pastel Tile Accent Colors (Launchpad) */
   --sc-pastel-blue: #e0f2fe;
   --sc-pastel-blue-icon: #0284c7;

@@ -51,6 +51,20 @@ function initContentTree() {
     autoScroll: true,
     quicksearch: true,
     clickFolderMode: 3, // Click on folder activates and expands/collapses
+    icon: (event, data) => {
+      const node = data.node;
+      const isFolder = node.folder || (node.data && node.data.isFolder);
+      if (isFolder) {
+        return node.expanded ? '/img/icons/folder-open.svg' : '/img/icons/folder.svg';
+      }
+      if (node.data && node.data.iconUrl) {
+        return node.data.iconUrl;
+      }
+      if (node.icon) {
+        return node.icon;
+      }
+      return '/img/icons/page.svg';
+    },
     filter: {
       autoApply: true,
       autoExpand: true,
@@ -838,7 +852,9 @@ async function openInsertModal() {
         (tpl, idx) => `
         <label class="list-group-item list-group-item-action d-flex align-items-center gap-2 cursor-pointer ${idx === 0 ? 'active' : ''}">
           <input type="radio" name="templateRadio" class="form-check-input me-1 template-radio-option" value="${tpl._id}" ${idx === 0 ? 'checked' : ''} />
-          <i class="${tpl.icon || 'ti ti-file-text'} fs-2"></i>
+          <div class="flex-shrink-0 d-flex align-items-center">
+            ${window.CMS_ICONS ? window.CMS_ICONS.renderIconHtml(tpl.icon, 28) : `<i class="${tpl.icon || 'ti ti-file-text'} fs-2"></i>`}
+          </div>
           <div>
             <div class="fw-bold">${tpl.displayName || tpl.name}</div>
             <div class="small opacity-75">${tpl.description || ''}</div>
@@ -1093,7 +1109,9 @@ function openMoveModal() {
         optionsHtml += `
           <label class="list-group-item list-group-item-action d-flex align-items-center gap-2 cursor-pointer py-1">
             <input type="radio" name="moveTargetRadio" value="${node.key}" class="form-check-input me-1 move-target-radio" />
-            <i class="${node.data?.icon || 'ti ti-folder'} fs-3 text-muted"></i>
+            <div class="flex-shrink-0 d-flex align-items-center">
+              ${window.CMS_ICONS ? window.CMS_ICONS.renderIconHtml(node.data?.iconKey || node.icon, 20) : `<i class="${node.data?.icon || 'ti ti-folder'} fs-3 text-muted"></i>`}
+            </div>
             <div>
               <div class="fw-semibold small">${node.title}</div>
               <div class="font-monospace text-muted" style="font-size: 0.65rem;">${node.data?.path || ''}</div>
@@ -1293,9 +1311,14 @@ function initTreeSearch() {
           resultsDropdown.innerHTML = result.data
             .map(
               (item) => `
-              <a href="#" class="list-group-item list-group-item-action py-1 px-2 search-result-item" data-item-id="${item._id}">
-                <div class="fw-semibold text-truncate small">${item.displayName || item.name}</div>
-                <div class="text-muted font-monospace" style="font-size: 0.65rem;">${item.path}</div>
+              <a href="#" class="list-group-item list-group-item-action py-1 px-2 search-result-item d-flex align-items-center gap-2" data-item-id="${item._id}">
+                <div class="flex-shrink-0 d-flex align-items-center">
+                  ${window.CMS_ICONS ? window.CMS_ICONS.renderIconHtml(item.iconKey || item.icon, 18) : ''}
+                </div>
+                <div class="flex-fill overflow-hidden">
+                  <div class="fw-semibold text-truncate small">${item.displayName || item.name}</div>
+                  <div class="text-muted font-monospace text-truncate" style="font-size: 0.65rem;">${item.path}</div>
+                </div>
               </a>
             `
             )

@@ -171,7 +171,7 @@ async function seedPresentationData(options = {}) {
   const layoutFolderTemplate = await ensureTemplate({
     name: 'Layout Folder',
     displayName: 'Layout Folder',
-    icon: 'ti ti-folder',
+    icon: 'folder',
     isSystem: true,
     description: 'Thư mục phân cấp chứa Layout',
     sections: [],
@@ -181,7 +181,7 @@ async function seedPresentationData(options = {}) {
   const placeholderFolderTemplate = await ensureTemplate({
     name: 'Placeholder Folder',
     displayName: 'Placeholder Folder',
-    icon: 'ti ti-folder',
+    icon: 'folder',
     isSystem: true,
     description: 'Thư mục phân cấp chứa Placeholder',
     sections: [],
@@ -191,7 +191,7 @@ async function seedPresentationData(options = {}) {
   const renderingFolderTemplate = await ensureTemplate({
     name: 'Rendering Folder',
     displayName: 'Rendering Folder',
-    icon: 'ti ti-folder',
+    icon: 'folder',
     isSystem: true,
     description: 'Thư mục phân cấp chứa Rendering',
     sections: [],
@@ -201,7 +201,7 @@ async function seedPresentationData(options = {}) {
   const layoutTemplate = await ensureTemplate({
     name: 'Layout',
     displayName: 'Layout',
-    icon: 'ti ti-layout',
+    icon: 'layout',
     isSystem: true,
     description: 'Layout Page Server-Side EJS',
     sections: [
@@ -225,7 +225,7 @@ async function seedPresentationData(options = {}) {
   const placeholderTemplate = await ensureTemplate({
     name: 'Placeholder',
     displayName: 'Placeholder',
-    icon: 'ti ti-layout-grid-add',
+    icon: 'placeholder',
     isSystem: true,
     description: 'Placeholder giữ chỗ cho Rendering trên Layout',
     sections: [
@@ -262,7 +262,7 @@ async function seedPresentationData(options = {}) {
   const renderingTemplate = await ensureTemplate({
     name: 'Rendering',
     displayName: 'Rendering',
-    icon: 'ti ti-components',
+    icon: 'rendering',
     isSystem: true,
     description: 'Rendering Component kết xuất bằng EJS phía server',
     sections: [

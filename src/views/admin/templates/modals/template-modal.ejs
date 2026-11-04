@@ -37,18 +37,23 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label" for="metaTemplateIcon">Tabler Icon Class</label>
-            <div class="input-icon">
-              <span class="input-icon-addon"><i class="ti ti-icons text-muted"></i></span>
-              <input
-                type="text"
-                class="form-control"
-                id="metaTemplateIcon"
-                name="icon"
-                value="ti ti-file-text"
-                placeholder="e.g. ti ti-file-text, ti ti-article, ti ti-template"
-              />
+            <label class="form-label" for="metaTemplateIcon">Template Icon</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light p-1" id="templateIconPreview" style="min-width: 42px; display: inline-flex; justify-content: center; align-items: center;">
+                <img src="/img/icons/template.svg" width="22" height="22" id="metaTemplateIconImg" alt="Icon" />
+              </span>
+              <select class="form-select" id="metaTemplateIcon" name="icon" onchange="const preview = document.getElementById('templateIconPreview'); if(window.CMS_ICONS) { preview.innerHTML = window.CMS_ICONS.renderIconHtml(this.value, 22); }">
+                <option value="template" selected>Template (Lined Paper - Red)</option>
+                <option value="page">Page (Document - Blue)</option>
+                <option value="folder">Folder (Yellow)</option>
+                <option value="layout">Layout (Grid Frame - Indigo)</option>
+                <option value="placeholder">Placeholder (Dashed Box - Green)</option>
+                <option value="rendering">Rendering (Puzzle Component - Purple)</option>
+                <option value="media">Media (Photo Frame - Green)</option>
+                <option value="content-root">Content Root (Sitecore Cube)</option>
+              </select>
             </div>
+            <small class="form-hint">Chọn icon trực quan đại diện cho Template.</small>
           </div>
 
           <div class="mb-3">

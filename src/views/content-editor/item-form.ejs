@@ -1,7 +1,8 @@
 <%
   const itemFields = item.fields instanceof Map ? Object.fromEntries(item.fields) : (item.fields || {});
   const sections = template && template.sections ? template.sections : [];
-  const tplIcon = template && template.icon ? template.icon : 'ti ti-file-text';
+  const resolvedIcon = typeof resolveItemIcon === 'function' ? resolveItemIcon(item, template) : (item.icon || (template && template.icon) || 'page');
+  const tplIcon = resolvedIcon;
   const tplName = template && template.displayName ? template.displayName : (template ? template.name : 'Unknown');
   const lang = typeof currentLang !== 'undefined' ? currentLang : 'vi';
   const ver = typeof currentVersion !== 'undefined' ? currentVersion : 1;
@@ -18,8 +19,8 @@
   <!-- 1. Item Header Overview Bar with Language & Version Switchers -->
   <div class="card-header bg-white border-bottom py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
-      <span class="avatar avatar-sm bg-blue-lt rounded">
-        <i class="<%= tplIcon %> fs-2"></i>
+      <span class="avatar avatar-sm bg-light border rounded d-flex align-items-center justify-content-center p-1">
+        <%- typeof renderIconHtml === 'function' ? renderIconHtml(resolvedIcon, 20) : `<img src="/img/icons/page.svg" width="20" height="20" />` %>
       </span>
       <div>
         <div class="d-flex align-items-center gap-2">

@@ -8,8 +8,8 @@
   <div class="bg-white border-bottom px-3 pt-3 pb-0 shadow-2xs">
     <div class="d-flex align-items-center justify-content-between mb-3">
       <div class="d-flex align-items-center gap-3">
-        <span class="avatar avatar-md bg-purple-lt rounded-2 shadow-2xs">
-          <i class="<%= tpl ? (tpl.icon || 'ti ti-template') : 'ti ti-template' %> fs-2"></i>
+        <span class="avatar avatar-md bg-light border rounded-2 shadow-2xs d-flex align-items-center justify-content-center p-1" style="width: 48px; height: 48px;">
+          <%- typeof renderIconHtml === 'function' ? renderIconHtml(tpl ? (tpl.icon || 'template') : 'template', 32) : `<img src="/img/icons/template.svg" width="32" height="32" />` %>
         </span>
         <div>
           <div class="d-flex align-items-center gap-2">

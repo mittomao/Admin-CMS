@@ -1,3 +1,5 @@
+const { resolveItemIcon, getIconUrl, isFolderItem } = require('../config/icons');
+
 /**
  * Helper to convert MongoDB Item documents to Fancytree JSON format
  */
@@ -9,15 +11,16 @@ const treeHelper = {
    * @param {Object} template Populated template object
    */
   toFancytreeNode(item, hasChildren = false, template = null) {
-    const icon = item.icon || (template && template.icon) || (item.templateId && item.templateId.icon) || 'ti ti-file-text';
-    const isFolder = template ? (template.name === 'Folder' || template.name.includes('Folder') || template.name === 'Template Folder') : true;
+    const isFolder = isFolderItem(item, template);
+    const iconKey = resolveItemIcon(item, template);
+    const iconUrl = getIconUrl(iconKey);
 
     return {
       key: item._id.toString(),
       title: item.displayName || item.name,
       folder: isFolder,
       lazy: Boolean(hasChildren),
-      icon: icon,
+      icon: iconUrl || iconKey,
       extraClasses: `node-template-${(template && template.name) || 'default'}`,
       data: {
         id: item._id.toString(),
@@ -28,6 +31,9 @@ const treeHelper = {
         sortOrder: item.sortOrder || 100,
         templateName: template ? template.name : '',
         templateId: (template && template._id) || (item.templateId ? item.templateId.toString() : ''),
+        isFolder: isFolder,
+        iconKey: iconKey,
+        iconUrl: iconUrl,
       },
     };
   },

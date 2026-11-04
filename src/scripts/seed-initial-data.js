@@ -278,7 +278,7 @@ const seedData = async () => {
       {
         name: 'Standard Template',
         displayName: 'Standard Template',
-        icon: 'ti ti-box',
+        icon: 'template',
         isSystem: true,
         description: 'Mẫu component trống để khởi tạo component hoặc page template mới',
         path: '/sitecore/templates/System/Standard Template',
@@ -287,7 +287,7 @@ const seedData = async () => {
       {
         name: 'Folder',
         displayName: 'Folder',
-        icon: 'ti ti-folder',
+        icon: 'folder',
         isSystem: true,
         description: 'A structural folder item to organize other items',
         sections: [
@@ -301,7 +301,7 @@ const seedData = async () => {
       {
         name: 'Page',
         displayName: 'Page',
-        icon: 'ti ti-file-text',
+        icon: 'page',
         isSystem: false,
         description: 'Standard content page with rich body and metadata',
         sections: [

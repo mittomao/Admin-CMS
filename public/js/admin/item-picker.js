@@ -134,8 +134,16 @@ window.ItemPicker = (function () {
     toggle.innerHTML = hasChildren ? '<i class="ti ti-chevron-right fs-4"></i>' : '<span style="display:inline-block; width:14px;"></span>';
 
     // Item icon
-    const icon = document.createElement('i');
-    icon.className = `${item.icon || 'ti ti-file-text'} text-muted`;
+    const iconContainer = document.createElement('span');
+    iconContainer.className = 'tree-item-icon me-1 d-inline-flex align-items-center justify-content-center flex-shrink-0';
+    iconContainer.style.width = '18px';
+    iconContainer.style.height = '18px';
+    const iconKey = item.data?.iconKey || item.icon;
+    if (window.CMS_ICONS) {
+      iconContainer.innerHTML = window.CMS_ICONS.renderIconHtml(iconKey, 16);
+    } else {
+      iconContainer.innerHTML = `<i class="${item.icon || 'ti ti-file-text'} text-muted"></i>`;
+    }
 
     // Item text
     const label = document.createElement('span');
@@ -149,12 +157,12 @@ window.ItemPicker = (function () {
       typeBadge.style.fontSize = '0.65rem';
       typeBadge.textContent = templateName;
       row.appendChild(toggle);
-      row.appendChild(icon);
+      row.appendChild(iconContainer);
       row.appendChild(label);
       row.appendChild(typeBadge);
     } else {
       row.appendChild(toggle);
-      row.appendChild(icon);
+      row.appendChild(iconContainer);
       row.appendChild(label);
     }
 

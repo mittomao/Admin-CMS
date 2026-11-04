@@ -78,6 +78,8 @@ app.set('layout', 'layouts/shell');
 app.set('layout extractScripts', true);
 app.set('layout extractStyles', true);
 
+const { resolveItemIcon, renderIconHtml, getIconUrl } = require('./config/icons');
+
 // 7. Global Template Variables & CSRF Token
 app.use(csrfMiddleware.generateToken);
 app.use((req, res, next) => {
@@ -85,6 +87,9 @@ app.use((req, res, next) => {
   res.locals.currentPath = req.path;
   res.locals.flashMessages = [];
   res.locals.user = req.session && req.session.user ? req.session.user : null;
+  res.locals.resolveItemIcon = resolveItemIcon;
+  res.locals.renderIconHtml = renderIconHtml;
+  res.locals.getIconUrl = getIconUrl;
   next();
 });
 
