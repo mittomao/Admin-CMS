@@ -185,18 +185,35 @@ class PresentationController {
 
   /**
    * GET /api/presentation/renderings/allowed
-   * Returns list of allowed renderings for a placeholder
+   * Returns list of allowed renderings for a placeholder (with optional includeAll support)
    */
   async getAllowedRenderings(req, res) {
     try {
-      const { placeholder = 'maincontent', placeholderId = null } = req.query;
+      const { placeholder = 'maincontent', placeholderId = null, includeAll = 'true' } = req.query;
       const target = placeholderId || placeholder;
-      const renderings = await presentationService.getAllowedRenderings(target);
+      const shouldIncludeAll = includeAll === 'true' || includeAll === true;
+
+      const result = await presentationService.getAllowedRenderings(target, {
+        includeAll: shouldIncludeAll,
+      });
+
+      if (shouldIncludeAll && result && typeof result === 'object' && result.renderings) {
+        const uniqueFolders = Array.from(new Set(result.renderings.map((r) => r.folder).filter(Boolean)));
+        return res.json({
+          success: true,
+          placeholder: target,
+          hasRestrictions: result.hasRestrictions,
+          total: result.renderings.length,
+          allowedCount: result.renderings.filter((r) => r.isAllowed).length,
+          folders: ['Tất cả', ...uniqueFolders.sort()],
+          data: result.renderings,
+        });
+      }
 
       res.json({
         success: true,
         placeholder: target,
-        data: renderings,
+        data: result,
       });
     } catch (error) {
       logger.error(`API getAllowedRenderings error: ${error.message}`);

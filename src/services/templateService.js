@@ -1203,6 +1203,141 @@ const templateService = {
 
     return effective;
   },
+
+  /**
+   * Resolve effective template for a Template document (in Template Manager),
+   * merging its direct sections, base templates inherited sections, and
+   * component template sections/fields derived from its Standard Presentation renderings.
+   */
+  async resolveEffectiveTemplateForTemplate(templateOrId) {
+    if (!templateOrId) return null;
+    let template = null;
+    if (typeof templateOrId === 'string' || templateOrId instanceof mongoose.Types.ObjectId) {
+      template = await Template.findById(templateOrId).lean();
+    } else if (templateOrId && typeof templateOrId === 'object') {
+      template = templateOrId;
+    }
+
+    if (!template) return null;
+    const templateId = template._id.toString();
+
+    // 1. Resolve base template hierarchy (sections + inheritedSections)
+    const baseResolved = await this.resolveTemplate(templateId);
+    if (!baseResolved) return null;
+
+    const result = JSON.parse(JSON.stringify(baseResolved));
+
+    // 2. Fetch presentation from Template or matching Item
+    let presentationRenderings = [];
+    if (template.presentation?.renderings && Array.isArray(template.presentation.renderings) && template.presentation.renderings.length > 0) {
+      presentationRenderings = template.presentation.renderings;
+    } else {
+      const item = await Item.findById(templateId).lean();
+      if (item?.presentation?.shared?.renderings && Array.isArray(item.presentation.shared.renderings)) {
+        presentationRenderings = item.presentation.shared.renderings;
+      }
+    }
+
+    const componentSections = [];
+    const componentTemplates = [];
+    const seenCompTemplateIds = new Set();
+
+    if (presentationRenderings.length > 0) {
+      const presentationService = require('./presentationService');
+      const allRenderingsMetadata = await presentationService.getAllRenderings();
+      const renderingsMetaMap = new Map(allRenderingsMetadata.map((r) => [r.id, r]));
+
+      for (const r of presentationRenderings) {
+        if (r.hidden) continue;
+        const renderingIdStr = r.renderingId ? r.renderingId.toString() : null;
+        const meta = renderingIdStr ? renderingsMetaMap.get(renderingIdStr) : null;
+        const compTplId = meta?.componentTemplate;
+        if (!compTplId) continue;
+        const compTplIdStr = compTplId.toString();
+
+        let compTpl = null;
+        try {
+          compTpl = await Template.findById(compTplIdStr).lean();
+        } catch {
+          compTpl = null;
+        }
+        if (!compTpl) continue;
+
+        const renderingName = r.name || meta?.name || compTpl.name;
+        const renderingDisplayName = meta?.displayName || compTpl.displayName || renderingName;
+        const icon = meta?.icon || compTpl.icon || 'ti ti-box';
+
+        // Count fields
+        let fieldsCount = 0;
+        const compFields = [];
+        if (compTpl.sections) {
+          for (const sec of compTpl.sections) {
+            if (sec.fields) {
+              fieldsCount += sec.fields.length;
+              for (const f of sec.fields) {
+                compFields.push({
+                  ...f,
+                  _id: f._id ? f._id.toString() : new mongoose.Types.ObjectId().toString(),
+                  origin: {
+                    templateId: compTpl._id.toString(),
+                    templateName: compTpl.displayName || compTpl.name,
+                    renderingName,
+                    renderingDisplayName,
+                    icon,
+                    isComponent: true,
+                    isFromPresentation: true,
+                  },
+                });
+              }
+            }
+          }
+        }
+
+        if (!seenCompTemplateIds.has(compTplIdStr)) {
+          seenCompTemplateIds.add(compTplIdStr);
+          componentTemplates.push({
+            _id: compTpl._id.toString(),
+            name: compTpl.name,
+            displayName: compTpl.displayName || compTpl.name,
+            icon,
+            renderingName,
+            renderingDisplayName,
+            fieldsCount,
+            path: compTpl.path,
+          });
+        }
+
+        if (compFields.length > 0) {
+          componentSections.push({
+            _id: new mongoose.Types.ObjectId().toString(),
+            name: `${renderingName} (Component)`,
+            displayName: renderingDisplayName,
+            renderingName,
+            sortOrder: 300 + componentSections.length * 10,
+            origin: {
+              templateId: compTpl._id.toString(),
+              templateName: compTpl.displayName || compTpl.name,
+              renderingName,
+              renderingDisplayName,
+              icon,
+              isComponent: true,
+              isFromPresentation: true,
+            },
+            fields: compFields,
+          });
+        }
+      }
+    }
+
+    result.componentSections = componentSections;
+    result.componentTemplates = componentTemplates;
+    result.allEffectiveSections = [
+      ...(result.sections || []),
+      ...componentSections,
+    ];
+
+    return result;
+  },
 };
 
 module.exports = templateService;

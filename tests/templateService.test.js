@@ -230,4 +230,71 @@ describe('templateService - Template Engine & Inheritance', () => {
       templateService.updateField(tpl._id, tpl.sections[0]._id, fieldId, { type: 'Checkbox' })
     ).rejects.toThrow(/Incompatible type change/);
   });
+
+  test('resolveEffectiveTemplateForTemplate derives component fields from Standard Presentation (DEC-036)', async () => {
+    // 1. Create component template
+    const heroCompTpl = await Template.create({
+      name: 'HeroBannerComp',
+      displayName: 'Hero Banner Component',
+      sections: [
+        {
+          name: 'Hero Data',
+          fields: [
+            { name: 'HeroTitle', title: 'Hero Title', type: 'Single-Line Text', required: true },
+            { name: 'HeroImage', title: 'Hero Image', type: 'Image' },
+          ],
+        },
+      ],
+    });
+
+    // 2. Create Rendering Template and Item
+    const renderingTpl = await Template.create({
+      name: 'Rendering',
+      displayName: 'Rendering',
+      isSystem: true,
+      sections: [],
+    });
+
+    const heroRenderingItem = await Item.create({
+      name: 'HeroBanner',
+      displayName: 'Hero Banner',
+      templateId: renderingTpl._id,
+      path: '/sitecore/layout/Renderings/Feature/HeroBanner',
+      sharedFields: {
+        viewPath: 'site/components/HeroBanner.ejs',
+        componentTemplate: heroCompTpl._id.toString(),
+      },
+    });
+
+    // 3. Create Page Template with standard presentation
+    const pageTpl = await Template.create({
+      name: 'AboutUsPageTemplate',
+      displayName: 'About Us Page Template',
+      sections: [],
+      presentation: {
+        layoutId: null,
+        renderings: [
+          {
+            uid: 'test-rendering-uid-1',
+            renderingId: heroRenderingItem._id,
+            placeholder: 'maincontent',
+            placeholderKey: 'maincontent',
+            sortOrder: 100,
+          },
+        ],
+      },
+    });
+
+    // 4. Resolve effective template for template
+    const resolved = await templateService.resolveEffectiveTemplateForTemplate(pageTpl._id);
+
+    expect(resolved).toBeDefined();
+    expect(resolved.componentTemplates.length).toBe(1);
+    expect(resolved.componentTemplates[0].name).toBe('HeroBannerComp');
+    expect(resolved.componentSections.length).toBe(1);
+    expect(resolved.componentSections[0].fields.length).toBe(2);
+    expect(resolved.componentSections[0].fields.map((f) => f.name)).toEqual(['HeroTitle', 'HeroImage']);
+    expect(resolved.componentSections[0].fields[0].origin.isComponent).toBe(true);
+    expect(resolved.componentSections[0].fields[0].origin.isFromPresentation).toBe(true);
+  });
 });

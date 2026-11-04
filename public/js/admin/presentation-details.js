@@ -406,69 +406,193 @@ window.PresentationDetails = (function () {
     if (titleEl) titleEl.textContent = placeholder;
 
     const grid = document.getElementById('renderingsGridContainer');
+    const statsEl = document.getElementById('renderingSelectedStats');
+    const searchInput = document.getElementById('searchRenderingInput');
+    const folderFilter = document.getElementById('renderingFolderFilter');
+    const btnFilterAll = document.getElementById('btnFilterAllRenderings');
+    const btnFilterRec = document.getElementById('btnFilterRecommendedRenderings');
+    const countAllEl = document.getElementById('countAllRenderings');
+    const countRecEl = document.getElementById('countRecommendedRenderings');
+
     if (grid) {
       grid.innerHTML = `
         <div class="col-12 text-center py-4 text-muted">
           <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-          <div>Đang tải danh sách components được phép...</div>
+          <div>Đang tải danh sách components từ /sitecore/layout/Renderings/...</div>
         </div>
       `;
     }
+    if (statsEl) statsEl.textContent = 'Đang tải components...';
 
     const modalEl = document.getElementById('selectRenderingModal');
     const bsModal = new window.bootstrap.Modal(modalEl);
     bsModal.show();
 
     try {
-      const res = await fetch(`/api/presentation/renderings/allowed?placeholder=${encodeURIComponent(placeholder)}`);
+      const res = await fetch(`/api/presentation/renderings/allowed?placeholder=${encodeURIComponent(placeholder)}&includeAll=true`);
       const json = await res.json();
       if (!json.success || !Array.isArray(json.data)) {
-        grid.innerHTML = '<div class="alert alert-warning">Không tải được danh sách renderings.</div>';
+        grid.innerHTML = '<div class="alert alert-warning">Không tải được danh sách renderings từ /sitecore/layout/Renderings/.</div>';
+        if (statsEl) statsEl.textContent = 'Lỗi tải dữ liệu';
         return;
       }
 
-      grid.innerHTML = '';
-      json.data.forEach((r) => {
-        const col = document.createElement('div');
-        col.className = 'col-md-6 rendering-select-card';
-        const compTplLabel = r.componentTemplateName ? `Template: ${r.componentTemplateName}` : '';
-        col.innerHTML = `
-          <div class="card card-sm border hover-bg-light cursor-pointer p-2 d-flex flex-row align-items-center gap-2" style="cursor: pointer;">
-            <span class="avatar avatar-sm bg-blue-lt rounded">
-              <i class="${r.icon || 'ti ti-box'} fs-3"></i>
-            </span>
-            <div class="flex-fill text-truncate">
-              <div class="fw-bold text-dark text-truncate">${r.displayName || r.name}</div>
-              <div class="text-muted small font-monospace">${r.viewPath || ''}</div>
-              ${compTplLabel ? `<div class="badge bg-purple-lt text-purple small mt-1 font-monospace"><i class="ti ti-puzzle me-1"></i>${compTplLabel}</div>` : ''}
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2">
-              <i class="ti ti-plus"></i> Chọn
-            </button>
-          </div>
-        `;
+      const allRenderings = json.data;
+      const hasRestrictions = Boolean(json.hasRestrictions);
+      let activeScope = 'all'; // 'all' hoặc 'recommended'
+      let selectedFolder = 'all';
+      let searchQuery = '';
 
-        col.addEventListener('click', () => {
-          bsModal.hide();
-          addRenderingToPlaceholder(placeholder, r);
+      // Cập nhật số lượng và hiển thị pill lọc Khuyên dùng nếu placeholder có ràng buộc
+      if (countAllEl) countAllEl.textContent = allRenderings.length;
+      if (hasRestrictions && btnFilterRec) {
+        btnFilterRec.style.display = '';
+        if (countRecEl) countRecEl.textContent = json.allowedCount || allRenderings.filter((r) => r.isAllowed).length;
+      } else if (btnFilterRec) {
+        btnFilterRec.style.display = 'none';
+      }
+
+      // Khởi tạo danh sách thư mục vào dropdown
+      if (folderFilter) {
+        folderFilter.innerHTML = '<option value="all">Tất cả thư mục</option>';
+        const folders = Array.isArray(json.folders)
+          ? json.folders.filter((f) => f && f !== 'Tất cả')
+          : Array.from(new Set(allRenderings.map((r) => r.folder).filter(Boolean)));
+        folders.forEach((f) => {
+          const opt = document.createElement('option');
+          opt.value = f;
+          opt.textContent = `Thư mục: ${f}`;
+          folderFilter.appendChild(opt);
+        });
+        folderFilter.value = 'all';
+      }
+
+      // Render danh sách component dựa trên các bộ lọc
+      function renderCards() {
+        if (!grid) return;
+
+        const filtered = allRenderings.filter((r) => {
+          // Lọc theo scope (Khuyên dùng vs Tất cả)
+          if (activeScope === 'recommended' && !r.isAllowed) {
+            return false;
+          }
+          // Lọc theo thư mục
+          if (selectedFolder !== 'all') {
+            const fName = (r.folder || 'Renderings').toLowerCase();
+            if (fName !== selectedFolder.toLowerCase()) return false;
+          }
+          // Lọc theo ô tìm kiếm
+          if (searchQuery) {
+            const textToSearch = [
+              r.displayName || '',
+              r.name || '',
+              r.viewPath || '',
+              r.componentTemplateName || '',
+              r.folder || '',
+            ].join(' ').toLowerCase();
+            if (!textToSearch.includes(searchQuery)) return false;
+          }
+          return true;
         });
 
-        grid.appendChild(col);
-      });
+        // Cập nhật thanh trạng thái
+        if (statsEl) {
+          statsEl.innerHTML = `Hiển thị <strong>${filtered.length}</strong> / <strong>${allRenderings.length}</strong> components`;
+        }
 
-      const searchInput = document.getElementById('searchRenderingInput');
+        if (filtered.length === 0) {
+          grid.innerHTML = `
+            <div class="col-12 text-center py-5 text-muted">
+              <i class="ti ti-search-off fs-1 d-block mb-2 text-secondary"></i>
+              <div>Không tìm thấy component nào phù hợp với bộ lọc.</div>
+              <div class="small mt-1">Thử đổi từ khóa tìm kiếm hoặc chọn "Tất cả thư mục".</div>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = '';
+        filtered.forEach((r) => {
+          const col = document.createElement('div');
+          col.className = 'col-md-6 rendering-select-card';
+          const compTplLabel = r.componentTemplateName ? `Template: ${r.componentTemplateName}` : '';
+          const folderLabel = r.folder && r.folder !== 'Renderings' ? r.folder : 'Renderings';
+          const isRec = hasRestrictions && r.isAllowed;
+
+          col.innerHTML = `
+            <div class="card card-sm border hover-bg-light cursor-pointer p-2 d-flex flex-row align-items-center gap-2 h-100 ${isRec ? 'border-primary-subtle' : ''}" style="cursor: pointer;">
+              <span class="avatar avatar-sm ${isRec ? 'bg-purple-lt' : 'bg-blue-lt'} rounded flex-shrink-0">
+                <i class="${r.icon || 'ti ti-box'} fs-3"></i>
+              </span>
+              <div class="flex-fill text-truncate">
+                <div class="d-flex align-items-center gap-1 text-truncate">
+                  <span class="fw-bold text-dark text-truncate">${r.displayName || r.name}</span>
+                  ${isRec ? '<span class="badge bg-purple-lt text-purple small ms-auto flex-shrink-0" title="Được cấu hình trong Placeholder Settings"><i class="ti ti-star me-1"></i>Khuyên dùng</span>' : ''}
+                </div>
+                <div class="d-flex align-items-center gap-1 mt-1 text-truncate">
+                  <span class="badge bg-light text-muted small font-monospace"><i class="ti ti-folder me-1"></i>${folderLabel}</span>
+                  ${r.viewPath
+                    ? `<span class="text-muted small font-monospace text-truncate" title="${r.viewPath}">${r.viewPath}</span>`
+                    : '<span class="badge bg-warning-lt text-warning small"><i class="ti ti-alert-circle me-1"></i>Chưa gán viewPath</span>'
+                  }
+                </div>
+                ${compTplLabel ? `<div class="badge bg-secondary-lt text-muted small mt-1 font-monospace text-truncate"><i class="ti ti-puzzle me-1"></i>${compTplLabel}</div>` : ''}
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 flex-shrink-0">
+                <i class="ti ti-plus"></i> Chọn
+              </button>
+            </div>
+          `;
+
+          col.addEventListener('click', () => {
+            bsModal.hide();
+            addRenderingToPlaceholder(placeholder, r);
+          });
+
+          grid.appendChild(col);
+        });
+      }
+
+      // Xử lý sự kiện tìm kiếm realtime
       if (searchInput) {
         searchInput.value = '';
         searchInput.oninput = (e) => {
-          const q = e.target.value.toLowerCase().trim();
-          grid.querySelectorAll('.rendering-select-card').forEach((card) => {
-            const text = card.textContent.toLowerCase();
-            card.style.display = text.includes(q) ? '' : 'none';
-          });
+          searchQuery = e.target.value.toLowerCase().trim();
+          renderCards();
         };
       }
+
+      // Xử lý sự kiện lọc theo thư mục
+      if (folderFilter) {
+        folderFilter.onchange = (e) => {
+          selectedFolder = e.target.value;
+          renderCards();
+        };
+      }
+
+      // Xử lý chuyển tab Tất cả vs Khuyên dùng
+      if (btnFilterAll) {
+        btnFilterAll.onclick = () => {
+          activeScope = 'all';
+          btnFilterAll.className = 'btn btn-sm btn-primary active';
+          if (btnFilterRec) btnFilterRec.className = 'btn btn-sm btn-outline-purple';
+          renderCards();
+        };
+      }
+      if (btnFilterRec) {
+        btnFilterRec.onclick = () => {
+          activeScope = 'recommended';
+          btnFilterRec.className = 'btn btn-sm btn-purple active';
+          if (btnFilterAll) btnFilterAll.className = 'btn btn-sm btn-outline-primary';
+          renderCards();
+        };
+      }
+
+      // Render lần đầu
+      renderCards();
     } catch (err) {
       grid.innerHTML = `<div class="alert alert-danger">Lỗi: ${err.message}</div>`;
+      if (statsEl) statsEl.textContent = 'Lỗi kết nối';
     }
   }
 

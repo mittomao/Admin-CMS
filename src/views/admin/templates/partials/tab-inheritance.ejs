@@ -2,6 +2,7 @@
   const currentBaseIds = (template.baseTemplates || []).map(b => (b._id ? b._id.toString() : b.toString()));
   const allTpls = typeof allTemplates !== 'undefined' ? allTemplates.filter(t => t._id.toString() !== template._id.toString()) : [];
   const resolvedBaseTemplates = resolved && resolved.baseTemplates ? resolved.baseTemplates : [];
+  const compTemplates = locals.componentTemplates || resolved?.componentTemplates || [];
 %>
 <form id="templateInheritanceForm">
   <div class="card shadow-sm border-0">
@@ -37,6 +38,48 @@
           <% }) %>
         </div>
       <% } %>
+
+      <!-- Component Templates from Standard Presentation (DEC-036) -->
+      <div class="mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+            <i class="ti ti-puzzle text-purple fs-2"></i>
+            <span>Component Templates (từ Standard Presentation)</span>
+            <span class="badge bg-purple-lt text-purple small">DEC-036: Effective Inherited</span>
+          </h5>
+          <span class="text-muted small">Tự động liên kết qua Renderings</span>
+        </div>
+
+        <% if (compTemplates.length === 0) { %>
+          <div class="p-3 bg-light-subtle rounded border text-muted small">
+            <i class="ti ti-info-circle me-1 text-muted"></i>
+            Chưa có rendering nào trong Standard Presentation liên kết với Component Template.
+          </div>
+        <% } else { %>
+          <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-2">
+            <i class="ti ti-info-circle fs-2 text-info"></i>
+            <div>
+              Theo quyết định kiến trúc <strong>DEC-036</strong>, các Component Template này được <strong>liên kết tự động qua Standard Presentation</strong> (không cần chọn làm Base Template). Khi tạo hoặc mở trang từ template này, các trường của component sẽ tự động xuất hiện trên form nhập liệu.
+            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <% compTemplates.forEach(ct => { %>
+              <div class="badge bg-purple-lt p-2 d-flex align-items-center gap-2 border border-purple-subtle">
+                <i class="<%= ct.icon || 'ti ti-puzzle' %> fs-2 text-purple"></i>
+                <div class="text-start">
+                  <div class="fs-4 fw-semibold text-dark"><%= ct.displayName || ct.name %></div>
+                  <div class="text-muted font-monospace small" style="font-size: 0.65rem;">
+                    Component: <%= ct.renderingDisplayName || ct.renderingName %> · <%= ct.fieldsCount || 0 %> fields
+                  </div>
+                </div>
+                <a href="/admin/template-manager/<%= ct._id %>" class="btn btn-sm btn-ghost-purple p-1 ms-2" title="Mở Component Template" target="_blank">
+                  <i class="ti ti-external-link"></i>
+                </a>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
 
       <!-- Base Templates Selector Grid -->
       <h5 class="fw-bold mb-2 text-dark">Select Base Templates</h5>

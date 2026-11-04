@@ -1,5 +1,5 @@
 <%
-  const sections = resolved && resolved.sections ? resolved.sections : [];
+  const sections = resolved && (resolved.allEffectiveSections || resolved.sections) ? (resolved.allEffectiveSections || resolved.sections) : [];
   const stdValues = resolved && resolved.standardValues ? resolved.standardValues : {};
 %>
 <form id="templateStandardValuesForm">

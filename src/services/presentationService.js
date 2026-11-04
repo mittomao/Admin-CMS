@@ -158,6 +158,23 @@ const presentationService = {
   },
 
   /**
+   * Helper trích xuất tên thư mục cha của rendering item (ví dụ Feature, Project, Renderings)
+   */
+  getRenderingFolder(path) {
+    if (!path) return 'Renderings';
+    const prefix = '/sitecore/layout/renderings/';
+    const lower = path.toLowerCase();
+    if (lower.startsWith(prefix)) {
+      const relative = path.substring(prefix.length);
+      const segments = relative.split('/');
+      if (segments.length > 1) {
+        return segments[0];
+      }
+    }
+    return 'Renderings';
+  },
+
+  /**
    * Get all active Rendering items under /sitecore/layout/Renderings/
    */
   async getAllRenderings() {
@@ -192,6 +209,7 @@ const presentationService = {
       const sharedFields = toPlainObject(item.sharedFields);
       const viewPath = sharedFields.viewPath || fields.viewPath || '';
       const compTplId = sharedFields.componentTemplate || fields.componentTemplate || null;
+      const folder = this.getRenderingFolder(item.path);
       return {
         _id: item._id,
         id: item._id.toString(),
@@ -204,19 +222,29 @@ const presentationService = {
         parametersTemplate: sharedFields.parametersTemplate || fields.parametersTemplate || null,
         sortOrder: item.sortOrder || 100,
         path: item.path,
+        folder,
       };
     });
   },
 
   /**
    * Get allowed renderings for a given placeholder key or placeholder item ID
+   * @param {string} placeholderKeyOrId - Placeholder key or item ID
+   * @param {Object} options - { includeAll: boolean, showAll: boolean }
    */
-  async getAllowedRenderings(placeholderKeyOrId) {
+  async getAllowedRenderings(placeholderKeyOrId, options = {}) {
+    const allRenderings = await this.getAllRenderings();
     if (!placeholderKeyOrId) {
-      return this.getAllRenderings();
+      const list = allRenderings.map((r) => ({ ...r, isAllowed: true }));
+      if (options.includeAll) {
+        return {
+          hasRestrictions: false,
+          renderings: list,
+        };
+      }
+      return list;
     }
 
-    const allRenderings = await this.getAllRenderings();
     const allPlaceholders = await this.getAllPlaceholders();
 
     const placeholder = allPlaceholders.find(
@@ -225,20 +253,49 @@ const presentationService = {
         p.placeholderKey.toLowerCase() === placeholderKeyOrId.toString().toLowerCase()
     );
 
-    if (!placeholder || !placeholder.allowedRenderings || placeholder.allowedRenderings.length === 0) {
-      // Nếu placeholder không giới hạn hoặc không tìm thấy, cho phép toàn bộ renderings
-      return allRenderings;
-    }
+    const hasRestrictions = Boolean(
+      placeholder && placeholder.allowedRenderings && placeholder.allowedRenderings.length > 0
+    );
 
-    const allowedSet = new Set(placeholder.allowedRenderings.map((r) => r.toLowerCase()));
+    const allowedSet = hasRestrictions
+      ? new Set(placeholder.allowedRenderings.map((r) => r.toLowerCase()))
+      : null;
 
-    return allRenderings.filter((r) => {
-      return (
+    const enriched = allRenderings.map((r) => {
+      const isAllowed = !hasRestrictions || (
         allowedSet.has(r.id.toLowerCase()) ||
         allowedSet.has(r.name.toLowerCase()) ||
         allowedSet.has(r.displayName.toLowerCase())
       );
+      return {
+        ...r,
+        isAllowed,
+      };
     });
+
+    // Sắp xếp: các item isAllowed = true lên trước, sau đó theo sortOrder và displayName
+    enriched.sort((a, b) => {
+      if (a.isAllowed && !b.isAllowed) return -1;
+      if (!a.isAllowed && b.isAllowed) return 1;
+      if ((a.sortOrder || 100) !== (b.sortOrder || 100)) {
+        return (a.sortOrder || 100) - (b.sortOrder || 100);
+      }
+      return (a.displayName || a.name).localeCompare(b.displayName || b.name);
+    });
+
+    if (options.includeAll) {
+      return {
+        hasRestrictions,
+        renderings: enriched,
+      };
+    }
+
+    if (options.showAll) {
+      return enriched;
+    }
+
+    // Default legacy filter cho backward compatibility: chỉ trả về các rendering được phép
+    return enriched.filter((r) => r.isAllowed);
   },
 
   /**
@@ -591,6 +648,27 @@ const presentationService = {
     await item.save();
     logger.info(`[presentationService] Saved ${scope} presentation for item: ${item.path} (ID: ${item._id})`);
 
+    // Đồng bộ sang Template document nếu item là một Template (nằm dưới /sitecore/templates hoặc có Template trùng _id)
+    if (scope === 'shared') {
+      try {
+        const isTemplatePath = item.path?.toLowerCase().startsWith('/sitecore/templates');
+        const targetTemplate = await Template.findById(item._id);
+        if (isTemplatePath || targetTemplate) {
+          if (targetTemplate) {
+            targetTemplate.presentation = {
+              layoutId: layoutId ? new mongoose.Types.ObjectId(layoutId) : null,
+              renderings: formattedRenderings,
+            };
+            if (userId) targetTemplate.updatedBy = userId;
+            await targetTemplate.save();
+            logger.info(`[presentationService] Đồng bộ Standard Presentation sang Template: ${targetTemplate.name} (${targetTemplate._id})`);
+          }
+        }
+      } catch (syncErr) {
+        logger.error(`[presentationService] Lỗi đồng bộ sang Template collection: ${syncErr.message}`);
+      }
+    }
+
     try {
       const templateService = require('./templateService');
       templateService.invalidateCache();
@@ -694,6 +772,23 @@ const presentationService = {
 
     await template.save();
     logger.info(`[presentationService] Set Standard Presentation on Template: ${template.name}`);
+
+    // Đồng bộ ngược lại sang Item.presentation.shared nếu có Item tương ứng trong cây Content Tree
+    try {
+      const item = await Item.findById(template._id);
+      if (item) {
+        if (!item.presentation) item.presentation = { shared: {}, final: [] };
+        item.presentation.shared = {
+          layoutId: layoutId ? new mongoose.Types.ObjectId(layoutId) : null,
+          renderings: formattedRenderings,
+        };
+        if (options.userId) item.updatedBy = options.userId;
+        await item.save();
+        logger.info(`[presentationService] Đồng bộ ngược lại Item.presentation.shared: ${item.path} (${item._id})`);
+      }
+    } catch (syncErr) {
+      logger.error(`[presentationService] Lỗi đồng bộ ngược lại Item: ${syncErr.message}`);
+    }
 
     try {
       const templateService = require('./templateService');

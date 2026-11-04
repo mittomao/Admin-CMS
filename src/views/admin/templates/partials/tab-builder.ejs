@@ -1,5 +1,8 @@
 <%
   const sections = resolved && resolved.sections ? resolved.sections : (template && template.sections ? template.sections : []);
+  const compSections = locals.componentSections || resolved?.componentSections || [];
+  const compTemplates = locals.componentTemplates || resolved?.componentTemplates || [];
+  const hasPresentationRenderings = (template && template.presentation && Array.isArray(template.presentation.renderings) && template.presentation.renderings.length > 0) || compSections.length > 0;
 %>
 <!-- Quick Info Section (DEC-037 / GĐ 6.3) -->
 <%- include('../../../partials/quick-info', { quickInfo: locals.quickInfo, item: template, template: resolved }) %>
@@ -20,11 +23,20 @@
 
   <div class="card-body p-3">
     <% if (sections.length === 0) { %>
-      <div class="empty py-4 text-center">
-        <div class="empty-icon text-muted"><i class="ti ti-layout-navbar-expand fs-1"></i></div>
-        <p class="empty-title">No Sections Defined</p>
-        <p class="empty-subtitle text-muted">Click "Add Section" above to organize fields for this template.</p>
-      </div>
+      <% if (compSections.length > 0) { %>
+        <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+          <i class="ti ti-info-circle fs-2 text-info"></i>
+          <div>
+            <strong>Chưa có Section riêng:</strong> Template này hiện chưa tạo các section trường dữ liệu riêng. Tuy nhiên, template đang sử dụng <strong><%= compTemplates.length %> Component Template(s)</strong> gắn với Standard Presentation bên dưới. Khi tạo trang từ template này, các trường của component sẽ tự động xuất hiện trên form nhập liệu.
+          </div>
+        </div>
+      <% } else { %>
+        <div class="empty py-4 text-center">
+          <div class="empty-icon text-muted"><i class="ti ti-layout-navbar-expand fs-1"></i></div>
+          <p class="empty-title">No Sections Defined</p>
+          <p class="empty-subtitle text-muted">Click "Add Section" above to organize fields for this template.</p>
+        </div>
+      <% } %>
     <% } else { %>
       <!-- Sections Sortable Container -->
       <div class="accordion" id="builderSectionsContainer">
@@ -208,19 +220,114 @@
       </div>
     <% } %>
 
-    <% if (template && template.presentation && Array.isArray(template.presentation.renderings) && template.presentation.renderings.length > 0) { %>
+    <% if (hasPresentationRenderings) { %>
       <div class="mt-4 pt-3 border-top">
-        <h5 class="fw-bold mb-2 text-dark d-flex align-items-center gap-2">
-          <i class="ti ti-components text-purple fs-2"></i>
-          <span>Fields từ Renderings (Standard Presentation)</span>
-          <span class="badge bg-purple-lt text-purple small">Chỉ đọc</span>
-        </h5>
-        <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-2">
-          <i class="ti ti-info-circle fs-2"></i>
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+            <i class="ti ti-components text-purple fs-2"></i>
+            <span>Fields từ Renderings (Standard Presentation)</span>
+            <span class="badge bg-purple-lt text-purple small">DEC-036: Effective Fields</span>
+          </h5>
+          <span class="text-muted small">
+            <%= compSections.length %> section(s) · <%= compTemplates.length %> component template(s)
+          </span>
+        </div>
+
+        <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-3">
+          <i class="ti ti-info-circle fs-2 text-info"></i>
           <div>
-            Template này có <strong><%= template.presentation.renderings.length %> component(s)</strong> trong Standard Presentation. Các trường của component sẽ được tự động suy ra và hiển thị theo Section riêng trên Content Editor của Item.
+            Các trường bên dưới được <strong>tự động suy ra từ Standard Presentation</strong> của Template. Chúng sẽ tự động xuất hiện trên Content Editor khi biên tập trang. Cấu trúc trường được quản lý tập trung tại Component Template gốc (chỉ đọc tại đây).
           </div>
         </div>
+
+        <% if (compSections.length > 0) { %>
+          <div class="accordion" id="builderComponentSectionsContainer">
+            <% compSections.forEach((cSection, csIdx) => { %>
+              <div class="accordion-item mb-3 border border-purple-subtle rounded shadow-2xs">
+                <!-- Component Section Header -->
+                <div class="accordion-header bg-purple-lt d-flex align-items-center justify-content-between p-2 border-bottom border-purple-subtle">
+                  <div class="d-flex align-items-center gap-2 flex-fill">
+                    <button
+                      class="accordion-button py-1 px-2 fw-bold text-dark bg-transparent border-0 shadow-none d-flex align-items-center gap-2 flex-fill"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#csec-collapse-<%= csIdx %>"
+                      aria-expanded="true"
+                    >
+                      <i class="<%= cSection.origin.icon || 'ti ti-box' %> text-purple fs-2"></i>
+                      <span class="fw-bold text-purple"><%= cSection.displayName %></span>
+                      <span class="badge bg-white text-purple border border-purple-subtle ms-2 font-monospace" style="font-size: 0.65rem;">
+                        <%= cSection.fields ? cSection.fields.length : 0 %> <%= cSection.fields && cSection.fields.length === 1 ? 'field' : 'fields' %>
+                      </span>
+                      <span class="badge bg-purple text-white ms-1" style="font-size: 0.65rem;" title="Component Template">
+                        <i class="ti ti-puzzle me-1"></i><%= cSection.origin.templateName %>
+                      </span>
+                    </button>
+                  </div>
+
+                  <div class="d-flex align-items-center gap-2 pe-2">
+                    <span class="badge bg-secondary-lt text-muted small">Chỉ đọc</span>
+                    <a
+                      href="/admin/template-manager/<%= cSection.origin.templateId %>"
+                      class="btn btn-sm btn-ghost-purple p-1 d-flex align-items-center gap-1 text-decoration-none"
+                      title="Chuyển đến Component Template để chỉnh sửa cấu trúc trường"
+                      target="_blank"
+                    >
+                      <i class="ti ti-external-link"></i>
+                      <span class="small">Sửa Template gốc</span>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Component Section Fields List -->
+                <div id="csec-collapse-<%= csIdx %>" class="accordion-collapse collapse show">
+                  <div class="accordion-body p-2 bg-light-subtle">
+                    <div class="list-group list-group-flush">
+                      <% (cSection.fields || []).forEach(field => { %>
+                        <div class="list-group-item d-flex align-items-center justify-content-between p-2 rounded border mb-1 bg-white shadow-2xs">
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="text-purple opacity-75">
+                              <i class="ti ti-columns-2 fs-3"></i>
+                            </span>
+                            <div>
+                              <div class="fw-semibold text-dark small d-flex align-items-center gap-2">
+                                <span><%= field.title || field.name %></span>
+                                <span class="badge bg-light text-muted font-monospace border" style="font-size: 0.65rem;">
+                                  <%= field.name %>
+                                </span>
+                                <% if (field.required) { %>
+                                  <span class="badge bg-danger-lt text-danger" style="font-size: 0.6rem;">Required</span>
+                                <% } %>
+                                <% if (field.shared) { %>
+                                  <span class="badge bg-azure-lt text-azure" style="font-size: 0.6rem;">Shared</span>
+                                <% } %>
+                              </div>
+                              <div class="text-muted small" style="font-size: 0.7rem;">
+                                Kiểu: <span class="fw-medium text-dark"><%= field.type %></span>
+                                <% if (field.defaultValue) { %>
+                                  · Mặc định: <code class="text-muted"><%= field.defaultValue %></code>
+                                <% } %>
+                                <% if (field.helpText) { %>
+                                  · <span class="fst-italic"><%= field.helpText %></span>
+                                <% } %>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="d-flex align-items-center gap-1">
+                            <span class="badge bg-purple-lt text-purple" style="font-size: 0.65rem;">
+                              <i class="ti ti-lock me-1"></i>Từ Component
+                            </span>
+                          </div>
+                        </div>
+                      <% }) %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
       </div>
     <% } %>
   </div>

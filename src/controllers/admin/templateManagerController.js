@@ -63,7 +63,7 @@ const templateManagerController = {
         return res.status(404).send('<div class="alert alert-danger m-3">Template not found.</div>');
       }
 
-      const resolved = await templateService.resolveTemplate(id);
+      const resolved = await templateService.resolveEffectiveTemplateForTemplate(id);
       const quickInfo = await itemService.getQuickInfo(id);
 
       res.render('admin/templates/partials/tab-builder', {
@@ -71,6 +71,8 @@ const templateManagerController = {
         template,
         resolved,
         quickInfo,
+        componentSections: resolved?.componentSections || [],
+        componentTemplates: resolved?.componentTemplates || [],
       });
     } catch (error) {
       res.status(500).send(`<div class="alert alert-danger m-3">${error.message}</div>`);
@@ -84,7 +86,7 @@ const templateManagerController = {
   async getStandardValuesPartial(req, res) {
     try {
       const { id } = req.params;
-      const resolved = await templateService.resolveTemplate(id);
+      const resolved = await templateService.resolveEffectiveTemplateForTemplate(id);
       if (!resolved) {
         return res.status(404).send('<div class="alert alert-danger m-3">Template not found.</div>');
       }
@@ -130,7 +132,7 @@ const templateManagerController = {
     try {
       const { id } = req.params;
       const template = await templateService.getById(id);
-      const resolved = await templateService.resolveTemplate(id);
+      const resolved = await templateService.resolveEffectiveTemplateForTemplate(id);
       const allTemplates = await templateService.list();
 
       if (!template) {
@@ -142,6 +144,7 @@ const templateManagerController = {
         template,
         resolved,
         allTemplates,
+        componentTemplates: resolved?.componentTemplates || [],
       });
     } catch (error) {
       res.status(500).send(`<div class="alert alert-danger m-3">${error.message}</div>`);
@@ -179,10 +182,15 @@ const templateManagerController = {
   async getPreviewPartial(req, res) {
     try {
       const { id } = req.params;
-      const resolved = await templateService.resolveTemplate(id);
+      const resolved = await templateService.resolveEffectiveTemplateForTemplate(id);
       if (!resolved) {
         return res.status(404).send('<div class="alert alert-danger m-3">Template not found.</div>');
       }
+
+      const previewTemplate = {
+        ...resolved,
+        sections: resolved.allEffectiveSections || resolved.sections || [],
+      };
 
       // Mock item using standard values
       const mockItem = {
@@ -196,7 +204,7 @@ const templateManagerController = {
       res.render('content-editor/item-form', {
         layout: false,
         item: mockItem,
-        template: resolved,
+        template: previewTemplate,
         breadcrumbs: [{ displayName: 'Templates' }, { displayName: resolved.displayName || resolved.name }, { displayName: 'Preview' }],
         isPreview: true,
       });
