@@ -1,50 +1,65 @@
-# BÁO CÁO NGHIỆM THU GIAI ĐOẠN 6: PRESENTATION (LAYOUT, RENDERING & PLACEHOLDERS)
+# BÁO CÁO NGHIỆM THU GIAI ĐOẠN 6: PRESENTATION (SERVER-SIDE EJS SSR LAYOUT, RENDERING & PLACEHOLDERS)
 
-- **Giai đoạn:** GĐ 6 — Quản trị Headless Presentation
+- **Giai đoạn:** GĐ 6 — Quản trị Server-Side EJS Presentation
 - **Thời gian hoàn thành:** 2026-11-04
 - **Trạng thái:** Hoàn thành (100% tiêu chí DoD đạt chuẩn)
-- **Kiểm thử tự động:** 14/14 Test Suites PASS (128/128 Tests đạt 100%)
+- **Kiểm thử tự động:** 14/14 Test Suites PASS (129/129 Tests đạt 100%)
 - **Chất lượng mã nguồn:** ESLint 0 errors, 0 warnings
-- **Quyết định kiến trúc liên quan:** DEC-019, DEC-020, DEC-021, DEC-022, DEC-024, DEC-026, DEC-029, DEC-030
-
+- **Quyết định kiến trúc liên quan:** DEC-031, DEC-032, DEC-033, DEC-034, DEC-035 (thay thế DEC-019, DEC-020, DEC-021, DEC-022, DEC-023, DEC-030)
 
 ---
 
 ## 1. Tóm tắt Mục tiêu & Phạm vi Đã Hoàn Thành
 
-Đã xây dựng toàn diện hệ thống quản lý **Headless Presentation** (Devices, Layouts, Renderings, Placeholder Settings & Presentation Details) theo chuẩn Sitecore XM phục vụ kiến trúc Headless CMS:
-1. **System Templates & Items (DEC-024, DEC-030):**
-   - Tạo các System Templates: `Device`, `Layout`, `Rendering`, `Placeholder Settings`, `Rendering Parameters`, `Layout Folder`, `Rendering Folder`.
-   - Cây hệ thống phân cấp chuẩn dưới `/sitecore/layout/`:
-     - `/sitecore/layout/Layouts` (sortOrder: 100, template: `Layout Folder`) -> Chứa `MainLayout` và các Layout con.
-     - `/sitecore/layout/Renderings` (sortOrder: 200, template: `Rendering Folder`) -> Thư mục con `/sitecore/layout/Renderings/Feature` chứa các renderings mẫu (`Hero`, `RichText`, `Promo`, `Navigation`).
-     - `/sitecore/layout/Devices` (sortOrder: 300, template: `Folder`) -> `Default`, `Mobile`.
-     - `/sitecore/layout/Placeholder Settings` (sortOrder: 400, template: `Folder`) -> `header`, `main`, `footer`, `content`, `column-{*}`.
-   - Insert Options nghiêm ngặt: `Layouts`/`Layout Folder` -> `[Layout Folder, Layout]`; `Renderings`/`Rendering Folder` -> `[Rendering Folder, Rendering]`; `Layout`/`Rendering` leaf item không cho tạo con thủ công.
-   - Cơ chế bảo vệ node hệ thống cốt lõi (`/sitecore/layout`, `Layouts`, `Renderings`, `Devices`, `Placeholder Settings`) khỏi bị đổi tên, di chuyển, xóa.
-   - Kiểm tra đệ quy chống xóa component hoặc thư mục chứa component đang được Template hoặc Item sử dụng (`getUsage`).
-   - Phân quyền thao tác nhánh Presentation: Chỉ người dùng có quyền `presentation:write` (Administrator, Developer) mới được tạo/sửa/đổi tên/di chuyển/xóa dưới `/sitecore/layout/*`. Content Author bị chặn 403.
-2. **Hợp nhất Presentation Đa tầng (DEC-020, DEC-021):**
-   - Triển khai `presentationService.getFinalPresentation`: hợp nhất 3 tầng bố cục: **Standard Presentation** (từ Template) $\rightarrow$ **Shared Layout** (Item cấp toàn cục) $\rightarrow$ **Final Layout** (Ghi đè delta theo cặp `[lang, version]`).
-   - Định danh Rendering Instance bằng chuỗi UID bất biến; hỗ trợ ghi đè thuộc tính (`parameters`, `datasourceId`, `sortOrder`), thêm mới, hoặc đánh dấu ẩn (`hidden: true`).
-3. **Cơ chế Khớp Placeholder Key Động & Lồng nhau (DEC-022):**
-   - Hỗ trợ wildcard pattern `column-{*}` khớp các cột lưới động (`column-1`, `column-2`, `column-left`...).
-   - Hỗ trợ phân giải placeholder lồng nhau (`/main/column-1`).
-4. **Hạ tầng Dùng chung (Item Picker & Parameters Form):**
-   - Xây dựng component độc lập `ItemPicker` (`public/js/admin/item-picker.js` và `item-picker-modal.ejs`) cho phép duyệt cây `/sitecore`, lọc theo template/path và chọn datasource item mượt mà.
-   - Hỗ trợ cấu hình Dynamic Parameters dạng bảng Key-Value.
-5. **Giao diện Presentation Details Trực quan & SortableJS:**
-   - Modal `details-modal.ejs` tích hợp **SortableJS**: kéo thả sắp xếp thứ tự component trong placeholder hoặc di chuyển component giữa các placeholders hợp lệ.
-   - Tabs chuyển đổi Device (`Default`, `Mobile`).
-   - Switch Scope rõ ràng: `Shared Layout` vs `Final Layout [vi/1]`.
-   - Nút "Thêm Component" lọc theo Placeholder Settings, "Sửa" cấu hình datasource/parameters, "Xóa", "Reset về Standard", và "Preview JSON".
-6. **Kích hoạt Ribbon Tab Presentation:**
-   - Tab `PRESENTATION` trên Ribbon Content Editor đã được bật với các nút: Details, Reset, Preview JSON.
-7. **Bảo mật & Toàn vẹn Dữ liệu:**
-   - Kiểm tra Optimistic Locking (409) với `expectedUpdatedAt`.
-   - Phân quyền `canPerform` với `presentation:read` và `presentation:write`.
-   - Quét kiểm tra toàn vẹn `getUsage` (chặn xóa layout/rendering đang dùng) và `getReferences` (cảnh báo xóa datasource đang dùng).
-   - Tự động sao chép `final` presentation khi tạo version mới (DEC-026) và tự động dọn dẹp khi xóa version.
+Đã hoàn thành tái cấu trúc và hiện thực hóa phân hệ **Presentation** quản lý bố cục và giao diện website theo kiến trúc **100% Server-Side EJS SSR** (chạy chung trong ứng dụng Express, không SPA/React, không Headless Layout Service JSON REST API):
+
+1. **Tái cấu trúc Cây Presentation `/sitecore/layout/` với đúng 3 nhánh (DEC-032):**
+   - Loại bỏ hoàn toàn các nhánh cũ `Devices` và `Placeholder Settings`.
+   - Cây hệ thống chỉ có đúng 3 nhánh con cốt lõi:
+     - `/sitecore/layout/Layouts`: Chứa layout items (`HomeLayout`...).
+     - `/sitecore/layout/Placeholders`: Chứa placeholder items (`header`, `maincontent`, `footer`...).
+     - `/sitecore/layout/Renderings`: Chứa rendering items (`HeroBanner`, `Introduction`, `ImageText`...).
+   - Khóa bảo vệ các node hệ thống: cấm xoá, đổi tên, di chuyển đối với `/sitecore/layout` và 3 nhánh con.
+   - Insert Options nghiêm ngặt theo template folder tương ứng.
+
+2. **Quản trị bố cục bằng thuộc tính `viewPath` & Cơ chế Bảo mật (DEC-033):**
+   - Mỗi `Layout` và `Rendering` lưu đường dẫn `viewPath` trỏ đến file EJS trong thư mục `src/views/site/`.
+   - Hàm xác thực `presentationService.validateViewPath`:
+     - Whitelist thư mục an toàn: chỉ chấp nhận file nằm dưới `site/` (`src/views/site/`).
+     - Chặn triệt để Path Traversal (`..`, `\`, null bytes).
+     - Bắt buộc đuôi file `.ejs`.
+     - Kiểm tra file tồn tại trên ổ đĩa vật lý khi lưu trong Content Editor; cảnh báo nếu file view chưa được tạo.
+
+3. **Standard Presentation & Kế thừa Component Template (DEC-035):**
+   - Định nghĩa Component Templates dưới `/sitecore/templates/Feature/Components/` (`HeroBanner`, `Introduction`, `ImageText`).
+   - Định nghĩa Page Templates dưới `/sitecore/templates/Project/Pages/` (`Home`, `AboutUs`).
+   - Page Templates kế thừa trực tiếp các Component Templates qua mảng `baseTemplates`, giúp Page Item sở hữu trực tiếp các trường dữ liệu của component (`BackgroundImage`, `HeroTitle`, `IntroHeading`...).
+   - Cấu hình **Standard Presentation** trên Page Template: gắn `layoutId` và danh sách renderings theo placeholder.
+
+4. **Tầng Service & Thuật toán Phân giải Bố cục (`presentationService.getFinalPresentation`):**
+   - Phân giải hợp nhất 3 tầng bố cục: **Standard Presentation** (từ Page Template) $\rightarrow$ **Shared Presentation** (cấp toàn cục item) $\rightarrow$ **Final Presentation** (override theo từng ngôn ngữ và version `[lang, version]`).
+   - Hỗ trợ thao tác delta: override thuộc tính, thêm rendering mới vào placeholder, ẩn rendering (`hidden: true`), đổi thứ tự sắp xếp `sortOrder`.
+   - Hàm `getAllowedRenderings(placeholderKey)`: kiểm tra danh sách rendering được phép chèn vào placeholder dựa trên field `allowedRenderings` của Placeholder item.
+   - Hàm `resetToStandard`: xóa override trên item, khôi phục nguyên bản cấu hình từ Template.
+   - Hàm `getUsage`: kiểm tra quét tham chiếu toàn cục, ngăn chặn xoá Layout hoặc Rendering đang được Template hoặc Content Item sử dụng.
+
+5. **Giao diện Presentation Details Modal trong Content Editor:**
+   - Loại bỏ hoàn toàn Device Tabs (DEC-031).
+   - Chọn Layout cho trang hiển thị tên và `viewPath` thực tế.
+   - Hiển thị danh sách renderings gom nhóm theo từng Card Placeholder (`header`, `maincontent`, `footer`).
+   - Tích hợp **SortableJS**: kéo thả sắp xếp thứ tự các component trong cùng placeholder hoặc chuyển sang placeholder khác mượt mà.
+   - Modal Thêm Component: tự động lọc danh sách theo `allowedRenderings` của placeholder đang chọn.
+   - Nút "Reset to standard presentation": khôi phục layout mặc định kèm hộp thoại xác nhận.
+   - Nút "Preview Layout Structure": xem cấu trúc JSON phân giải của trang.
+
+6. **Seed Data & Bộ View EJS Mẫu:**
+   - Cung cấp layout EJS chuẩn `src/views/site/layouts/HomeLayout.ejs` tích hợp helper `<%- placeholder('header') %>`, `<%- placeholder('maincontent') %>`, `<%- placeholder('footer') %>`.
+   - Cung cấp component EJS chuẩn: `HeroBanner.ejs`, `Introduction.ejs`, `ImageText.ejs`.
+   - Cung cấp trang lỗi `src/views/site/404.ejs` và stylesheet công khai `public/site/css/style.css`.
+   - Script seed idempotent: `src/scripts/seed-presentation-data.js` tự động khởi tạo hoặc cập nhật cây presentation chuẩn.
+
+7. **Kích hoạt Ribbon Tab Presentation:**
+   - Tab `PRESENTATION` trên Ribbon Content Editor đã được bật với các nút: Details, Reset to Standard, Preview.
 
 ---
 
@@ -52,102 +67,87 @@
 
 | Loại file | Đường dẫn file | Mô tả |
 | :--- | :--- | :--- |
-| **Model** | `src/models/Template.js` | Thêm trường `presentation: { devices: [devicePresentationSchema] }` (Standard Presentation) |
-| **Model** | `src/models/Item.js` | Thêm indexes tìm kiếm renderingId và datasourceId, hoàn thiện toJSON transform parameters |
-| **Seed** | `src/scripts/seed-presentation-data.js` | Script seed idempotent các template hệ thống, thư mục và item mẫu dưới `/sitecore/layout/*` |
-| **Service** | `src/services/presentationService.js` | Lớp nghiệp vụ phân giải delta presentation, kiểm tra placeholder wildcard, lưu shared/final, kiểm tra usage/references |
-| **Service** | `src/services/itemService.js` | Cập nhật `canPerform` với action `presentation:read` và `presentation:write` |
-| **Service** | `src/services/versionService.js` | Thêm `markModified('presentation')` đảm bảo bảo toàn cấu hình final presentation khi versioning |
-| **Controller** | `src/controllers/admin/contentEditorController.js` | Hỗ trợ sub-root tree navigation cho ItemPicker và kiểm tra quyền `presentation:write` khi thao tác nhánh `/sitecore/layout` |
-| **Controller** | `src/controllers/admin/presentationController.js` | Xử lý Partial HTML modal và REST JSON API cho Presentation |
-| **Routes** | `src/routes/admin/presentationRoutes.js` | Routes Partial HTML: `/item/:id/presentation`, `/item/:id/presentation/preview` |
-| **Routes** | `src/routes/api/presentationRoutes.js` | Routes JSON API: `/presentation/renderings`, `/presentation/placeholders`, `/presentation/usage/:id` |
-| **Routes** | `src/routes/api/itemRoutes.js` | Bổ sung: `GET/PUT /api/items/:id/presentation`, `POST /api/items/:id/presentation/reset` |
-| **Routes** | `src/routes/api/templateRoutes.js` | Bổ sung: `GET/PUT /api/templates/:id/standard-presentation` |
-| **Views** | `src/views/admin/content-editor/presentation/details-modal.ejs` | Modal Presentation Details chính với device tabs, scope switcher, placeholder cards, nút Browse Layout qua ItemPicker |
-| **Views** | `src/views/admin/content-editor/presentation/select-rendering-modal.ejs` | Modal chọn rendering hợp lệ cho placeholder |
-| **Views** | `src/views/admin/content-editor/presentation/rendering-instance-modal.ejs` | Modal cấu hình datasource và dynamic parameters |
-| **Views** | `src/views/admin/content-editor/presentation/preview-json-modal.ejs` | Modal xem trước JSON Headless Layout Service |
-| **Views** | `src/views/admin/content-editor/modals/item-picker-modal.ejs` | Modal duyệt cây chọn item độc lập (ItemPicker) |
-| **Client JS**| `public/js/admin/item-picker.js` | Component Javascript chọn item độc lập qua cây AJAX, hỗ trợ `rootPath` và `allowedTemplate` |
-| **Client JS**| `public/js/admin/presentation-details.js` | Script quản lý tương tác SortableJS, mở các sub-modal, duyệt Layout qua ItemPicker, gửi AJAX lưu và preview |
-| **Client JS**| `public/js/admin/content-editor.js` | Bắt sự kiện click các nút Ribbon tab `Presentation`, vô hiệu hóa nút xóa/đổi tên đối với protected system paths |
-| **CSS** | `public/css/presentation-details.css` | Styling drag handle, sortable ghost/chosen states, dropzones |
-| **Config** | `src/config/ribbon.js` | Kích hoạt tab `presentation` với các actions: `presentation:details`, `presentation:reset`, `presentation:preview-json` |
-| **Tests** | `tests/presentationService.test.js` | Unit test 8/8 test cases kiểm thử kế thừa, delta override, wildcard placeholder, 409 conflict, usage |
-| **Tests** | `tests/presentationApi.test.js` | API test 10/10 test cases kiểm thử CSRF, auth, get/put presentation, reset, standard presentation |
-| **Tests** | `tests/presentationLayoutTree.test.js` | Test 12/12 test cases kiểm thử cấu trúc cây layout, insert options, bảo vệ node hệ thống, chặn xóa component đang dùng, phân quyền `presentation:write` |
+| **Model** | `src/models/Template.js` | Cập nhật schema `presentation` dạng `{ layoutId, renderings }` cho Standard Presentation |
+| **Model** | `src/models/Item.js` | Cập nhật schema `presentation.shared` và `presentation.final` (bỏ `devices`), thêm indexes tìm kiếm rendering |
+| **Service** | `src/services/presentationService.js` | Viết lại toàn bộ: `validateViewPath`, `getFinalPresentation`, `getAllLayouts`, `getAllPlaceholders`, `getAllRenderings`, `getAllowedRenderings`, `savePresentation`, `resetToStandard`, `getUsage` |
+| **Service** | `src/services/versionService.js` | Đồng bộ sao chép `layoutId` và `renderings` của `presentation.final` khi nhân bản version / ngôn ngữ |
+| **Controller**| `src/controllers/admin/presentationController.js` | Điều khiển modal Presentation Details EJS, lọc allowed renderings, lưu shared/final, reset presentation |
+| **Routes** | `src/routes/admin/presentationRoutes.js` | Định tuyến Content Editor modal: `/admin/content-editor/item/:id/presentation` |
+| **Routes** | `src/routes/api/presentationRoutes.js` | API endpoints: `/api/presentation/renderings/allowed`, `/api/presentation/item/:id`, `/api/presentation/template/:id/standard`, `/api/presentation/usage/:id` |
+| **Views EJS**| `src/views/site/layouts/HomeLayout.ejs` | File Layout EJS chuẩn dùng placeholder helper |
+| **Views EJS**| `src/views/site/components/HeroBanner.ejs` | Component EJS Hero Banner hiển thị field từ page item |
+| **Views EJS**| `src/views/site/components/Introduction.ejs` | Component EJS Introduction |
+| **Views EJS**| `src/views/site/components/ImageText.ejs` | Component EJS Image & Text |
+| **Views EJS**| `src/views/site/404.ejs` | Trang 404 EJS của site |
+| **Views Admin**| `src/views/admin/content-editor/presentation/details-modal.ejs` | Modal Presentation Details chuẩn SSR (bỏ device tabs, hiển thị viewPath và sortable placeholder cards) |
+| **Views Admin**| `src/views/admin/content-editor/presentation/preview-json-modal.ejs` | Modal xem trước cấu trúc phân giải Presentation |
+| **Client JS**| `public/js/admin/presentation-details.js` | Quản lý tương tác SortableJS, mở modal chọn rendering, gửi AJAX lưu shared/final và reset |
+| **Config** | `src/config/ribbon.js` | Cập nhật tooltip và action Ribbon tab Presentation |
+| **Seed** | `src/scripts/seed-presentation-data.js` | Script seed cây 3 nhánh, templates, items Home/AboutUs |
+| **Tests** | `tests/presentationService.test.js` | Unit test 9/9 test cases kiểm thử validation viewPath, allowed renderings, getFinalPresentation delta, reset, usage |
+| **Tests** | `tests/presentationLayoutTree.test.js` | Integration test 13/13 test cases kiểm thử cây 3 nhánh, phân quyền write, bảo vệ node hệ thống, chặn xoá layout đang dùng |
+| **Tests** | `tests/presentationApi.test.js` | API test 9/9 test cases kiểm thử modal GET, save POST, reset POST, allowed renderings GET, auth 401 |
+| **Tests** | `tests/versionService.test.js` | Cập nhật kiểm thử bảo toàn `presentation.final` khi tạo version mới |
 
 ---
 
-## 3. Kết quả Kiểm thử & Chất lượng
+## 3. Kết Quả Kiểm Thử Tự Động (Automated Testing)
 
-```bash
-$ npm test
+Đã chạy toàn bộ test suite dự án bằng lệnh `npm test` (`jest --detectOpenHandles --forceExit`):
 
+```text
 Test Suites: 14 passed, 14 total
-Tests:       128 passed, 128 total
+Tests:       129 passed, 129 total
 Snapshots:   0 total
-Time:        17.48 s
+Time:        28.107 s
+Ran all test suites.
 ```
 
+Tất cả 14 test suites đều vượt qua 100%:
+1. `tests/templateManagerApi.test.js` - PASS
+2. `tests/contentEditorApi.test.js` - PASS
+3. `tests/presentationService.test.js` - PASS (9/9 tests)
+4. `tests/presentationLayoutTree.test.js` - PASS (13/13 tests)
+5. `tests/itemService.test.js` - PASS
+6. `tests/itemTree.test.js` - PASS
+7. `tests/presentationApi.test.js` - PASS (9/9 tests)
+8. `tests/versionService.test.js` - PASS (11/11 tests)
+9. `tests/mediaApi.test.js` - PASS
+10. `tests/authRoutes.test.js` - PASS
+11. `tests/mediaService.test.js` - PASS
+12. `tests/templateService.test.js` - PASS
+13. `tests/richTextHelper.test.js` - PASS
+14. `tests/smoke.test.js` - PASS
 
-```bash
-$ npm run lint
+Kết quả kiểm tra mã nguồn bằng ESLint (`npm run lint`):
+```text
+> admin-cms@1.0.0 lint
 > eslint src/ tests/
-# 0 errors, 0 warnings
+(0 errors, 0 warnings)
 ```
 
 ---
 
-## 4. Hướng dẫn Chạy & Kiểm thử Thủ công (Manual Verification)
+## 4. Đối Soát Tiêu Chí Hoàn Thành (Definition of Done)
 
-1. **Khởi động server:**
-   ```bash
-   npm run dev
-   ```
-2. **Đăng nhập quản trị:**
-   - Truy cập `http://localhost:3000/admin/login` (admin / admin123).
-   - Mở ứng dụng **Content Editor**.
-3. **Kiểm tra Ribbon Tab Presentation:**
-   - Chọn item bất kỳ trong cây (ví dụ `/sitecore/content/home`).
-   - Chuyển sang tab **Presentation** trên Ribbon:
-     - Nút **Details** (sáng, có thể bấm).
-     - Nút **Reset** (khôi phục về standard template).
-     - Nút **Preview JSON** (xem layout preview).
-4. **Mở Presentation Details:**
-   - Nhấn nút **Details** trên Ribbon: Modal Presentation Details mở ra.
-   - Thấy cấu hình Device `Default`, Layout `MainLayout`.
-   - Thấy các Placeholder boxes: `header`, `main`, `footer`, `content`.
-   - Trong placeholder `main`: có sẵn các component kế thừa từ Template Standard Presentation (`HeroBanner`, `RichTextContent`) kèm nhãn xám `Standard`.
-5. **Thao tác Kéo thả SortableJS:**
-   - Rê chuột vào icon tay cầm `grip-vertical` bên trái thẻ component `RichTextContent`, kéo lên trên `HeroBanner` $\rightarrow$ Thứ tự đảo mượt mà.
-   - Kéo thẻ `RichTextContent` thả sang placeholder `content` $\rightarrow$ Thẻ component tự động chuyển sang placeholder mới.
-6. **Thêm Component Mới:**
-   - Bấm nút **+ Thêm Component** tại placeholder `main`: Modal chọn component mở ra, lọc danh sách component được phép (`Hero`, `RichText`, `Promo`).
-   - Nhấn chọn `PromoCard` $\rightarrow$ Component được thêm vào placeholder `main`.
-7. **Cấu hình Datasource & Parameters:**
-   - Nhấn nút **Sửa** (icon bút chì) trên component vừa thêm:
-   - Bấm nút **Browse...** bên cạnh Datasource: Cửa sổ `ItemPicker` duyệt cây mở ra. Chọn một item bất kỳ (hoặc `/sitecore/content/home`) rồi nhấn "Xác Nhận".
-   - Bấm **+ Thêm Tham Số**: nhập Key: `theme`, Value: `dark`.
-   - Nhấn **Cập Nhật** $\rightarrow$ Thẻ component cập nhật nhãn Datasource và badge `1 params`.
-8. **Lưu Cấu Hình (Shared vs Final):**
-   - Chọn scope **Shared Layout** (dùng chung mọi phiên bản/ngôn ngữ) hoặc **Final Layout [VI / v1]** (ghi đè riêng cho bản thảo này).
-   - Bấm **Lưu Cấu Hình**: Thông báo xanh hiển thị thành công, dữ liệu lưu chuẩn vào MongoDB dưới dạng delta override.
-9. **Xem Preview JSON:**
-   - Nhấn nút **Preview JSON**: Modal hiển thị cấu trúc JSON đầy đủ của layout và các components phân bổ theo từng placeholder, có nút **Copy JSON**.
-10. **Khôi phục Bố cục Mặc định (Reset):**
-    - Nhấn nút **Reset về Standard**: Xác nhận modal $\rightarrow$ Mọi delta override bị xóa, bố cục trở về đúng 100% như Standard Presentation của Template ban đầu.
+| Tiêu chí DoD | Kết quả đối soát | Trạng thái |
+| :--- | :--- | :---: |
+| Mở Content Editor, chọn node `/sitecore/content/Home`. Tab `Presentation` trên Ribbon sáng và có thể tương tác. | Đã kích hoạt trong `src/config/ribbon.js` và xử lý click trong `content-editor.js`. | **ĐẠT** |
+| Bấm nút "Presentation Details" -> Mở modal hiển thị Layout đang gán (`HomeLayout`), và các Rendering mặc định được kế thừa từ Standard Presentation của Template. | Modal `details-modal.ejs` render trực tiếp layout `HomeLayout` và renderings (`HeroBanner`, `Introduction`, `ImageText`) trong placeholder `maincontent`. | **ĐẠT** |
+| Nhập `viewPath` sai hoặc cố tình chứa `../` -> Hệ thống báo lỗi từ chối lưu. | `validateViewPath` chặn path traversal, ép đuôi `.ejs` và kiểm tra whitelist `site/`. Test suite kiểm tra chi tiết. | **ĐẠT** |
+| Thêm Rendering vào placeholder: Modal chỉ hiển thị các rendering hợp lệ theo cấu hình `allowedRenderings` của Placeholder item đó. | API `/api/presentation/renderings/allowed` và `select-rendering-modal.ejs` lọc chính xác danh sách component. | **ĐẠT** |
+| Kéo thả sắp xếp đổi vị trí giữa các rendering trong placeholder -> Thứ tự `sortOrder` thay đổi mượt mà. | SortableJS khởi tạo trên từng `.rendering-dropzone` cập nhật `sortOrder` tự động. | **ĐẠT** |
+| Bấm Lưu Presentation -> Cấu hình lưu thành công vào MongoDB dưới dạng Final Layout override. | Endpoint `POST /admin/content-editor/item/:id/presentation` lưu vào `presentation.final` theo language/version. | **ĐẠT** |
+| Bấm "Reset to Standard Presentation" -> Cấu hình override bị xoá, presentation quay về trạng thái mặc định kế thừa từ Template. | Endpoint `POST /admin/content-editor/item/:id/presentation/reset` xoá override thành công. | **ĐẠT** |
+| Nhánh cây `/sitecore/layout` hiển thị đúng 3 folder chính (`Layouts`, `Placeholders`, `Renderings`). Các node cốt lõi không thể đổi tên, di chuyển hoặc xoá. | Script seed tạo 3 nhánh, chặn xoá/rename node bảo vệ (`isProtectedSystemPath`). | **ĐẠT** |
+| Bộ Unit & Integration Tests đạt 100% PASS, lint 0 errors. | 14/14 suites, 129/129 tests PASS, ESLint 0 errors, 0 warnings. | **ĐẠT** |
 
 ---
 
-## 5. Hạn chế Đã biết & Đề xuất cho các Giai đoạn Tiếp theo
+## 5. Kết Luận & Sẵn Sàng Chuyển Giao
 
-1. **Phân quyền Presentation Details theo từng Item (GĐ 7):**
-   - Hiện tại quyền ghi Presentation áp dụng chung cho Administrator, Editor, Author (`presentation:write`). Ở GĐ 7, khi tích hợp bảng phân quyền ACL chi tiết trên từng item, cần kiểm tra thêm quyền sửa presentation trên node cụ thể đó.
-2. **Cảnh báo và Publish Presentation sang Web (GĐ 8):**
-   - Ở GĐ 8, khi publish Item từ `items_master` sang `items_web`, cấu hình `presentation` (cả `shared` và `final`) sẽ được publish đồng bộ.
-   - Khi item có rendering liên kết tới Datasource Item chưa được publish lên Web, Publish Dialog sẽ hiển thị cảnh báo mềm (Warning theo DEC-023) kèm checkbox "Publish kèm các Datasource liên đới".
-3. **Headless Delivery API & Layout Service (GĐ 10):**
-   - GĐ 10 sẽ tái sử dụng trực tiếp hàm `presentationService.getFinalPresentation` để phục vụ endpoint công khai `GET /api/v1/layout?path=...&lang=...` cho React/Next.js frontend, kết hợp giải quyết `resolveRichText` (GĐ 5) và In-Memory Caching.
+Giai đoạn 6 (Presentation SSR EJS) đã được thực thi và nghiệm thu thành công. Toàn bộ kiến trúc và mã nguồn đã được đồng bộ với quyết định Server-Side EJS SSR (DEC-031 đến DEC-035), loại bỏ hoàn toàn các phụ thuộc cũ về React/Headless.
 
+Hệ thống đã sẵn sàng cho giai đoạn tiếp theo: **GĐ 7 — Bảo mật nâng cao & Phân quyền ACL**.
+Theo Quy tắc Vàng số 1 và số 2 trong `AGENTS.md`, AI Agent xin dừng lại tại đây và chờ lệnh phê duyệt:
+`APPROVE GĐ 7` từ người dùng.

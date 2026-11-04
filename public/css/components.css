@@ -1048,3 +1048,118 @@
   border-radius: 3px;
   border: 1px solid #ced4da;
 }
+
+/* ==========================================================================
+   Sitecore Section Bar & Quick Info Component (DEC-037 / GĐ 6.3)
+   ========================================================================== */
+.sc-section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-section-bar, #474747);
+  color: var(--color-section-bar-text, #ffffff);
+  border-left: 5px solid var(--color-section-accent, #d93829);
+  padding: 8px 14px;
+  user-select: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-radius: 2px 2px 0 0;
+}
+
+.sc-section-bar:hover {
+  background-color: #383838;
+}
+
+.sc-section-title {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sc-section-toggle {
+  color: #e5e7eb;
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.sc-section-bar.collapsed .sc-section-toggle {
+  transform: rotate(-90deg);
+}
+
+.sc-quick-info {
+  margin-bottom: 16px;
+}
+
+.sc-quick-info-body {
+  background-color: var(--color-section-body-bg, #f4f4f4);
+  border: 1px solid var(--color-section-border, #d0d0d0);
+  border-top: none;
+  padding: 14px 18px;
+  font-size: 12px;
+  line-height: 1.7;
+  border-radius: 0 0 2px 2px;
+}
+
+.sc-quick-info-body.d-none {
+  display: none !important;
+}
+
+.sc-quick-info-row {
+  display: flex;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.sc-quick-info-row:last-child {
+  border-bottom: none;
+}
+
+.sc-quick-info-label {
+  width: 130px;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #333333;
+}
+
+.sc-quick-info-value {
+  flex-grow: 1;
+  color: #1a1a1a;
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sc-copy-btn {
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.sc-copy-btn:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  border-color: #94a3b8;
+}
+
+.sc-quick-info-link {
+  color: #0366d6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sc-quick-info-link:hover {
+  color: #0056b3;
+}

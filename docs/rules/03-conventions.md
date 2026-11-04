@@ -46,7 +46,7 @@ Admin-CMS/
 
 ```mermaid
 flowchart LR
-    Client["Client / Browser / React"] --> Routes["Routes Layer"]
+    Client["Client Browser"] --> Routes["Routes Layer"]
     Routes --> Middlewares["Middlewares (Auth, ACL, CSRF, Upload)"]
     Middlewares --> Controllers["Controllers Layer"]
     Controllers --> Services["Services Layer (Business Logic)"]

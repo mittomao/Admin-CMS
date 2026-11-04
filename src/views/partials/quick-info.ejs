@@ -1,0 +1,151 @@
+<%
+  const qi = locals.quickInfo || {};
+  const currentItem = locals.item || locals.selectedItem || null;
+  const currentTpl = locals.template || locals.activeTemplate || null;
+
+  const itemId = qi.itemId || (currentItem && currentItem._id ? `{${currentItem._id.toString().toUpperCase()}}` : '{UNKNOWN}');
+  const rawId = qi.rawId || (currentItem && currentItem._id ? currentItem._id.toString() : '');
+  const itemName = qi.name || (currentItem ? currentItem.name : '');
+  const itemPath = qi.path || (currentItem ? currentItem.path : '');
+
+  const templateInfo = qi.template || {};
+  const templatePath = templateInfo.path || (currentTpl ? currentTpl.path : '');
+  const templateId = templateInfo.id || (currentTpl && currentTpl._id ? `{${currentTpl._id.toString().toUpperCase()}}` : '');
+  const templateRawId = templateInfo.rawId || (currentTpl && currentTpl._id ? currentTpl._id.toString() : '');
+
+  const createdFrom = qi.createdFrom || {};
+  const createdFromText = createdFrom.displayText || '[unknown]';
+
+  const itemOwner = qi.itemOwner || {};
+  const itemOwnerText = itemOwner.displayText || '[unknown]';
+%>
+<div class="sc-quick-info mb-3" id="scQuickInfoSection">
+  <!-- Section Bar Header -->
+  <div class="sc-section-bar" id="scQuickInfoToggle" role="button" tabindex="0" title="Click to collapse / expand">
+    <div class="sc-section-title">
+      <span>Quick Info</span>
+    </div>
+    <div class="sc-section-toggle">
+      <i class="ti ti-chevron-down" id="scQuickInfoChevron"></i>
+    </div>
+  </div>
+
+  <!-- Section Body -->
+  <div class="sc-quick-info-body" id="scQuickInfoBody">
+    <!-- Row 1: Item ID -->
+    <div class="sc-quick-info-row">
+      <div class="sc-quick-info-label">Item ID:</div>
+      <div class="sc-quick-info-value font-monospace">
+        <span class="user-select-all" id="quickInfoItemIdVal"><%= itemId %></span>
+        <button type="button" class="sc-copy-btn ms-1" onclick="if(navigator.clipboard){navigator.clipboard.writeText('<%= itemId %>');}" title="Copy Item ID">
+          <i class="ti ti-copy"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 2: Item name -->
+    <div class="sc-quick-info-row">
+      <div class="sc-quick-info-label">Item name:</div>
+      <div class="sc-quick-info-value">
+        <span class="font-monospace"><%= itemName %></span>
+      </div>
+    </div>
+
+    <!-- Row 3: Item path -->
+    <div class="sc-quick-info-row">
+      <div class="sc-quick-info-label">Item path:</div>
+      <div class="sc-quick-info-value font-monospace">
+        <span class="user-select-all" id="quickInfoItemPathVal"><%= itemPath %></span>
+        <button type="button" class="sc-copy-btn ms-1" onclick="if(navigator.clipboard){navigator.clipboard.writeText('<%= itemPath %>');}" title="Copy Item Path">
+          <i class="ti ti-copy"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 4: Template -->
+    <div class="sc-quick-info-row">
+      <div class="sc-quick-info-label">Template:</div>
+      <div class="sc-quick-info-value">
+        <% if (templateRawId) { %>
+          <a href="/admin/content-editor/<%= templateRawId %>" class="sc-quick-info-link font-monospace" data-template-id="<%= templateRawId %>" title="Navigate to template">
+            <%= templatePath || '/sitecore/templates/System/Template' %>
+          </a>
+          <span class="text-muted ms-1 font-monospace">- <%= templateId %></span>
+        <% } else { %>
+          <span class="font-monospace"><%= templatePath || '[unknown]' %></span>
+          <% if (templateId) { %><span class="text-muted ms-1 font-monospace">- <%= templateId %></span><% } %>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Row 5: Created from -->
+    <div class="sc-quick-info-row">
+      <div class="sc-quick-info-label">Created from:</div>
+      <div class="sc-quick-info-value">
+        <% if (createdFrom.rawId) { %>
+          <a href="/admin/content-editor/<%= createdFrom.rawId %>" class="sc-quick-info-link font-monospace" data-source-id="<%= createdFrom.rawId %>" title="Open source item">
+            <%= createdFromText %>
+          </a>
+        <% } else { %>
+          <span class="text-muted font-monospace"><%= createdFromText %></span>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Row 6: Item owner -->
+    <div class="sc-quick-info-row">
+      <div class="sc-quick-info-label">Item owner:</div>
+      <div class="sc-quick-info-value font-monospace">
+        <span class="<%= itemOwnerText === '[unknown]' ? 'text-muted' : '' %>"><%= itemOwnerText %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var toggle = document.getElementById('scQuickInfoToggle');
+    var body = document.getElementById('scQuickInfoBody');
+    if (!toggle || !body) return;
+
+    var storageKey = 'sc_quickinfo_collapsed';
+    try {
+      var isCollapsed = localStorage.getItem(storageKey) === 'true';
+      if (isCollapsed) {
+        body.classList.add('d-none');
+        toggle.classList.add('collapsed');
+      }
+    } catch (e) {
+      // Ignore localStorage access errors
+    }
+
+    toggle.addEventListener('click', function() {
+      var willCollapse = !body.classList.contains('d-none');
+      if (willCollapse) {
+        body.classList.add('d-none');
+        toggle.classList.add('collapsed');
+      } else {
+        body.classList.remove('d-none');
+        toggle.classList.remove('collapsed');
+      }
+      try {
+        localStorage.setItem(storageKey, willCollapse ? 'true' : 'false');
+      } catch (e) {
+        // Ignore localStorage access errors
+      }
+    });
+
+    // Handle template hyperlink click in tree without full reload if supported
+    var tplLinks = document.querySelectorAll('.sc-quick-info-link[data-template-id], .sc-quick-info-link[data-source-id]');
+    tplLinks.forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        var targetId = this.getAttribute('data-template-id') || this.getAttribute('data-source-id');
+        if (targetId && typeof window.activateTreeNodeById === 'function') {
+          e.preventDefault();
+          window.activateTreeNodeById(targetId);
+        }
+      });
+    });
+  })();
+</script>
+

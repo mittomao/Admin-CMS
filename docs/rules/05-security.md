@@ -60,9 +60,17 @@ Tầng `aclService.js` cung cấp hàm chuẩn kiểm tra quyền của user tr�
 
 ---
 
-## 5. Bảo vệ Headless Delivery API & Layout Service
-- **Phân ly dữ liệu tuyệt đối:** Delivery API và Layout Service chỉ được đọc từ `items_web`; không bao giờ truy vấn `items_master`.
-- **Chống DDoS / Brute Force:** Áp dụng `express-rate-limit` giới hạn số lượt request tối đa trên mỗi IP trong cửa sổ thời gian (ví dụ 100 req/phút).
-- **Cấu hình CORS:** Chỉ cho phép các domain Frontend React được cấu hình trong biến môi trường (`CORS_ALLOWED_ORIGINS`).
-- **Phòng chống NoSQL Injection:** Sử dụng Mongoose Schema typing và validate input, không truyền trực tiếp query parameters không kiểm soát vào lệnh `find()`.
+## 5. Bảo mật Cơ chế Site Renderer & Quản lý `viewPath`
+- **Whitelist thư mục view gốc:** 
+  - Chỉ cho phép thuộc tính `viewPath` của Layout và Rendering trỏ vào bên trong thư mục `src/views/site/` (ví dụ `layouts/HomeLayout.ejs`, `components/HeroBanner.ejs`).
+  - Sử dụng `path.resolve` và kiểm tra nghiêm ngặt `resolvedPath.startsWith(path.resolve('src/views/site'))`. Mọi đường dẫn chứa `../` hoặc cố tình trỏ sang thư mục `src/views/admin/` hay các tệp nhạy cảm trong hệ thống đều bị chặn lập tức và ném ngoại lệ 403 Forbidden.
+- **Bắt buộc định dạng `.ejs`:** Chỉ chấp nhận các tệp tin có đuôi mở rộng `.ejs`.
+- **Kiểm tra sự tồn tại của tệp tin:** Khi tạo hoặc cập nhật Layout / Rendering trong Content Editor, hệ thống kiểm tra sự tồn tại thực tế của tệp EJS trên đĩa và đưa ra cảnh báo cho biên tập viên nếu tệp chưa được tạo trong repo.
+- **Cô lập lỗi Component (Error Boundary):**
+  - Khi render từng Rendering bên trong helper `placeholder(key)`, mỗi component được bọc trong khối try-catch an toàn.
+  - Nếu một component bị lỗi runtime EJS, hệ thống ghi log lỗi `logger.error`, hiển thị khung cảnh báo chi tiết ở môi trường phát triển (`NODE_ENV === 'development'`) và ẩn nhẹ nhàng ở môi trường production. Lỗi của một component **tuyệt đối không làm sập cả trang web**.
+- **Phân ly dữ liệu tuyệt đối (Master vs Web):** 
+  - Tuyến đường công khai của Site Renderer chỉ được phép đọc dữ liệu từ collection `items_web`. Trang web chưa từng được publish hoặc đang ở trạng thái nháp sẽ trả về HTTP 404 Not Found.
+- **Quy tắc render an toàn:** Mặc định luôn escape bằng `<%= %>`. Cú pháp `<%- %>` chỉ được dùng cho nội dung trường `Rich Text` đã qua `sanitize-html` và được xử lý qua hàm `resolveRichText(html)`.
+- **Chống DDoS & Brute Force:** Áp dụng `express-rate-limit` giới hạn tần suất request công khai trên mỗi IP (ví dụ 100 req/phút).
 

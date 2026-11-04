@@ -1,4 +1,6 @@
 const { randomUUID } = require('crypto');
+const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const Item = require('../models/Item');
 const Template = require('../models/Template');
@@ -46,77 +48,50 @@ const presentationService = {
   NotFoundError,
 
   /**
-   * Helper to resolve device by ID, Name or fallback to default device
+   * Validate viewPath against path traversal, whitelist folder, and .ejs extension
+   * DEC-033: Cơ chế an toàn viewPath
    */
-  async resolveDevice(deviceIdOrName = null) {
-    let device = null;
-    if (deviceIdOrName) {
-      if (deviceIdOrName.toString().match(/^[0-9a-fA-F]{24}$/)) {
-        device = await Item.findById(deviceIdOrName).lean();
+  validateViewPath(viewPath, checkFileExists = false) {
+    if (!viewPath || typeof viewPath !== 'string') {
+      throw new ValidationError('viewPath là bắt buộc và phải là chuỗi ký tự.');
+    }
+
+    const normalized = viewPath.trim().replace(/\\/g, '/');
+
+    // 1. Chặn Path Traversal (..)
+    if (normalized.includes('..')) {
+      throw new ValidationError('viewPath không được chứa ký tự ".." (Path Traversal bị chặn).');
+    }
+
+    // 2. Bắt buộc kết thúc bằng .ejs
+    if (!normalized.toLowerCase().endsWith('.ejs')) {
+      throw new ValidationError('viewPath bắt buộc phải có phần mở rộng là ".ejs".');
+    }
+
+    // 3. Whitelist thư mục gốc: phải nằm dưới site/ (tương ứng src/views/site/)
+    const cleanPath = normalized.startsWith('/') ? normalized.substring(1) : normalized;
+    if (!cleanPath.startsWith('site/')) {
+      throw new ValidationError('viewPath bắt buộc phải nằm trong thư mục whitelist "site/" (ví dụ: site/layouts/... hoặc site/components/...).');
+    }
+
+    // 4. Kiểm tra file tồn tại trên đĩa nếu được yêu cầu
+    if (checkFileExists) {
+      const fullPath = path.join(process.cwd(), 'src', 'views', cleanPath);
+      if (!fs.existsSync(fullPath)) {
+        logger.warn(`[validateViewPath] Tệp view vật lý chưa tồn tại trên đĩa: ${fullPath}`);
       }
-      if (!device) {
-        device = await Item.findOne({
-          path: { $regex: new RegExp(`^/sitecore/layout/Devices/${deviceIdOrName}$`, 'i') },
-          deleted: false,
-        }).lean();
-      }
     }
 
-    if (!device) {
-      // Find default device
-      device = await Item.findOne({
-        path: { $regex: new RegExp('^/sitecore/layout/Devices/', 'i') },
-        $or: [
-          { 'sharedFields.isDefault': true },
-          { 'fields.isDefault': true },
-          { name: 'Default' },
-        ],
-        deleted: false,
-      }).lean();
-    }
-
-    if (!device) {
-      // Find any first device under /sitecore/layout/Devices
-      device = await Item.findOne({
-        path: { $regex: new RegExp('^/sitecore/layout/Devices/[^/]+$', 'i') },
-        deleted: false,
-      }).lean();
-    }
-
-    return device;
+    return cleanPath;
   },
 
   /**
-   * Get all active Devices in CMS
-   */
-  async getAllDevices() {
-    const devices = await Item.find({
-      path: { $regex: new RegExp('^/sitecore/layout/Devices/[^/]+$', 'i') },
-      deleted: false,
-    })
-      .sort({ sortOrder: 1, name: 1 })
-      .lean();
-
-    return devices.map((d) => {
-      const fields = toPlainObject(d.sharedFields || d.fields);
-      return {
-        _id: d._id,
-        name: d.name,
-        displayName: d.displayName || d.name,
-        isDefault: Boolean(fields.isDefault),
-        userAgentRegex: fields.userAgentRegex || '',
-        fallbackDeviceId: fields.fallbackDeviceId || null,
-      };
-    });
-  },
-
-  /**
-   * Get all active Layouts in CMS (recursively under /sitecore/layout/Layouts/)
+   * Get all active Layout items under /sitecore/layout/Layouts/
    */
   async getAllLayouts() {
-    const layoutTemplate = await Template.findOne({ name: 'Layout' });
+    const layoutTemplate = await Template.findOne({ name: 'Layout' }).lean();
     const query = {
-      path: { $regex: new RegExp('^/sitecore/layout/Layouts/', 'i') },
+      path: { $regex: new RegExp('^/sitecore/layout/Layouts/[^/]+$', 'i') },
       deleted: false,
     };
     if (layoutTemplate) {
@@ -127,30 +102,68 @@ const presentationService = {
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
-    return layouts.map((l) => {
-      const fields = toPlainObject(l.sharedFields || l.fields);
-      const placeholdersRaw = fields.placeholders || '';
-      const placeholders = typeof placeholdersRaw === 'string'
-        ? placeholdersRaw.split(',').map((p) => p.trim()).filter(Boolean)
-        : [];
-
+    return layouts.map((item) => {
+      const fields = toPlainObject(item.fields);
+      const sharedFields = toPlainObject(item.sharedFields);
+      const viewPath = sharedFields.viewPath || fields.viewPath || '';
       return {
-        _id: l._id,
-        name: l.name,
-        displayName: l.displayName || l.name,
-        componentName: fields.componentName || l.name,
-        placeholders,
+        _id: item._id,
+        id: item._id.toString(),
+        name: item.name,
+        displayName: item.displayName || item.name,
+        viewPath,
+        sortOrder: item.sortOrder || 100,
+        path: item.path,
       };
     });
   },
 
   /**
-   * Get all active Renderings in CMS (recursively under /sitecore/layout/Renderings/)
+   * Get all active Placeholder items under /sitecore/layout/Placeholders/
+   */
+  async getAllPlaceholders() {
+    const placeholderTemplate = await Template.findOne({ name: 'Placeholder' }).lean();
+    const query = {
+      path: { $regex: new RegExp('^/sitecore/layout/Placeholders/[^/]+$', 'i') },
+      deleted: false,
+    };
+    if (placeholderTemplate) {
+      query.templateId = placeholderTemplate._id;
+    }
+
+    const placeholders = await Item.find(query)
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
+
+    return placeholders.map((item) => {
+      const fields = toPlainObject(item.fields);
+      const sharedFields = toPlainObject(item.sharedFields);
+      const placeholderKey = sharedFields.placeholderKey || fields.placeholderKey || item.name;
+      const allowedRenderingsRaw = sharedFields.allowedRenderings || fields.allowedRenderings || '';
+      const allowedRenderings = typeof allowedRenderingsRaw === 'string'
+        ? allowedRenderingsRaw.split(',').map((s) => s.trim()).filter(Boolean)
+        : Array.isArray(allowedRenderingsRaw) ? allowedRenderingsRaw : [];
+      return {
+        _id: item._id,
+        id: item._id.toString(),
+        name: item.name,
+        displayName: item.displayName || item.name,
+        placeholderKey,
+        allowedRenderings,
+        description: sharedFields.description || fields.description || '',
+        sortOrder: item.sortOrder || 100,
+        path: item.path,
+      };
+    });
+  },
+
+  /**
+   * Get all active Rendering items under /sitecore/layout/Renderings/
    */
   async getAllRenderings() {
-    const renderingTemplate = await Template.findOne({ name: 'Rendering' });
+    const renderingTemplate = await Template.findOne({ name: 'Rendering' }).lean();
     const query = {
-      path: { $regex: new RegExp('^/sitecore/layout/Renderings/', 'i') },
+      path: { $regex: new RegExp('^/sitecore/layout/Renderings/.*', 'i') },
       deleted: false,
     };
     if (renderingTemplate) {
@@ -161,393 +174,316 @@ const presentationService = {
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
-    return renderings.map((r) => {
-      const fields = toPlainObject(r.sharedFields || r.fields);
-      return {
-        _id: r._id,
-        name: r.name,
-        displayName: r.displayName || r.name,
-        componentName: fields.componentName || r.name,
-        icon: fields.icon || 'ti ti-box',
-        datasourceTemplate: fields.datasourceTemplate || null,
-        datasourceLocation: fields.datasourceLocation || null,
-        parametersTemplate: fields.parametersTemplate || null,
-      };
-    });
-  },
+    const compTplIds = renderings
+      .map((item) => {
+        const fields = toPlainObject(item.fields);
+        const sharedFields = toPlainObject(item.sharedFields);
+        return sharedFields.componentTemplate || fields.componentTemplate || null;
+      })
+      .filter((id) => id && mongoose.Types.ObjectId.isValid(id));
 
-  /**
-   * Get all Placeholder Settings in CMS
-   */
-  async getAllPlaceholderSettings() {
-    const settings = await Item.find({
-      path: { $regex: new RegExp('^/sitecore/layout/Placeholder Settings/[^/]+$', 'i') },
-      deleted: false,
-    })
-      .sort({ sortOrder: 1, name: 1 })
+    const compTemplates = await Template.find({ _id: { $in: compTplIds } })
+      .select('name displayName')
       .lean();
+    const compTplMap = new Map(compTemplates.map((t) => [t._id.toString(), t.displayName || t.name]));
 
-    return settings.map((s) => {
-      const fields = toPlainObject(s.sharedFields || s.fields);
-      let allowedRenderings = [];
-      if (typeof fields.allowedRenderings === 'string') {
-        allowedRenderings = fields.allowedRenderings.split(',').map((x) => x.trim()).filter(Boolean);
-      } else if (Array.isArray(fields.allowedRenderings)) {
-        allowedRenderings = fields.allowedRenderings.map((x) => x.toString());
-      }
-
+    return renderings.map((item) => {
+      const fields = toPlainObject(item.fields);
+      const sharedFields = toPlainObject(item.sharedFields);
+      const viewPath = sharedFields.viewPath || fields.viewPath || '';
+      const compTplId = sharedFields.componentTemplate || fields.componentTemplate || null;
       return {
-        _id: s._id,
-        name: s.name,
-        displayName: s.displayName || s.name,
-        placeholderKey: fields.placeholderKey || s.name,
-        allowedRenderings,
-        description: fields.description || '',
+        _id: item._id,
+        id: item._id.toString(),
+        name: item.name,
+        displayName: item.displayName || item.name,
+        viewPath,
+        icon: sharedFields.icon || fields.icon || 'ti ti-box',
+        componentTemplate: compTplId,
+        componentTemplateName: compTplId ? (compTplMap.get(compTplId.toString()) || null) : null,
+        parametersTemplate: sharedFields.parametersTemplate || fields.parametersTemplate || null,
+        sortOrder: item.sortOrder || 100,
+        path: item.path,
       };
     });
   },
 
   /**
-   * Match a placeholder key against Placeholder Settings
-   * Rules (DEC-022):
-   * 1. Exact match (e.g. key === 'main')
-   * 2. Wildcard match (e.g. 'column-{*}' matches 'column-1', 'column-left')
-   * 3. Nested placeholder key (e.g. '/main/column-1' extracts the last segment 'column-1')
+   * Get allowed renderings for a given placeholder key or placeholder item ID
    */
-  async matchPlaceholderSettings(placeholderKey) {
-    if (!placeholderKey) return null;
-    const key = placeholderKey.trim();
-    const settings = await this.getAllPlaceholderSettings();
-
-    // Clean nested key: /main/column-1 -> column-1
-    const segments = key.split('/').filter(Boolean);
-    const leafKey = segments[segments.length - 1] || key;
-
-    // 1. Exact match
-    const exact = settings.find(
-      (s) => s.placeholderKey.toLowerCase() === key.toLowerCase() || s.placeholderKey.toLowerCase() === leafKey.toLowerCase()
-    );
-    if (exact) return exact;
-
-    // 2. Wildcard match (e.g., column-{*})
-    for (const setting of settings) {
-      if (setting.placeholderKey.includes('{*}')) {
-        const regexStr = '^' + setting.placeholderKey.replace('{*}', '.*') + '$';
-        const reg = new RegExp(regexStr, 'i');
-        if (reg.test(leafKey) || reg.test(key)) {
-          return setting;
-        }
-      }
+  async getAllowedRenderings(placeholderKeyOrId) {
+    if (!placeholderKeyOrId) {
+      return this.getAllRenderings();
     }
 
-    return null;
-  },
-
-  /**
-   * Get allowed renderings for a given placeholder key
-   */
-  async getAllowedRenderings(placeholderKey) {
-    const matched = await this.matchPlaceholderSettings(placeholderKey);
     const allRenderings = await this.getAllRenderings();
+    const allPlaceholders = await this.getAllPlaceholders();
 
-    if (!matched || !matched.allowedRenderings || matched.allowedRenderings.length === 0) {
-      // If no placeholder settings defined, return all renderings as fallback
+    const placeholder = allPlaceholders.find(
+      (p) =>
+        p.id === placeholderKeyOrId.toString() ||
+        p.placeholderKey.toLowerCase() === placeholderKeyOrId.toString().toLowerCase()
+    );
+
+    if (!placeholder || !placeholder.allowedRenderings || placeholder.allowedRenderings.length === 0) {
+      // Nếu placeholder không giới hạn hoặc không tìm thấy, cho phép toàn bộ renderings
       return allRenderings;
     }
 
-    const allowedSet = new Set(matched.allowedRenderings.map((x) => x.toLowerCase()));
-    return allRenderings.filter((r) =>
-      allowedSet.has(r._id.toString().toLowerCase()) || allowedSet.has(r.name.toLowerCase())
-    );
+    const allowedSet = new Set(placeholder.allowedRenderings.map((r) => r.toLowerCase()));
+
+    return allRenderings.filter((r) => {
+      return (
+        allowedSet.has(r.id.toLowerCase()) ||
+        allowedSet.has(r.name.toLowerCase()) ||
+        allowedSet.has(r.displayName.toLowerCase())
+      );
+    });
   },
 
   /**
-   * Resolve merged presentation (Standard -> Shared -> Final Delta)
-   * Algorithm according to DEC-020 and DEC-021.
+   * Phân giải Final Presentation cho một Item:
+   * Độ ưu tiên: Final Layout (version & lang) > Shared Layout > Standard Presentation (từ Template)
    */
-  async getFinalPresentation(itemOrId, deviceIdOrName = null, lang = 'vi', version = 1) {
-    let item = itemOrId;
+  async getFinalPresentation(itemOrId, lang = 'vi', version = 1) {
+    let item = null;
     if (typeof itemOrId === 'string' || itemOrId instanceof mongoose.Types.ObjectId) {
       item = await Item.findById(itemOrId).lean();
-    }
-    if (!item) {
-      throw new NotFoundError('Không tìm thấy Item để lấy Presentation.');
+    } else if (itemOrId && typeof itemOrId === 'object') {
+      item = itemOrId;
     }
 
-    const device = await this.resolveDevice(deviceIdOrName);
-    if (!device) {
-      throw new NotFoundError('Không tìm thấy Thiết bị (Device) hợp lệ.');
+    if (!item) {
+      throw new NotFoundError('Không tìm thấy Item để phân giải Presentation.');
     }
-    const targetDeviceIdStr = device._id.toString();
+
+    const currentLang = (lang || 'vi').toLowerCase().trim();
+    const currentVersion = Number(version) || 1;
 
     // 1. Lấy Standard Presentation từ Template
-    let standardDeviceConfig = null;
+    let standardLayoutId = null;
+    let standardRenderings = [];
     const templateId = item.templateId?._id || item.templateId;
     if (templateId) {
       const template = await Template.findById(templateId).lean();
-      if (template && template.presentation && Array.isArray(template.presentation.devices)) {
-        standardDeviceConfig = template.presentation.devices.find(
-          (d) => d.deviceId && d.deviceId.toString() === targetDeviceIdStr
-        );
-      }
-    }
-
-    let resolvedLayoutId = standardDeviceConfig?.layoutId || null;
-    const renderingsMap = new Map(); // Key: uid, Value: rendering object
-
-    // Step A: Load Standard Renderings
-    if (standardDeviceConfig && Array.isArray(standardDeviceConfig.renderings)) {
-      standardDeviceConfig.renderings.forEach((r) => {
-        if (!r.hidden) {
-          renderingsMap.set(r.uid, {
-            uid: r.uid,
-            renderingId: r.renderingId,
-            placeholder: r.placeholder || 'main',
-            sortOrder: r.sortOrder || 100,
-            datasourceId: r.datasourceId || null,
-            parameters: toPlainObject(r.parameters),
-            hidden: false,
-            origin: 'standard',
-          });
+      if (template && template.presentation) {
+        standardLayoutId = template.presentation.layoutId || null;
+        if (Array.isArray(template.presentation.renderings)) {
+          standardRenderings = template.presentation.renderings;
         }
-      });
-    }
-
-    // Step B: Merge Shared Layout Delta
-    const sharedDeviceConfig = (item.presentation?.shared?.devices || []).find(
-      (d) => d.deviceId && d.deviceId.toString() === targetDeviceIdStr
-    );
-
-    if (sharedDeviceConfig) {
-      if (sharedDeviceConfig.layoutId) {
-        resolvedLayoutId = sharedDeviceConfig.layoutId;
-      }
-      if (Array.isArray(sharedDeviceConfig.renderings)) {
-        sharedDeviceConfig.renderings.forEach((r) => {
-          if (r.hidden) {
-            renderingsMap.delete(r.uid);
-          } else {
-            const existing = renderingsMap.get(r.uid);
-            renderingsMap.set(r.uid, {
-              uid: r.uid,
-              renderingId: r.renderingId || existing?.renderingId,
-              placeholder: r.placeholder || existing?.placeholder || 'main',
-              sortOrder: r.sortOrder !== undefined ? r.sortOrder : (existing?.sortOrder || 100),
-              datasourceId: r.datasourceId !== undefined ? r.datasourceId : (existing?.datasourceId || null),
-              parameters: {
-                ...(existing?.parameters || {}),
-                ...toPlainObject(r.parameters),
-              },
-              hidden: false,
-              origin: 'shared',
-            });
-          }
-        });
       }
     }
 
-    // Step C: Merge Final Layout Delta (language + version)
-    const normalizedLang = (lang || 'vi').toLowerCase().trim();
-    const normalizedVer = parseInt(version, 10) || 1;
-
-    const finalRecord = (item.presentation?.final || []).find(
-      (f) => f.language === normalizedLang && f.version === normalizedVer
-    );
-
-    const finalDeviceConfig = (finalRecord?.devices || []).find(
-      (d) => d.deviceId && d.deviceId.toString() === targetDeviceIdStr
-    );
-
-    if (finalDeviceConfig) {
-      if (finalDeviceConfig.layoutId) {
-        resolvedLayoutId = finalDeviceConfig.layoutId;
-      }
-      if (Array.isArray(finalDeviceConfig.renderings)) {
-        finalDeviceConfig.renderings.forEach((r) => {
-          if (r.hidden) {
-            renderingsMap.delete(r.uid);
-          } else {
-            const existing = renderingsMap.get(r.uid);
-            renderingsMap.set(r.uid, {
-              uid: r.uid,
-              renderingId: r.renderingId || existing?.renderingId,
-              placeholder: r.placeholder || existing?.placeholder || 'main',
-              sortOrder: r.sortOrder !== undefined ? r.sortOrder : (existing?.sortOrder || 100),
-              datasourceId: r.datasourceId !== undefined ? r.datasourceId : (existing?.datasourceId || null),
-              parameters: {
-                ...(existing?.parameters || {}),
-                ...toPlainObject(r.parameters),
-              },
-              hidden: false,
-              origin: 'final',
-            });
-          }
-        });
-      }
-    }
-
-    // Step D: Enrich metadata (Rendering component name, icon, Datasource path)
-    const allRenderings = await this.getAllRenderings();
-    const renderingMetaMap = new Map(allRenderings.map((r) => [r._id.toString(), r]));
-
-    const datasourceIds = Array.from(renderingsMap.values())
-      .map((r) => r.datasourceId)
-      .filter((id) => id && id.toString().match(/^[0-9a-fA-F]{24}$/));
-
-    const datasourceItems = datasourceIds.length > 0
-      ? await Item.find({ _id: { $in: datasourceIds }, deleted: false }, { path: 1, name: 1, displayName: 1 }).lean()
+    // 2. Lấy Shared Presentation của Item
+    const sharedLayoutId = item.presentation?.shared?.layoutId || null;
+    const sharedRenderings = Array.isArray(item.presentation?.shared?.renderings)
+      ? item.presentation.shared.renderings
       : [];
-    const datasourceMetaMap = new Map(datasourceItems.map((ds) => [ds._id.toString(), ds]));
 
-    const sortedRenderings = Array.from(renderingsMap.values())
-      .map((r) => {
-        const rMeta = r.renderingId ? renderingMetaMap.get(r.renderingId.toString()) : null;
-        const dsMeta = r.datasourceId ? datasourceMetaMap.get(r.datasourceId.toString()) : null;
-
-        return {
-          ...r,
-          renderingName: rMeta?.name || 'Unknown',
-          displayName: rMeta?.displayName || rMeta?.name || 'Unknown Rendering',
-          componentName: rMeta?.componentName || 'UnknownComponent',
-          icon: rMeta?.icon || 'ti ti-box',
-          datasourcePath: dsMeta?.path || null,
-          datasourceName: dsMeta?.displayName || dsMeta?.name || null,
-        };
-      })
-      .sort((a, b) => {
-        if (a.placeholder !== b.placeholder) {
-          return a.placeholder.localeCompare(b.placeholder);
+    // 3. Lấy Final Presentation theo Language và Version của Item
+    let finalLayoutId = null;
+    let finalRenderings = [];
+    if (Array.isArray(item.presentation?.final)) {
+      const finalRec = item.presentation.final.find(
+        (f) =>
+          f.language?.toLowerCase() === currentLang &&
+          Number(f.version) === currentVersion
+      );
+      if (finalRec) {
+        finalLayoutId = finalRec.layoutId || null;
+        if (Array.isArray(finalRec.renderings)) {
+          finalRenderings = finalRec.renderings;
         }
-        return a.sortOrder - b.sortOrder;
-      });
-
-    // Group into placeholders map
-    const placeholdersMap = {};
-    sortedRenderings.forEach((r) => {
-      if (!placeholdersMap[r.placeholder]) {
-        placeholdersMap[r.placeholder] = [];
       }
-      placeholdersMap[r.placeholder].push(r);
+    }
+
+    // 4. Phân giải Layout ID (Final > Shared > Standard)
+    const resolvedLayoutId = finalLayoutId || sharedLayoutId || standardLayoutId || null;
+
+    // 5. Phân giải Renderings (Delta merge: Standard -> Shared -> Final)
+    const renderingsMap = new Map();
+
+    // Bước 5.1: Nạp Standard renderings
+    for (const r of standardRenderings) {
+      if (!r.hidden) {
+        const uid = r.uid || uuidv4();
+        renderingsMap.set(uid, {
+          uid,
+          renderingId: r.renderingId ? r.renderingId.toString() : null,
+          placeholder: r.placeholderKey || r.placeholder || 'maincontent',
+          placeholderKey: r.placeholderKey || r.placeholder || 'maincontent',
+          sortOrder: r.sortOrder || 100,
+          datasourceId: r.datasourceId ? r.datasourceId.toString() : null,
+          parameters: toPlainObject(r.parameters),
+          hidden: false,
+          origin: 'standard',
+        });
+      }
+    }
+
+    // Bước 5.2: Ghi đè Shared renderings
+    for (const r of sharedRenderings) {
+      const uid = r.uid || uuidv4();
+      if (r.hidden) {
+        renderingsMap.delete(uid);
+      } else {
+        const existing = renderingsMap.get(uid);
+        renderingsMap.set(uid, {
+          uid,
+          renderingId: r.renderingId ? r.renderingId.toString() : existing?.renderingId || null,
+          placeholder: r.placeholderKey || r.placeholder || existing?.placeholderKey || 'maincontent',
+          placeholderKey: r.placeholderKey || r.placeholder || existing?.placeholderKey || 'maincontent',
+          sortOrder: r.sortOrder !== undefined ? r.sortOrder : existing?.sortOrder || 100,
+          datasourceId: r.datasourceId !== undefined ? (r.datasourceId ? r.datasourceId.toString() : null) : existing?.datasourceId || null,
+          parameters: { ...(existing?.parameters || {}), ...toPlainObject(r.parameters) },
+          hidden: false,
+          origin: 'shared',
+        });
+      }
+    }
+
+    // Bước 5.3: Ghi đè Final renderings
+    for (const r of finalRenderings) {
+      const uid = r.uid || uuidv4();
+      if (r.hidden) {
+        renderingsMap.delete(uid);
+      } else {
+        const existing = renderingsMap.get(uid);
+        renderingsMap.set(uid, {
+          uid,
+          renderingId: r.renderingId ? r.renderingId.toString() : existing?.renderingId || null,
+          placeholder: r.placeholderKey || r.placeholder || existing?.placeholderKey || 'maincontent',
+          placeholderKey: r.placeholderKey || r.placeholder || existing?.placeholderKey || 'maincontent',
+          sortOrder: r.sortOrder !== undefined ? r.sortOrder : existing?.sortOrder || 100,
+          datasourceId: r.datasourceId !== undefined ? (r.datasourceId ? r.datasourceId.toString() : null) : existing?.datasourceId || null,
+          parameters: { ...(existing?.parameters || {}), ...toPlainObject(r.parameters) },
+          hidden: false,
+          origin: 'final',
+        });
+      }
+    }
+
+    const mergedRenderings = Array.from(renderingsMap.values()).sort((a, b) => {
+      const pA = (a.placeholderKey || a.placeholder || '').localeCompare(b.placeholderKey || b.placeholder || '');
+      if (pA !== 0) return pA;
+      return (a.sortOrder || 100) - (b.sortOrder || 100);
     });
 
-    // Layout info
-    let layoutInfo = null;
+    // 6. Gán thêm metadata (viewPath, name, icon) cho Layout và Renderings
+    let layoutDetails = null;
     if (resolvedLayoutId) {
-      const allLayouts = await this.getAllLayouts();
-      layoutInfo = allLayouts.find((l) => l._id.toString() === resolvedLayoutId.toString()) || null;
+      const layoutItem = await Item.findById(resolvedLayoutId).lean();
+      if (layoutItem) {
+        const lf = toPlainObject(layoutItem.fields);
+        const lsf = toPlainObject(layoutItem.sharedFields);
+        layoutDetails = {
+          _id: layoutItem._id,
+          id: layoutItem._id.toString(),
+          name: layoutItem.name,
+          displayName: layoutItem.displayName || layoutItem.name,
+          viewPath: lsf.viewPath || lf.viewPath || '',
+        };
+      }
+    }
+
+    const allRenderingsMetadata = await this.getAllRenderings();
+    const renderingsMetaMap = new Map(allRenderingsMetadata.map((r) => [r.id, r]));
+
+    const enrichedRenderings = mergedRenderings.map((r) => {
+      const meta = r.renderingId ? renderingsMetaMap.get(r.renderingId) : null;
+      return {
+        ...r,
+        name: meta?.name || 'Unnamed Component',
+        displayName: meta?.displayName || meta?.name || 'Component',
+        viewPath: meta?.viewPath || '',
+        icon: meta?.icon || 'ti ti-box',
+        componentTemplate: meta?.componentTemplate || null,
+      };
+    });
+
+    // 7. Gom nhóm theo Placeholder Key
+    const placeholdersMap = {};
+    for (const r of enrichedRenderings) {
+      const key = r.placeholderKey || r.placeholder || 'maincontent';
+      if (!placeholdersMap[key]) {
+        placeholdersMap[key] = [];
+      }
+      placeholdersMap[key].push(r);
     }
 
     return {
       itemId: item._id,
-      language: normalizedLang,
-      version: normalizedVer,
-      device: {
-        _id: device._id,
-        name: device.name,
-        displayName: device.displayName || device.name,
-        isDefault: Boolean(device.sharedFields?.isDefault || device.fields?.isDefault),
-      },
+      itemPath: item.path,
+      itemName: item.name,
+      lang: currentLang,
+      version: currentVersion,
       layoutId: resolvedLayoutId,
-      layout: layoutInfo,
-      renderings: sortedRenderings,
+      layout: layoutDetails,
+      renderings: enrichedRenderings,
       placeholders: placeholdersMap,
+      origins: {
+        hasStandard: Boolean(standardLayoutId || standardRenderings.length > 0),
+        hasShared: Boolean(sharedLayoutId || sharedRenderings.length > 0),
+        hasFinal: Boolean(finalLayoutId || finalRenderings.length > 0),
+      },
     };
   },
 
   /**
-   * Get Presentation details for UI Modal
+   * Get presentation details for Content Editor modal
    */
-  async getPresentationDetails(itemId, deviceIdOrName = null, lang = 'vi', version = 1) {
-    const item = await Item.findById(itemId).populate('templateId').lean();
+  async getPresentationDetails(itemId, lang = 'vi', version = 1) {
+    const item = await Item.findById(itemId).lean();
     if (!item) {
       throw new NotFoundError('Không tìm thấy Item.');
     }
 
-    const allDevices = await this.getAllDevices();
-    let currentDevice = await this.resolveDevice(deviceIdOrName);
-    if (!currentDevice && allDevices.length > 0) {
-      currentDevice = allDevices[0];
-    }
-    const targetDeviceIdStr = currentDevice?._id ? currentDevice._id.toString() : null;
+    const currentLang = (lang || 'vi').toLowerCase().trim();
+    const currentVersion = Number(version) || 1;
 
-    const normalizedLang = (lang || 'vi').toLowerCase().trim();
-    const normalizedVer = parseInt(version, 10) || 1;
-
-    // Check configuration level
-    const template = item.templateId;
-    const hasStandard = Boolean(
-      template?.presentation?.devices?.some((d) => d.deviceId?.toString() === targetDeviceIdStr)
-    );
-    const hasShared = Boolean(
-      item.presentation?.shared?.devices?.some((d) => d.deviceId?.toString() === targetDeviceIdStr)
-    );
-    const hasFinal = Boolean(
-      item.presentation?.final?.some(
-        (f) =>
-          f.language === normalizedLang &&
-          f.version === normalizedVer &&
-          f.devices?.some((d) => d.deviceId?.toString() === targetDeviceIdStr)
-      )
-    );
-
-    let activeScope = 'standard';
-    if (hasFinal) activeScope = 'final';
-    else if (hasShared) activeScope = 'shared';
-
-    const merged = currentDevice?._id
-      ? await this.getFinalPresentation(item, currentDevice._id, normalizedLang, normalizedVer)
-      : { layout: null, placeholders: {} };
     const allLayouts = await this.getAllLayouts();
-    const allPlaceholderSettings = await this.getAllPlaceholderSettings();
+    const allPlaceholders = await this.getAllPlaceholders();
+    const allRenderings = await this.getAllRenderings();
+
+    const merged = await this.getFinalPresentation(item, currentLang, currentVersion);
+
+    // Xác định activeScope mặc định (ưu tiên final nếu đã có override, ngược lại shared)
+    let activeScope = 'shared';
+    if (merged.origins.hasFinal) {
+      activeScope = 'final';
+    }
 
     return {
-      item: {
-        _id: item._id,
-        name: item.name,
-        displayName: item.displayName || item.name,
-        path: item.path,
-        updatedAt: item.updatedAt,
-      },
-      currentDevice,
-      allDevices,
-      allLayouts,
-      allPlaceholderSettings,
+      item,
+      language: currentLang,
+      version: currentVersion,
       activeScope,
-      hasStandard,
-      hasShared,
-      hasFinal,
+      allLayouts,
+      allPlaceholders,
+      allRenderings,
       merged,
-      language: normalizedLang,
-      version: normalizedVer,
+      updatedAt: item.updatedAt ? new Date(item.updatedAt).toISOString() : '',
     };
   },
 
   /**
-   * Validate Presentation configuration:
-   * Enforces that Layout must be under /sitecore/layout/Layouts (Template Layout)
-   * and Renderings must be under /sitecore/layout/Renderings (Template Rendering)
+   * Validate Presentation configuration (Layout & Renderings)
    */
   async validatePresentation(presentationData) {
     if (!presentationData) return;
-    const { layoutId, renderings = [] } = presentationData;
+    const { layoutId, renderings } = presentationData;
 
     if (layoutId) {
-      const layoutItem = await Item.findOne({ _id: layoutId, deleted: false })
-        .populate('templateId')
-        .lean();
+      const layoutItem = await Item.findById(layoutId).populate('templateId').lean();
       if (!layoutItem) {
-        throw new ValidationError(`Layout [${layoutId}] không tồn tại.`);
+        throw new ValidationError(`Layout với ID ${layoutId} không tồn tại.`);
       }
       if (!layoutItem.path.toLowerCase().startsWith('/sitecore/layout/layouts')) {
-        throw new ValidationError(
-          `Layout [${layoutItem.name}] phải nằm dưới cây /sitecore/layout/Layouts (hiện tại: ${layoutItem.path}).`
-        );
+        throw new ValidationError('Layout được chọn phải nằm trong nhánh /sitecore/layout/Layouts.');
       }
       const tplName = layoutItem.templateId?.name || '';
       if (tplName !== 'Layout') {
-        throw new ValidationError(
-          `Item [${layoutItem.name}] không phải là Layout hợp lệ (Template: ${tplName}).`
-        );
+        throw new ValidationError(`Item ${layoutItem.name} không phải là một Layout hợp lệ (Template: ${tplName}).`);
       }
     }
 
@@ -555,359 +491,275 @@ const presentationService = {
       for (let i = 0; i < renderings.length; i++) {
         const r = renderings[i];
         if (!r.renderingId) continue;
-        const renderingItem = await Item.findOne({ _id: r.renderingId, deleted: false })
-          .populate('templateId')
-          .lean();
+
+        const renderingItem = await Item.findById(r.renderingId).populate('templateId').lean();
         if (!renderingItem) {
-          throw new ValidationError(`Component Rendering [${r.renderingId}] không tồn tại.`);
+          throw new ValidationError(`Rendering tại vị trí [${i}] với ID ${r.renderingId} không tồn tại.`);
         }
         if (!renderingItem.path.toLowerCase().startsWith('/sitecore/layout/renderings')) {
-          throw new ValidationError(
-            `Rendering [${renderingItem.name}] phải nằm dưới cây /sitecore/layout/Renderings (hiện tại: ${renderingItem.path}).`
-          );
+          throw new ValidationError(`Rendering ${renderingItem.name} phải nằm trong nhánh /sitecore/layout/Renderings.`);
         }
         const tplName = renderingItem.templateId?.name || '';
         if (tplName !== 'Rendering') {
-          throw new ValidationError(
-            `Item [${renderingItem.name}] không phải là Rendering hợp lệ (Template: ${tplName}).`
-          );
+          throw new ValidationError(`Item ${renderingItem.name} không phải là một Rendering hợp lệ (Template: ${tplName}).`);
         }
       }
     }
   },
 
   /**
-   * Save Presentation changes (Shared or Final)
-   * Enforces Optimistic Locking with expectedUpdatedAt
+   * Lưu cấu hình Presentation cho Item (Shared hoặc Final)
    */
-  async savePresentation(
-    itemId,
-    presentationData,
-    scope = 'shared',
-    { lang = 'vi', version = 1, expectedUpdatedAt = null, userId = null } = {}
-  ) {
+  async savePresentation(itemId, presentationData, scope = 'shared', options = {}) {
+    const { lang = 'vi', version = 1, expectedUpdatedAt = null, userId = null } = options;
     const item = await Item.findById(itemId);
     if (!item) {
       throw new NotFoundError('Không tìm thấy Item để lưu Presentation.');
     }
 
-    // 1. Optimistic Locking check (409)
+    // Optimistic locking
     if (expectedUpdatedAt && item.updatedAt) {
       const expectedTime = new Date(expectedUpdatedAt).getTime();
       const actualTime = new Date(item.updatedAt).getTime();
       if (Math.abs(expectedTime - actualTime) > 1000) {
-        throw new ConflictError(
-          'Dữ liệu đã được người dùng khác cập nhật trong phiên làm việc. Vui lòng tải lại trang trước khi lưu.'
-        );
+        throw new ConflictError('Item đã bị chỉnh sửa bởi người dùng khác. Vui lòng tải lại trước khi lưu Presentation.');
       }
     }
 
-    const { deviceId, layoutId, renderings = [] } = presentationData;
-    if (!deviceId) {
-      throw new ValidationError('Thiếu Device ID cho cấu hình Presentation.');
-    }
+    const { layoutId = null, renderings = [] } = presentationData;
 
-    // 2. Validate Presentation items (Layout must be in Layouts, Renderings in Renderings)
-    await this.validatePresentation(presentationData);
+    // Validate Layout & Renderings
+    await this.validatePresentation({ layoutId, renderings });
 
-    // 3. Validate and sanitize rendering instances
-    const cleanRenderings = [];
-    for (let i = 0; i < renderings.length; i++) {
-      const r = renderings[i];
-      const uid = r.uid && typeof r.uid === 'string' && r.uid.trim() ? r.uid.trim() : uuidv4();
-      if (!r.renderingId) {
-        throw new ValidationError(`Rendering ở vị trí ${i + 1} chưa chọn Component.`);
-      }
-
-      cleanRenderings.push({
-        uid,
-        renderingId: r.renderingId,
-        placeholder: (r.placeholder || 'main').trim(),
-        sortOrder: typeof r.sortOrder === 'number' ? r.sortOrder : (i + 1) * 100,
-        datasourceId: r.datasourceId || null,
+    // Format renderings và gán UID nếu chưa có
+    const formattedRenderings = renderings.map((r, index) => {
+      const phKey = r.placeholderKey || r.placeholder || 'maincontent';
+      return {
+        uid: r.uid || uuidv4(),
+        renderingId: r.renderingId ? new mongoose.Types.ObjectId(r.renderingId) : null,
+        placeholder: phKey,
+        placeholderKey: phKey,
+        sortOrder: r.sortOrder !== undefined ? Number(r.sortOrder) : (index + 1) * 100,
+        datasourceId: r.datasourceId ? new mongoose.Types.ObjectId(r.datasourceId) : null,
         parameters: toPlainObject(r.parameters),
         hidden: Boolean(r.hidden),
-      });
-    }
-
-    const normalizedLang = (lang || 'vi').toLowerCase().trim();
-    const normalizedVer = parseInt(version, 10) || 1;
-    const deviceObjectId = new mongoose.Types.ObjectId(deviceId);
-    const layoutObjectId = layoutId ? new mongoose.Types.ObjectId(layoutId) : null;
+      };
+    });
 
     if (!item.presentation) {
-      item.presentation = { shared: { devices: [] }, final: [] };
+      item.presentation = { shared: {}, final: [] };
     }
 
     if (scope === 'shared') {
-      // Update Shared Presentation
-      if (!item.presentation.shared) {
-        item.presentation.shared = { devices: [] };
+      item.presentation.shared = {
+        layoutId: layoutId ? new mongoose.Types.ObjectId(layoutId) : null,
+        renderings: formattedRenderings,
+      };
+    } else if (scope === 'final') {
+      if (!Array.isArray(item.presentation.final)) {
+        item.presentation.final = [];
       }
-      const existingDeviceIdx = item.presentation.shared.devices.findIndex(
-        (d) => d.deviceId && d.deviceId.toString() === deviceId.toString()
+
+      const targetLang = (lang || 'vi').toLowerCase().trim();
+      const targetVersion = Number(version) || 1;
+
+      const idx = item.presentation.final.findIndex(
+        (f) => f.language?.toLowerCase() === targetLang && Number(f.version) === targetVersion
       );
 
-      const devicePayload = {
-        deviceId: deviceObjectId,
-        layoutId: layoutObjectId,
-        renderings: cleanRenderings,
+      const finalRecord = {
+        language: targetLang,
+        version: targetVersion,
+        layoutId: layoutId ? new mongoose.Types.ObjectId(layoutId) : null,
+        renderings: formattedRenderings,
       };
 
-      if (existingDeviceIdx >= 0) {
-        item.presentation.shared.devices[existingDeviceIdx] = devicePayload;
+      if (idx >= 0) {
+        item.presentation.final[idx] = finalRecord;
       } else {
-        item.presentation.shared.devices.push(devicePayload);
+        item.presentation.final.push(finalRecord);
       }
     } else {
-      // Update Final Presentation for language & version
-      const devicePayload = {
-        deviceId: deviceObjectId,
-        layoutId: layoutObjectId,
-        renderings: cleanRenderings,
-      };
-
-      const finalArray = Array.isArray(item.presentation.final)
-        ? item.presentation.final.map((f) => (typeof f.toObject === 'function' ? f.toObject() : { ...f }))
-        : [];
-
-      const langRecordIdx = finalArray.findIndex(
-        (f) => f.language === normalizedLang && f.version === normalizedVer
-      );
-
-      if (langRecordIdx >= 0) {
-        const langRecord = finalArray[langRecordIdx];
-        const devices = Array.isArray(langRecord.devices) ? [...langRecord.devices] : [];
-        const existingDeviceIdx = devices.findIndex(
-          (d) => d.deviceId && d.deviceId.toString() === deviceId.toString()
-        );
-        if (existingDeviceIdx >= 0) {
-          devices[existingDeviceIdx] = devicePayload;
-        } else {
-          devices.push(devicePayload);
-        }
-        langRecord.devices = devices;
-        finalArray[langRecordIdx] = langRecord;
-      } else {
-        finalArray.push({
-          language: normalizedLang,
-          version: normalizedVer,
-          devices: [devicePayload],
-        });
-      }
-
-      item.presentation.final = finalArray;
+      throw new ValidationError(`Scope "${scope}" không hợp lệ (chỉ chấp nhận 'shared' hoặc 'final').`);
     }
 
-    item.markModified('presentation');
-    item.updatedBy = userId;
+    if (userId) {
+      item.updatedBy = userId;
+    }
     item.updatedAt = new Date();
-    await item.save();
 
-    logger.info(`[Presentation] Saved ${scope} presentation for item: ${item.path} (${item._id})`);
-    return {
-      success: true,
-      itemId: item._id,
-      scope,
-      language: normalizedLang,
-      version: normalizedVer,
-      updatedAt: item.updatedAt,
-    };
+    await item.save();
+    logger.info(`[presentationService] Saved ${scope} presentation for item: ${item.path} (ID: ${item._id})`);
+
+    try {
+      const templateService = require('./templateService');
+      templateService.invalidateCache();
+    } catch (err) {
+      logger.debug(`Could not invalidate template cache: ${err.message}`);
+    }
+
+    return this.getFinalPresentation(item, lang, version);
   },
 
   /**
-   * Reset Presentation to Standard (Template defaults)
+   * Reset Presentation về Standard Presentation của Template
    */
-  async resetToStandard(
-    itemId,
-    scope = 'all',
-    { lang = 'vi', version = 1, deviceId = null, expectedUpdatedAt = null, userId = null } = {}
-  ) {
+  async resetToStandard(itemId, scope = 'final', options = {}) {
+    const { lang = 'vi', version = 1, expectedUpdatedAt = null, userId = null } = options;
     const item = await Item.findById(itemId);
     if (!item) {
-      throw new NotFoundError('Không tìm thấy Item để khôi phục Presentation.');
+      throw new NotFoundError('Không tìm thấy Item để reset Presentation.');
     }
 
+    // Optimistic locking
     if (expectedUpdatedAt && item.updatedAt) {
       const expectedTime = new Date(expectedUpdatedAt).getTime();
       const actualTime = new Date(item.updatedAt).getTime();
       if (Math.abs(expectedTime - actualTime) > 1000) {
-        throw new ConflictError(
-          'Dữ liệu đã được người dùng khác cập nhật. Vui lòng tải lại trang trước khi khôi phục.'
-        );
+        throw new ConflictError('Item đã bị chỉnh sửa bởi người dùng khác. Vui lòng tải lại trước khi reset Presentation.');
       }
     }
 
-    const normalizedLang = (lang || 'vi').toLowerCase().trim();
-    const normalizedVer = parseInt(version, 10) || 1;
+    const targetLang = (lang || 'vi').toLowerCase().trim();
+    const targetVersion = Number(version) || 1;
 
     if (scope === 'final' || scope === 'all') {
       if (Array.isArray(item.presentation?.final)) {
-        if (deviceId) {
-          const rec = item.presentation.final.find(
-            (f) => f.language === normalizedLang && f.version === normalizedVer
-          );
-          if (rec && Array.isArray(rec.devices)) {
-            rec.devices = rec.devices.filter((d) => d.deviceId && d.deviceId.toString() !== deviceId.toString());
-          }
-        } else {
-          item.presentation.final = item.presentation.final.filter(
-            (f) => !(f.language === normalizedLang && f.version === normalizedVer)
-          );
-        }
+        item.presentation.final = item.presentation.final.filter(
+          (f) => !(f.language?.toLowerCase() === targetLang && Number(f.version) === targetVersion)
+        );
       }
     }
 
     if (scope === 'shared' || scope === 'all') {
-      if (item.presentation?.shared?.devices) {
-        if (deviceId) {
-          item.presentation.shared.devices = item.presentation.shared.devices.filter(
-            (d) => d.deviceId && d.deviceId.toString() !== deviceId.toString()
-          );
-        } else {
-          item.presentation.shared.devices = [];
-        }
+      if (item.presentation?.shared) {
+        item.presentation.shared = {
+          layoutId: null,
+          renderings: [],
+        };
       }
     }
 
-    item.markModified('presentation');
-    item.updatedBy = userId;
+    if (userId) {
+      item.updatedBy = userId;
+    }
     item.updatedAt = new Date();
-    await item.save();
 
-    logger.info(`[Presentation] Reset to standard (${scope}) for item: ${item.path}`);
-    return {
-      success: true,
-      itemId: item._id,
-      scope,
-      updatedAt: item.updatedAt,
-    };
+    await item.save();
+    logger.info(`[presentationService] Reset ${scope} presentation for item: ${item.path} (ID: ${item._id})`);
+
+    try {
+      const templateService = require('./templateService');
+      templateService.invalidateCache();
+    } catch (err) {
+      logger.debug(`Could not invalidate template cache: ${err.message}`);
+    }
+
+    return this.getFinalPresentation(item, lang, version);
   },
 
   /**
    * Set Standard Presentation on Template
    */
-  async setTemplateStandardPresentation(templateId, { deviceId, layoutId, renderings = [] }, { userId = null } = {}) {
+  async setTemplateStandardPresentation(templateId, { layoutId = null, renderings = [] }, options = {}) {
     const template = await Template.findById(templateId);
     if (!template) {
-      throw new NotFoundError('Không tìm thấy Template.');
-    }
-
-    if (!template.presentation) {
-      template.presentation = { devices: [] };
+      throw new NotFoundError('Không tìm thấy Template để cấu hình Standard Presentation.');
     }
 
     await this.validatePresentation({ layoutId, renderings });
 
-    const cleanRenderings = [];
-    for (let i = 0; i < renderings.length; i++) {
-      const r = renderings[i];
-      const uid = r.uid && typeof r.uid === 'string' && r.uid.trim() ? r.uid.trim() : uuidv4();
-      cleanRenderings.push({
-        uid,
-        renderingId: r.renderingId,
-        placeholder: (r.placeholder || 'main').trim(),
-        sortOrder: typeof r.sortOrder === 'number' ? r.sortOrder : (i + 1) * 100,
-        datasourceId: r.datasourceId || null,
+    const formattedRenderings = renderings.map((r, index) => {
+      const phKey = r.placeholderKey || r.placeholder || 'maincontent';
+      return {
+        uid: r.uid || uuidv4(),
+        renderingId: r.renderingId ? new mongoose.Types.ObjectId(r.renderingId) : null,
+        placeholder: phKey,
+        placeholderKey: phKey,
+        sortOrder: r.sortOrder !== undefined ? Number(r.sortOrder) : (index + 1) * 100,
+        datasourceId: r.datasourceId ? new mongoose.Types.ObjectId(r.datasourceId) : null,
         parameters: toPlainObject(r.parameters),
         hidden: Boolean(r.hidden),
-      });
-    }
+      };
+    });
 
-    const deviceObjectId = new mongoose.Types.ObjectId(deviceId);
-    const layoutObjectId = layoutId ? new mongoose.Types.ObjectId(layoutId) : null;
-
-    const existingDeviceIdx = template.presentation.devices.findIndex(
-      (d) => d.deviceId && d.deviceId.toString() === deviceId.toString()
-    );
-
-    const payload = {
-      deviceId: deviceObjectId,
-      layoutId: layoutObjectId,
-      renderings: cleanRenderings,
+    template.presentation = {
+      layoutId: layoutId ? new mongoose.Types.ObjectId(layoutId) : null,
+      renderings: formattedRenderings,
     };
 
-    if (existingDeviceIdx >= 0) {
-      template.presentation.devices[existingDeviceIdx] = payload;
-    } else {
-      template.presentation.devices.push(payload);
+    if (options.userId) {
+      template.updatedBy = options.userId;
     }
 
-    template.markModified('presentation');
-    template.updatedBy = userId;
     await template.save();
-    return { success: true, templateId: template._id };
+    logger.info(`[presentationService] Set Standard Presentation on Template: ${template.name}`);
+
+    try {
+      const templateService = require('./templateService');
+      templateService.invalidateCache();
+    } catch (err) {
+      logger.debug(`Could not invalidate template cache: ${err.message}`);
+    }
+
+    return template;
   },
 
   /**
-   * Integrity Check: get all usage of a Layout or Rendering
+   * Kiểm tra xem Layout hoặc Rendering có đang được Template hoặc Item nào sử dụng hay không
    */
   async getUsage(layoutOrRenderingId) {
-    const idStr = layoutOrRenderingId.toString();
-    const idObj = mongoose.Types.ObjectId.isValid(idStr) ? new mongoose.Types.ObjectId(idStr) : null;
-    const queryIds = idObj ? [idStr, idObj] : [idStr];
+    if (!layoutOrRenderingId) return { inUse: false, templates: [], items: [] };
+    const id = new mongoose.Types.ObjectId(layoutOrRenderingId);
 
-    // Check templates
-    const templatesWithLayout = await Template.find({
-      'presentation.devices.layoutId': { $in: queryIds },
-    }, { name: 1, displayName: 1 }).lean();
-
-    const templatesWithRendering = await Template.find({
-      'presentation.devices.renderings.renderingId': { $in: queryIds },
-    }, { name: 1, displayName: 1 }).lean();
-
-    // Check items (shared + final)
-    const itemsWithLayout = await Item.find({
+    // 1. Kiểm tra trong Templates
+    const templates = await Template.find({
       $or: [
-        { 'presentation.shared.devices.layoutId': { $in: queryIds } },
-        { 'presentation.final.devices.layoutId': { $in: queryIds } },
+        { 'presentation.layoutId': id },
+        { 'presentation.renderings.renderingId': id },
       ],
-      deleted: false,
-    }, { path: 1, name: 1, displayName: 1 }).lean();
+    })
+      .select('name displayName')
+      .lean();
 
-    const itemsWithRendering = await Item.find({
+    // 2. Kiểm tra trong Items (shared và final)
+    const items = await Item.find({
+      deleted: false,
       $or: [
-        { 'presentation.shared.devices.renderings.renderingId': { $in: queryIds } },
-        { 'presentation.final.devices.renderings.renderingId': { $in: queryIds } },
+        { 'presentation.shared.layoutId': id },
+        { 'presentation.shared.renderings.renderingId': id },
+        { 'presentation.final.layoutId': id },
+        { 'presentation.final.renderings.renderingId': id },
       ],
-      deleted: false,
-    }, { path: 1, name: 1, displayName: 1 }).lean();
-
-    const totalUsage =
-      templatesWithLayout.length +
-      templatesWithRendering.length +
-      itemsWithLayout.length +
-      itemsWithRendering.length;
+    })
+      .select('name displayName path')
+      .lean();
 
     return {
-      id: idStr,
-      inUse: totalUsage > 0,
-      totalUsage,
-      templates: [...templatesWithLayout, ...templatesWithRendering],
-      items: [...itemsWithLayout, ...itemsWithRendering],
+      inUse: templates.length > 0 || items.length > 0,
+      templates,
+      items,
     };
   },
 
   /**
-   * Integrity Check: get all items referencing a datasource item
+   * Kiểm tra các item tham chiếu tới Datasource item
    */
   async getReferences(datasourceItemId) {
-    const id = datasourceItemId.toString();
+    if (!datasourceItemId) return [];
+    const id = new mongoose.Types.ObjectId(datasourceItemId);
 
-    const referencingItems = await Item.find({
-      $or: [
-        { 'presentation.shared.devices.renderings.datasourceId': id },
-        { 'presentation.final.devices.renderings.datasourceId': id },
-      ],
+    const items = await Item.find({
       deleted: false,
-    }, { path: 1, name: 1, displayName: 1 }).lean();
+      $or: [
+        { 'presentation.shared.renderings.datasourceId': id },
+        { 'presentation.final.renderings.datasourceId': id },
+      ],
+    })
+      .select('name displayName path')
+      .lean();
 
-    return {
-      datasourceId: id,
-      referenced: referencingItems.length > 0,
-      count: referencingItems.length,
-      items: referencingItems,
-    };
+    return items;
   },
 };
 

@@ -19,8 +19,9 @@ class ValidationError extends Error {
   }
 }
 
-// In-memory cache for resolved templates
+// In-memory cache for resolved templates and effective templates
 const resolvedTemplateCache = new Map();
+const effectiveTemplateCache = new Map();
 
 // Compatible field type transitions when items already have data
 const COMPATIBLE_TYPE_TRANSITIONS = {
@@ -39,10 +40,11 @@ const templateService = {
   ValidationError,
 
   /**
-   * Clear in-memory resolved template cache
+   * Clear in-memory resolved template and effective template caches
    */
   invalidateCache() {
     resolvedTemplateCache.clear();
+    effectiveTemplateCache.clear();
   },
 
   /**
@@ -282,9 +284,86 @@ const templateService = {
       return Template.find().select('name displayName icon description').sort({ name: 1 }).lean();
     }
 
-    // Leaf items under presentation cannot have children created manually
-    if (['Layout', 'Rendering', 'Device', 'Placeholder Settings'].includes(resolved.name)) {
+    // Leaf items under presentation and template items cannot have children created manually
+    if (['Layout', 'Rendering', 'Device', 'Placeholder Settings', 'Template', 'Standard Template', 'Sample Component'].includes(resolved.name)) {
       return [];
+    }
+
+    if (item) {
+      const isTemplateDefItem = await Template.findById(item._id).lean();
+      if (isTemplateDefItem && isTemplateDefItem.name !== 'Template Folder') {
+        return [];
+      }
+    }
+
+    // Special rule for Feature/Components and Project/Pages branches (and nested folders)
+    if (item && item.path) {
+      const p = item.path.toLowerCase().trim();
+      const isComponentOrPageFolder =
+        p === '/sitecore/templates/feature/components' ||
+        p.startsWith('/sitecore/templates/feature/components/') ||
+        p === '/sitecore/templates/project/pages' ||
+        p.startsWith('/sitecore/templates/project/pages/');
+
+      if (isComponentOrPageFolder) {
+        const templateFolder = await Template.findOne({ name: 'Template Folder' })
+          .select('name displayName icon description path isSystem')
+          .lean();
+        const standardTemplate = await Template.findOne({
+          $or: [{ name: 'Standard Template' }, { name: 'Sample Component' }],
+        })
+          .select('name displayName icon description path isSystem')
+          .lean();
+
+        const options = [];
+        if (templateFolder) {
+          options.push({
+            ...templateFolder,
+            displayName: 'Folder',
+          });
+        }
+        if (standardTemplate) {
+          options.push({
+            ...standardTemplate,
+            displayName: 'Standard Template',
+          });
+        }
+        return options;
+      }
+    }
+
+    // Check if target is /sitecore/content or a page under /sitecore/content
+    const isContentBranch = item && item.path && (
+      item.path.toLowerCase() === '/sitecore/content' ||
+      item.path.toLowerCase().startsWith('/sitecore/content/')
+    );
+
+    const isPageTemplate = resolved.path && resolved.path.toLowerCase().includes('/project/pages');
+    const isCommonTemplate = (resolved.name === 'Folder') || (resolved.path && resolved.path.toLowerCase().includes('/templates/common'));
+
+    if (isContentBranch || isPageTemplate || isCommonTemplate) {
+      // 1. Root /sitecore/content always allows inserting page templates from Project/Pages and common templates from Common
+      if (item && item.path && item.path.toLowerCase() === '/sitecore/content') {
+        return this.getContentInsertTemplates();
+      }
+
+      // 2. If a specific page or common template defines custom insert options, prioritize them
+      if (resolved.insertOptions && resolved.insertOptions.length > 0) {
+        const configured = await Template.find({
+          _id: { $in: resolved.insertOptions },
+          isSystem: { $ne: true },
+        })
+          .select('name displayName icon description path')
+          .sort({ displayName: 1, name: 1 })
+          .lean();
+
+        if (configured && configured.length > 0) {
+          return configured;
+        }
+      }
+
+      // 3. Fallback rule for /content branch: dynamic templates from Project/Pages and Common
+      return this.getContentInsertTemplates();
     }
 
     // If current template defines insert options, use them
@@ -300,7 +379,120 @@ const templateService = {
   },
 
   /**
-   * Check usage of a template: items using it + templates inheriting from it
+   * Get all templates allowed for content creation under /sitecore/content:
+   * - Page Templates located under /sitecore/templates/Project/Pages (recursive)
+   * - Common Templates located under /sitecore/templates/Common (recursive, e.g. Folder)
+   * Excludes structural template folders and System templates.
+   */
+  async getContentInsertTemplates() {
+    const allowedPathRegex = '^/sitecore/templates/(project/pages|common)';
+
+    // 1. Search Template documents by path
+    const templatesByPath = await Template.find({
+      path: { $regex: allowedPathRegex, $options: 'i' },
+      name: { $nin: ['Template Folder', 'Layout Folder', 'Rendering Folder', 'Placeholder Folder'] },
+      isSystem: { $ne: true },
+    })
+      .select('name displayName icon description path isSystem')
+      .lean();
+
+    // 2. Search via Item tree under /sitecore/templates/(project/pages|common)
+    const treeItems = await Item.find({
+      path: { $regex: allowedPathRegex, $options: 'i' },
+      deleted: false,
+    }).lean();
+
+    const candidateIds = treeItems
+      .filter((it) => {
+        const nameLower = (it.name || '').toLowerCase();
+        if (nameLower === 'pages' || nameLower === 'common') return false;
+        if (nameLower === 'template folder') return false;
+        return true;
+      })
+      .map((it) => it._id);
+
+    let templatesByTree = [];
+    if (candidateIds.length > 0) {
+      templatesByTree = await Template.find({
+        _id: { $in: candidateIds },
+        name: { $nin: ['Template Folder', 'Layout Folder', 'Rendering Folder', 'Placeholder Folder'] },
+        isSystem: { $ne: true },
+      })
+        .select('name displayName icon description path isSystem')
+        .lean();
+    }
+
+    // 3. Special check for Folder template:
+    // If Folder template exists, and either its path or its Item path is under common, include it
+    let folderTplDoc = null;
+    const folderTpl = await Template.findOne({ name: 'Folder' })
+      .select('name displayName icon description path isSystem')
+      .lean();
+    if (folderTpl) {
+      const p = (folderTpl.path || '').toLowerCase();
+      const folderItem = await Item.findOne({ _id: folderTpl._id, deleted: false }).lean();
+      const itemPath = (folderItem?.path || '').toLowerCase();
+      if (p.includes('/common') || itemPath.includes('/common')) {
+        folderTplDoc = folderTpl;
+      }
+    }
+
+    // Combine and deduplicate
+    const map = new Map();
+    for (const t of templatesByPath) {
+      map.set(t._id.toString(), t);
+    }
+    for (const t of templatesByTree) {
+      map.set(t._id.toString(), t);
+    }
+    if (folderTplDoc) {
+      map.set(folderTplDoc._id.toString(), folderTplDoc);
+    }
+
+    const list = Array.from(map.values());
+    list.sort((a, b) => (a.displayName || a.name).localeCompare(b.displayName || b.name));
+    return list;
+  },
+
+  /**
+   * Get all page templates located under /sitecore/templates/Project/Pages (recursive)
+   * Excludes folders and system templates
+   */
+  async getPageTemplates() {
+    return this.getContentInsertTemplates();
+  },
+
+  /**
+   * Check if a component template is used by any rendering item
+   */
+  async checkComponentTemplateUsage(templateId) {
+    if (!templateId) return { inUse: false, renderings: [], totalUsage: 0 };
+    const idStr = templateId.toString();
+
+    const renderings = await Item.find({
+      deleted: false,
+      $or: [
+        { 'fields.componentTemplate': idStr },
+        { 'sharedFields.componentTemplate': idStr },
+      ],
+    })
+      .select('name displayName path fields sharedFields')
+      .lean();
+
+    return {
+      inUse: renderings.length > 0,
+      renderings: renderings.map((r) => ({
+        id: r._id.toString(),
+        name: r.name,
+        displayName: r.displayName || r.name,
+        path: r.path,
+      })),
+      totalUsage: renderings.length,
+    };
+  },
+
+  /**
+   * Check usage of a template: items using it + templates inheriting from it + renderings using it as componentTemplate
    */
   async getUsage(templateId) {
     const id = templateId.toString();
@@ -315,12 +507,16 @@ const templateService = {
       .select('name displayName icon')
       .lean();
 
+    const compUsage = await this.checkComponentTemplateUsage(id);
+    const referencingRenderings = compUsage.renderings;
+
     return {
       templateId: id,
       itemsCount,
       sampleItems,
       inheritingTemplates,
-      canDelete: itemsCount === 0 && inheritingTemplates.length === 0,
+      referencingRenderings,
+      canDelete: itemsCount === 0 && inheritingTemplates.length === 0 && referencingRenderings.length === 0,
     };
   },
 
@@ -423,6 +619,11 @@ const templateService = {
       if (usage.inheritingTemplates.length > 0) {
         reasons.push(
           `Inherited by template(s): ${usage.inheritingTemplates.map((t) => t.displayName || t.name).join(', ')}`
+        );
+      }
+      if (usage.referencingRenderings && usage.referencingRenderings.length > 0) {
+        reasons.push(
+          `Referenced as componentTemplate by rendering(s): ${usage.referencingRenderings.map((r) => r.displayName || r.name).join(', ')}`
         );
       }
       throw new ValidationError(`Cannot delete template: ${reasons.join('; ')}.`);
@@ -821,6 +1022,186 @@ const templateService = {
 
     this.invalidateCache();
     return this.getById(template._id);
+  },
+
+  /**
+   * Validate a component template reference
+   */
+  async validateComponentTemplateReference(componentTemplateId) {
+    if (!componentTemplateId) {
+      throw new ValidationError('Trường componentTemplate là bắt buộc đối với Rendering.');
+    }
+    const idStr = componentTemplateId.toString().trim();
+    if (!mongoose.Types.ObjectId.isValid(idStr)) {
+      throw new ValidationError('componentTemplate phải là một ObjectId hợp lệ.');
+    }
+
+    const tpl = await Template.findById(idStr).lean();
+    if (!tpl) {
+      throw new ValidationError(`Component Template với ID [${idStr}] không tồn tại.`);
+    }
+
+    if (tpl.isSystem) {
+      throw new ValidationError('Không được phép chọn Template hệ thống làm componentTemplate.');
+    }
+
+    // Check path if set, must belong to /sitecore/templates/Feature/Components (case insensitive)
+    if (tpl.path && !tpl.path.toLowerCase().startsWith('/sitecore/templates/feature/components')) {
+      throw new ValidationError('Component Template phải nằm dưới thư mục /sitecore/templates/Feature/Components.');
+    }
+
+    return tpl;
+  },
+
+  /**
+   * List all valid component templates under /sitecore/templates/Feature/Components
+   */
+  async getComponentTemplates() {
+    const templates = await Template.find({
+      $or: [
+        { path: { $regex: '^/sitecore/templates/Feature/Components', $options: 'i' } },
+        { name: { $in: ['HeroBanner', 'Introduction', 'ImageText'] } },
+      ],
+      isSystem: { $ne: true },
+    })
+      .select('_id name displayName icon path')
+      .sort({ displayName: 1, name: 1 })
+      .lean();
+    return templates;
+  },
+
+  /**
+   * Resolve effective template for an item, merging its base template definition with the
+   * component templates of all renderings in the item's resolved presentation.
+   */
+  async resolveEffectiveTemplate(itemOrId, langCode = 'vi', versionNumber = 1) {
+    if (!itemOrId) return null;
+    let item = itemOrId;
+    if (typeof itemOrId === 'string' || itemOrId instanceof mongoose.Types.ObjectId) {
+      item = await Item.findById(itemOrId).lean();
+      if (!item) return null;
+    }
+
+    const itemIdStr = item._id ? item._id.toString() : 'temp';
+    const lang = (langCode || 'vi').toLowerCase().trim();
+    const ver = parseInt(versionNumber, 10) || 1;
+    const cacheKey = `eff_${itemIdStr}_${lang}_${ver}`;
+
+    if (effectiveTemplateCache.has(cacheKey)) {
+      return JSON.parse(JSON.stringify(effectiveTemplateCache.get(cacheKey)));
+    }
+
+    const templateId = item.templateId?._id || item.templateId;
+    if (!templateId) return null;
+
+    // 1. Resolve base template hierarchy (e.g. Home template + its base templates)
+    const baseTemplate = await this.resolveTemplate(templateId);
+    if (!baseTemplate) return null;
+
+    const effective = JSON.parse(JSON.stringify(baseTemplate));
+
+    // 2. Fetch presentation for this item at this lang & version
+    let presentation = null;
+    try {
+      const presentationService = require('./presentationService');
+      presentation = await presentationService.getFinalPresentation(item, lang, ver);
+    } catch {
+      presentation = null;
+    }
+
+    const componentRenderings = presentation?.renderings || [];
+    const addedCompTemplateIds = new Set();
+    const componentSections = [];
+    const componentStandardValues = {};
+
+    // 3. For each rendering in presentation, find its componentTemplate
+    for (const r of componentRenderings) {
+      if (r.hidden) continue;
+      const compTplId = r.componentTemplate;
+      if (!compTplId) continue;
+      const compTplIdStr = compTplId.toString();
+
+      // All instances of the same component on the page share the same fields
+      if (addedCompTemplateIds.has(compTplIdStr)) continue;
+      addedCompTemplateIds.add(compTplIdStr);
+
+      let compTpl = null;
+      try {
+        compTpl = await Template.findById(compTplIdStr).lean();
+      } catch {
+        compTpl = null;
+      }
+      if (!compTpl) continue;
+
+      // Gather component template standard values
+      if (compTpl.standardValues) {
+        const stdMap = compTpl.standardValues instanceof Map
+          ? Object.fromEntries(compTpl.standardValues)
+          : compTpl.standardValues;
+        Object.assign(componentStandardValues, stdMap);
+      }
+
+      // Group fields of this component template into a dedicated section named after the Component / Rendering
+      const renderingName = r.name || compTpl.name;
+      const sectionName = renderingName;
+      const sectionDisplayName = r.displayName || compTpl.displayName || compTpl.name;
+
+      const compFields = [];
+      if (compTpl.sections) {
+        for (const sec of compTpl.sections) {
+          if (sec.fields) {
+            for (const f of sec.fields) {
+              const fieldObj = {
+                ...f,
+                _id: f._id ? f._id.toString() : new mongoose.Types.ObjectId().toString(),
+                origin: {
+                  templateId: compTpl._id.toString(),
+                  templateName: compTpl.displayName || compTpl.name,
+                  renderingName,
+                  isComponent: true,
+                },
+              };
+              compFields.push(fieldObj);
+            }
+          }
+        }
+      }
+
+      if (compFields.length > 0) {
+        componentSections.push({
+          _id: new mongoose.Types.ObjectId().toString(),
+          name: sectionName,
+          displayName: sectionDisplayName,
+          sortOrder: 200 + componentSections.length * 10,
+          origin: {
+            templateId: compTpl._id.toString(),
+            templateName: compTpl.displayName || compTpl.name,
+            renderingName,
+            isComponent: true,
+          },
+          fields: compFields,
+        });
+      }
+    }
+
+    // Merge sections: base page sections first, then component sections
+    effective.sections = [
+      ...(effective.sections || []),
+      ...componentSections,
+    ];
+
+    // Merge standard values: base template standard values + component template standard values
+    effective.standardValues = {
+      ...(effective.standardValues || {}),
+      ...componentStandardValues,
+    };
+
+    effective.componentRenderings = componentRenderings;
+
+    // Cache the result
+    effectiveTemplateCache.set(cacheKey, JSON.parse(JSON.stringify(effective)));
+
+    return effective;
   },
 };
 

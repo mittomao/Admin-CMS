@@ -9,7 +9,7 @@ const Item = require('../src/models/Item');
 const Language = require('../src/models/Language');
 const { seedPresentationData } = require('../src/scripts/seed-presentation-data');
 
-describe('GĐ 6: Presentation API & Endpoints', () => {
+describe('GĐ 6: Presentation API & Endpoints (Server-Side EJS)', () => {
   let mongoServer;
   let adminAgent;
   let anonymousAgent;
@@ -65,19 +65,15 @@ describe('GĐ 6: Presentation API & Endpoints', () => {
       displayName: 'Landing Page',
       sections: [],
       presentation: {
-        devices: [
+        layoutId: seedResult.homeLayout._id,
+        renderings: [
           {
-            deviceId: seedResult.defaultDevice._id,
-            layoutId: seedResult.mainLayout._id,
-            renderings: [
-              {
-                uid: 'std-landing-hero',
-                renderingId: seedResult.heroRendering._id,
-                placeholder: 'main',
-                sortOrder: 100,
-                parameters: { theme: 'dark' },
-              },
-            ],
+            uid: 'std-landing-hero',
+            renderingId: seedResult.heroBannerRendering._id,
+            placeholder: 'maincontent',
+            placeholderKey: 'maincontent',
+            sortOrder: 100,
+            parameters: { theme: 'dark' },
           },
         ],
       },
@@ -95,7 +91,7 @@ describe('GĐ 6: Presentation API & Endpoints', () => {
         },
       ],
       presentation: {
-        shared: { devices: [] },
+        shared: { layoutId: null, renderings: [] },
         final: [],
       },
     });
@@ -122,35 +118,35 @@ describe('GĐ 6: Presentation API & Endpoints', () => {
     }
   });
 
-  test('GET /api/items/:id/presentation returns merged presentation JSON', async () => {
-    const res = await adminAgent.get(`/api/items/${testItem._id}/presentation?lang=vi&version=1`);
+  test('GET /api/presentation/item/:id returns merged presentation JSON', async () => {
+    const res = await adminAgent.get(`/api/presentation/item/${testItem._id}?lang=vi&version=1`);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.renderings.length).toBe(1);
     expect(res.body.data.renderings[0].uid).toBe('std-landing-hero');
-    expect(res.body.data.renderings[0].componentName).toBe('HeroBanner');
+    expect(res.body.data.renderings[0].name).toBe('HeroBanner');
+    expect(res.body.data.renderings[0].viewPath).toBe('site/components/HeroBanner.ejs');
   });
 
-  test('PUT /api/items/:id/presentation saves shared presentation configuration', async () => {
+  test('PUT /api/presentation/item/:id saves shared presentation configuration', async () => {
     const res = await adminAgent
-      .put(`/api/items/${testItem._id}/presentation`)
+      .put(`/api/presentation/item/${testItem._id}`)
       .set('X-CSRF-Token', adminCsrfToken)
       .send({
-        deviceId: seedResult.defaultDevice._id.toString(),
-        layoutId: seedResult.mainLayout._id.toString(),
+        layoutId: seedResult.homeLayout._id.toString(),
         scope: 'shared',
         renderings: [
           {
             uid: 'std-landing-hero',
-            renderingId: seedResult.heroRendering._id.toString(),
-            placeholder: 'main',
+            renderingId: seedResult.heroBannerRendering._id.toString(),
+            placeholderKey: 'maincontent',
             sortOrder: 100,
             parameters: { theme: 'shared-override' },
           },
           {
-            uid: 'new-shared-richtext',
-            renderingId: seedResult.richTextRendering._id.toString(),
-            placeholder: 'main',
+            uid: 'new-shared-intro',
+            renderingId: seedResult.introRendering._id.toString(),
+            placeholderKey: 'maincontent',
             sortOrder: 200,
           },
         ],
@@ -160,15 +156,15 @@ describe('GĐ 6: Presentation API & Endpoints', () => {
     expect(res.body.success).toBe(true);
 
     // Verify merged result
-    const verifyRes = await adminAgent.get(`/api/items/${testItem._id}/presentation?lang=vi&version=1`);
+    const verifyRes = await adminAgent.get(`/api/presentation/item/${testItem._id}?lang=vi&version=1`);
     expect(verifyRes.body.data.renderings.length).toBe(2);
     const hero = verifyRes.body.data.renderings.find((r) => r.uid === 'std-landing-hero');
     expect(hero.parameters.theme).toBe('shared-override');
   });
 
-  test('POST /api/items/:id/presentation/reset restores standard template presentation', async () => {
+  test('POST /api/presentation/item/:id/reset restores standard template presentation', async () => {
     const res = await adminAgent
-      .post(`/api/items/${testItem._id}/presentation/reset`)
+      .post(`/api/presentation/item/${testItem._id}/reset`)
       .set('X-CSRF-Token', adminCsrfToken)
       .send({
         scope: 'all',
@@ -177,52 +173,42 @@ describe('GĐ 6: Presentation API & Endpoints', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
 
-    const verifyRes = await adminAgent.get(`/api/items/${testItem._id}/presentation?lang=vi&version=1`);
+    const verifyRes = await adminAgent.get(`/api/presentation/item/${testItem._id}?lang=vi&version=1`);
     expect(verifyRes.body.data.renderings.length).toBe(1);
     expect(verifyRes.body.data.renderings[0].origin).toBe('standard');
   });
 
-  test('GET /api/presentation/renderings?placeholder=main returns allowed components', async () => {
-    const res = await adminAgent.get('/api/presentation/renderings?placeholder=main');
+  test('GET /api/presentation/renderings/allowed?placeholder=maincontent returns allowed components', async () => {
+    const res = await adminAgent.get('/api/presentation/renderings/allowed?placeholder=maincontent');
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data)).toBe(true);
-    expect(res.body.data.some((r) => r.componentName === 'HeroBanner')).toBe(true);
+    expect(res.body.data.some((r) => r.name === 'HeroBanner')).toBe(true);
   });
 
-  test('GET /api/presentation/placeholders?layoutId=... returns placeholders of layout', async () => {
-    const res = await adminAgent.get(`/api/presentation/placeholders?layoutId=${seedResult.mainLayout._id}`);
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.placeholders).toContain('header');
-    expect(res.body.placeholders).toContain('main');
-    expect(res.body.placeholders).toContain('footer');
-  });
-
-  test('GET /api/presentation/usage/:id returns usage count', async () => {
-    const res = await adminAgent.get(`/api/presentation/usage/${seedResult.heroRendering._id}`);
+  test('GET /api/presentation/usage/:id returns usage in templates and items', async () => {
+    const res = await adminAgent.get(`/api/presentation/usage/${seedResult.heroBannerRendering._id}`);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.inUse).toBe(true);
-    expect(res.body.data.totalUsage).toBeGreaterThan(0);
+    expect(res.body.data.templates.length).toBeGreaterThan(0);
   });
 
-  test('GET and PUT /api/templates/:id/standard-presentation updates template configuration', async () => {
-    const getRes = await adminAgent.get(`/api/templates/${testTemplate._id}/standard-presentation`);
+  test('GET and PUT /api/presentation/template/:id/standard updates template standard presentation', async () => {
+    const getRes = await adminAgent.get(`/api/presentation/template/${testTemplate._id}/standard`);
     expect(getRes.status).toBe(200);
     expect(getRes.body.success).toBe(true);
 
     const putRes = await adminAgent
-      .put(`/api/templates/${testTemplate._id}/standard-presentation`)
+      .put(`/api/presentation/template/${testTemplate._id}/standard`)
       .set('X-CSRF-Token', adminCsrfToken)
       .send({
-        deviceId: seedResult.defaultDevice._id.toString(),
-        layoutId: seedResult.mainLayout._id.toString(),
+        layoutId: seedResult.homeLayout._id.toString(),
         renderings: [
           {
             uid: 'tpl-updated-hero',
-            renderingId: seedResult.heroRendering._id.toString(),
-            placeholder: 'main',
+            renderingId: seedResult.heroBannerRendering._id.toString(),
+            placeholderKey: 'maincontent',
             sortOrder: 100,
           },
         ],
@@ -240,7 +226,7 @@ describe('GĐ 6: Presentation API & Endpoints', () => {
     expect(res.text).not.toContain('<html');
   });
 
-  test('GET /admin/content-editor/item/:id/presentation/preview returns preview JSON modal partial HTML without shell layout', async () => {
+  test('GET /admin/content-editor/item/:id/presentation/preview returns preview modal partial HTML without shell layout', async () => {
     const res = await adminAgent.get(`/admin/content-editor/item/${testItem._id}/presentation/preview`);
     expect(res.status).toBe(200);
     expect(res.text).toContain('id="previewPresentationJsonModal"');
@@ -249,8 +235,7 @@ describe('GĐ 6: Presentation API & Endpoints', () => {
   });
 
   test('Security: unauthenticated requests are blocked', async () => {
-    const res = await anonymousAgent.get(`/api/items/${testItem._id}/presentation`);
+    const res = await anonymousAgent.get(`/api/presentation/item/${testItem._id}`);
     expect(res.status).toBe(401);
   });
 });
-

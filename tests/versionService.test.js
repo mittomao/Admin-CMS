@@ -163,7 +163,7 @@ describe('GĐ 4: versionService & Migration Tests', () => {
     expect(resolved.origins[unversionedFieldId]).toBe('unversioned');
   });
 
-  test('addVersion: clones version 1 fields and copies final presentation devices if present', async () => {
+  test('addVersion: clones version 1 fields and copies final presentation if present', async () => {
     await migrateVersionsAndLanguages({ dryRun: false });
 
     // Simulate final presentation on version 1
@@ -173,12 +173,8 @@ describe('GĐ 4: versionService & Migration Tests', () => {
         'presentation.final': {
           language: 'en',
           version: 1,
-          devices: [
-            {
-              layoutId: dummyLayoutId,
-              renderings: [{ uid: 'test-uuid-v4', placeholder: 'main', sortOrder: 100 }],
-            },
-          ],
+          layoutId: dummyLayoutId,
+          renderings: [{ uid: 'test-uuid-v4', placeholder: 'maincontent', sortOrder: 100 }],
         },
       },
     });
@@ -195,10 +191,12 @@ describe('GĐ 4: versionService & Migration Tests', () => {
     const resolvedV2 = await versionService.resolveFields(updatedItem, 'en', 2);
     expect(resolvedV2.fields[normalFieldId]).toBe('Version 1 Headline');
 
-    // Verify presentation final devices were copied according to DEC-020
+    // Verify presentation final was copied according to DEC-020, DEC-026, DEC-031
     const finalV2 = updatedItem.presentation.final.find((p) => p.language === 'en' && p.version === 2);
     expect(finalV2).toBeDefined();
-    expect(finalV2.devices[0].layoutId.toString()).toBe(dummyLayoutId.toString());
+    expect(finalV2.layoutId.toString()).toBe(dummyLayoutId.toString());
+    expect(finalV2.renderings.length).toBe(1);
+    expect(finalV2.renderings[0].uid).toBe('test-uuid-v4');
   });
 
   test('updateFields: editing a shared field updates it for all versions and languages', async () => {

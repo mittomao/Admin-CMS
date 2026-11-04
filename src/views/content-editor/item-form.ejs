@@ -133,6 +133,9 @@
 
   <!-- 2. Form Body (Scrollable Sections) -->
   <div class="card-body p-3 overflow-auto flex-fill" style="max-height: calc(100vh - 280px);">
+    <!-- Quick Info Section (DEC-037 / GĐ 6.3) -->
+    <%- include('../partials/quick-info', { quickInfo: locals.quickInfo, item: locals.item, template: locals.template }) %>
+
     <% if (sections.length === 0 || sections.every(s => !s.fields || s.fields.length === 0)) { %>
       <div class="empty py-4 text-center">
         <div class="empty-icon text-muted">
@@ -162,8 +165,16 @@
                   aria-expanded="<%= sIndex === 0 ? 'true' : 'false' %>"
                   aria-controls="collapse-<%= section._id %>"
                 >
-                  <i class="ti ti-layout-navbar-expand me-2 text-primary"></i>
-                  <span><%= section.name %></span>
+                  <% if (section.origin && section.origin.isComponent) { %>
+                    <i class="ti ti-components me-2 text-purple"></i>
+                    <span><%= section.displayName || section.name %></span>
+                    <span class="badge bg-purple-lt ms-2" title="Trường được tự động suy ra từ rendering component">
+                      <i class="ti ti-puzzle me-1"></i>từ rendering <%= section.origin.renderingName || section.name %>
+                    </span>
+                  <% } else { %>
+                    <i class="ti ti-layout-navbar-expand me-2 text-primary"></i>
+                    <span><%= section.displayName || section.name %></span>
+                  <% } %>
                   <span class="badge bg-secondary-lt ms-2 font-monospace" style="font-size: 0.65rem;">
                     <%= section.fields.length %> <%= section.fields.length === 1 ? 'field' : 'fields' %>
                   </span>
@@ -184,7 +195,28 @@
                             : itemFields[field.name]);
                       const fieldType = field.type;
                     %>
-                    <% if (fieldType === 'Single-Line Text') { %>
+                    <% if (field.name === 'componentTemplate' || field.source === '/sitecore/templates/Feature/Components') { %>
+                      <div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+                        <%- include('./fields/field-header', { field }) %>
+                        <div class="input-group">
+                          <span class="input-group-text bg-purple-lt text-purple">
+                            <i class="ti ti-puzzle"></i>
+                          </span>
+                          <select class="form-select item-field-input" name="fields[<%= field.name %>]" <%= field.required ? 'required' : '' %>>
+                            <option value="">-- Chọn Component Template --</option>
+                            <% (typeof componentTemplates !== 'undefined' && componentTemplates ? componentTemplates : []).forEach(ct => { %>
+                              <option value="<%= ct._id %>" <%= String(val) === String(ct._id) ? 'selected' : '' %>>
+                                <%= ct.displayName || ct.name %> (<%= ct.name %>)
+                              </option>
+                            <% }) %>
+                          </select>
+                        </div>
+                        <% if (field.helpText) { %>
+                          <div class="form-hint text-muted mt-1"><i class="ti ti-info-circle me-1"></i><%= field.helpText %></div>
+                        <% } %>
+                        <div class="invalid-feedback"></div>
+                      </div>
+                    <% } else if (fieldType === 'Single-Line Text') { %>
                       <%- include('./fields/single-line-text', { field, value: val }) %>
                     <% } else if (fieldType === 'Multi-Line Text') { %>
                       <%- include('./fields/multi-line-text', { field, value: val }) %>

@@ -18,6 +18,9 @@
     </div>
   </div>
 
+  <!-- Quick Info Section (DEC-037 / GĐ 6.3) -->
+  <%- include('../partials/quick-info', { quickInfo: locals.quickInfo, item: locals.item }) %>
+
   <!-- Children Grid -->
   <div class="overflow-auto flex-fill">
     <% if (!children || children.length === 0) { %>

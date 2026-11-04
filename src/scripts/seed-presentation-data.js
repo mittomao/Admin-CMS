@@ -20,9 +20,20 @@ async function ensureTemplate(data) {
     logger.info(`[Presentation Seed] Created Template: ${data.name}`);
   } else {
     let updated = false;
-    // Update sections if needed
-    if (data.sections && (!tpl.sections || tpl.sections.length === 0)) {
+    if (data.sections && (data.isSystem || !tpl.sections || tpl.sections.length === 0)) {
       tpl.sections = data.sections;
+      updated = true;
+    }
+    if (data.displayName && tpl.displayName !== data.displayName) {
+      tpl.displayName = data.displayName;
+      updated = true;
+    }
+    if (data.description && tpl.description !== data.description) {
+      tpl.description = data.description;
+      updated = true;
+    }
+    if (data.path && tpl.path !== data.path) {
+      tpl.path = data.path;
       updated = true;
     }
     if (data.icon && tpl.icon !== data.icon) {
@@ -33,8 +44,16 @@ async function ensureTemplate(data) {
       tpl.isSystem = data.isSystem;
       updated = true;
     }
+    if (data.baseTemplates && Array.isArray(data.baseTemplates)) {
+      tpl.baseTemplates = data.baseTemplates;
+      updated = true;
+    }
     if (data.insertOptions && Array.isArray(data.insertOptions)) {
       tpl.insertOptions = data.insertOptions;
+      updated = true;
+    }
+    if (data.presentation !== undefined) {
+      tpl.presentation = data.presentation;
       updated = true;
     }
     if (updated) {
@@ -53,10 +72,8 @@ async function ensureTemplate(data) {
  */
 async function ensureItem(data) {
   const dryRun = isDryRunMode;
-  // 1. Try finding by current target path
   let item = await Item.findOne({ path: data.path });
 
-  // 2. If not found by new path, check if it exists by name + templateId under /sitecore/layout
   if (!item && data.name && data.templateId) {
     item = await Item.findOne({
       name: data.name,
@@ -66,7 +83,6 @@ async function ensureItem(data) {
     });
   }
 
-  // 3. Or if it's a folder under /sitecore/layout with the same name and parentId
   if (!item && data.name && data.parentId) {
     item = await Item.findOne({ name: data.name, parentId: data.parentId, deleted: false });
   }
@@ -100,21 +116,29 @@ async function ensureItem(data) {
       item.templateId = data.templateId;
       updated = true;
     }
-    if (data.displayName && item.displayName !== data.displayName) {
-      item.displayName = data.displayName;
-      updated = true;
-    }
     if (data.fields) {
-      item.fields = data.fields;
+      if (item.fields instanceof Map) {
+        Object.entries(data.fields).forEach(([k, v]) => item.fields.set(k, v));
+      } else {
+        item.fields = data.fields;
+      }
       updated = true;
     }
     if (data.sharedFields) {
-      item.sharedFields = data.sharedFields;
+      if (item.sharedFields instanceof Map) {
+        Object.entries(data.sharedFields).forEach(([k, v]) => item.sharedFields.set(k, v));
+      } else {
+        item.sharedFields = data.sharedFields;
+      }
+      updated = true;
+    }
+    if (data.presentation !== undefined) {
+      item.presentation = data.presentation;
       updated = true;
     }
     if (updated) {
       if (dryRun) {
-        logger.info(`[DRY-RUN] Sẽ cập nhật/di chuyển Item: ${data.path} (ID: ${item._id})`);
+        logger.info(`[DRY-RUN] Sẽ cập nhật Item: ${data.path}`);
       } else {
         await item.save();
         logger.info(`[Presentation Seed] Updated/Relocated Item: ${data.path} (ID: ${item._id})`);
@@ -125,32 +149,41 @@ async function ensureItem(data) {
 }
 
 /**
- * Main seeding function for GĐ 6 Presentation
+ * Main seeding function for GĐ 6 Presentation (100% Server-Side EJS SSR)
  */
 async function seedPresentationData(options = {}) {
   isDryRunMode = Boolean(options.dryRun);
   const dryRun = isDryRunMode;
-  logger.info(`=== BẮT ĐẦU SEED HỆ THỐNG PRESENTATION (GĐ 6)${dryRun ? ' [DRY-RUN]' : ''} ===`);
+  logger.info(`=== BẮT ĐẦU SEED HỆ THỐNG PRESENTATION EJS SSR (GĐ 6)${dryRun ? ' [DRY-RUN]' : ''} ===`);
 
-  // 1. Tìm hoặc lấy root item (/sitecore)
+  // 1. Root items & Folder template
   const sitecoreRoot = await Item.findOne({ path: '/sitecore' });
   if (!sitecoreRoot) {
     throw new Error('Chưa tìm thấy /sitecore root item. Vui lòng chạy seed ban đầu trước.');
   }
 
-  // Lấy template Folder
   const folderTemplate = await Template.findOne({ name: 'Folder' });
   if (!folderTemplate) {
     throw new Error('Chưa tìm thấy template Folder. Vui lòng chạy seed ban đầu trước.');
   }
 
-  // 2. Tạo các System Templates cho Presentation
+  // 2. Tạo các System Templates cho Presentation EJS
   const layoutFolderTemplate = await ensureTemplate({
     name: 'Layout Folder',
     displayName: 'Layout Folder',
     icon: 'ti ti-folder',
     isSystem: true,
     description: 'Thư mục phân cấp chứa Layout',
+    sections: [],
+    insertOptions: [],
+  });
+
+  const placeholderFolderTemplate = await ensureTemplate({
+    name: 'Placeholder Folder',
+    displayName: 'Placeholder Folder',
+    icon: 'ti ti-folder',
+    isSystem: true,
+    description: 'Thư mục phân cấp chứa Placeholder',
     sections: [],
     insertOptions: [],
   });
@@ -165,39 +198,62 @@ async function seedPresentationData(options = {}) {
     insertOptions: [],
   });
 
-  const deviceTemplate = await ensureTemplate({
-    name: 'Device',
-    displayName: 'Device',
-    icon: 'ti ti-device-desktop',
-    isSystem: true,
-    description: 'Thiết bị hiển thị Presentation (Default, Mobile...)',
-    sections: [
-      {
-        name: 'Device Settings',
-        sortOrder: 100,
-        fields: [
-          { name: 'name', title: 'Device Name', type: 'Single-Line Text', required: true, sortOrder: 10 },
-          { name: 'isDefault', title: 'Is Default Device', type: 'Checkbox', defaultValue: false, sortOrder: 20 },
-          { name: 'userAgentRegex', title: 'User Agent Pattern', type: 'Single-Line Text', sortOrder: 30 },
-          { name: 'fallbackDeviceId', title: 'Fallback Device ID', type: 'Single-Line Text', sortOrder: 40 },
-        ],
-      },
-    ],
-  });
-
   const layoutTemplate = await ensureTemplate({
     name: 'Layout',
     displayName: 'Layout',
     icon: 'ti ti-layout',
     isSystem: true,
-    description: 'Layout Component trong React Frontend (MainLayout, BlankLayout...)',
+    description: 'Layout Page Server-Side EJS',
     sections: [
       {
-        name: 'Layout Settings',
+        name: 'Layout Data',
         sortOrder: 100,
         fields: [
-          { name: 'componentName', title: 'React Component Name', type: 'Single-Line Text', required: true, sortOrder: 10 },
-          { name: 'placeholders', title: 'Defined Placeholders', type: 'Multi-Line Text', sortOrder: 20, helpText: 'Danh sách placeholder keys cách nhau bởi dấu phẩy (header, main, footer)' },
+          {
+            name: 'viewPath',
+            title: 'EJS View Path',
+            type: 'Single-Line Text',
+            required: true,
+            sortOrder: 10,
+            helpText: 'Đường dẫn view EJS tương đối từ src/views (ví dụ: site/layouts/HomeLayout.ejs)',
+          },
+        ],
+      },
+    ],
+  });
+
+  const placeholderTemplate = await ensureTemplate({
+    name: 'Placeholder',
+    displayName: 'Placeholder',
+    icon: 'ti ti-layout-grid-add',
+    isSystem: true,
+    description: 'Placeholder giữ chỗ cho Rendering trên Layout',
+    sections: [
+      {
+        name: 'Placeholder Data',
+        sortOrder: 100,
+        fields: [
+          {
+            name: 'placeholderKey',
+            title: 'Placeholder Key',
+            type: 'Single-Line Text',
+            required: true,
+            sortOrder: 10,
+            helpText: 'Khóa định danh placeholder (ví dụ: header, maincontent, footer)',
+          },
+          {
+            name: 'allowedRenderings',
+            title: 'Allowed Renderings',
+            type: 'Multi-Line Text',
+            sortOrder: 20,
+            helpText: 'Danh sách ID Rendering được phép chèn, phân tách bởi dấu phẩy (rỗng = cho phép tất cả)',
+          },
+          {
+            name: 'description',
+            title: 'Description',
+            type: 'Single-Line Text',
+            sortOrder: 30,
+          },
         ],
       },
     ],
@@ -208,58 +264,62 @@ async function seedPresentationData(options = {}) {
     displayName: 'Rendering',
     icon: 'ti ti-components',
     isSystem: true,
-    description: 'Rendering Component ánh xạ với React component frontend',
+    description: 'Rendering Component kết xuất bằng EJS phía server',
     sections: [
       {
         name: 'Rendering Data',
         sortOrder: 100,
         fields: [
-          { name: 'componentName', title: 'React Component Name', type: 'Single-Line Text', required: true, sortOrder: 10 },
-          { name: 'icon', title: 'Tabler Icon', type: 'Single-Line Text', defaultValue: 'ti ti-box', sortOrder: 20 },
-          { name: 'datasourceTemplate', title: 'Allowed Datasource Template', type: 'Single-Line Text', sortOrder: 30 },
-          { name: 'datasourceLocation', title: 'Datasource Root Location', type: 'Single-Line Text', sortOrder: 40 },
-          { name: 'parametersTemplate', title: 'Parameters Template', type: 'Single-Line Text', sortOrder: 50 },
-          { name: 'placeholders', title: 'Nested Placeholders', type: 'Multi-Line Text', sortOrder: 60 },
+          {
+            name: 'viewPath',
+            title: 'EJS View Path',
+            type: 'Single-Line Text',
+            required: true,
+            sortOrder: 10,
+            helpText: 'Đường dẫn view EJS tương đối từ src/views (ví dụ: site/components/HeroBanner.ejs)',
+          },
+          {
+            name: 'componentTemplate',
+            title: 'Component Template ID',
+            type: 'Single-Line Text',
+            required: true,
+            sortOrder: 20,
+            source: '/sitecore/templates/Feature/Components',
+            helpText: 'ID của template định nghĩa fields của component dưới Feature/Components',
+          },
+          {
+            name: 'parametersTemplate',
+            title: 'Parameters Template',
+            type: 'Single-Line Text',
+            sortOrder: 30,
+          },
+          {
+            name: 'icon',
+            title: 'Tabler Icon',
+            type: 'Single-Line Text',
+            defaultValue: 'ti ti-box',
+            sortOrder: 40,
+          },
         ],
       },
     ],
   });
 
-  const placeholderSettingsTemplate = await ensureTemplate({
-    name: 'Placeholder Settings',
-    displayName: 'Placeholder Settings',
-    icon: 'ti ti-layout-grid-add',
-    isSystem: true,
-    description: 'Cấu hình quyền chèn Rendering vào từng Placeholder',
-    sections: [
-      {
-        name: 'Placeholder Configuration',
-        sortOrder: 100,
-        fields: [
-          { name: 'placeholderKey', title: 'Placeholder Key', type: 'Single-Line Text', required: true, sortOrder: 10, helpText: 'Ví dụ: main, header, column-{*}' },
-          { name: 'allowedRenderings', title: 'Allowed Renderings', type: 'Multi-Line Text', sortOrder: 20, helpText: 'Danh sách ID hoặc Tên Rendering được phép chèn' },
-          { name: 'description', title: 'Description', type: 'Single-Line Text', sortOrder: 30 },
-        ],
-      },
-    ],
-  });
-
-  // Cập nhật Insert Options cho các System Template của Presentation
+  // Thiết lập Insert Options cho Presentation Templates
   layoutFolderTemplate.insertOptions = [layoutFolderTemplate._id, layoutTemplate._id];
+  placeholderFolderTemplate.insertOptions = [placeholderFolderTemplate._id, placeholderTemplate._id];
   renderingFolderTemplate.insertOptions = [renderingFolderTemplate._id, renderingTemplate._id];
   layoutTemplate.insertOptions = [];
+  placeholderTemplate.insertOptions = [];
   renderingTemplate.insertOptions = [];
 
   if (!dryRun) {
     await layoutFolderTemplate.save();
+    await placeholderFolderTemplate.save();
     await renderingFolderTemplate.save();
-    await layoutTemplate.save();
-    await renderingTemplate.save();
-  } else {
-    logger.info('[DRY-RUN] Sẽ cập nhật Insert Options cho Layout Folder, Rendering Folder, Layout, Rendering');
   }
 
-  // 3. Tạo cấu trúc thư mục dưới /sitecore/layout/
+  // 3. Khởi tạo /sitecore/layout Root và Dọn dẹp cấu trúc cũ
   const layoutRoot = await ensureItem({
     name: 'layout',
     displayName: 'Layout',
@@ -267,9 +327,21 @@ async function seedPresentationData(options = {}) {
     parentId: sitecoreRoot._id,
     ancestors: [sitecoreRoot._id],
     path: '/sitecore/layout',
-    sortOrder: 200,
+    sortOrder: 300,
+    fields: {},
   });
 
+  if (!dryRun) {
+    // Dọn dẹp các node cũ Devices và Placeholder Settings nếu có
+    await Item.deleteMany({
+      path: { $regex: new RegExp('^/sitecore/layout/(Devices|Placeholder Settings)($|/)', 'i') },
+    });
+    // Xóa template Device và Placeholder Settings cũ nếu còn
+    await Template.deleteMany({ name: { $in: ['Device', 'Placeholder Settings'] } });
+    logger.info('[Presentation Seed] Đã dọn dẹp các node cũ Devices & Placeholder Settings.');
+  }
+
+  // 4. Khởi tạo 3 Nhánh Thư mục Cốt lõi
   const layoutsFolder = await ensureItem({
     name: 'Layouts',
     displayName: 'Layouts',
@@ -278,6 +350,18 @@ async function seedPresentationData(options = {}) {
     ancestors: [sitecoreRoot._id, layoutRoot._id],
     path: '/sitecore/layout/Layouts',
     sortOrder: 100,
+    fields: {},
+  });
+
+  const placeholdersFolder = await ensureItem({
+    name: 'Placeholders',
+    displayName: 'Placeholders',
+    templateId: placeholderFolderTemplate._id,
+    parentId: layoutRoot._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id],
+    path: '/sitecore/layout/Placeholders',
+    sortOrder: 200,
+    fields: {},
   });
 
   const renderingsFolder = await ensureItem({
@@ -287,343 +371,395 @@ async function seedPresentationData(options = {}) {
     parentId: layoutRoot._id,
     ancestors: [sitecoreRoot._id, layoutRoot._id],
     path: '/sitecore/layout/Renderings',
-    sortOrder: 200,
-  });
-
-  const devicesFolder = await ensureItem({
-    name: 'Devices',
-    displayName: 'Devices',
-    templateId: folderTemplate._id,
-    parentId: layoutRoot._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id],
-    path: '/sitecore/layout/Devices',
     sortOrder: 300,
+    fields: {},
   });
 
-  const placeholdersFolder = await ensureItem({
-    name: 'Placeholder Settings',
-    displayName: 'Placeholder Settings',
-    templateId: folderTemplate._id,
-    parentId: layoutRoot._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id],
-    path: '/sitecore/layout/Placeholder Settings',
-    sortOrder: 400,
+  // Dọn dẹp các legacy items cũ từ thời kỳ Headless React (nếu có)
+  const legacyItems = await Item.find({
+    path: { $in: ['/sitecore/layout/Layouts/MainLayout', '/sitecore/layout/Renderings/Feature'] },
   });
+  for (const legacy of legacyItems) {
+    // Xóa item và các con nếu có
+    await Item.deleteMany({ ancestors: legacy._id });
+    await Item.deleteOne({ _id: legacy._id });
+    logger.info(`[Presentation Seed] Đã dọn dẹp legacy item: ${legacy.path}`);
+  }
 
-  // Feature Folder chứa các rendering mẫu dưới Renderings
-  const featureFolder = await ensureItem({
-    name: 'Feature',
-    displayName: 'Feature Renderings',
-    templateId: renderingFolderTemplate._id,
-    parentId: renderingsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
-    path: '/sitecore/layout/Renderings/Feature',
-    sortOrder: 100,
-  });
-
-  // 4. Tạo các Devices mẫu
-  const defaultDevice = await ensureItem({
-    name: 'Default',
-    displayName: 'Default Device',
-    templateId: deviceTemplate._id,
-    parentId: devicesFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, devicesFolder._id],
-    path: '/sitecore/layout/Devices/Default',
-    sortOrder: 100,
-    fields: {
-      name: 'Default',
-      isDefault: true,
-    },
-    sharedFields: {
-      name: 'Default',
-      isDefault: true,
-    },
-  });
-
-  const mobileDevice = await ensureItem({
-    name: 'Mobile',
-    displayName: 'Mobile Device',
-    templateId: deviceTemplate._id,
-    parentId: devicesFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, devicesFolder._id],
-    path: '/sitecore/layout/Devices/Mobile',
-    sortOrder: 200,
-    fields: {
-      name: 'Mobile',
-      isDefault: false,
-      userAgentRegex: 'Mobile|Android|iPhone',
-      fallbackDeviceId: defaultDevice._id.toString(),
-    },
-    sharedFields: {
-      name: 'Mobile',
-      isDefault: false,
-      userAgentRegex: 'Mobile|Android|iPhone',
-      fallbackDeviceId: defaultDevice._id.toString(),
-    },
-  });
-
-  // 5. Tạo Layout mẫu: MainLayout
-  const mainLayout = await ensureItem({
-    name: 'MainLayout',
-    displayName: 'Main Layout',
+  // 5. Seed Items trong 3 nhánh
+  // 5.1. Layouts
+  const homeLayout = await ensureItem({
+    name: 'HomeLayout',
+    displayName: 'Home Layout',
     templateId: layoutTemplate._id,
     parentId: layoutsFolder._id,
     ancestors: [sitecoreRoot._id, layoutRoot._id, layoutsFolder._id],
-    path: '/sitecore/layout/Layouts/MainLayout',
+    path: '/sitecore/layout/Layouts/HomeLayout',
     sortOrder: 100,
     fields: {
-      componentName: 'MainLayout',
-      placeholders: 'header, main, footer, content',
+      viewPath: 'site/layouts/HomeLayout.ejs',
     },
     sharedFields: {
-      componentName: 'MainLayout',
-      placeholders: 'header, main, footer, content',
+      viewPath: 'site/layouts/HomeLayout.ejs',
     },
   });
 
-  // 6. Tạo các Renderings mẫu (đặt trong thư mục Feature)
-  const heroRendering = await ensureItem({
-    name: 'Hero',
+  // 5.2. Renderings
+  const heroBannerRendering = await ensureItem({
+    name: 'HeroBanner',
     displayName: 'Hero Banner',
     templateId: renderingTemplate._id,
-    parentId: featureFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id, featureFolder._id],
-    path: '/sitecore/layout/Renderings/Feature/Hero',
+    parentId: renderingsFolder._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
+    path: '/sitecore/layout/Renderings/HeroBanner',
     sortOrder: 100,
     fields: {
-      componentName: 'HeroBanner',
-      icon: 'ti ti-star',
-      placeholders: '',
+      viewPath: 'site/components/HeroBanner.ejs',
+      icon: 'ti ti-ad-2',
     },
     sharedFields: {
-      componentName: 'HeroBanner',
-      icon: 'ti ti-star',
-      placeholders: '',
+      viewPath: 'site/components/HeroBanner.ejs',
+      icon: 'ti ti-ad-2',
     },
   });
 
-  const richTextRendering = await ensureItem({
-    name: 'RichText',
-    displayName: 'Rich Text Content',
+  const introRendering = await ensureItem({
+    name: 'Introduction',
+    displayName: 'Introduction',
     templateId: renderingTemplate._id,
-    parentId: featureFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id, featureFolder._id],
-    path: '/sitecore/layout/Renderings/Feature/RichText',
+    parentId: renderingsFolder._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
+    path: '/sitecore/layout/Renderings/Introduction',
     sortOrder: 200,
     fields: {
-      componentName: 'RichTextContent',
-      icon: 'ti ti-file-text',
-      placeholders: '',
+      viewPath: 'site/components/Introduction.ejs',
+      icon: 'ti ti-file-description',
     },
     sharedFields: {
-      componentName: 'RichTextContent',
-      icon: 'ti ti-file-text',
-      placeholders: '',
+      viewPath: 'site/components/Introduction.ejs',
+      icon: 'ti ti-file-description',
     },
   });
 
-  const promoRendering = await ensureItem({
-    name: 'Promo',
-    displayName: 'Promo Card',
+  const imageTextRendering = await ensureItem({
+    name: 'ImageText',
+    displayName: 'Image Text',
     templateId: renderingTemplate._id,
-    parentId: featureFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id, featureFolder._id],
-    path: '/sitecore/layout/Renderings/Feature/Promo',
+    parentId: renderingsFolder._id,
+    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
+    path: '/sitecore/layout/Renderings/ImageText',
     sortOrder: 300,
     fields: {
-      componentName: 'PromoCard',
-      icon: 'ti ti-tag',
-      placeholders: '',
+      viewPath: 'site/components/ImageText.ejs',
+      icon: 'ti ti-photo',
     },
     sharedFields: {
-      componentName: 'PromoCard',
-      icon: 'ti ti-tag',
-      placeholders: '',
+      viewPath: 'site/components/ImageText.ejs',
+      icon: 'ti ti-photo',
     },
   });
 
-  const navRendering = await ensureItem({
-    name: 'Navigation',
-    displayName: 'Site Navigation',
-    templateId: renderingTemplate._id,
-    parentId: featureFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id, featureFolder._id],
-    path: '/sitecore/layout/Renderings/Feature/Navigation',
-    sortOrder: 400,
-    fields: {
-      componentName: 'SiteNavigation',
-      icon: 'ti ti-menu-2',
-      placeholders: '',
-    },
-    sharedFields: {
-      componentName: 'SiteNavigation',
-      icon: 'ti ti-menu-2',
-      placeholders: '',
-    },
-  });
-
-  // 7. Tạo các Placeholder Settings mẫu
+  // 5.3. Placeholders
   await ensureItem({
     name: 'header',
-    displayName: 'Header Placeholder',
-    templateId: placeholderSettingsTemplate._id,
+    displayName: 'Header',
+    templateId: placeholderTemplate._id,
     parentId: placeholdersFolder._id,
     ancestors: [sitecoreRoot._id, layoutRoot._id, placeholdersFolder._id],
-    path: '/sitecore/layout/Placeholder Settings/header',
+    path: '/sitecore/layout/Placeholders/header',
     sortOrder: 100,
     fields: {
       placeholderKey: 'header',
-      allowedRenderings: navRendering._id.toString(),
-      description: 'Phần đầu trang (Navigation, Topbar)',
+      allowedRenderings: '',
+      description: 'Phần đầu trang web',
     },
     sharedFields: {
       placeholderKey: 'header',
-      allowedRenderings: navRendering._id.toString(),
-      description: 'Phần đầu trang (Navigation, Topbar)',
+      allowedRenderings: '',
+      description: 'Phần đầu trang web',
     },
   });
 
-  await ensureItem({
-    name: 'main',
-    displayName: 'Main Placeholder',
-    templateId: placeholderSettingsTemplate._id,
+  const allowedMainRenderings = [heroBannerRendering._id, introRendering._id, imageTextRendering._id]
+    .map((id) => id.toString())
+    .join(',');
+
+  const maincontentPlaceholder = await ensureItem({
+    name: 'maincontent',
+    displayName: 'Main Content',
+    templateId: placeholderTemplate._id,
     parentId: placeholdersFolder._id,
     ancestors: [sitecoreRoot._id, layoutRoot._id, placeholdersFolder._id],
-    path: '/sitecore/layout/Placeholder Settings/main',
+    path: '/sitecore/layout/Placeholders/maincontent',
     sortOrder: 200,
     fields: {
-      placeholderKey: 'main',
-      allowedRenderings: [heroRendering._id, richTextRendering._id, promoRendering._id].map((id) => id.toString()).join(','),
-      description: 'Nội dung trung tâm trang (Hero, RichText, Promo)',
+      placeholderKey: 'maincontent',
+      allowedRenderings: allowedMainRenderings,
+      description: 'Nội dung chính giữa trang web',
     },
     sharedFields: {
-      placeholderKey: 'main',
-      allowedRenderings: [heroRendering._id, richTextRendering._id, promoRendering._id].map((id) => id.toString()).join(','),
-      description: 'Nội dung trung tâm trang (Hero, RichText, Promo)',
+      placeholderKey: 'maincontent',
+      allowedRenderings: allowedMainRenderings,
+      description: 'Nội dung chính giữa trang web',
     },
   });
 
   await ensureItem({
     name: 'footer',
-    displayName: 'Footer Placeholder',
-    templateId: placeholderSettingsTemplate._id,
+    displayName: 'Footer',
+    templateId: placeholderTemplate._id,
     parentId: placeholdersFolder._id,
     ancestors: [sitecoreRoot._id, layoutRoot._id, placeholdersFolder._id],
-    path: '/sitecore/layout/Placeholder Settings/footer',
+    path: '/sitecore/layout/Placeholders/footer',
     sortOrder: 300,
     fields: {
       placeholderKey: 'footer',
-      allowedRenderings: [navRendering._id, richTextRendering._id].map((id) => id.toString()).join(','),
-      description: 'Chân trang',
+      allowedRenderings: '',
+      description: 'Phần chân trang web',
     },
     sharedFields: {
       placeholderKey: 'footer',
-      allowedRenderings: [navRendering._id, richTextRendering._id].map((id) => id.toString()).join(','),
-      description: 'Chân trang',
+      allowedRenderings: '',
+      description: 'Phần chân trang web',
     },
   });
 
-  await ensureItem({
-    name: 'content',
-    displayName: 'Content Placeholder',
-    templateId: placeholderSettingsTemplate._id,
-    parentId: placeholdersFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, placeholdersFolder._id],
-    path: '/sitecore/layout/Placeholder Settings/content',
-    sortOrder: 400,
-    fields: {
-      placeholderKey: 'content',
-      allowedRenderings: [richTextRendering._id, promoRendering._id].map((id) => id.toString()).join(','),
-      description: 'Vùng nội dung phụ trợ',
-    },
-    sharedFields: {
-      placeholderKey: 'content',
-      allowedRenderings: [richTextRendering._id, promoRendering._id].map((id) => id.toString()).join(','),
-      description: 'Vùng nội dung phụ trợ',
-    },
+  // 6. Khởi tạo Component Templates (Feature/Components)
+  const heroBannerTemplate = await ensureTemplate({
+    name: 'HeroBanner',
+    displayName: 'Hero Banner Component',
+    icon: 'ti ti-ad-2',
+    isSystem: false,
+    path: '/sitecore/templates/Feature/Components/HeroBanner',
+    description: 'Template dữ liệu cho component HeroBanner',
+    sections: [
+      {
+        name: 'Hero Data',
+        sortOrder: 100,
+        fields: [
+          { name: 'HeroTitle', title: 'Hero Title', type: 'Single-Line Text', required: true, sortOrder: 10 },
+          { name: 'HeroDescription', title: 'Hero Description', type: 'Rich Text', sortOrder: 20 },
+          { name: 'BackgroundImage', title: 'Background Image', type: 'Image', sortOrder: 30 },
+        ],
+      },
+    ],
   });
 
-  // Placeholder key động với Wildcard (DEC-022)
-  await ensureItem({
-    name: 'column-wildcard',
-    displayName: 'Column Dynamic Placeholder',
-    templateId: placeholderSettingsTemplate._id,
-    parentId: placeholdersFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, placeholdersFolder._id],
-    path: '/sitecore/layout/Placeholder Settings/column-wildcard',
-    sortOrder: 500,
-    fields: {
-      placeholderKey: 'column-{*}',
-      allowedRenderings: [richTextRendering._id, promoRendering._id].map((id) => id.toString()).join(','),
-      description: 'Cột lưới động (column-1, column-2, column-left...)',
-    },
-    sharedFields: {
-      placeholderKey: 'column-{*}',
-      allowedRenderings: [richTextRendering._id, promoRendering._id].map((id) => id.toString()).join(','),
-      description: 'Cột lưới động (column-1, column-2, column-left...)',
-    },
+  const introTemplate = await ensureTemplate({
+    name: 'Introduction',
+    displayName: 'Introduction Component',
+    icon: 'ti ti-file-description',
+    isSystem: false,
+    path: '/sitecore/templates/Feature/Components/Introduction',
+    description: 'Template dữ liệu cho component Introduction',
+    sections: [
+      {
+        name: 'Intro Data',
+        sortOrder: 100,
+        fields: [
+          { name: 'IntroHeading', title: 'Introduction Heading', type: 'Single-Line Text', required: true, sortOrder: 10 },
+          { name: 'IntroBody', title: 'Introduction Body', type: 'Rich Text', sortOrder: 20 },
+        ],
+      },
+    ],
   });
 
-  // 8. Gán Standard Presentation mẫu cho Template `Page`
-  const pageTemplate = await Template.findOne({ name: 'Page' });
-  if (pageTemplate) {
-    pageTemplate.presentation = {
-      devices: [
+  const imageTextTemplate = await ensureTemplate({
+    name: 'ImageText',
+    displayName: 'Image & Text Component',
+    icon: 'ti ti-photo',
+    isSystem: false,
+    path: '/sitecore/templates/Feature/Components/ImageText',
+    description: 'Template dữ liệu cho component ImageText',
+    sections: [
+      {
+        name: 'Content Data',
+        sortOrder: 100,
+        fields: [
+          { name: 'Image', title: 'Illustration Image', type: 'Image', sortOrder: 10 },
+          { name: 'Title', title: 'Title', type: 'Single-Line Text', required: true, sortOrder: 20 },
+          { name: 'Body', title: 'Body Content', type: 'Rich Text', sortOrder: 30 },
+          { name: 'Alignment', title: 'Image Alignment (left/right)', type: 'Single-Line Text', defaultValue: 'left', sortOrder: 40 },
+        ],
+      },
+    ],
+  });
+
+  // Gán componentTemplate ID cho renderings
+  if (heroBannerRendering.fields instanceof Map) {
+    heroBannerRendering.fields.set('componentTemplate', heroBannerTemplate._id.toString());
+  } else {
+    heroBannerRendering.set('fields.componentTemplate', heroBannerTemplate._id.toString());
+  }
+  if (introRendering.fields instanceof Map) {
+    introRendering.fields.set('componentTemplate', introTemplate._id.toString());
+  } else {
+    introRendering.set('fields.componentTemplate', introTemplate._id.toString());
+  }
+  if (imageTextRendering.fields instanceof Map) {
+    imageTextRendering.fields.set('componentTemplate', imageTextTemplate._id.toString());
+  } else {
+    imageTextRendering.set('fields.componentTemplate', imageTextTemplate._id.toString());
+  }
+  if (!dryRun) {
+    await heroBannerRendering.save();
+    await introRendering.save();
+    await imageTextRendering.save();
+  }
+
+  // 7. Khởi tạo Page Templates (Project/Pages) độc lập (không kế thừa Component Templates)
+  const homePageTemplate = await ensureTemplate({
+    name: 'Home',
+    displayName: 'Home Page Template',
+    icon: 'ti ti-home',
+    isSystem: false,
+    path: '/sitecore/templates/Project/Pages/Home',
+    description: 'Page Template cho Trang Chủ',
+    baseTemplates: [],
+    sections: [],
+    presentation: {
+      layoutId: homeLayout._id,
+      renderings: [
         {
-          deviceId: defaultDevice._id,
-          layoutId: mainLayout._id,
-          renderings: [
-            {
-              uid: 'hero-std-uid-1000-0000-000000000001',
-              renderingId: heroRendering._id,
-              placeholder: 'main',
-              sortOrder: 100,
-              datasourceId: null,
-              parameters: { theme: 'light' },
-              hidden: false,
-            },
-            {
-              uid: 'richtext-std-uid-2000-0000-000000000002',
-              renderingId: richTextRendering._id,
-              placeholder: 'main',
-              sortOrder: 200,
-              datasourceId: null,
-              parameters: {},
-              hidden: false,
-            },
-          ],
+          uid: 'hero-std-uid-0000-0000-000000000001',
+          renderingId: heroBannerRendering._id,
+          placeholder: 'maincontent',
+          placeholderKey: 'maincontent',
+          sortOrder: 100,
+          datasourceId: null,
+          parameters: {},
+          hidden: false,
+        },
+        {
+          uid: 'intro-std-uid-0000-0000-000000000002',
+          renderingId: introRendering._id,
+          placeholder: 'maincontent',
+          placeholderKey: 'maincontent',
+          sortOrder: 200,
+          datasourceId: null,
+          parameters: {},
+          hidden: false,
+        },
+        {
+          uid: 'imgtxt-std-uid-0000-0000-000000000003',
+          renderingId: imageTextRendering._id,
+          placeholder: 'maincontent',
+          placeholderKey: 'maincontent',
+          sortOrder: 300,
+          datasourceId: null,
+          parameters: {},
+          hidden: false,
         },
       ],
-    };
-    if (!dryRun) {
-      await pageTemplate.save();
-      logger.info('[Presentation Seed] Configured Standard Presentation on Page Template');
-    } else {
-      logger.info('[DRY-RUN] Sẽ cấu hình Standard Presentation trên Page Template');
-    }
+    },
+  });
+
+  const aboutUsPageTemplate = await ensureTemplate({
+    name: 'AboutUs',
+    displayName: 'About Us Page Template',
+    icon: 'ti ti-info-circle',
+    isSystem: false,
+    path: '/sitecore/templates/Project/Pages/AboutUs',
+    description: 'Page Template cho Trang Giới Thiệu',
+    baseTemplates: [],
+    sections: [],
+    presentation: {
+      layoutId: homeLayout._id,
+      renderings: [
+        {
+          uid: 'intro-about-uid-0000-0000-000000000001',
+          renderingId: introRendering._id,
+          placeholder: 'maincontent',
+          placeholderKey: 'maincontent',
+          sortOrder: 100,
+          datasourceId: null,
+          parameters: {},
+          hidden: false,
+        },
+        {
+          uid: 'imgtxt-about-uid-0000-0000-000000000002',
+          renderingId: imageTextRendering._id,
+          placeholder: 'maincontent',
+          placeholderKey: 'maincontent',
+          sortOrder: 200,
+          datasourceId: null,
+          parameters: {},
+          hidden: false,
+        },
+      ],
+    },
+  });
+
+  // 8. Seed Content Items mẫu: Home và About-Us
+  const contentRoot = await Item.findOne({ path: '/sitecore/content' });
+  if (contentRoot) {
+    await ensureItem({
+      name: 'Home',
+      displayName: 'Home',
+      templateId: homePageTemplate._id,
+      parentId: contentRoot._id,
+      ancestors: [sitecoreRoot._id, contentRoot._id],
+      path: '/sitecore/content/Home',
+      sortOrder: 100,
+      fields: {
+        HeroTitle: 'Trang Chủ Antigravity CMS',
+        HeroDescription: '<p>Hệ thống CMS quản trị nội dung phân cấp kiến trúc Server-Side EJS SSR.</p>',
+        IntroHeading: 'Giới thiệu giải pháp',
+        IntroBody: '<p>CMS kết hợp sức mạnh giữa mô hình Sitecore XM và hiệu năng vượt trội của Express EJS.</p>',
+        Title: 'Kiến trúc linh hoạt',
+        Body: '<p>Quản lý Layout, Placeholders và Renderings trực quan với kéo thả SortableJS.</p>',
+      },
+      sharedFields: {
+        HeroTitle: 'Trang Chủ Antigravity CMS',
+      },
+    });
+
+    await ensureItem({
+      name: 'About-Us',
+      displayName: 'About Us',
+      templateId: aboutUsPageTemplate._id,
+      parentId: contentRoot._id,
+      ancestors: [sitecoreRoot._id, contentRoot._id],
+      path: '/sitecore/content/About-Us',
+      sortOrder: 200,
+      fields: {
+        IntroHeading: 'Về chúng tôi',
+        IntroBody: '<p>Chúng tôi cung cấp giải pháp quản trị nội dung hiện đại cho doanh nghiệp.</p>',
+        Title: 'Đội ngũ phát triển',
+        Body: '<p>Đội ngũ kỹ sư tận tâm với triết lý sản phẩm tối giản, an toàn và tin cậy.</p>',
+      },
+      sharedFields: {
+        IntroHeading: 'Về chúng tôi',
+      },
+    });
   }
+
+  // Đồng bộ toàn bộ Template vào Cây Nội Dung (/sitecore/templates)
+  const { migrateTemplatesToContentTree } = require('./migrate-templates-to-content-tree');
+  await migrateTemplatesToContentTree();
 
   logger.info(`=== HOÀN TẤT SEED HỆ THỐNG PRESENTATION THÀNH CÔNG${dryRun ? ' [DRY-RUN]' : ''} ===`);
   return {
     layoutFolderTemplate,
+    placeholderFolderTemplate,
     renderingFolderTemplate,
-    deviceTemplate,
     layoutTemplate,
+    placeholderTemplate,
     renderingTemplate,
-    placeholderSettingsTemplate,
     layoutRoot,
     layoutsFolder,
-    renderingsFolder,
-    devicesFolder,
     placeholdersFolder,
-    featureFolder,
-    defaultDevice,
-    mobileDevice,
-    mainLayout,
-    heroRendering,
-    richTextRendering,
-    promoRendering,
-    navRendering,
+    renderingsFolder,
+    homeLayout,
+    heroBannerRendering,
+    introRendering,
+    imageTextRendering,
+    maincontentPlaceholder,
+    heroBannerTemplate,
+    introTemplate,
+    imageTextTemplate,
+    homePageTemplate,
+    aboutUsPageTemplate,
   };
 }
 

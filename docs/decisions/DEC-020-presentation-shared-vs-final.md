@@ -1,8 +1,11 @@
-# DEC-020: Kiến trúc Presentation Headless (Shared Layout vs. Final Layout)
+# DEC-020: Kiến trúc Presentation (Shared Layout vs. Final Layout)
+
+> [!WARNING]
+> **Trạng thái:** Bị thay thế và chuẩn hóa lại bởi [DEC-031](DEC-031-server-side-ejs-renderer-architecture.md) và [DEC-032](DEC-032-three-branch-layout-tree-structure.md). Khái niệm Headless và Device bị loại bỏ hoàn toàn; Shared và Final Layout áp dụng cho Layout và Rendering EJS (`viewPath`).
 
 - **Ngày quyết định:** 2026-11-03
 - **Giai đoạn liên quan:** GĐ 6 (Presentation), GĐ 4 (Versions & Languages)
-- **Trạng thái:** Đã chốt (Accepted)
+- **Trạng thái:** Bị thay thế (Superseded by DEC-031, DEC-032)
 
 ## 1. Bối cảnh
 Trong Sitecore, trang web thường có các component dùng chung cho mọi ngôn ngữ và mọi phiên bản (ví dụ Header, Footer, cấu trúc Grid layout), nhưng cũng có những component hoặc thứ tự component chỉ dành riêng cho một ngôn ngữ cụ thể (ví dụ banner quảng cáo tiếng Việt khác banner tiếng Anh) hoặc chỉ áp dụng cho một version đang dự thảo (Draft version). Cần một kiến trúc lưu trữ tách bạch hai nhu cầu này.

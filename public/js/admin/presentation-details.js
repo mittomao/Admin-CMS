@@ -1,12 +1,11 @@
 /**
  * Presentation Details Controller & UI Manager (GĐ 6)
- * Supports Headless Presentation, SortableJS Drag & Drop, Datasource Picker, and Preview JSON
+ * Supports 100% Server-Side EJS Presentation, SortableJS Drag & Drop, and Datasource Picker
  */
 window.PresentationDetails = (function () {
   let currentItemId = null;
   let currentLang = 'vi';
   let currentVersion = 1;
-  let currentDeviceId = null;
   let sortableInstances = [];
 
   // Helper to ensure CSRF token in requests
@@ -59,7 +58,6 @@ window.PresentationDetails = (function () {
     currentItemId = itemId;
     currentLang = opts.lang || window.currentLang || 'vi';
     currentVersion = opts.version || window.currentVersion || 1;
-    currentDeviceId = opts.deviceId || null;
 
     let container = document.getElementById('presentationModalContainer');
     if (!container) {
@@ -71,9 +69,7 @@ window.PresentationDetails = (function () {
     try {
       const url = `/admin/content-editor/item/${itemId}/presentation?lang=${encodeURIComponent(
         currentLang
-      )}&version=${encodeURIComponent(currentVersion)}${
-        currentDeviceId ? `&device=${encodeURIComponent(currentDeviceId)}` : ''
-      }`;
+      )}&version=${encodeURIComponent(currentVersion)}`;
 
       const res = await fetch(url);
       if (!res.ok) {
@@ -83,7 +79,7 @@ window.PresentationDetails = (function () {
       const html = await res.text();
       container.innerHTML = html;
 
-      // Render additional modals if not already in DOM
+      // Render sub modals if not in DOM
       ensureSubModals(container);
 
       // Initialize Bootstrap Modal
@@ -91,7 +87,8 @@ window.PresentationDetails = (function () {
       if (!modalEl) {
         throw new Error('Không tìm thấy element #presentationDetailsModal.');
       }
-      const ModalClass = (window.bootstrap && window.bootstrap.Modal) || (typeof bootstrap !== 'undefined' && bootstrap.Modal);
+      const ModalClass =
+        (window.bootstrap && window.bootstrap.Modal) || (typeof bootstrap !== 'undefined' && bootstrap.Modal);
       if (!ModalClass) {
         throw new Error('Bootstrap Modal không khả dụng trên trang.');
       }
@@ -107,22 +104,21 @@ window.PresentationDetails = (function () {
   }
 
   /**
-   * Open standalone Preview JSON modal
+   * Open standalone Preview JSON / Structure modal
    */
   async function openPreviewJson(itemId, opts = {}) {
     if (!itemId) {
-      showToast('Vui lòng chọn một item trước khi xem Preview JSON.', 'warning');
+      showToast('Vui lòng chọn một item trước khi xem Preview.', 'warning');
       return;
     }
 
     const lang = opts.lang || window.currentLang || 'vi';
     const version = opts.version || window.currentVersion || 1;
-    const deviceId = opts.deviceId || '';
 
     try {
       const url = `/admin/content-editor/item/${itemId}/presentation/preview?lang=${encodeURIComponent(
         lang
-      )}&version=${encodeURIComponent(version)}${deviceId ? `&device=${encodeURIComponent(deviceId)}` : ''}`;
+      )}&version=${encodeURIComponent(version)}`;
 
       const res = await fetch(url);
       if (!res.ok) {
@@ -142,7 +138,8 @@ window.PresentationDetails = (function () {
       if (!modalEl) {
         throw new Error('Không tìm thấy element #previewPresentationJsonModal.');
       }
-      const ModalClass = (window.bootstrap && window.bootstrap.Modal) || (typeof bootstrap !== 'undefined' && bootstrap.Modal);
+      const ModalClass =
+        (window.bootstrap && window.bootstrap.Modal) || (typeof bootstrap !== 'undefined' && bootstrap.Modal);
       if (!ModalClass) {
         throw new Error('Bootstrap Modal không khả dụng trên trang.');
       }
@@ -162,12 +159,11 @@ window.PresentationDetails = (function () {
         });
       }
     } catch (err) {
-      showToast(`Không thể tải Preview JSON: ${err.message}`, 'error');
+      showToast(`Không thể tải Preview: ${err.message}`, 'error');
     }
   }
 
   function ensureSubModals(container) {
-    // Check if selectRenderingModal is present
     if (!document.getElementById('selectRenderingModal')) {
       const selectHtml = `
         <div class="modal fade" id="selectRenderingModal" tabindex="-1" aria-hidden="true" style="z-index: 1055;">
@@ -184,7 +180,7 @@ window.PresentationDetails = (function () {
                 <div class="mb-3">
                   <div class="input-icon">
                     <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                    <input type="text" class="form-control form-control-sm" id="searchRenderingInput" placeholder="Tìm component theo tên..." autocomplete="off">
+                    <input type="text" class="form-control form-control-sm" id="searchRenderingInput" placeholder="Tìm component theo tên hoặc viewPath..." autocomplete="off">
                   </div>
                 </div>
                 <div class="row g-2 overflow-auto" id="renderingsGridContainer" style="max-height: 380px;"></div>
@@ -199,7 +195,6 @@ window.PresentationDetails = (function () {
       container.insertAdjacentHTML('beforeend', selectHtml);
     }
 
-    // Check if renderingInstanceModal is present
     if (!document.getElementById('renderingInstanceModal')) {
       const editHtml = `
         <div class="modal fade" id="renderingInstanceModal" tabindex="-1" aria-hidden="true" style="z-index: 1056;">
@@ -220,24 +215,24 @@ window.PresentationDetails = (function () {
                 <div class="modal-body p-3">
                   <div class="mb-3 card border p-3 bg-light">
                     <label class="form-label fw-bold small text-dark d-flex align-items-center justify-content-between mb-1">
-                      <span>Nguồn Dữ Liệu (Datasource Item):</span>
+                      <span>Nguồn Dữ Liệu Riêng (Datasource Item):</span>
                       <span class="badge bg-secondary-lt fw-normal">Tùy chọn</span>
                     </label>
                     <div class="input-group input-group-sm">
                       <span class="input-group-text bg-white"><i class="ti ti-database text-muted"></i></span>
-                      <input type="text" class="form-control" id="editRenderingDatasourcePath" placeholder="(Dùng nội dung của chính trang - Context Item)" readonly>
+                      <input type="text" class="form-control" id="editRenderingDatasourcePath" placeholder="(Mặc định dùng nội dung của chính trang - Page context)" readonly>
                       <input type="hidden" id="editRenderingDatasourceId">
                       <button class="btn btn-outline-secondary" type="button" id="btnBrowseDatasource">
-                        <i class="ti ti-folder-search me-1"></i> Browse...
+                        <i class="ti ti-folder-search me-1"></i> Chọn Item...
                       </button>
-                      <button class="btn btn-outline-danger" type="button" id="btnClearDatasource" title="Xóa datasource">
+                      <button class="btn btn-outline-danger" type="button" id="btnClearDatasource" title="Xóa datasource (đọc lại từ trang)">
                         <i class="ti ti-x"></i>
                       </button>
                     </div>
                   </div>
                   <div class="mb-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                      <label class="form-label fw-bold small text-dark m-0">Tham Số Giao Diện (Parameters):</label>
+                      <label class="form-label fw-bold small text-dark m-0">Tham Số Hiển Thị (Parameters):</label>
                       <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" id="btnAddParameterRow">
                         <i class="ti ti-plus"></i> Thêm Tham Số
                       </button>
@@ -272,15 +267,7 @@ window.PresentationDetails = (function () {
   }
 
   function initModalEvents(modalEl) {
-    // 1. Switch Device Tabs
-    modalEl.querySelectorAll('#deviceTabs button').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const devId = btn.getAttribute('data-device-id');
-        open(currentItemId, { lang: currentLang, version: currentVersion, deviceId: devId });
-      });
-    });
-
-    // 2. Add Component button in each placeholder
+    // 1. Add Component button in each placeholder
     modalEl.querySelectorAll('.btn-add-rendering').forEach((btn) => {
       btn.addEventListener('click', () => {
         const ph = btn.getAttribute('data-placeholder');
@@ -288,7 +275,7 @@ window.PresentationDetails = (function () {
       });
     });
 
-    // 3. Edit Rendering button
+    // 2. Edit Rendering button
     modalEl.querySelectorAll('.btn-edit-rendering').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const itemCard = e.target.closest('.rendering-item');
@@ -296,7 +283,7 @@ window.PresentationDetails = (function () {
       });
     });
 
-    // 4. Remove Rendering button
+    // 3. Remove Rendering button
     modalEl.querySelectorAll('.btn-remove-rendering').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const itemCard = e.target.closest('.rendering-item');
@@ -308,7 +295,7 @@ window.PresentationDetails = (function () {
       });
     });
 
-    // 5. Reset to standard button
+    // 4. Reset to standard button
     const resetBtn = modalEl.querySelector('#btnResetToStandard');
     if (resetBtn) {
       resetBtn.addEventListener('click', async () => {
@@ -316,7 +303,7 @@ window.PresentationDetails = (function () {
           return;
         }
         try {
-          const res = await fetch(`/api/items/${currentItemId}/presentation/reset`, {
+          const res = await fetch(`/api/presentation/item/${currentItemId}/reset`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -341,52 +328,24 @@ window.PresentationDetails = (function () {
       });
     }
 
-    // 6. Preview JSON button
+    // 5. Preview JSON / structure button
     const previewBtn = modalEl.querySelector('#btnPreviewPresentationJson');
     if (previewBtn) {
       previewBtn.addEventListener('click', () => {
-        openPreviewJson(currentItemId, { lang: currentLang, version: currentVersion, deviceId: currentDeviceId });
+        openPreviewJson(currentItemId, { lang: currentLang, version: currentVersion });
       });
     }
 
-    // 7. Save Presentation button
+    // 6. Save Presentation button
     const saveBtn = modalEl.querySelector('#btnSavePresentation');
     if (saveBtn) {
       saveBtn.addEventListener('click', async () => {
         await saveCurrentPresentation(modalEl);
       });
     }
-
-    // 8. Browse Layout in Tree button
-    const browseLayoutBtn = modalEl.querySelector('#btnBrowseLayout');
-    if (browseLayoutBtn && window.ItemPicker) {
-      browseLayoutBtn.addEventListener('click', () => {
-        const layoutSelect = modalEl.querySelector('#presentationLayoutSelect');
-        window.ItemPicker.open({
-          title: 'Chọn Layout Component từ cây /sitecore/layout/Layouts',
-          rootPath: '/sitecore/layout/Layouts',
-          allowedTemplate: 'Layout',
-          selectedId: layoutSelect?.value || null,
-          onSelect: (item) => {
-            if (item && layoutSelect) {
-              const val = item._id || item.id;
-              let opt = layoutSelect.querySelector(`option[value="${val}"]`);
-              if (!opt) {
-                opt = document.createElement('option');
-                opt.value = val;
-                opt.textContent = `${item.displayName || item.name}`;
-                layoutSelect.appendChild(opt);
-              }
-              layoutSelect.value = val;
-            }
-          },
-        });
-      });
-    }
   }
 
   function initSortable() {
-    // Destroy previous sortable instances
     sortableInstances.forEach((inst) => {
       if (typeof inst.destroy === 'function') inst.destroy();
     });
@@ -433,7 +392,7 @@ window.PresentationDetails = (function () {
         dropzone.innerHTML = `
           <div class="empty-dropzone text-center py-3 text-muted small border border-dashed rounded bg-white">
             <i class="ti ti-drag-drop fs-2 text-muted mb-1"></i>
-            <div>Chưa có component nào trong placeholder <strong>${ph}</strong>. Kéo thả hoặc nhấn "Thêm Component".</div>
+            <div>Chưa có component nào trong placeholder <strong>${ph}</strong>. Nhấn "Thêm Component" để bắt đầu.</div>
           </div>
         `;
       }
@@ -461,7 +420,7 @@ window.PresentationDetails = (function () {
     bsModal.show();
 
     try {
-      const res = await fetch(`/api/presentation/renderings?placeholder=${encodeURIComponent(placeholder)}`);
+      const res = await fetch(`/api/presentation/renderings/allowed?placeholder=${encodeURIComponent(placeholder)}`);
       const json = await res.json();
       if (!json.success || !Array.isArray(json.data)) {
         grid.innerHTML = '<div class="alert alert-warning">Không tải được danh sách renderings.</div>';
@@ -472,6 +431,7 @@ window.PresentationDetails = (function () {
       json.data.forEach((r) => {
         const col = document.createElement('div');
         col.className = 'col-md-6 rendering-select-card';
+        const compTplLabel = r.componentTemplateName ? `Template: ${r.componentTemplateName}` : '';
         col.innerHTML = `
           <div class="card card-sm border hover-bg-light cursor-pointer p-2 d-flex flex-row align-items-center gap-2" style="cursor: pointer;">
             <span class="avatar avatar-sm bg-blue-lt rounded">
@@ -479,7 +439,8 @@ window.PresentationDetails = (function () {
             </span>
             <div class="flex-fill text-truncate">
               <div class="fw-bold text-dark text-truncate">${r.displayName || r.name}</div>
-              <div class="text-muted small font-monospace">${r.componentName}</div>
+              <div class="text-muted small font-monospace">${r.viewPath || ''}</div>
+              ${compTplLabel ? `<div class="badge bg-purple-lt text-purple small mt-1 font-monospace"><i class="ti ti-puzzle me-1"></i>${compTplLabel}</div>` : ''}
             </div>
             <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2">
               <i class="ti ti-plus"></i> Chọn
@@ -495,7 +456,6 @@ window.PresentationDetails = (function () {
         grid.appendChild(col);
       });
 
-      // Filter input
       const searchInput = document.getElementById('searchRenderingInput');
       if (searchInput) {
         searchInput.value = '';
@@ -524,13 +484,11 @@ window.PresentationDetails = (function () {
 
     const card = document.createElement('div');
     card.className = 'card mb-2 rendering-item shadow-xs border cursor-move bg-white';
-    card.setAttribute('data-uid', ''); // Will be generated on save or edit
-    card.setAttribute('data-rendering-id', rendering._id);
+    card.setAttribute('data-uid', '');
+    card.setAttribute('data-rendering-id', rendering._id || rendering.id);
     card.setAttribute('data-placeholder', placeholder);
     card.setAttribute('data-sort-order', (dropzone.querySelectorAll('.rendering-item').length + 1) * 100);
     card.setAttribute('data-datasource-id', '');
-    card.setAttribute('data-datasource-name', '');
-    card.setAttribute('data-datasource-path', '');
     card.setAttribute('data-parameters', '{}');
     card.setAttribute('data-origin', currentScope);
     card.setAttribute('data-hidden', 'false');
@@ -547,11 +505,11 @@ window.PresentationDetails = (function () {
           <div class="text-truncate">
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold small text-dark">${rendering.displayName || rendering.name}</span>
-              <span class="badge bg-light text-muted font-monospace small">${rendering.componentName}</span>
+              <span class="badge bg-light text-muted font-monospace small">${rendering.viewPath || ''}</span>
               <span class="badge bg-primary-lt">${currentScope.toUpperCase()}</span>
             </div>
             <div class="text-muted small d-flex align-items-center gap-2 mt-1">
-              <span class="text-muted fst-italic"><i class="ti ti-arrow-guide me-1"></i>Dùng nội dung Page context</span>
+              <span class="text-muted fst-italic"><i class="ti ti-arrow-guide me-1"></i>Đọc trường trực tiếp từ Page Item</span>
             </div>
           </div>
         </div>
@@ -566,7 +524,6 @@ window.PresentationDetails = (function () {
       </div>
     `;
 
-    // Hook events
     card.querySelector('.btn-edit-rendering').addEventListener('click', () => openEditRenderingModal(card));
     card.querySelector('.btn-remove-rendering').addEventListener('click', () => {
       card.remove();
@@ -588,15 +545,13 @@ window.PresentationDetails = (function () {
 
     document.getElementById('editRenderingUid').value = card.getAttribute('data-uid') || '';
     document.getElementById('editRenderingId').value = card.getAttribute('data-rendering-id') || '';
-    document.getElementById('editRenderingPlaceholder').value = card.getAttribute('data-placeholder') || 'main';
+    document.getElementById('editRenderingPlaceholder').value = card.getAttribute('data-placeholder') || 'maincontent';
     document.getElementById('editRenderingSortOrder').value = card.getAttribute('data-sort-order') || 100;
 
     const dsId = card.getAttribute('data-datasource-id') || '';
-    const dsPath = card.getAttribute('data-datasource-path') || '';
     document.getElementById('editRenderingDatasourceId').value = dsId;
-    document.getElementById('editRenderingDatasourcePath').value = dsPath;
+    document.getElementById('editRenderingDatasourcePath').value = dsId ? `Item: ${dsId}` : '';
 
-    // Parameters table
     const tableBody = document.getElementById('parametersTableBody');
     tableBody.innerHTML = '';
     let params = {};
@@ -610,13 +565,11 @@ window.PresentationDetails = (function () {
       tableBody.appendChild(createParameterRow(k, v));
     });
 
-    // Add parameter row button
     const addParamBtn = document.getElementById('btnAddParameterRow');
     addParamBtn.onclick = () => {
       tableBody.appendChild(createParameterRow('', ''));
     };
 
-    // Browse datasource button
     const browseBtn = document.getElementById('btnBrowseDatasource');
     browseBtn.onclick = () => {
       if (window.ItemPicker) {
@@ -636,14 +589,12 @@ window.PresentationDetails = (function () {
       }
     };
 
-    // Clear datasource button
     const clearDsBtn = document.getElementById('btnClearDatasource');
     clearDsBtn.onclick = () => {
       document.getElementById('editRenderingDatasourceId').value = '';
       document.getElementById('editRenderingDatasourcePath').value = '';
     };
 
-    // Form submit
     form.onsubmit = (e) => {
       e.preventDefault();
       const updatedDsId = document.getElementById('editRenderingDatasourceId').value;
@@ -659,18 +610,17 @@ window.PresentationDetails = (function () {
       });
 
       card.setAttribute('data-datasource-id', updatedDsId);
-      card.setAttribute('data-datasource-path', updatedDsPath);
       card.setAttribute('data-parameters', JSON.stringify(newParams));
 
-      // Update card UI labels
       const dsLabel = card.querySelector('.text-muted.small.d-flex');
       if (dsLabel) {
-        const dsContent = updatedDsPath
-          ? `<span class="text-truncate text-azure" title="Datasource: ${updatedDsPath}"><i class="ti ti-database me-1"></i>${updatedDsPath}</span>`
-          : '<span class="text-muted fst-italic"><i class="ti ti-arrow-guide me-1"></i>Dùng nội dung Page context</span>';
-        const paramsBadge = Object.keys(newParams).length > 0
-          ? `<span class="badge bg-orange-lt ms-2" title="Có cấu hình parameters"><i class="ti ti-adjustments me-1"></i>${Object.keys(newParams).length} params</span>`
-          : '';
+        const dsContent = updatedDsId
+          ? `<span class="text-truncate text-azure" title="Datasource: ${updatedDsPath || updatedDsId}"><i class="ti ti-database me-1"></i>${updatedDsPath || updatedDsId}</span>`
+          : '<span class="text-muted fst-italic"><i class="ti ti-arrow-guide me-1"></i>Đọc trường trực tiếp từ Page Item</span>';
+        const paramsBadge =
+          Object.keys(newParams).length > 0
+            ? `<span class="badge bg-orange-lt ms-2" title="Có cấu hình parameters"><i class="ti ti-adjustments me-1"></i>${Object.keys(newParams).length} params</span>`
+            : '';
         dsLabel.innerHTML = dsContent + paramsBadge;
       }
 
@@ -700,9 +650,6 @@ window.PresentationDetails = (function () {
   }
 
   async function saveCurrentPresentation(modalEl) {
-    const activeTab = modalEl.querySelector('#deviceTabs button.active');
-    const deviceId = activeTab ? activeTab.getAttribute('data-device-id') : currentDeviceId;
-
     const layoutSelect = modalEl.querySelector('#presentationLayoutSelect');
     const layoutId = layoutSelect ? layoutSelect.value : null;
 
@@ -714,7 +661,6 @@ window.PresentationDetails = (function () {
     const scopeRadio = modalEl.querySelector('input[name="presentationScope"]:checked');
     const scope = scopeRadio ? scopeRadio.value : 'shared';
 
-    // Collect all renderings from DOM
     const renderings = [];
     const itemCards = modalEl.querySelectorAll('.rendering-item');
     itemCards.forEach((card, index) => {
@@ -728,7 +674,8 @@ window.PresentationDetails = (function () {
       renderings.push({
         uid: card.getAttribute('data-uid') || '',
         renderingId: card.getAttribute('data-rendering-id'),
-        placeholder: card.getAttribute('data-placeholder') || 'main',
+        placeholder: card.getAttribute('data-placeholder') || 'maincontent',
+        placeholderKey: card.getAttribute('data-placeholder') || 'maincontent',
         sortOrder: (index + 1) * 100,
         datasourceId: card.getAttribute('data-datasource-id') || null,
         parameters: params,
@@ -743,14 +690,13 @@ window.PresentationDetails = (function () {
     }
 
     try {
-      const res = await fetch(`/api/items/${currentItemId}/presentation`, {
+      const res = await fetch(`/api/presentation/item/${currentItemId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': getCsrfToken(),
         },
         body: JSON.stringify({
-          deviceId,
           layoutId,
           renderings,
           scope,
@@ -782,4 +728,3 @@ window.PresentationDetails = (function () {
     openPreviewJson,
   };
 })();
-

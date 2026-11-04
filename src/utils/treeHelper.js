@@ -9,8 +9,8 @@ const treeHelper = {
    * @param {Object} template Populated template object
    */
   toFancytreeNode(item, hasChildren = false, template = null) {
-    const icon = (template && template.icon) || (item.templateId && item.templateId.icon) || 'ti ti-file-text';
-    const isFolder = template ? (template.name === 'Folder' || template.name.includes('Folder')) : true;
+    const icon = item.icon || (template && template.icon) || (item.templateId && item.templateId.icon) || 'ti ti-file-text';
+    const isFolder = template ? (template.name === 'Folder' || template.name.includes('Folder') || template.name === 'Template Folder') : true;
 
     return {
       key: item._id.toString(),

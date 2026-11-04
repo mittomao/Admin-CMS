@@ -2,6 +2,7 @@ const itemService = require('../../services/itemService');
 const templateService = require('../../services/templateService');
 const versionService = require('../../services/versionService');
 const Item = require('../../models/Item');
+const Template = require('../../models/Template');
 const treeHelper = require('../../utils/treeHelper');
 const ribbonConfig = require('../../config/ribbon');
 const logger = require('../../utils/logger');
@@ -28,19 +29,40 @@ const contentEditorController = {
       const lang = req.query.lang || 'vi';
       const version = parseInt(req.query.version, 10) || 1;
       let schemaData = null;
+      let isTemplate = false;
+      let activeTemplate = null;
+      let resolvedTemplate = null;
+      let usage = null;
+      let quickInfo = null;
+      const allTemplates = await templateService.list();
 
       if (selectedItem) {
-        schemaData = await itemService.getItemWithRenderSchema(selectedItem._id, lang, version);
+        activeTemplate = await Template.findById(selectedItem._id);
+        if (activeTemplate) {
+          isTemplate = true;
+          resolvedTemplate = await templateService.resolveTemplate(selectedItem._id);
+          usage = await templateService.getUsage(selectedItem._id);
+          quickInfo = await itemService.getQuickInfo(selectedItem._id);
+        } else {
+          schemaData = await itemService.getItemWithRenderSchema(selectedItem._id, lang, version);
+          quickInfo = schemaData?.quickInfo || (await itemService.getQuickInfo(selectedItem._id));
+        }
       }
 
       const breadcrumbs = selectedItem ? await itemService.getPathBreadcrumb(selectedItem) : [];
-      const templates = await templateService.list();
+      const templates = allTemplates;
 
       res.render('content-editor/index', {
         title: selectedItem ? `${selectedItem.displayName || selectedItem.name} - Content Editor` : 'Content Editor',
         currentPath: '/admin/content-editor',
         selectedItem: schemaData ? schemaData.item : selectedItem,
         schemaData,
+        isTemplate,
+        activeTemplate,
+        resolvedTemplate,
+        usage,
+        allTemplates,
+        quickInfo,
         currentLang: lang,
         currentVersion: version,
         breadcrumbs,
@@ -64,12 +86,31 @@ const contentEditorController = {
       const lang = req.query.lang || 'vi';
       const version = parseInt(req.query.version, 10) || 1;
 
+      // 1. Check if item is a Template Definition
+      const activeTemplate = await Template.findById(id);
+      if (activeTemplate) {
+        const resolvedTemplate = await templateService.resolveTemplate(id);
+        const usage = await templateService.getUsage(id);
+        const allTemplates = await templateService.list();
+        const quickInfo = await itemService.getQuickInfo(id);
+
+        return res.render('content-editor/template-workspace', {
+          layout: false,
+          activeTemplate,
+          resolvedTemplate,
+          usage,
+          allTemplates,
+          quickInfo,
+        });
+      }
+
+      // 2. Normal Content Item
       const schemaData = await itemService.getItemWithRenderSchema(id, lang, version);
       if (!schemaData) {
         return res.status(404).send('<div class="alert alert-danger m-3">Item not found or has been removed.</div>');
       }
 
-      const { item, resolvedTemplate, languagesList, versionsList, hasLanguage, hasVersion, versionInfo } = schemaData;
+      const { item, resolvedTemplate, languagesList, versionsList, hasLanguage, hasVersion, versionInfo, componentTemplates, quickInfo } = schemaData;
       const breadcrumbs = await itemService.getPathBreadcrumb(item);
 
       res.render('content-editor/item-form', {
@@ -84,6 +125,8 @@ const contentEditorController = {
         hasLanguage,
         hasVersion,
         versionInfo,
+        componentTemplates: componentTemplates || [],
+        quickInfo,
       });
     } catch (error) {
       logger.error(`Error loading item form partial: ${error.message}`);
@@ -181,11 +224,14 @@ const contentEditorController = {
       const children = await itemService.getChildren(id);
       const breadcrumbs = await itemService.getPathBreadcrumb(item);
 
+      const quickInfo = await itemService.getQuickInfo(item);
+
       res.render('content-editor/folder-view', {
         layout: false,
         item,
         children,
         breadcrumbs,
+        quickInfo,
       });
     } catch (error) {
       logger.error(`Error loading folder view partial: ${error.message}`);
@@ -243,6 +289,24 @@ const contentEditorController = {
     } catch (error) {
       logger.error(`Error loading tree nodes: ${error.message}`);
       res.status(500).json({ error: error.message });
+    }
+  },
+
+  /**
+   * GET /api/items/:id/quick-info
+   * Returns JSON metadata of the item for Quick Info
+   */
+  async getItemQuickInfo(req, res, next) {
+    try {
+      const { id } = req.params;
+      const quickInfo = await itemService.getQuickInfo(id);
+      if (!quickInfo) {
+        return res.status(404).json({ success: false, message: 'Item not found.' });
+      }
+      res.json({ success: true, data: quickInfo });
+    } catch (error) {
+      logger.error(`Error loading item quick info: ${error.message}`);
+      next(error);
     }
   },
 

@@ -1,8 +1,11 @@
 # DEC-023: Xử lý Datasource Chưa Publish (Cảnh báo mềm)
 
+> [!WARNING]
+> **Trạng thái:** Bị thay thế và điều chỉnh bởi [DEC-031](DEC-031-server-side-ejs-renderer-architecture.md) và [DEC-035](DEC-035-component-field-inheritance-and-context.md). Trong kiến trúc mới, component mặc định đọc trường trực tiếp từ chính Page Item (nhờ kế thừa Component Template). Nếu rendering sử dụng datasource riêng chưa publish, Site Renderer EJS tự động xử lý fallback an toàn (không render hoặc hiển thị placeholder trống) thay vì gửi payload tới React.
+
 - **Ngày quyết định:** 2026-11-03
 - **Giai đoạn liên quan:** GĐ 8 (Workflow & Publishing), GĐ 6 (Presentation)
-- **Trạng thái:** Đã chốt (Accepted)
+- **Trạng thái:** Bị thay thế (Superseded by DEC-031, DEC-035)
 
 ## 1. Bối cảnh
 Khi một trang được xuất bản (Publish) từ Master sang Web, các rendering của nó có thể đang tham chiếu tới các Datasource Item (ví dụ bài viết promo, banner). Nếu các Datasource Item này vẫn đang ở trạng thái Draft hoặc chưa từng được publish lên Web, khi gọi Layout Service phía React frontend, dữ liệu `fields` của component đó sẽ bị trống (`null`). Cần quyết định ứng xử của hệ thống khi biên tập viên publish trang có datasource chưa publish.

@@ -1,0 +1,20 @@
+<section class="image-text-section" style="padding: 3rem 0; background: #f1f5f9;">
+  <div class="container" style="display: flex; gap: 2rem; align-items: center; flex-direction: <%= (fields && fields.Alignment === 'right') ? 'row-reverse' : 'row' %>;">
+    <% if (fields && fields.Image) { %>
+      <div class="image-col" style="flex: 1; text-align: center;">
+        <img src="<%= fields.Image %>" alt="<%= (fields && fields.Title) || '' %>" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+      </div>
+    <% } %>
+    <div class="text-col" style="flex: 1;">
+      <% if (fields && fields.Title) { %>
+        <h3 class="title" style="font-size: 1.75rem; margin-bottom: 1rem; color: #1e293b;"><%= fields.Title %></h3>
+      <% } %>
+      <% if (fields && fields.Body) { %>
+        <div class="body-content" style="color: #475569; font-size: 1.05rem;">
+          <%- fields.Body %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+

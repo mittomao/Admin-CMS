@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Item = require('../models/Item');
 const Template = require('../models/Template');
+const User = require('../models/User');
 const { getFieldHandler } = require('../fields');
 const templateService = require('./templateService');
 const versionService = require('./versionService');
@@ -28,8 +29,11 @@ const PROTECTED_SYSTEM_PATHS = new Set([
   '/sitecore/media library',
   '/sitecore/system',
   '/sitecore/templates',
+  '/sitecore/templates/system/sample component',
+  '/sitecore/templates/system/standard template',
   '/sitecore/layout',
   '/sitecore/layout/layouts',
+  '/sitecore/layout/placeholders',
   '/sitecore/layout/renderings',
   '/sitecore/layout/devices',
   '/sitecore/layout/placeholder settings',
@@ -148,8 +152,9 @@ const itemService = {
     const item = await this.getById(id);
     if (!item) return null;
 
-    const resolvedTemplate = await templateService.resolveTemplate(item.templateId._id || item.templateId);
-    const standardValues = await templateService.resolveStandardValues(item.templateId._id || item.templateId);
+    const effectiveTemplate = await templateService.resolveEffectiveTemplate(item, langCode, versionNumber);
+    const resolvedTemplate = effectiveTemplate || (await templateService.resolveTemplate(item.templateId._id || item.templateId));
+    const standardValues = effectiveTemplate ? effectiveTemplate.standardValues : (await templateService.resolveStandardValues(item.templateId._id || item.templateId));
 
     // Resolve multilingual & versioned fields
     const resolvedResult = await versionService.resolveFields(item, langCode, versionNumber);
@@ -190,6 +195,10 @@ const itemService = {
     const languagesList = await versionService.listLanguages(item._id);
     const versionsList = await versionService.listVersions(item._id, langCode);
 
+    // Retrieve available component templates for rendering items
+    const componentTemplates = await templateService.getComponentTemplates();
+    const quickInfo = await this.getQuickInfo(item);
+
     return {
       item,
       resolvedTemplate,
@@ -201,6 +210,96 @@ const itemService = {
       versionsList,
       hasLanguage: resolvedResult.hasLanguage,
       hasVersion: resolvedResult.hasVersion,
+      componentTemplates,
+      quickInfo,
+    };
+  },
+
+  /**
+   * Get Sitecore Quick Info metadata for an item (DEC-037 / GĐ 6.3)
+   */
+  async getQuickInfo(itemOrId) {
+    if (!itemOrId) return null;
+
+    let item = itemOrId;
+    if (typeof itemOrId === 'string' || itemOrId instanceof mongoose.Types.ObjectId || !itemOrId.name || !itemOrId.path) {
+      item = await Item.findById(itemOrId).lean();
+    }
+    if (!item) {
+      // Check if it's a Template document (in case called with template ID)
+      const tpl = await Template.findById(itemOrId).lean();
+      if (tpl) {
+        item = (await Item.findById(tpl._id).lean()) || {
+          _id: tpl._id,
+          name: tpl.name,
+          displayName: tpl.displayName,
+          path: tpl.path || `/sitecore/templates/${tpl.name}`,
+          templateId: null,
+          createdBy: tpl.createdBy,
+          createdFrom: tpl.createdFrom || null,
+        };
+      }
+    }
+    if (!item) return null;
+
+    const itemIdStr = item._id ? item._id.toString().toUpperCase() : '';
+    const formattedItemId = `{${itemIdStr}}`;
+
+    const templateIdToQuery = item.templateId ? (item.templateId._id || item.templateId) : null;
+    const createdFromId = item.createdFrom ? (item.createdFrom._id || item.createdFrom) : null;
+    const createdById = item.createdBy ? (item.createdBy._id || item.createdBy) : null;
+
+    // Fetch related records in parallel to prevent N+1 queries
+    const [templateDoc, sourceItem, ownerUser] = await Promise.all([
+      templateIdToQuery
+        ? Template.findById(templateIdToQuery).select('name displayName path').lean()
+        : null,
+      createdFromId
+        ? Item.findById(createdFromId).select('name displayName path').lean()
+        : null,
+      createdById
+        ? User.findById(createdById).select('username domain fullName').lean()
+        : null,
+    ]);
+
+    let templatePath = templateDoc ? templateDoc.path : null;
+    if (!templatePath && templateIdToQuery) {
+      const tplItem = await Item.findById(templateIdToQuery).select('path name displayName').lean();
+      if (tplItem) {
+        templatePath = tplItem.path;
+      }
+    }
+
+    const templateIdStr = templateIdToQuery ? templateIdToQuery.toString().toUpperCase() : '';
+    const templateName = templateDoc ? (templateDoc.displayName || templateDoc.name) : 'Unknown';
+
+    return {
+      itemId: formattedItemId,
+      rawId: item._id ? item._id.toString() : '',
+      name: item.name,
+      displayName: item.displayName || item.name,
+      path: item.path,
+      template: {
+        rawId: templateIdToQuery ? templateIdToQuery.toString() : null,
+        id: templateIdStr ? `{${templateIdStr}}` : '',
+        name: templateName,
+        path: templatePath || '/sitecore/templates/System/Template',
+        fullText: templatePath ? `${templatePath} - {${templateIdStr}}` : (templateIdStr ? `{${templateIdStr}}` : '[unknown]'),
+      },
+      createdFrom: {
+        rawId: sourceItem ? sourceItem._id.toString() : null,
+        displayText: sourceItem
+          ? `${sourceItem.displayName || sourceItem.name} - {${sourceItem._id.toString().toUpperCase()}}`
+          : '[unknown]',
+        isUnknown: !sourceItem,
+      },
+      itemOwner: {
+        rawId: ownerUser ? ownerUser._id.toString() : null,
+        username: ownerUser ? ownerUser.username : null,
+        domain: (ownerUser && ownerUser.domain) || 'sitecore',
+        displayText: ownerUser ? `${ownerUser.domain || 'sitecore'}\\${ownerUser.username}` : '[unknown]',
+        isUnknown: !ownerUser,
+      },
     };
   },
 
@@ -218,7 +317,7 @@ const itemService = {
     fieldsMap.delete(fieldId.toString());
 
     // Also remove fieldName key if present
-    const resolvedTemplate = await templateService.resolveTemplate(item.templateId);
+    const resolvedTemplate = (await templateService.resolveEffectiveTemplate(item)) || (await templateService.resolveTemplate(item.templateId));
     const fieldDef = resolvedTemplate?.sections?.flatMap((s) => s.fields)?.find(
       (f) => f._id.toString() === fieldId.toString()
     );
@@ -236,9 +335,22 @@ const itemService = {
   /**
    * Get an item by Path
    */
-  async getByPath(path) {
-    if (!path) return null;
-    return Item.findOne({ path, deleted: false })
+  async getByPath(rawPath) {
+    if (!rawPath) return null;
+    let targetPath = rawPath.trim();
+
+    // Normalize path aliases for templates
+    if (targetPath === '/template' || targetPath === '/templates' || targetPath === '/sitecore/template') {
+      targetPath = '/sitecore/templates';
+    } else if (targetPath.toLowerCase().startsWith('/template/')) {
+      targetPath = '/sitecore/templates/' + targetPath.slice('/template/'.length);
+    } else if (targetPath.toLowerCase().startsWith('/templates/')) {
+      targetPath = '/sitecore/templates/' + targetPath.slice('/templates/'.length);
+    } else if (targetPath.toLowerCase().startsWith('/sitecore/template/')) {
+      targetPath = '/sitecore/templates/' + targetPath.slice('/sitecore/template/'.length);
+    }
+
+    return Item.findOne({ path: new RegExp(`^${targetPath}$`, 'i'), deleted: false })
       .populate('templateId')
       .lean();
   },
@@ -328,6 +440,26 @@ const itemService = {
       throw new ValidationError(`Không thể tạo item con dưới ${parentTemplate.name} item.`);
     }
 
+    // Leaf template items cannot have children created
+    const parentTplDoc = await Template.findById(parent._id).lean();
+    if (parentTplDoc && parentTplDoc.name !== 'Template Folder') {
+      throw new ValidationError(`Không thể tạo item con bên trong một Template: '${parent.displayName || parent.name}'.`);
+    }
+
+    // Explicit constraint: only Folder and Sample Component allowed under Feature/Components and Project/Pages
+    const parentLowerPath = (parent.path || '').toLowerCase().trim();
+    const isComponentOrPageBranch =
+      parentLowerPath === '/sitecore/templates/feature/components' ||
+      parentLowerPath.startsWith('/sitecore/templates/feature/components/') ||
+      parentLowerPath === '/sitecore/templates/project/pages' ||
+      parentLowerPath.startsWith('/sitecore/templates/project/pages/');
+
+    if (isComponentOrPageBranch) {
+      if (!['Template Folder', 'Standard Template', 'Sample Component'].includes(template.name)) {
+        throw new ValidationError(`Chỉ cho phép tạo 'Folder' hoặc 'Standard Template' dưới ${parent.path}. Template '${template.name}' không được phép.`);
+      }
+    }
+
     // Verify insert options if defined on parent template
     const allowedInsertOptions = await templateService.getInsertOptions(parent._id);
     if (allowedInsertOptions && allowedInsertOptions.length > 0) {
@@ -339,8 +471,56 @@ const itemService = {
       }
     }
 
-    const name = this.cleanItemName(rawName);
-    const itemDisplayName = (displayName && displayName.trim()) || rawName.trim();
+    // Explicit constraint: only templates in Project/Pages and Common are allowed under /sitecore/content
+    const isContentBranch = parent.path && (
+      parent.path.toLowerCase() === '/sitecore/content' ||
+      parent.path.toLowerCase().startsWith('/sitecore/content/')
+    );
+    if (isContentBranch) {
+      const tplPath = (template.path || '').toLowerCase();
+      let itemTreePath = '';
+      const tplItem = await Item.findOne({ _id: template._id, deleted: false }).lean();
+      if (tplItem && tplItem.path) {
+        itemTreePath = tplItem.path.toLowerCase();
+      }
+
+      const isFeatureTpl = tplPath.includes('/templates/feature/components') || itemTreePath.includes('/templates/feature/components');
+      const isSystemTpl = (tplPath.includes('/templates/system') || itemTreePath.includes('/templates/system')) &&
+                          !itemTreePath.includes('/templates/common') &&
+                          !tplPath.includes('/templates/common');
+
+      const hasPathMetadata = !!(tplPath || itemTreePath);
+      const isAllowedBranch = !hasPathMetadata ||
+        tplPath.includes('/templates/project/pages') ||
+        tplPath.includes('/templates/common') ||
+        itemTreePath.includes('/templates/project/pages') ||
+        itemTreePath.includes('/templates/common') ||
+        template.name === 'Folder';
+
+      if (isFeatureTpl || isSystemTpl || (template.isSystem && template.name !== 'Folder') || !isAllowedBranch) {
+        throw new ValidationError(`Template '${template.name}' is not allowed under /content. Only templates in Project/Pages and Common can be used.`);
+      }
+    }
+
+    let finalRawName = rawName;
+    let finalDisplayName = displayName;
+    if ((template.name === 'Standard Template' || template.name === 'Sample Component') && (!finalRawName || !finalRawName.trim())) {
+      const baseDefaultName = parentLowerPath.includes('/templates/feature/components')
+        ? 'New Component'
+        : 'New Page Template';
+
+      let candidate = baseDefaultName;
+      let counter = 1;
+      while (await Item.findOne({ parentId: parent._id, name: this.cleanItemName(candidate), deleted: false })) {
+        candidate = `${baseDefaultName} ${counter}`;
+        counter++;
+      }
+      finalRawName = candidate;
+      finalDisplayName = candidate;
+    }
+
+    const name = this.cleanItemName(finalRawName);
+    const itemDisplayName = (finalDisplayName && finalDisplayName.trim()) || finalRawName.trim();
 
     // Sibling uniqueness check
     const existingSibling = await Item.findOne({
@@ -384,10 +564,17 @@ const itemService = {
       }
     }
 
+    // For items created from Standard Template (or Sample Component), templateId on Item refers to Template meta-definition
+    let actualTemplateId = template._id;
+    if (template.name === 'Standard Template' || template.name === 'Sample Component') {
+      const templateDefTpl = await Template.findOne({ name: 'Template' }).lean();
+      if (templateDefTpl) actualTemplateId = templateDefTpl._id;
+    }
+
     const newItem = await Item.create({
       name,
       displayName: itemDisplayName,
-      templateId: template._id,
+      templateId: actualTemplateId,
       parentId: parent._id,
       ancestors,
       path: newPath,
@@ -410,12 +597,63 @@ const itemService = {
         },
       ],
       presentation: {
-        shared: { devices: [] },
+        shared: { layoutId: null, renderings: [] },
         final: [],
       },
       createdBy: userId,
       updatedBy: userId,
     });
+
+    // If creating a Template item (via Template definition, Standard Template, or Sample Component), create corresponding Template document
+    if (template.name === 'Template' || template.name === 'Standard Template' || template.name === 'Sample Component') {
+      const existingTpl = await Template.findById(newItem._id);
+      if (!existingTpl) {
+        const tplName = templateService.cleanName(finalRawName);
+        await Template.create({
+          _id: newItem._id,
+          name: tplName,
+          displayName: newItem.displayName || tplName,
+          icon: newItem.icon || 'ti ti-template',
+          path: `${parent.path}/${tplName}`,
+          isSystem: false,
+          baseTemplates: [],
+          sections: [],
+          standardValues: {},
+          insertOptions: [],
+        });
+      }
+    }
+
+    // Apply Standard Values from effective template (including component templates)
+    try {
+      const effTpl = await templateService.resolveEffectiveTemplate(newItem, 'vi', 1);
+      if (effTpl && effTpl.standardValues && Object.keys(effTpl.standardValues).length > 0) {
+        let modified = false;
+        const allFields = effTpl.sections?.flatMap((s) => s.fields) || [];
+        const fieldMetaMap = new Map(allFields.map((f) => [f._id.toString(), f]));
+
+        for (const [fId, val] of Object.entries(effTpl.standardValues)) {
+          if (val !== undefined && val !== '') {
+            const fDef = fieldMetaMap.get(fId);
+            if (fDef?.shared) {
+              newItem.sharedFields.set(fId, val);
+              modified = true;
+            } else {
+              const v1 = newItem.languages?.[0]?.versions?.[0];
+              if (v1 && v1.fields) {
+                v1.fields.set(fId, val);
+                modified = true;
+              }
+            }
+          }
+        }
+        if (modified) {
+          await newItem.save();
+        }
+      }
+    } catch {
+      // Fallback silently if effective resolution fails during creation
+    }
 
     return this.getById(newItem._id);
   },
@@ -444,8 +682,10 @@ const itemService = {
       }
     }
 
-    // 2. Fetch resolved template schema (including inherited fields) to validate and sanitize values
-    const resolvedTemplate = await templateService.resolveTemplate(item.templateId);
+    // 2. Fetch resolved effective template schema (including presentation component fields) to validate and sanitize values
+    const targetLang = langCode || 'vi';
+    const targetVersion = versionNumber || 1;
+    const resolvedTemplate = (await templateService.resolveEffectiveTemplate(item, targetLang, targetVersion)) || (await templateService.resolveTemplate(item.templateId));
     if (!resolvedTemplate) {
       throw new ValidationError('Template definition for this item is missing.');
     }
@@ -460,6 +700,44 @@ const itemService = {
             fieldDefinitions.set(f.name.toLowerCase(), f);
           }
         }
+      }
+    }
+
+    // Special validation for Layout and Rendering items: viewPath must be valid
+    const isLayoutItem = item.path?.toLowerCase().startsWith('/sitecore/layout/layouts') || resolvedTemplate.name === 'Layout';
+    const isRenderingItem = item.path?.toLowerCase().startsWith('/sitecore/layout/renderings') || resolvedTemplate.name === 'Rendering';
+
+    if (isLayoutItem || isRenderingItem) {
+      let viewPathVal = rawFields['viewPath'];
+      if (viewPathVal === undefined) {
+        for (const [key, val] of Object.entries(rawFields)) {
+          const def = fieldDefinitions.get(key);
+          if (def && def.name === 'viewPath') {
+            viewPathVal = val;
+            break;
+          }
+        }
+      }
+      if (viewPathVal !== undefined && viewPathVal !== '') {
+        const presentationService = require('./presentationService');
+        presentationService.validateViewPath(viewPathVal);
+      }
+    }
+
+    // Special validation for Rendering items: componentTemplate is required and must be valid
+    if (isRenderingItem) {
+      let compTplVal = rawFields['componentTemplate'];
+      if (!compTplVal) {
+        for (const [key, val] of Object.entries(rawFields)) {
+          const def = fieldDefinitions.get(key);
+          if (def && def.name === 'componentTemplate') {
+            compTplVal = val;
+            break;
+          }
+        }
+      }
+      if (compTplVal !== undefined) {
+        await templateService.validateComponentTemplateReference(compTplVal);
       }
     }
 
@@ -512,6 +790,10 @@ const itemService = {
 
     if (!item.parentId || isProtectedSystemPath(item.path)) {
       throw new ValidationError(`Không thể đổi tên node hệ thống: '${item.displayName || item.name}' (${item.path}).`);
+    }
+    const tplDoc = await Template.findById(item._id).lean();
+    if (tplDoc && tplDoc.isSystem) {
+      throw new ValidationError(`Không thể đổi tên template hệ thống: '${item.displayName || item.name}'.`);
     }
 
     const newName = this.cleanItemName(newRawName);
@@ -625,6 +907,7 @@ const itemService = {
       sharedFields: clonedSharedFields,
       languages: clonedLanguages,
       presentation: clonedPresentation,
+      createdFrom: sourceItem._id,
       createdBy: userId,
       updatedBy: userId,
     });
@@ -668,6 +951,7 @@ const itemService = {
       sharedFields: clonedSharedFields,
       languages: clonedLanguages,
       presentation: clonedPresentation,
+      createdFrom: child._id,
       createdBy: userId,
       updatedBy: userId,
     });
@@ -696,6 +980,10 @@ const itemService = {
 
     if (!item.parentId || isProtectedSystemPath(item.path)) {
       throw new ValidationError(`Không thể di chuyển node hệ thống: '${item.displayName || item.name}' (${item.path}).`);
+    }
+    const tplDoc = await Template.findById(item._id).lean();
+    if (tplDoc && tplDoc.isSystem) {
+      throw new ValidationError(`Không thể di chuyển template hệ thống: '${item.displayName || item.name}'.`);
     }
 
     if (item._id.toString() === targetParentId.toString()) {
@@ -756,7 +1044,12 @@ const itemService = {
         desc.ancestors = [...newAncestors, ...remainingAncestors];
       }
       await desc.save();
+      // Keep Template.path in sync if descendant is a template
+      await Template.findByIdAndUpdate(desc._id, { path: desc.path });
     }
+
+    // Keep moved item's Template.path in sync if it is a template
+    await Template.findByIdAndUpdate(item._id, { path: item.path });
 
     return this.getById(item._id);
   },
@@ -772,6 +1065,10 @@ const itemService = {
 
     if (!item.parentId || isProtectedSystemPath(item.path)) {
       throw new ValidationError(`Không thể xoá node hệ thống: '${item.displayName || item.name}' (${item.path}).`);
+    }
+    const tplDoc = await Template.findById(item._id).lean();
+    if (tplDoc && tplDoc.isSystem) {
+      throw new ValidationError(`Không thể xoá template hệ thống: '${item.displayName || item.name}'.`);
     }
 
     // Check usage if deleting a Layout, Rendering, or Folder containing them
@@ -796,6 +1093,12 @@ const itemService = {
             `Không thể xóa '${item.name}' vì component '${target.name}' đang được sử dụng trong ${usage.totalUsage} cấu hình Presentation (${details.join('; ')}).`
           );
         }
+      }
+
+      // Check usage if deleting a Template item
+      const templateDoc = await Template.findById(target._id);
+      if (templateDoc) {
+        await templateService.delete(target._id);
       }
     }
 

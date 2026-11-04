@@ -104,3 +104,20 @@ Hỗ trợ đầy đủ các kiểu trường CMS chuyên nghiệp:
   - Gộp các Section trùng tên; trường của Template con ghi đè trường trùng tên của Template cha.
   - Thuật toán kiểm tra Cycle Detection chặn hoàn toàn vòng lặp phụ thuộc (ví dụ $A \leftarrow B \leftarrow A$) với giới hạn tối đa 10 cấp thừa kế.
 
+---
+
+## 4. Phân loại Template & Quan hệ với Rendering Component Template (DEC-036)
+Toàn bộ Template trong hệ thống được phân định rõ ràng thành 3 phân nhóm chức năng:
+1. **`/sitecore/templates/Feature/Components/` (Component Templates):**
+   - Định nghĩa các trường dữ liệu nội dung của từng component riêng biệt (ví dụ `HeroBanner`, `Introduction`, `ImageText`).
+   - Ví dụ template `HeroBanner` gồm Section "Hero Banner" chứa các field: `BackgroundImage` (Image), `HeroTitle` (Single-Line Text), `HeroDescription` (Rich Text).
+   - Được gắn trực tiếp vào Item Rendering qua trường `componentTemplate`.
+2. **`/sitecore/templates/Project/Pages/` (Page Templates):**
+   - Định nghĩa các loại trang nội dung cụ thể trong website (ví dụ `Home`, `About us`).
+   - Mỗi Page Template cấu hình **Standard Presentation**: Chọn Layout sử dụng (`HomeLayout`) và các Rendering tương ứng đặt trong các Placeholders (`maincontent`).
+   - **Độc lập hoàn toàn với Component Template:** Page Template **không** kế thừa Component Template qua `baseTemplates`. Mảng `baseTemplates` chỉ dùng để kế thừa cấu trúc chung (ví dụ `_BasePage`, `_BaseSEO`).
+   - Khi tạo hoặc mở Page Item, các trường nhập liệu của component được **tự động suy ra (computed)** thông qua thuật toán `templateService.resolveEffectiveTemplate` dựa trên Presentation thực tế của trang.
+3. **`/sitecore/templates/System/` (System Templates):**
+   - Chứa các template định nghĩa cấu trúc của chính CMS: `Layout`, `Placeholder`, `Rendering`, `Folder`, `Media Folder`, `Image`, `File`...
+   - Toàn bộ System Templates có cờ `isSystem: true` và được bảo vệ cấm xóa/đổi tên tùy tiện.
+

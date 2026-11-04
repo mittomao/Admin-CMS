@@ -8,15 +8,31 @@ const getCsrfToken = () => {
   return meta ? meta.getAttribute('content') : '';
 };
 
-const currentTemplateId = window.__ACTIVE_TEMPLATE_ID__ || null;
+const getActiveTemplateId = () => {
+  const wrapper = document.getElementById('templateEditorWrapper');
+  if (wrapper && wrapper.getAttribute('data-template-id')) {
+    return wrapper.getAttribute('data-template-id');
+  }
+  return window.__ACTIVE_TEMPLATE_ID__ || null;
+};
+
 let currentTab = 'builder';
 let isDirty = false;
 
-document.addEventListener('DOMContentLoaded', () => {
+function initTemplateWorkspace() {
+  currentTab = 'builder';
   initTabSwitching();
-  initTemplateSearch();
   initRibbonEvents();
-  initTabEvents(currentTab);
+  initTabEvents('builder');
+}
+
+window.initTemplateWorkspace = initTemplateWorkspace;
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.getElementById('templateWorkspaceTabs')) {
+    initTemplateWorkspace();
+  }
+  initTemplateSearch();
 });
 
 // ==========================================
@@ -48,7 +64,8 @@ function initTabSwitching() {
 
 async function loadTabContent(tabName) {
   const container = document.getElementById('templateTabContent');
-  if (!container || !currentTemplateId) return;
+  const activeId = getActiveTemplateId();
+  if (!container || !activeId) return;
 
   container.innerHTML = `
     <div class="d-flex justify-content-center align-items-center py-5">
@@ -58,7 +75,7 @@ async function loadTabContent(tabName) {
   `;
 
   try {
-    const res = await fetch(`/admin/template-manager/${currentTemplateId}/${tabName}`, {
+    const res = await fetch(`/admin/template-manager/${activeId}/${tabName}`, {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
     });
 
@@ -109,7 +126,7 @@ function initSortables() {
         const sectionIds = Array.from(sectionItems).map((el) => el.getAttribute('data-section-id'));
 
         try {
-          const res = await fetch(`/api/templates/${currentTemplateId}/sections/reorder`, {
+          const res = await fetch(`/api/templates/${getActiveTemplateId()}/sections/reorder`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -147,7 +164,7 @@ function initSortables() {
           // Moved between sections
           try {
             const res = await fetch(
-              `/api/templates/${currentTemplateId}/sections/${oldSectionId}/fields/${fieldId}/move`,
+              `/api/templates/${getActiveTemplateId()}/sections/${oldSectionId}/fields/${fieldId}/move`,
               {
                 method: 'POST',
                 headers: {
@@ -175,7 +192,7 @@ function initSortables() {
         const fieldIds = Array.from(targetFieldItems).map((el) => el.getAttribute('data-field-id'));
 
         try {
-          await fetch(`/api/templates/${currentTemplateId}/sections/${newSectionId}/fields/reorder`, {
+          await fetch(`/api/templates/${getActiveTemplateId()}/sections/${newSectionId}/fields/reorder`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -220,7 +237,7 @@ function initBuilderEvents() {
       if (!confirm(`Delete section "${secName}" and all its fields?`)) return;
 
       try {
-        const res = await fetch(`/api/templates/${currentTemplateId}/sections/${secId}`, {
+        const res = await fetch(`/api/templates/${getActiveTemplateId()}/sections/${secId}`, {
           method: 'DELETE',
           headers: { 'X-CSRF-Token': getCsrfToken() },
         });
@@ -277,7 +294,7 @@ function initBuilderEvents() {
       if (!confirm(`Delete field "${fieldName}"?`)) return;
 
       try {
-        const res = await fetch(`/api/templates/${currentTemplateId}/sections/${secId}/fields/${fieldId}`, {
+        const res = await fetch(`/api/templates/${getActiveTemplateId()}/sections/${secId}/fields/${fieldId}`, {
           method: 'DELETE',
           headers: { 'X-CSRF-Token': getCsrfToken() },
         });
@@ -338,7 +355,7 @@ function initStandardValuesEvents() {
     });
 
     try {
-      const res = await fetch(`/api/templates/${currentTemplateId}/standard-values`, {
+      const res = await fetch(`/api/templates/${getActiveTemplateId()}/standard-values`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -390,7 +407,7 @@ function initInsertOptionsEvents() {
       const insertOptions = Array.from(checkedBoxes).map((cb) => cb.value);
 
       try {
-        const res = await fetch(`/api/templates/${currentTemplateId}/insert-options`, {
+        const res = await fetch(`/api/templates/${getActiveTemplateId()}/insert-options`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -427,7 +444,7 @@ function initInheritanceEvents() {
     const baseTemplateIds = Array.from(checkedBoxes).map((cb) => cb.value);
 
     try {
-      const res = await fetch(`/api/templates/${currentTemplateId}/base-templates`, {
+      const res = await fetch(`/api/templates/${getActiveTemplateId()}/base-templates`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -472,8 +489,8 @@ if (sectionForm) {
     const name = document.getElementById('sectionModalName').value;
 
     const url = secId
-      ? `/api/templates/${currentTemplateId}/sections/${secId}`
-      : `/api/templates/${currentTemplateId}/sections`;
+      ? `/api/templates/${getActiveTemplateId()}/sections/${secId}`
+      : `/api/templates/${getActiveTemplateId()}/sections`;
     const method = secId ? 'PUT' : 'POST';
 
     try {
@@ -555,8 +572,8 @@ if (fieldForm) {
     };
 
     const url = fieldId
-      ? `/api/templates/${currentTemplateId}/sections/${secId}/fields/${fieldId}`
-      : `/api/templates/${currentTemplateId}/sections/${secId}/fields`;
+      ? `/api/templates/${getActiveTemplateId()}/sections/${secId}/fields/${fieldId}`
+      : `/api/templates/${getActiveTemplateId()}/sections/${secId}/fields`;
     const method = fieldId ? 'PUT' : 'POST';
 
     try {
@@ -592,8 +609,8 @@ function openTemplateMetaModal(isEdit = false) {
 
   if (isEdit) {
     document.getElementById('templateMetaModalTitle').textContent = 'Edit Template Details';
-    document.getElementById('metaTemplateId').value = currentTemplateId;
-    document.getElementById('metaTemplateName').value = document.querySelector('h3.fw-bold')?.textContent || '';
+    document.getElementById('metaTemplateId').value = getActiveTemplateId() || '';
+    document.getElementById('metaTemplateName').value = document.querySelector('h2.fw-bold, h3.fw-bold')?.textContent?.trim() || '';
   } else {
     document.getElementById('templateMetaModalTitle').textContent = 'New Template';
     document.getElementById('metaTemplateId').value = '';
@@ -634,7 +651,7 @@ if (templateMetaForm) {
       }
 
       window.bootstrap.Modal.getInstance(document.getElementById('templateMetaModal'))?.hide();
-      window.location.href = `/admin/template-manager/${result.data._id}`;
+      window.location.href = `/admin/content-editor/${result.data._id}`;
     } catch (err) {
       alert(`Error: ${err.message}`);
     }
@@ -659,11 +676,12 @@ function initRibbonEvents() {
   });
 
   document.getElementById('btnDuplicateTemplate')?.addEventListener('click', async () => {
-    if (!currentTemplateId) return;
+    const activeId = getActiveTemplateId();
+    if (!activeId) return;
     if (!confirm('Duplicate current template and all its sections/fields?')) return;
 
     try {
-      const res = await fetch(`/api/templates/${currentTemplateId}/duplicate`, {
+      const res = await fetch(`/api/templates/${activeId}/duplicate`, {
         method: 'POST',
         headers: { 'X-CSRF-Token': getCsrfToken() },
       });
@@ -671,7 +689,7 @@ function initRibbonEvents() {
       if (!res.ok || !result.success) {
         showToast(result.message || 'Failed to duplicate template.', 'danger');
       } else {
-        window.location.href = `/admin/template-manager/${result.data._id}`;
+        window.location.href = `/admin/content-editor/${result.data._id}`;
       }
     } catch (err) {
       showToast(`Error: ${err.message}`, 'danger');
@@ -679,11 +697,12 @@ function initRibbonEvents() {
   });
 
   document.getElementById('btnDeleteTemplate')?.addEventListener('click', async () => {
-    if (!currentTemplateId) return;
+    const activeId = getActiveTemplateId();
+    if (!activeId) return;
     if (!confirm('Are you sure you want to delete this template?')) return;
 
     try {
-      const res = await fetch(`/api/templates/${currentTemplateId}`, {
+      const res = await fetch(`/api/templates/${activeId}`, {
         method: 'DELETE',
         headers: { 'X-CSRF-Token': getCsrfToken() },
       });
@@ -691,7 +710,7 @@ function initRibbonEvents() {
       if (!res.ok || !result.success) {
         alert(result.message || 'Cannot delete template.');
       } else {
-        window.location.href = '/admin/template-manager';
+        window.location.href = '/admin/content-editor?path=/sitecore/templates';
       }
     } catch (err) {
       alert(`Error: ${err.message}`);
@@ -699,6 +718,8 @@ function initRibbonEvents() {
   });
 
   document.getElementById('btnPreviewForm')?.addEventListener('click', async () => {
+    const activeId = getActiveTemplateId();
+    if (!activeId) return;
     const modalEl = document.getElementById('previewModal');
     const content = document.getElementById('previewModalContent');
     if (!modalEl || !content || !window.bootstrap) return;
@@ -714,7 +735,7 @@ function initRibbonEvents() {
     modal.show();
 
     try {
-      const res = await fetch(`/admin/template-manager/${currentTemplateId}/preview`);
+      const res = await fetch(`/admin/template-manager/${activeId}/preview`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       content.innerHTML = html;

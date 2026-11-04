@@ -1,8 +1,11 @@
 # DEC-019: Bổ sung Giai đoạn Presentation (GĐ 6) & Tịnh tiến Đánh số (GĐ 0 → GĐ 12)
 
+> [!WARNING]
+> **Trạng thái:** Bị thay thế một phần bởi [DEC-031](DEC-031-server-side-ejs-renderer-architecture.md). Vị trí GĐ 6 được giữ nguyên, nhưng bối cảnh kiến trúc chuyển từ Headless React sang 100% Server-Side EJS.
+
 - **Ngày quyết định:** 2026-11-03
 - **Giai đoạn liên quan:** Lộ trình tổng thể dự án, GĐ 6 (Presentation)
-- **Trạng thái:** Đã chốt (Accepted)
+- **Trạng thái:** Bị thay thế một phần (Partially Superseded by DEC-031)
 
 ## 1. Bối cảnh
 Theo yêu cầu chuyển đổi kiến trúc sang Headless CMS hỗ trợ React frontend theo chuẩn Sitecore JSS, hệ thống cần bổ sung năng lực quản trị Layout, Rendering, Placeholder Settings và Layout Service. Cần xác định vị trí của giai đoạn này trong lộ trình phát triển sao cho hợp lý và tối ưu nhất về mặt phụ thuộc kỹ thuật.

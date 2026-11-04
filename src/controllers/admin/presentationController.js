@@ -1,30 +1,26 @@
 const presentationService = require('../../services/presentationService');
 const itemService = require('../../services/itemService');
-const Item = require('../../models/Item');
 const Template = require('../../models/Template');
 const logger = require('../../utils/logger');
 
 class PresentationController {
   /**
    * GET /admin/content-editor/item/:id/presentation
-   * Renders the partial HTML for Presentation Details Modal
+   * Renders the partial HTML for Presentation Details Modal (Server-Side EJS Presentation)
    */
   async getPresentationDetailsModal(req, res) {
     try {
       const { id } = req.params;
-      const { device = null, lang = 'vi', version = 1 } = req.query;
+      const { lang = 'vi', version = 1 } = req.query;
       const user = req.session?.user;
 
       if (!itemService.canPerform(user, null, 'presentation:read')) {
-        return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền xem Presentation Details.</div>');
+        return res
+          .status(403)
+          .send('<div class="alert alert-danger m-3">Bạn không có quyền xem Presentation Details.</div>');
       }
 
-      const details = await presentationService.getPresentationDetails(
-        id,
-        device,
-        lang,
-        version
-      );
+      const details = await presentationService.getPresentationDetails(id, lang, version);
 
       res.render('admin/content-editor/presentation/details-modal', {
         layout: false,
@@ -34,27 +30,29 @@ class PresentationController {
       });
     } catch (error) {
       logger.error(`Error loading presentation details modal: ${error.message}`);
-      res.status(error.statusCode || 500).send(
-        `<div class="alert alert-danger m-3">Lỗi tải Presentation Details: ${error.message}</div>`
-      );
+      res
+        .status(error.statusCode || 500)
+        .send(`<div class="alert alert-danger m-3">Lỗi tải Presentation Details: ${error.message}</div>`);
     }
   }
 
   /**
    * GET /admin/content-editor/item/:id/presentation/preview
-   * Renders the partial HTML for Preview JSON Modal
+   * Renders preview or inspection modal for Presentation
    */
   async getPreviewJsonModal(req, res) {
     try {
       const { id } = req.params;
-      const { device = null, lang = 'vi', version = 1 } = req.query;
+      const { lang = 'vi', version = 1 } = req.query;
       const user = req.session?.user;
 
       if (!itemService.canPerform(user, null, 'presentation:read')) {
-        return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền xem Presentation Preview.</div>');
+        return res
+          .status(403)
+          .send('<div class="alert alert-danger m-3">Bạn không có quyền xem Presentation Preview.</div>');
       }
 
-      const merged = await presentationService.getFinalPresentation(id, device, lang, version);
+      const merged = await presentationService.getFinalPresentation(id, lang, version);
 
       res.render('admin/content-editor/presentation/preview-json-modal', {
         layout: false,
@@ -63,27 +61,27 @@ class PresentationController {
       });
     } catch (error) {
       logger.error(`Error loading presentation preview modal: ${error.message}`);
-      res.status(error.statusCode || 500).send(
-        `<div class="alert alert-danger m-3">Lỗi tải JSON Preview: ${error.message}</div>`
-      );
+      res
+        .status(error.statusCode || 500)
+        .send(`<div class="alert alert-danger m-3">Lỗi tải Preview: ${error.message}</div>`);
     }
   }
 
   /**
-   * GET /api/items/:id/presentation
+   * GET /api/presentation/item/:id hoặc GET /api/items/:id/presentation
    * Returns merged final presentation JSON for an item
    */
   async getPresentationJson(req, res) {
     try {
       const { id } = req.params;
-      const { device = null, lang = 'vi', version = 1 } = req.query;
+      const { lang = 'vi', version = 1 } = req.query;
       const user = req.session?.user;
 
       if (!itemService.canPerform(user, null, 'presentation:read')) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền truy cập Presentation.' });
       }
 
-      const merged = await presentationService.getFinalPresentation(id, device, lang, version);
+      const merged = await presentationService.getFinalPresentation(id, lang, version);
 
       res.json({
         success: true,
@@ -99,14 +97,13 @@ class PresentationController {
   }
 
   /**
-   * PUT /api/items/:id/presentation
+   * PUT /api/presentation/item/:id hoặc POST /admin/content-editor/item/:id/presentation
    * Saves presentation configuration (Shared or Final)
    */
   async savePresentation(req, res) {
     try {
       const { id } = req.params;
       const {
-        deviceId,
         layoutId,
         renderings = [],
         scope = 'shared',
@@ -122,7 +119,7 @@ class PresentationController {
 
       const result = await presentationService.savePresentation(
         id,
-        { deviceId, layoutId, renderings },
+        { layoutId, renderings },
         scope,
         {
           lang,
@@ -147,7 +144,7 @@ class PresentationController {
   }
 
   /**
-   * POST /api/items/:id/presentation/reset
+   * POST /api/presentation/item/:id/reset hoặc POST /admin/content-editor/item/:id/presentation/reset
    * Resets presentation to standard template defaults
    */
   async resetPresentation(req, res) {
@@ -155,7 +152,6 @@ class PresentationController {
       const { id } = req.params;
       const {
         scope = 'all',
-        deviceId = null,
         lang = 'vi',
         version = 1,
         expectedUpdatedAt = null,
@@ -167,7 +163,6 @@ class PresentationController {
       }
 
       const result = await presentationService.resetToStandard(id, scope, {
-        deviceId,
         lang,
         version,
         expectedUpdatedAt,
@@ -189,57 +184,22 @@ class PresentationController {
   }
 
   /**
-   * GET /api/presentation/renderings
+   * GET /api/presentation/renderings/allowed
    * Returns list of allowed renderings for a placeholder
    */
   async getAllowedRenderings(req, res) {
     try {
-      const { placeholder = 'main' } = req.query;
-      const renderings = await presentationService.getAllowedRenderings(placeholder);
+      const { placeholder = 'maincontent', placeholderId = null } = req.query;
+      const target = placeholderId || placeholder;
+      const renderings = await presentationService.getAllowedRenderings(target);
 
       res.json({
         success: true,
-        placeholder,
+        placeholder: target,
         data: renderings,
       });
     } catch (error) {
       logger.error(`API getAllowedRenderings error: ${error.message}`);
-      res.status(error.statusCode || 500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
-
-  /**
-   * GET /api/presentation/placeholders
-   * Returns defined placeholders for a layout
-   */
-  async getPlaceholdersByLayout(req, res) {
-    try {
-      const { layoutId } = req.query;
-      if (!layoutId) {
-        return res.status(400).json({ success: false, message: 'Thiếu tham số layoutId.' });
-      }
-
-      const layoutItem = await Item.findById(layoutId).lean();
-      if (!layoutItem) {
-        return res.status(404).json({ success: false, message: 'Không tìm thấy Layout.' });
-      }
-
-      const fields = layoutItem.sharedFields || layoutItem.fields || {};
-      const placeholdersRaw = fields.placeholders || '';
-      const placeholders = typeof placeholdersRaw === 'string'
-        ? placeholdersRaw.split(',').map((p) => p.trim()).filter(Boolean)
-        : [];
-
-      res.json({
-        success: true,
-        layoutId,
-        placeholders,
-      });
-    } catch (error) {
-      logger.error(`API getPlaceholdersByLayout error: ${error.message}`);
       res.status(error.statusCode || 500).json({
         success: false,
         message: error.message,
@@ -282,7 +242,7 @@ class PresentationController {
 
       res.json({
         success: true,
-        data: template.presentation || { devices: [] },
+        data: template.presentation || { layoutId: null, renderings: [] },
       });
     } catch (error) {
       logger.error(`API getTemplateStandardPresentation error: ${error.message}`);
@@ -299,7 +259,7 @@ class PresentationController {
   async setTemplateStandardPresentation(req, res) {
     try {
       const { id } = req.params;
-      const { deviceId, layoutId, renderings = [] } = req.body;
+      const { layoutId, renderings = [] } = req.body;
       const user = req.session?.user;
 
       if (!itemService.canPerform(user, null, 'presentation:write')) {
@@ -308,7 +268,7 @@ class PresentationController {
 
       const result = await presentationService.setTemplateStandardPresentation(
         id,
-        { deviceId, layoutId, renderings },
+        { layoutId, renderings },
         { userId: user?.id }
       );
 
@@ -328,4 +288,3 @@ class PresentationController {
 }
 
 module.exports = new PresentationController();
-

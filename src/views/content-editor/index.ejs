@@ -125,7 +125,15 @@
 
       <!-- Workspace Body (Dynamic Fragment Content Swapped via AJAX) -->
       <div class="workspace-content-body flex-fill overflow-auto p-3" id="editorWorkspace">
-        <% if (selectedItem && typeof schemaData !== 'undefined' && schemaData) { %>
+        <% if (typeof isTemplate !== 'undefined' && isTemplate && typeof activeTemplate !== 'undefined' && activeTemplate) { %>
+          <%- include('./template-workspace', {
+            activeTemplate,
+            resolvedTemplate: typeof resolvedTemplate !== 'undefined' ? resolvedTemplate : activeTemplate,
+            usage: typeof usage !== 'undefined' ? usage : null,
+            allTemplates: typeof allTemplates !== 'undefined' ? allTemplates : [],
+            quickInfo: typeof quickInfo !== 'undefined' ? quickInfo : null
+          }) %>
+        <% } else if (selectedItem && typeof schemaData !== 'undefined' && schemaData) { %>
           <%- include('./item-form', {
             item: schemaData.item,
             template: schemaData.resolvedTemplate,
@@ -136,7 +144,9 @@
             versionsList: schemaData.versionsList,
             hasLanguage: schemaData.hasLanguage,
             hasVersion: schemaData.hasVersion,
-            versionInfo: schemaData.versionInfo
+            versionInfo: schemaData.versionInfo,
+            componentTemplates: schemaData.componentTemplates || [],
+            quickInfo: typeof quickInfo !== 'undefined' ? quickInfo : null
           }) %>
         <% } else if (selectedItem) { %>
           <%- include('./item-form', {
@@ -144,7 +154,9 @@
             template: selectedItem.templateId,
             breadcrumbs: breadcrumbs,
             currentLang: typeof currentLang !== 'undefined' ? currentLang : 'vi',
-            currentVersion: typeof currentVersion !== 'undefined' ? currentVersion : 1
+            currentVersion: typeof currentVersion !== 'undefined' ? currentVersion : 1,
+            componentTemplates: [],
+            quickInfo: typeof quickInfo !== 'undefined' ? quickInfo : null
           }) %>
         <% } else { %>
           <div class="empty py-5 text-center">
@@ -176,6 +188,12 @@
 <div id="dynamicModalsContainer"></div>
 <div id="presentationModalContainer"></div>
 
+<!-- Template Designer Modals -->
+<%- include('../admin/templates/modals/template-modal', { activeTemplate: typeof activeTemplate !== 'undefined' ? activeTemplate : null }) %>
+<%- include('../admin/templates/modals/section-modal') %>
+<%- include('../admin/templates/modals/field-modal') %>
+<%- include('../admin/templates/modals/preview-modal') %>
+
 <!-- Pass Selected Item Initial ID to Client Script -->
 <script>
   window.__INITIAL_ITEM_ID__ = "<%= selectedItem ? selectedItem._id : '' %>";
@@ -195,6 +213,7 @@
 <!-- Reusable Presentation & Picker Scripts -->
 <script src="/js/admin/item-picker.js"></script>
 <script src="/js/admin/presentation-details.js"></script>
+<script src="/js/admin/template-manager.js"></script>
 
 <!-- Content Editor Client Script -->
 <script type="module" src="/js/admin/content-editor.js"></script>

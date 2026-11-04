@@ -13,7 +13,12 @@ const renderingInstanceSchema = new mongoose.Schema(
     },
     placeholder: {
       type: String,
-      default: 'main',
+      default: 'maincontent',
+      trim: true,
+    },
+    placeholderKey: {
+      type: String,
+      default: 'maincontent',
       trim: true,
     },
     sortOrder: {
@@ -38,13 +43,8 @@ const renderingInstanceSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const devicePresentationSchema = new mongoose.Schema(
+const presentationSchema = new mongoose.Schema(
   {
-    deviceId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Item',
-      default: null,
-    },
     layoutId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Item',
@@ -158,6 +158,11 @@ const templateSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    path: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     baseTemplates: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -178,9 +183,7 @@ const templateSchema = new mongoose.Schema(
       },
     ],
     // Standard Presentation (kế thừa bố cục mặc định cho các items tạo từ Template này - GĐ 6)
-    presentation: {
-      devices: [devicePresentationSchema],
-    },
+    presentation: presentationSchema,
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -201,14 +204,10 @@ const templateSchema = new mongoose.Schema(
         if (ret.standardValues instanceof Map) {
           ret.standardValues = Object.fromEntries(ret.standardValues);
         }
-        if (ret.presentation && Array.isArray(ret.presentation.devices)) {
-          ret.presentation.devices.forEach((d) => {
-            if (Array.isArray(d.renderings)) {
-              d.renderings.forEach((r) => {
-                if (r.parameters instanceof Map) {
-                  r.parameters = Object.fromEntries(r.parameters);
-                }
-              });
+        if (ret.presentation && Array.isArray(ret.presentation.renderings)) {
+          ret.presentation.renderings.forEach((r) => {
+            if (r.parameters instanceof Map) {
+              r.parameters = Object.fromEntries(r.parameters);
             }
           });
         }
@@ -221,14 +220,10 @@ const templateSchema = new mongoose.Schema(
         if (ret.standardValues instanceof Map) {
           ret.standardValues = Object.fromEntries(ret.standardValues);
         }
-        if (ret.presentation && Array.isArray(ret.presentation.devices)) {
-          ret.presentation.devices.forEach((d) => {
-            if (Array.isArray(d.renderings)) {
-              d.renderings.forEach((r) => {
-                if (r.parameters instanceof Map) {
-                  r.parameters = Object.fromEntries(r.parameters);
-                }
-              });
+        if (ret.presentation && Array.isArray(ret.presentation.renderings)) {
+          ret.presentation.renderings.forEach((r) => {
+            if (r.parameters instanceof Map) {
+              r.parameters = Object.fromEntries(r.parameters);
             }
           });
         }
@@ -239,6 +234,7 @@ const templateSchema = new mongoose.Schema(
 );
 
 templateSchema.index({ baseTemplates: 1 });
+templateSchema.index({ path: 1 });
 templateSchema.index({ isSystem: 1 });
 
 const Template = mongoose.model('Template', templateSchema);

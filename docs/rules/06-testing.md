@@ -26,7 +26,7 @@ flowchart TD
    - Kiểm tra sự phối hợp giữa Route, Middleware (Auth, CSRF, ACL), Controller, Service và MongoDB.
    - Trọng tâm: Luồng Auth -> CRUD Item -> Template Inheritance -> Workflow -> Publish sang Web.
 3. **End-to-End Tests (`tests/e2e/`):**
-   - Kiểm thử toàn vẹn luồng Headless: Admin cấu hình Presentation -> Chuyển Workflow & Publish -> Layout Service `GET /api/v1/layout` trả JSON chuẩn xác và resolve đúng datasource.
+   - Kiểm thử toàn vẹn luồng Server-Side EJS: Admin tạo Page từ Page Template -> Biên tập nội dung kế thừa từ Component Templates -> Cấu hình Presentation Details -> Chuyển Workflow & Publish -> Truy cập Public Site Renderer `GET /about-us` trả về HTML đúng layout và danh sách rendering EJS theo đúng thứ tự trong placeholder.
 
 ---
 

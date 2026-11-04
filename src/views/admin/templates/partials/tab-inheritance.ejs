@@ -44,6 +44,8 @@
         <% allTpls.forEach(t => { %>
           <%
             const isBase = currentBaseIds.includes(t._id.toString());
+            const isComponentTemplate = (t.path && t.path.toLowerCase().includes('/feature/components')) ||
+              ['herobanner', 'introduction', 'imagetext'].includes(t.name.toLowerCase());
           %>
           <div class="col-sm-6 col-md-4">
             <label class="card card-sm card-link-pop h-100 p-2 cursor-pointer border <%= isBase ? 'border-purple bg-purple-lt' : '' %>">
@@ -56,8 +58,15 @@
                   <%= isBase ? 'checked' : '' %>
                 />
                 <i class="<%= t.icon || 'ti ti-file-text' %> fs-2 text-purple"></i>
-                <div class="overflow-hidden">
-                  <div class="fw-semibold text-truncate small text-dark"><%= t.displayName || t.name %></div>
+                <div class="overflow-hidden flex-fill">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold text-truncate small text-dark"><%= t.displayName || t.name %></span>
+                    <% if (isComponentTemplate) { %>
+                      <span class="badge bg-warning-lt text-warning ms-1" style="font-size: 0.6rem;" title="Component Template - Trường sẽ được tự động suy ra khi gắn vào Presentation. Không khuyến khích kế thừa trực tiếp làm Base Template">
+                        <i class="ti ti-alert-triangle"></i> Comp
+                      </span>
+                    <% } %>
+                  </div>
                   <div class="text-muted font-monospace" style="font-size: 0.65rem;"><%= t.name %></div>
                 </div>
               </div>

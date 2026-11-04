@@ -10,6 +10,7 @@ router.use(requireAuth);
 
 // Read operations
 router.get('/search', contentEditorController.searchItems);
+router.get('/:id/quick-info', contentEditorController.getItemQuickInfo);
 router.get('/:id/children', contentEditorController.getTreeNodes);
 router.get('/:id/languages', contentEditorController.getItemLanguages);
 router.get('/:id/versions', contentEditorController.getItemVersions);

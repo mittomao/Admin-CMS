@@ -1,8 +1,11 @@
 # DEC-022: Quy tắc Khớp Dynamic Placeholder Keys
 
+> [!WARNING]
+> **Trạng thái:** Bị thay thế bởi [DEC-032](DEC-032-three-branch-layout-tree-structure.md). Thư mục `Placeholder Settings` và cơ chế khớp wildcard phức tạp cho React được xóa bỏ. Thay thế bằng thư mục `/sitecore/layout/Placeholders/` chứa trực tiếp các Item Placeholder (`header`, `maincontent`, `footer`) định nghĩa `placeholderKey` và `allowedRenderings[]` rõ ràng, đơn giản.
+
 - **Ngày quyết định:** 2026-11-03
 - **Giai đoạn liên quan:** GĐ 6 (Presentation)
-- **Trạng thái:** Đã chốt (Accepted)
+- **Trạng thái:** Bị thay thế (Superseded by DEC-032)
 
 ## 1. Bối cảnh
 Trong các thiết kế layout hiện đại bằng React (ví dụ component Grid 2 cột, 3 cột, Tab pane, Accordion), mỗi cột hoặc tab là một placeholder động có tên như `column-1`, `column-2`, `column-left`, `column-right`. Nếu hệ thống chỉ cho phép cấu hình Placeholder Settings với key tĩnh tuyệt đối, người quản trị sẽ phải tạo hàng chục item cấu hình lặp đi lặp lại rất phiền toái.

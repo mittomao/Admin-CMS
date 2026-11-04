@@ -1,6 +1,9 @@
 <%
   const sections = resolved && resolved.sections ? resolved.sections : (template && template.sections ? template.sections : []);
 %>
+<!-- Quick Info Section (DEC-037 / GĐ 6.3) -->
+<%- include('../../../partials/quick-info', { quickInfo: locals.quickInfo, item: template, template: resolved }) %>
+
 <div class="card shadow-sm border-0">
   <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
     <div>
@@ -202,6 +205,22 @@
             </div>
           </div>
         <% }) %>
+      </div>
+    <% } %>
+
+    <% if (template && template.presentation && Array.isArray(template.presentation.renderings) && template.presentation.renderings.length > 0) { %>
+      <div class="mt-4 pt-3 border-top">
+        <h5 class="fw-bold mb-2 text-dark d-flex align-items-center gap-2">
+          <i class="ti ti-components text-purple fs-2"></i>
+          <span>Fields từ Renderings (Standard Presentation)</span>
+          <span class="badge bg-purple-lt text-purple small">Chỉ đọc</span>
+        </h5>
+        <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-2">
+          <i class="ti ti-info-circle fs-2"></i>
+          <div>
+            Template này có <strong><%= template.presentation.renderings.length %> component(s)</strong> trong Standard Presentation. Các trường của component sẽ được tự động suy ra và hiển thị theo Section riêng trên Content Editor của Item.
+          </div>
+        </div>
       </div>
     <% } %>
   </div>

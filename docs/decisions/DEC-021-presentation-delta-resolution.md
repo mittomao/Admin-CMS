@@ -1,8 +1,11 @@
 # DEC-021: Thuật toán Phân giải Presentation (Delta Resolution)
 
+> [!WARNING]
+> **Trạng thái:** Bị thay thế và tinh giản bởi [DEC-031](DEC-031-server-side-ejs-renderer-architecture.md) và [DEC-035](DEC-035-component-field-inheritance-and-context.md). Thuật toán delta resolution loại bỏ hoàn toàn tham số Device; kết quả trả về `getFinalPresentation(item, lang, version)` phục vụ trực tiếp cho Site Renderer EJS thay vì React Layout Service.
+
 - **Ngày quyết định:** 2026-11-03
-- **Giai đoạn liên quan:** GĐ 6 (Presentation), GĐ 10 (Delivery & Layout API)
-- **Trạng thái:** Đã chốt (Accepted)
+- **Giai đoạn liên quan:** GĐ 6 (Presentation), GĐ 10 (Site Renderer)
+- **Trạng thái:** Bị thay thế (Superseded by DEC-031, DEC-035)
 
 ## 1. Bối cảnh
 Khi một trang web có nhiều tầng cấu hình Presentation (Standard Presentation từ Template, Shared Layout của Item, và Final Layout của Version), hệ thống cần một thuật toán phân giải hợp nhất (merge/resolve) để ra được danh sách Renderings cuối cùng phục vụ cho biên tập và trả về cho React Frontend qua Layout Service.

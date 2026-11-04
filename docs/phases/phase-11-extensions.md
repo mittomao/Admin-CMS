@@ -29,7 +29,7 @@ Bổ sung các công cụ cao cấp gia tăng sức mạnh hệ sinh thái CMS: 
   - **Serialization:** Tính năng "Serialize Item / Tree" xuất toàn bộ nhánh cây ra tệp JSON và "Sync/Deserialize" nhập lại vào hệ thống (hỗ trợ cả dữ liệu fields và presentation).
   - **Full-Text Search:** Ô tìm kiếm trên Cây nội dung và tìm kiếm nâng cao theo từ khóa, template, ngày tạo.
   - **Control Panel:** Màn hình quản trị cấu hình hệ thống, dọn dẹp cache, xem thông số MongoDB.
-  - **Experience Editor đơn giản (Mở rộng - Mức ưu tiên thấp):** Cửa sổ xem trước trang React frontend trong thẻ `<iframe>` kèm thanh công cụ bên cạnh cho phép biên tập nhanh các trường và component parameters của trang mà không cần vào Content Editor.
+  - **Experience Editor đơn giản (Mở rộng - Mức ưu tiên thấp):** Cửa sổ xem trước trang web công khai EJS trong thẻ `<iframe>` kèm thanh công cụ bên cạnh cho phép biên tập nhanh các trường và component parameters của trang mà không cần vào Content Editor.
 - **Không làm:** Chưa làm tích hợp gửi mail SMTP thực tế của form submission (chỉ lưu vào database).
 
 ## Checklist Task
@@ -41,7 +41,7 @@ Bổ sung các công cụ cao cấp gia tăng sức mạnh hệ sinh thái CMS: 
 - [ ] **Task 11.4:** Bổ sung ô Search nhanh ngay phía trên Cây nội dung Content Editor (gõ từ khóa -> lọc danh sách kết quả trực tiếp).
 - [ ] **Task 11.5:** Xây dựng Forms Builder: Model `CmsForm` và `FormSubmission`, giao diện kéo thả form fields sử dụng SortableJS (`src/views/admin/forms/form-designer.ejs`), API tiếp nhận nộp form.
 - [ ] **Task 11.6:** Xây dựng ứng dụng Control Panel (`src/views/admin/control-panel/index.ejs`): Quản trị dọn dẹp cache hệ thống (Flush Cache), thống kê dung lượng database, số lượng items/media, re-index tìm kiếm.
-- [ ] **Task 11.7 (Ưu tiên thấp):** Xây dựng trang Experience Editor Preview đơn giản (`src/views/admin/content-editor/experience-editor-preview.ejs`): nạp URL live frontend vào `<iframe>` với thanh thuộc tính chỉnh sửa nhanh.
+- [ ] **Task 11.7 (Ưu tiên thấp):** Xây dựng trang Experience Editor Preview đơn giản (`src/views/admin/content-editor/experience-editor-preview.ejs`): nạp URL trang web công khai vào `<iframe>` với thanh thuộc tính chỉnh sửa nhanh.
 
 ## File/Thư mục Dự kiến
 - `src/models/CmsForm.js`, `src/models/FormSubmission.js`

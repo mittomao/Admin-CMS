@@ -8,8 +8,8 @@
 
 | Công nghệ / Thư viện | Vai trò | Lý do lựa chọn |
 | :--- | :--- | :--- |
-| **Node.js (v20+ LTS) + Express.js** | Backend Web Framework | Nền tảng hướng sự kiện, non-blocking I/O tối ưu cho các thao tác đọc/ghi cây dữ liệu; pipeline middleware linh hoạt, dễ tích hợp bảo mật và session. |
-| **EJS (Embedded JavaScript)** | Server-Side Rendering (SSR) | Cú pháp JavaScript tự nhiên, hỗ trợ layout/partials mạnh mẽ qua `express-ejs-layouts`; render nhanh chóng phía server, tránh overhead bundle của SPA nặng nề khi tương tác quản trị backend. |
+| **Node.js (v20+ LTS) + Express.js** | Backend Web Framework | Nền tảng hướng sự kiện, non-blocking I/O tối ưu cho các thao tác đọc/ghi cây dữ liệu; pipeline middleware linh hoạt, dễ tích hợp bảo mật và session. Phục vụ chung cả Admin CMS (`/admin`) và Public Website (`/`) trên cùng cổng 4000. |
+| **EJS (Embedded JavaScript)** | Server-Side Rendering (SSR) | Cú pháp JavaScript tự nhiên, hỗ trợ layout/partials mạnh mẽ qua `express-ejs-layouts`. Render nhanh chóng phía server cả giao diện Admin lẫn 100% Website công khai qua cơ chế Site Renderer; loại bỏ hoàn toàn React, Next.js và overhead của SPA. |
 | **Client Script (Vanilla JS + Alpine.js)** | UI Interactivity | Giữ mã client nhẹ, tối giản dependencies; Alpine.js cung cấp reactive state cục bộ mượt mà cho các modal, dropdown, tabs mà không cần build step phức tạp. |
 | **Fancytree** | Cây nội dung (Content Tree) | Hỗ trợ Lazy Loading node qua AJAX, Virtual Scrolling xử lý hàng chục ngàn item mượt mà, hỗ trợ Context Menu, Drag & Drop HTML5 native (`dnd5`), và Keyboard Navigation chuyên nghiệp. |
 | **SortableJS** | Kéo thả sắp xếp | Thư viện kéo thả nhẹ (~10KB), ổn định để sắp xếp thứ tự Fields, Sections, Form Controls và danh sách Renderings trong Presentation Details. |

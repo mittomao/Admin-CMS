@@ -1,0 +1,11 @@
+<section class="hero-banner" style="background-color: #f8fafc; padding: 4rem 0; text-align: center; <%= fields && fields.BackgroundImage ? 'background-image: url(' + fields.BackgroundImage + '); background-size: cover;' : '' %>">
+  <div class="container">
+    <h1 class="hero-title" style="font-size: 2.75rem; margin-bottom: 1rem; color: #0f172a;"><%= (fields && fields.HeroTitle) || 'Chào mừng đến với Website' %></h1>
+    <% if (fields && fields.HeroDescription) { %>
+      <div class="hero-desc" style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; color: #475569;">
+        <%- fields.HeroDescription %>
+      </div>
+    <% } %>
+  </div>
+</section>
+

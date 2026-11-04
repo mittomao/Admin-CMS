@@ -8,7 +8,7 @@ const Role = require('../src/models/Role');
 const presentationService = require('../src/services/presentationService');
 const { seedPresentationData } = require('../src/scripts/seed-presentation-data');
 
-describe('GĐ 6: presentationService Unit Tests', () => {
+describe('GĐ 6: presentationService Unit Tests (Server-Side EJS Presentation)', () => {
   let mongoServer;
   let testUser;
   let testTemplate;
@@ -57,30 +57,27 @@ describe('GĐ 6: presentationService Unit Tests', () => {
       displayName: 'Article Page with Presentation',
       sections: [],
       presentation: {
-        devices: [
+        layoutId: seedResult.homeLayout._id,
+        renderings: [
           {
-            deviceId: seedResult.defaultDevice._id,
-            layoutId: seedResult.mainLayout._id,
-            renderings: [
-              {
-                uid: 'std-hero-0001',
-                renderingId: seedResult.heroRendering._id,
-                placeholder: 'main',
-                sortOrder: 100,
-                datasourceId: null,
-                parameters: { theme: 'dark' },
-                hidden: false,
-              },
-              {
-                uid: 'std-richtext-0002',
-                renderingId: seedResult.richTextRendering._id,
-                placeholder: 'main',
-                sortOrder: 200,
-                datasourceId: null,
-                parameters: {},
-                hidden: false,
-              },
-            ],
+            uid: 'std-hero-0001',
+            renderingId: seedResult.heroBannerRendering._id,
+            placeholder: 'maincontent',
+            placeholderKey: 'maincontent',
+            sortOrder: 100,
+            datasourceId: null,
+            parameters: { theme: 'dark' },
+            hidden: false,
+          },
+          {
+            uid: 'std-intro-0002',
+            renderingId: seedResult.introRendering._id,
+            placeholder: 'maincontent',
+            placeholderKey: 'maincontent',
+            sortOrder: 200,
+            datasourceId: null,
+            parameters: {},
+            hidden: false,
           },
         ],
       },
@@ -112,7 +109,7 @@ describe('GĐ 6: presentationService Unit Tests', () => {
         },
       ],
       presentation: {
-        shared: { devices: [] },
+        shared: { layoutId: null, renderings: [] },
         final: [],
       },
       createdBy: testUser._id,
@@ -123,72 +120,77 @@ describe('GĐ 6: presentationService Unit Tests', () => {
     await Item.deleteOne({ _id: testItem._id });
   });
 
-  test('DEC-022: Dynamic Placeholder matching (exact, wildcard, and nested)', async () => {
-    // Exact match
-    const exactMain = await presentationService.matchPlaceholderSettings('main');
-    expect(exactMain).toBeDefined();
-    expect(exactMain.placeholderKey).toBe('main');
+  test('DEC-033: validateViewPath guards against path traversal, non-ejs and non-whitelist paths', () => {
+    // Valid viewPath
+    expect(presentationService.validateViewPath('site/layouts/HomeLayout.ejs')).toBe('site/layouts/HomeLayout.ejs');
+    expect(presentationService.validateViewPath('/site/components/HeroBanner.ejs')).toBe('site/components/HeroBanner.ejs');
 
-    // Wildcard match (column-{*})
-    const wild1 = await presentationService.matchPlaceholderSettings('column-1');
-    expect(wild1).toBeDefined();
-    expect(wild1.placeholderKey).toBe('column-{*}');
+    // Path Traversal
+    expect(() => presentationService.validateViewPath('site/../../etc/passwd.ejs')).toThrow(
+      presentationService.ValidationError
+    );
 
-    const wildLeft = await presentationService.matchPlaceholderSettings('column-left');
-    expect(wildLeft).toBeDefined();
-    expect(wildLeft.placeholderKey).toBe('column-{*}');
+    // Missing .ejs extension
+    expect(() => presentationService.validateViewPath('site/components/HeroBanner.html')).toThrow(
+      presentationService.ValidationError
+    );
 
-    // Nested match
-    const nested = await presentationService.matchPlaceholderSettings('/main/column-right');
-    expect(nested).toBeDefined();
-    expect(nested.placeholderKey).toBe('column-{*}');
+    // Non-whitelist directory
+    expect(() => presentationService.validateViewPath('admin/content-editor/view.ejs')).toThrow(
+      presentationService.ValidationError
+    );
+  });
+
+  test('getAllowedRenderings: filters renderings allowed by placeholderKey', async () => {
+    const allowedForMain = await presentationService.getAllowedRenderings('maincontent');
+    expect(allowedForMain).toBeDefined();
+    expect(allowedForMain.length).toBeGreaterThanOrEqual(3);
+
+    // Empty or non-restricted placeholder allows all
+    const allowedForHeader = await presentationService.getAllowedRenderings('header');
+    expect(allowedForHeader).toBeDefined();
+    expect(allowedForHeader.length).toBeGreaterThanOrEqual(3);
   });
 
   test('getFinalPresentation: inherits directly from Template Standard Presentation when no overrides exist', async () => {
-    const finalPres = await presentationService.getFinalPresentation(
-      testItem._id,
-      seedResult.defaultDevice._id,
-      'vi',
-      1
-    );
+    const finalPres = await presentationService.getFinalPresentation(testItem._id, 'vi', 1);
 
     expect(finalPres).toBeDefined();
-    expect(finalPres.layoutId.toString()).toBe(seedResult.mainLayout._id.toString());
+    expect(finalPres.layoutId.toString()).toBe(seedResult.homeLayout._id.toString());
+    expect(finalPres.layout.name).toBe('HomeLayout');
     expect(finalPres.renderings.length).toBe(2);
 
     const r1 = finalPres.renderings[0];
     expect(r1.uid).toBe('std-hero-0001');
-    expect(r1.componentName).toBe('HeroBanner');
+    expect(r1.name).toBe('HeroBanner');
     expect(r1.origin).toBe('standard');
     expect(r1.parameters.theme).toBe('dark');
 
     const r2 = finalPres.renderings[1];
-    expect(r2.uid).toBe('std-richtext-0002');
-    expect(r2.componentName).toBe('RichTextContent');
+    expect(r2.uid).toBe('std-intro-0002');
+    expect(r2.name).toBe('Introduction');
     expect(r2.origin).toBe('standard');
   });
 
   test('getFinalPresentation: Shared Layout delta overrides standard rendering parameters and order', async () => {
-    // Override std-hero-0001 parameters and sortOrder in Shared layout
     await presentationService.savePresentation(
       testItem._id,
       {
-        deviceId: seedResult.defaultDevice._id,
-        layoutId: seedResult.mainLayout._id,
+        layoutId: seedResult.homeLayout._id,
         renderings: [
           {
             uid: 'std-hero-0001',
-            renderingId: seedResult.heroRendering._id,
-            placeholder: 'main',
+            renderingId: seedResult.heroBannerRendering._id,
+            placeholderKey: 'maincontent',
             sortOrder: 500, // pushed to bottom
             parameters: { theme: 'blue-override' },
           },
           {
-            uid: 'shared-promo-9999',
-            renderingId: seedResult.promoRendering._id,
-            placeholder: 'content',
-            sortOrder: 100,
-            parameters: { badge: 'Hot' },
+            uid: 'shared-imagetext-9999',
+            renderingId: seedResult.imageTextRendering._id,
+            placeholderKey: 'maincontent',
+            sortOrder: 150,
+            parameters: { align: 'right' },
           },
         ],
       },
@@ -196,12 +198,7 @@ describe('GĐ 6: presentationService Unit Tests', () => {
       { userId: testUser._id }
     );
 
-    const merged = await presentationService.getFinalPresentation(
-      testItem._id,
-      seedResult.defaultDevice._id,
-      'vi',
-      1
-    );
+    const merged = await presentationService.getFinalPresentation(testItem._id, 'vi', 1);
 
     // Total should now be 3 (2 standard, 1 of which overridden, plus 1 new shared)
     expect(merged.renderings.length).toBe(3);
@@ -211,28 +208,27 @@ describe('GĐ 6: presentationService Unit Tests', () => {
     expect(hero.sortOrder).toBe(500);
     expect(hero.origin).toBe('shared');
 
-    const promo = merged.renderings.find((r) => r.uid === 'shared-promo-9999');
-    expect(promo).toBeDefined();
-    expect(promo.placeholder).toBe('content');
-    expect(promo.origin).toBe('shared');
+    const imgTxt = merged.renderings.find((r) => r.uid === 'shared-imagetext-9999');
+    expect(imgTxt).toBeDefined();
+    expect(imgTxt.sortOrder).toBe(150);
+    expect(imgTxt.origin).toBe('shared');
 
-    // Rich text was not overridden in shared, so it remains origin standard
-    const richText = merged.renderings.find((r) => r.uid === 'std-richtext-0002');
-    expect(richText.origin).toBe('standard');
+    // Intro was not overridden in shared, so it remains origin standard
+    const intro = merged.renderings.find((r) => r.uid === 'std-intro-0002');
+    expect(intro.origin).toBe('standard');
   });
 
   test('getFinalPresentation: Shared Layout can hide a rendering from standard', async () => {
     await presentationService.savePresentation(
       testItem._id,
       {
-        deviceId: seedResult.defaultDevice._id,
-        layoutId: seedResult.mainLayout._id,
+        layoutId: seedResult.homeLayout._id,
         renderings: [
           {
             uid: 'std-hero-0001',
-            renderingId: seedResult.heroRendering._id,
-            placeholder: 'main',
-            hidden: true, // hide hero
+            renderingId: seedResult.heroBannerRendering._id,
+            placeholderKey: 'maincontent',
+            hidden: true,
           },
         ],
       },
@@ -240,31 +236,24 @@ describe('GĐ 6: presentationService Unit Tests', () => {
       { userId: testUser._id }
     );
 
-    const merged = await presentationService.getFinalPresentation(
-      testItem._id,
-      seedResult.defaultDevice._id,
-      'vi',
-      1
-    );
+    const merged = await presentationService.getFinalPresentation(testItem._id, 'vi', 1);
 
-    // Hero is hidden, only richText should remain
+    // Hero is hidden, only intro should remain
     expect(merged.renderings.length).toBe(1);
-    expect(merged.renderings[0].uid).toBe('std-richtext-0002');
+    expect(merged.renderings[0].uid).toBe('std-intro-0002');
   });
 
   test('Final Layout: overrides specifically for language and version', async () => {
-    // English v1 has Promo rendering in main placeholder
     await presentationService.savePresentation(
       testItem._id,
       {
-        deviceId: seedResult.defaultDevice._id,
-        layoutId: seedResult.mainLayout._id,
+        layoutId: seedResult.homeLayout._id,
         renderings: [
           {
-            uid: 'en-v1-promo-001',
-            renderingId: seedResult.promoRendering._id,
-            placeholder: 'main',
-            sortOrder: 150,
+            uid: 'en-v1-custom-img',
+            renderingId: seedResult.imageTextRendering._id,
+            placeholderKey: 'maincontent',
+            sortOrder: 50,
             parameters: { langTag: 'EN-ONLY' },
           },
         ],
@@ -273,23 +262,13 @@ describe('GĐ 6: presentationService Unit Tests', () => {
       { lang: 'en', version: 1, userId: testUser._id }
     );
 
-    // English v1 must have Promo
-    const enMerged = await presentationService.getFinalPresentation(
-      testItem._id,
-      seedResult.defaultDevice._id,
-      'en',
-      1
-    );
-    expect(enMerged.renderings.some((r) => r.uid === 'en-v1-promo-001')).toBe(true);
+    // English v1 must have custom image
+    const enMerged = await presentationService.getFinalPresentation(testItem._id, 'en', 1);
+    expect(enMerged.renderings.some((r) => r.uid === 'en-v1-custom-img')).toBe(true);
 
-    // Vietnamese v1 must NOT have en-v1-promo-001
-    const viMerged = await presentationService.getFinalPresentation(
-      testItem._id,
-      seedResult.defaultDevice._id,
-      'vi',
-      1
-    );
-    expect(viMerged.renderings.some((r) => r.uid === 'en-v1-promo-001')).toBe(false);
+    // Vietnamese v1 must NOT have en-v1-custom-img
+    const viMerged = await presentationService.getFinalPresentation(testItem._id, 'vi', 1);
+    expect(viMerged.renderings.some((r) => r.uid === 'en-v1-custom-img')).toBe(false);
   });
 
   test('Optimistic Locking: rejects save with ConflictError (409) if expectedUpdatedAt is stale', async () => {
@@ -299,8 +278,7 @@ describe('GĐ 6: presentationService Unit Tests', () => {
       presentationService.savePresentation(
         testItem._id,
         {
-          deviceId: seedResult.defaultDevice._id,
-          layoutId: seedResult.mainLayout._id,
+          layoutId: seedResult.homeLayout._id,
           renderings: [],
         },
         'shared',
@@ -314,13 +292,12 @@ describe('GĐ 6: presentationService Unit Tests', () => {
     await presentationService.savePresentation(
       testItem._id,
       {
-        deviceId: seedResult.defaultDevice._id,
-        layoutId: seedResult.mainLayout._id,
+        layoutId: seedResult.homeLayout._id,
         renderings: [
           {
-            uid: 'custom-promo',
-            renderingId: seedResult.promoRendering._id,
-            placeholder: 'main',
+            uid: 'custom-imagetext',
+            renderingId: seedResult.imageTextRendering._id,
+            placeholderKey: 'maincontent',
             sortOrder: 10,
           },
         ],
@@ -331,16 +308,10 @@ describe('GĐ 6: presentationService Unit Tests', () => {
 
     // Reset shared
     await presentationService.resetToStandard(testItem._id, 'shared', {
-      deviceId: seedResult.defaultDevice._id,
       userId: testUser._id,
     });
 
-    const resetMerged = await presentationService.getFinalPresentation(
-      testItem._id,
-      seedResult.defaultDevice._id,
-      'vi',
-      1
-    );
+    const resetMerged = await presentationService.getFinalPresentation(testItem._id, 'vi', 1);
 
     // Should only have standard 2 renderings
     expect(resetMerged.renderings.length).toBe(2);
@@ -348,14 +319,12 @@ describe('GĐ 6: presentationService Unit Tests', () => {
   });
 
   test('Integrity check: getUsage detects templates and items using layout or rendering', async () => {
-    const heroUsage = await presentationService.getUsage(seedResult.heroRendering._id);
+    const heroUsage = await presentationService.getUsage(seedResult.heroBannerRendering._id);
     expect(heroUsage.inUse).toBe(true);
     expect(heroUsage.templates.length).toBeGreaterThan(0);
 
     const unusedId = new mongoose.Types.ObjectId();
     const unusedUsage = await presentationService.getUsage(unusedId);
     expect(unusedUsage.inUse).toBe(false);
-    expect(unusedUsage.totalUsage).toBe(0);
   });
 });
-

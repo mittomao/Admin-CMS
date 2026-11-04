@@ -4,16 +4,16 @@
       <div class="modal-header py-2 px-3 bg-light border-bottom d-flex align-items-center justify-content-between">
         <h5 class="modal-title d-flex align-items-center gap-2" id="previewPresentationJsonModalLabel">
           <i class="ti ti-code text-primary fs-3"></i>
-          <span>Headless Layout Service JSON Preview</span>
+          <span>Cấu Trúc Bố Cục Presentation (Đã Hợp Nhất)</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body p-3 bg-dark">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <span class="text-muted small">Cấu trúc Layout & Placeholders sẽ trả về cho React Frontend (Next.js):</span>
+          <span class="text-muted small">Cấu trúc Layout & Placeholders Server-Side EJS sau khi hợp nhất Standard + Shared + Final:</span>
           <button type="button" class="btn btn-sm btn-outline-light py-0 px-2" id="btnCopyPresentationJson">
-            <i class="ti ti-copy me-1"></i> Copy JSON
+            <i class="ti ti-copy me-1"></i> Sao chép JSON
           </button>
         </div>
         <pre class="m-0 text-success font-monospace p-3 rounded bg-black" style="max-height: 450px; overflow: auto; font-size: 0.85rem;"><code id="presentationJsonCodeBlock"><%= jsonString %></code></pre>
@@ -25,4 +25,3 @@
     </div>
   </div>
 </div>
-

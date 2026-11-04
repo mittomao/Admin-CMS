@@ -174,7 +174,7 @@ const seedData = async () => {
         icon: 'ti ti-layout-grid',
         iconBg: 'red',
         group: 'Control Panel & Maintenance',
-        url: '/admin/template-manager',
+        url: '/admin/content-editor?path=/sitecore/templates',
         sortOrder: 10,
         allowedRoles: [rolesMap['Administrator']],
       },
@@ -274,6 +274,15 @@ const seedData = async () => {
             ],
           },
         ],
+      },
+      {
+        name: 'Standard Template',
+        displayName: 'Standard Template',
+        icon: 'ti ti-box',
+        isSystem: true,
+        description: 'Mẫu component trống để khởi tạo component hoặc page template mới',
+        path: '/sitecore/templates/System/Standard Template',
+        sections: [],
       },
       {
         name: 'Folder',
@@ -424,7 +433,7 @@ const seedData = async () => {
       insertOptions: [templatesMap['Page'], templatesMap['Sample Item']],
     });
     await Template.findByIdAndUpdate(templatesMap['Folder'], {
-      insertOptions: [templatesMap['Folder'], templatesMap['Page'], templatesMap['Sample Item']],
+      insertOptions: [templatesMap['Folder']],
     });
     await Template.findByIdAndUpdate(templatesMap['Sample Item'], {
       insertOptions: [templatesMap['Sample Item']],

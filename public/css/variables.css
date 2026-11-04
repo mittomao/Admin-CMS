@@ -33,6 +33,13 @@
   --sc-text-muted: #64748b;
   --sc-text-subtle: #94a3b8;
   
+  /* Section Bar & Quick Info Theme */
+  --color-section-bar: #474747;
+  --color-section-bar-text: #ffffff;
+  --color-section-accent: #d93829;
+  --color-section-body-bg: #f4f4f4;
+  --color-section-border: #d0d0d0;
+  
   /* Status Colors */
   --sc-success: #10b981;
   --sc-warning: #f59e0b;

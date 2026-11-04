@@ -225,6 +225,12 @@ async function loadItemWorkspace(itemId, mode = 'content', lang = null, version 
     // Re-attach form events
     attachItemFormEvents();
     attachFolderViewEvents();
+
+    if (document.getElementById('templateEditorWrapper')) {
+      if (typeof window.initTemplateWorkspace === 'function') {
+        window.initTemplateWorkspace();
+      }
+    }
   } catch (err) {
     workspace.innerHTML = `
       <div class="alert alert-danger m-3">
@@ -818,7 +824,12 @@ async function openInsertModal() {
     const result = await res.json();
 
     if (!result.success || !result.data || result.data.length === 0) {
-      container.innerHTML = '<div class="p-3 text-muted">No templates available.</div>';
+      const activePath = (activeNode.data && activeNode.data.path ? activeNode.data.path : '').toLowerCase();
+      const isContentBranch = activePath === '/sitecore/content' || activePath.startsWith('/sitecore/content/');
+      const emptyMsg = isContentBranch
+        ? 'Chưa có template trong Project/Pages hoặc Common.'
+        : 'No templates available.';
+      container.innerHTML = `<div class="p-3 text-muted text-center">${emptyMsg}</div>`;
       return;
     }
 
@@ -837,9 +848,48 @@ async function openInsertModal() {
       )
       .join('');
 
+    const tplMap = new Map();
+    result.data.forEach((t) => tplMap.set(t._id.toString(), t));
+
+    function updateDefaultNameForTemplate(tpl) {
+      if (!tpl) return;
+      const activePath = (activeNode.data && activeNode.data.path ? activeNode.data.path : '').toLowerCase();
+      const isCompBranch = activePath === '/sitecore/templates/feature/components' || activePath.startsWith('/sitecore/templates/feature/components/');
+      const isPageBranch = activePath === '/sitecore/templates/project/pages' || activePath.startsWith('/sitecore/templates/project/pages/');
+
+      if (tpl.name === 'Standard Template' || tpl.name === 'Sample Component') {
+        const base = isCompBranch ? 'New Component' : (isPageBranch ? 'New Page Template' : 'New Template');
+        const existingNames = new Set(
+          (activeNode.children || []).map((c) => (c.data?.name || c.title || '').trim().toLowerCase())
+        );
+        let candidate = base;
+        let counter = 1;
+        while (existingNames.has(candidate.toLowerCase())) {
+          candidate = `${base} ${counter}`;
+          counter++;
+        }
+        document.getElementById('modalItemName').value = candidate;
+        document.getElementById('modalItemDisplayName').value = candidate;
+      } else if (tpl.name === 'Template Folder' || tpl.displayName === 'Folder') {
+        const base = 'New Folder';
+        const existingNames = new Set(
+          (activeNode.children || []).map((c) => (c.data?.name || c.title || '').trim().toLowerCase())
+        );
+        let candidate = base;
+        let counter = 1;
+        while (existingNames.has(candidate.toLowerCase())) {
+          candidate = `${base} ${counter}`;
+          counter++;
+        }
+        document.getElementById('modalItemName').value = candidate;
+        document.getElementById('modalItemDisplayName').value = candidate;
+      }
+    }
+
     // Pre-select first
     if (result.data[0]) {
       document.getElementById('modalSelectedTemplateId').value = result.data[0]._id;
+      updateDefaultNameForTemplate(result.data[0]);
     }
 
     // Radio change handlers
@@ -849,6 +899,10 @@ async function openInsertModal() {
         radios.forEach((rb) => rb.closest('.list-group-item').classList.remove('active'));
         r.closest('.list-group-item').classList.add('active');
         document.getElementById('modalSelectedTemplateId').value = r.value;
+        const selectedTpl = tplMap.get(r.value);
+        if (selectedTpl) {
+          updateDefaultNameForTemplate(selectedTpl);
+        }
       });
     });
   } catch (err) {

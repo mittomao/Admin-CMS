@@ -1,43 +1,50 @@
 const templateService = require('../../services/templateService');
+const itemService = require('../../services/itemService');
 const logger = require('../../utils/logger');
 
 const templateManagerController = {
   /**
    * GET /admin/template-manager and /admin/template-manager/:id
-   * Render the Template Manager shell layout
+   * Consolidated into Content Editor. Redirects to Content Editor at the Templates node.
    */
   async index(req, res, next) {
     try {
       const requestedId = req.params.id;
-      const allTemplates = await templateService.list();
+      // Allow legacy mode if specifically requested
+      if (req.query.legacy === 'true') {
+        const allTemplates = await templateService.list();
+        let selectedTemplate = null;
+        if (requestedId) {
+          selectedTemplate = await templateService.getById(requestedId);
+        }
+        if (!selectedTemplate && allTemplates.length > 0) {
+          selectedTemplate = allTemplates.find((t) => !t.isSystem) || allTemplates[0];
+        }
 
-      let selectedTemplate = null;
+        let resolvedTemplate = null;
+        let usage = null;
+        if (selectedTemplate) {
+          resolvedTemplate = await templateService.resolveTemplate(selectedTemplate._id);
+          usage = await templateService.getUsage(selectedTemplate._id);
+        }
+
+        return res.render('admin/templates/manager', {
+          title: selectedTemplate
+            ? `${selectedTemplate.displayName || selectedTemplate.name} - Template Manager`
+            : 'Template Manager',
+          currentPath: '/admin/template-manager',
+          templates: allTemplates,
+          selectedTemplate,
+          resolvedTemplate,
+          usage,
+          layout: 'layouts/shell',
+        });
+      }
+
       if (requestedId) {
-        selectedTemplate = await templateService.getById(requestedId);
+        return res.redirect(`/admin/content-editor/${requestedId}`);
       }
-      if (!selectedTemplate && allTemplates.length > 0) {
-        // Default to first non-system template, or first template
-        selectedTemplate = allTemplates.find((t) => !t.isSystem) || allTemplates[0];
-      }
-
-      let resolvedTemplate = null;
-      let usage = null;
-      if (selectedTemplate) {
-        resolvedTemplate = await templateService.resolveTemplate(selectedTemplate._id);
-        usage = await templateService.getUsage(selectedTemplate._id);
-      }
-
-      res.render('admin/templates/manager', {
-        title: selectedTemplate
-          ? `${selectedTemplate.displayName || selectedTemplate.name} - Template Manager`
-          : 'Template Manager',
-        currentPath: '/admin/template-manager',
-        templates: allTemplates,
-        selectedTemplate,
-        resolvedTemplate,
-        usage,
-        layout: 'layouts/shell',
-      });
+      return res.redirect('/admin/content-editor?path=/sitecore/templates');
     } catch (error) {
       logger.error(`Error loading Template Manager: ${error.message}`);
       next(error);
@@ -57,11 +64,13 @@ const templateManagerController = {
       }
 
       const resolved = await templateService.resolveTemplate(id);
+      const quickInfo = await itemService.getQuickInfo(id);
 
       res.render('admin/templates/partials/tab-builder', {
         layout: false,
         template,
         resolved,
+        quickInfo,
       });
     } catch (error) {
       res.status(500).send(`<div class="alert alert-danger m-3">${error.message}</div>`);

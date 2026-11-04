@@ -36,12 +36,13 @@
   // Dữ liệu nội dung đa ngôn ngữ & đa phiên bản (chi tiết tại docs/data-model/versions-languages.md)
   languages: [ ... ],
   
-  // Cấu hình Headless Presentation (chi tiết tại docs/data-model/presentation.md)
+  // Cấu hình Presentation (Server-Side EJS, chi tiết tại docs/data-model/presentation.md)
   presentation: { ... },
   
   isDeleted: false,                    // Đánh dấu soft-delete (nằm trong Recycle Bin)
   deletedAt: null,
   deletedBy: null,
+  createdFrom: ObjectId("..."),        // ID item nguồn nếu tạo bằng Duplicate/Copy (nullable, GĐ 6.3)
   createdBy: ObjectId("..."),
   updatedBy: ObjectId("..."),
   createdAt: ISODate("2026-11-03T00:00:00.000Z"),
@@ -79,21 +80,23 @@ itemSchema.index({ isDeleted: 1 });
 
 ---
 
-## 4. Cấu trúc Cây Hệ thống Chuẩn & Bảo vệ Node (DEC-030)
-Cây nội dung khởi tạo với các node gốc bất biến:
+## 4. Cấu trúc Cây Hệ thống Chuẩn & Bảo vệ Node (DEC-032)
+Cây nội dung khởi tạo với các node gốc bất biến theo kiến trúc Sitecore XM Server-Side EJS:
 ```
 sitecore
-├── content                    (/sitecore/content - chứa các trang và site)
-├── layout                     (/sitecore/layout - chứa Presentation, xem DEC-030)
-│   ├── Layouts                (/sitecore/layout/layouts - chứa Layout items & folders)
-│   ├── Renderings             (/sitecore/layout/renderings - chứa Rendering items & folders)
-│   ├── Devices                (/sitecore/layout/devices)
-│   └── Placeholder Settings   (/sitecore/layout/placeholder settings)
-├── media library              (/sitecore/media library - chứa assets)
+├── content                    (/sitecore/content - chứa các trang; Home là start item ứng với '/')
+├── layout                     (/sitecore/layout - chứa Presentation, đúng 3 nhánh)
+│   ├── Layouts                (/sitecore/layout/Layouts - chứa các Layout EJS items)
+│   ├── Placeholders           (/sitecore/layout/Placeholders - chứa các Placeholder items giữ chỗ)
+│   └── Renderings             (/sitecore/layout/Renderings - chứa các Rendering/Component items)
+├── media library              (/sitecore/media library - chứa tài nguyên số)
 ├── system                     (/sitecore/system - cấu hình hệ thống)
 └── templates                  (/sitecore/templates - định nghĩa schema)
+    ├── Feature                (/sitecore/templates/Feature/Components - Component Templates)
+    ├── Project                (/sitecore/templates/Project/Pages - Page Templates)
+    └── System                 (/sitecore/templates/System - System Templates)
 ```
-- **Node Hệ thống Cốt lõi:** Bị cấm đổi tên, di chuyển và xóa (`/sitecore`, `/sitecore/content`, `/sitecore/layout`, `/sitecore/media library`, `/sitecore/system`, `/sitecore/templates`, và các sub-root của layout: `layouts`, `renderings`, `devices`, `placeholder settings`).
+- **Node Hệ thống Cốt lõi:** Bị cấm đổi tên, di chuyển và xóa (`/sitecore`, `/sitecore/content`, `/sitecore/layout`, `/sitecore/media library`, `/sitecore/system`, `/sitecore/templates`, và 3 nhánh sub-root của layout: `Layouts`, `Placeholders`, `Renderings`).
 - **Phân quyền Presentation:** Mọi thao tác ghi dưới `/sitecore/layout/*` yêu cầu quyền `presentation:write`.
 
 

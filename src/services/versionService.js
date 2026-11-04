@@ -111,13 +111,14 @@ const versionService = {
     const code = (langCode || 'vi').toLowerCase().trim();
     const vNum = parseInt(versionNumber, 10) || 1;
 
-    // 1. Template schema & standard values
+    // 1. Template schema & standard values (resolving effective template including presentation components)
     const templateId = item.templateId?._id || item.templateId;
     let template = null;
     let standardValues = {};
     if (templateId) {
-      template = await templateService.resolveTemplate(templateId);
-      standardValues = await templateService.resolveStandardValues(templateId);
+      const eff = await templateService.resolveEffectiveTemplate(item, code, vNum);
+      template = eff || (await templateService.resolveTemplate(templateId));
+      standardValues = eff?.standardValues || (await templateService.resolveStandardValues(templateId));
     }
 
     // Map fieldId -> field metadata
@@ -304,20 +305,23 @@ const versionService = {
     };
     langEntry.versions.push(newVersionDoc);
 
-    // Presentation Copy Rule (DEC-020):
-    // If source version had final presentation devices, copy them to new version
+    // Presentation Copy Rule (DEC-020, DEC-026, DEC-031):
+    // If source version had final presentation, copy it to new version
     if (sourceVersionNumber && item.presentation && Array.isArray(item.presentation.final)) {
       const sourceFinalPres = item.presentation.final.find(
         (p) => p.language === code && p.version === parseInt(sourceVersionNumber, 10)
       );
-      if (sourceFinalPres && sourceFinalPres.devices) {
-        // Deep clone devices
-        const clonedDevices = JSON.parse(JSON.stringify(sourceFinalPres.devices));
-        item.presentation.final.push({
+      if (sourceFinalPres) {
+        const clonedRecord = {
           language: code,
           version: nextVersion,
-          devices: clonedDevices,
-        });
+          layoutId: sourceFinalPres.layoutId || null,
+          renderings: sourceFinalPres.renderings ? JSON.parse(JSON.stringify(sourceFinalPres.renderings)) : [],
+        };
+        if (sourceFinalPres.devices) {
+          clonedRecord.devices = JSON.parse(JSON.stringify(sourceFinalPres.devices));
+        }
+        item.presentation.final.push(clonedRecord);
         item.markModified('presentation');
       }
     }
@@ -404,12 +408,17 @@ const versionService = {
       const srcPres = item.presentation.final.find(
         (p) => p.language === copyFromLang.toLowerCase() && p.version === (parseInt(copyFromVersion, 10) || 1)
       );
-      if (srcPres && srcPres.devices) {
-        item.presentation.final.push({
+      if (srcPres) {
+        const clonedRecord = {
           language: code,
           version: 1,
-          devices: JSON.parse(JSON.stringify(srcPres.devices)),
-        });
+          layoutId: srcPres.layoutId || null,
+          renderings: srcPres.renderings ? JSON.parse(JSON.stringify(srcPres.renderings)) : [],
+        };
+        if (srcPres.devices) {
+          clonedRecord.devices = JSON.parse(JSON.stringify(srcPres.devices));
+        }
+        item.presentation.final.push(clonedRecord);
         item.markModified('presentation');
       }
     }
@@ -539,7 +548,7 @@ const versionService = {
       throw new NotFoundError('Không tìm thấy Item.');
     }
 
-    const template = await templateService.resolveTemplate(item.templateId._id || item.templateId);
+    const template = (await templateService.resolveEffectiveTemplate(item, code, v2Num)) || (await templateService.resolveTemplate(item.templateId._id || item.templateId));
 
     // Resolve both versions
     const resV1 = await this.resolveFields(item, code, v1Num);
@@ -623,7 +632,8 @@ const versionService = {
     }
 
     // 2. Resolve template to know field scope (shared, unversioned, versioned)
-    const template = await templateService.resolveTemplate(item.templateId);
+    const eff = await templateService.resolveEffectiveTemplate(item, code, vNum);
+    const template = eff || (await templateService.resolveTemplate(item.templateId));
     const fieldMap = new Map(); // identifier (id or name) -> field definition
 
     if (template && template.sections) {

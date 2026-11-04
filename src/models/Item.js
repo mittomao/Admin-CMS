@@ -13,7 +13,12 @@ const renderingInstanceSchema = new mongoose.Schema(
     },
     placeholder: {
       type: String,
-      default: 'main',
+      default: 'maincontent',
+      trim: true,
+    },
+    placeholderKey: {
+      type: String,
+      default: 'maincontent',
       trim: true,
     },
     sortOrder: {
@@ -38,13 +43,8 @@ const renderingInstanceSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const devicePresentationSchema = new mongoose.Schema(
+const presentationSchema = new mongoose.Schema(
   {
-    deviceId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Item',
-      default: null,
-    },
     layoutId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Item',
@@ -124,6 +124,11 @@ const itemSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    icon: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     templateId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Template',
@@ -163,16 +168,15 @@ const itemSchema = new mongoose.Schema(
     },
     // Cấp độ 2 & 3: Đa ngôn ngữ và đa phiên bản (GĐ 4)
     languages: [itemLanguageSchema],
-    // Cấu hình Headless Presentation (chừa sẵn schema cho GĐ 6 theo DEC-020 & DEC-021)
+    // Cấu hình Server-Side EJS Presentation (GĐ 6 theo DEC-031, DEC-032, DEC-035)
     presentation: {
-      shared: {
-        devices: [devicePresentationSchema],
-      },
+      shared: presentationSchema,
       final: [
         {
-          language: { type: String, lowercase: true, trim: true },
-          version: { type: Number },
-          devices: [devicePresentationSchema],
+          language: { type: String, lowercase: true, trim: true, default: 'vi' },
+          version: { type: Number, default: 1 },
+          layoutId: { type: mongoose.Schema.Types.ObjectId, ref: 'Item', default: null },
+          renderings: [renderingInstanceSchema],
         },
       ],
     },
@@ -180,6 +184,11 @@ const itemSchema = new mongoose.Schema(
     deleted: {
       type: Boolean,
       default: false,
+    },
+    createdFrom: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Item',
+      default: null,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -248,22 +257,22 @@ const itemSchema = new mongoose.Schema(
             }
           });
         }
-        const cleanDeviceRenderings = (devices) => {
-          if (!Array.isArray(devices)) return;
-          devices.forEach((d) => {
-            if (Array.isArray(d.renderings)) {
-              d.renderings.forEach((r) => {
-                if (r.parameters instanceof Map) {
-                  r.parameters = Object.fromEntries(r.parameters);
-                }
-              });
+        const cleanRenderingsList = (renderings) => {
+          if (!Array.isArray(renderings)) return;
+          renderings.forEach((r) => {
+            if (r.parameters instanceof Map) {
+              r.parameters = Object.fromEntries(r.parameters);
             }
           });
         };
         if (ret.presentation) {
-          if (ret.presentation.shared) cleanDeviceRenderings(ret.presentation.shared.devices);
+          if (ret.presentation.shared && Array.isArray(ret.presentation.shared.renderings)) {
+            cleanRenderingsList(ret.presentation.shared.renderings);
+          }
           if (Array.isArray(ret.presentation.final)) {
-            ret.presentation.final.forEach((f) => cleanDeviceRenderings(f.devices));
+            ret.presentation.final.forEach((f) => {
+              if (Array.isArray(f.renderings)) cleanRenderingsList(f.renderings);
+            });
           }
         }
         return ret;
@@ -282,10 +291,10 @@ itemSchema.index({ name: 'text', displayName: 'text' });
 itemSchema.index({ 'languages.code': 1 });
 itemSchema.index({ 'languages.versions.version': 1 });
 itemSchema.index({ _id: 1, 'languages.code': 1, 'languages.versions.version': 1 });
-itemSchema.index({ 'presentation.shared.devices.renderings.renderingId': 1 });
-itemSchema.index({ 'presentation.final.devices.renderings.renderingId': 1 });
-itemSchema.index({ 'presentation.shared.devices.renderings.datasourceId': 1 });
-itemSchema.index({ 'presentation.final.devices.renderings.datasourceId': 1 });
+itemSchema.index({ 'presentation.shared.renderings.renderingId': 1 });
+itemSchema.index({ 'presentation.final.renderings.renderingId': 1 });
+itemSchema.index({ 'presentation.shared.renderings.datasourceId': 1 });
+itemSchema.index({ 'presentation.final.renderings.datasourceId': 1 });
 
 /**
  * Instance helper to get a field's value checking fieldId first, then fieldName (legacy support)

@@ -263,7 +263,7 @@ const ribbonConfig = {
               icon: 'ti ti-layout-grid',
               size: 'large',
               action: 'presentation:details',
-              tooltip: 'Mở cửa sổ quản trị Presentation Details (Bố cục, Devices, Renderings)',
+              tooltip: 'Mở cửa sổ quản trị Presentation Details (Bố cục, Renderings, Placeholders)',
             },
             {
               id: 'btn-presentation-reset',
@@ -285,7 +285,7 @@ const ribbonConfig = {
               icon: 'ti ti-code',
               size: 'large',
               action: 'presentation:preview-json',
-              tooltip: 'Xem cấu trúc JSON Layout Service trả về cho React Frontend',
+              tooltip: 'Xem cấu trúc JSON Presentation sau khi hợp nhất',
             },
           ],
         },

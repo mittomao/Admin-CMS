@@ -1,8 +1,11 @@
 # DEC-030: Cấu trúc Cây Item Layout, Thư mục Nhóm và Cơ chế Bảo vệ Node Hệ thống
 
+> [!WARNING]
+> **Trạng thái:** Bị thay thế bởi [DEC-032](DEC-032-three-branch-layout-tree-structure.md). Cây Presentation được chuẩn hóa thành đúng 3 nhánh bất biến: `Layouts`, `Placeholders`, `Renderings` (loại bỏ hoàn toàn `Devices` và `Placeholder Settings`). Các nguyên tắc bảo vệ node hệ thống cốt lõi và kiểm tra ràng buộc đệ quy khi xóa được kế thừa nguyên vẹn trong DEC-032.
+
 - **Ngày quyết định:** 2026-11-04
 - **Giai đoạn liên quan:** GĐ 6 (Presentation)
-- **Trạng thái:** Đã chốt (Accepted)
+- **Trạng thái:** Bị thay thế (Superseded by DEC-032)
 
 ## 1. Bối cảnh
 Tiếp nối quyết định DEC-024 (Quản lý Layout/Rendering như Item hệ thống trong Cây nội dung), việc tổ chức các thành phần Presentation trong cây cần cấu trúc rõ ràng, hỗ trợ thư mục nhóm để phân chia theo tính năng hoặc domain (ví dụ `/sitecore/layout/Renderings/Feature`), đồng thời phải đảm bảo:

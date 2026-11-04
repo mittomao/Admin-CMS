@@ -12,14 +12,13 @@ const templateService = require('../src/services/templateService');
 const presentationService = require('../src/services/presentationService');
 const { seedPresentationData } = require('../src/scripts/seed-presentation-data');
 
-describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection', () => {
+describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection (DEC-032)', () => {
   let mongoServer;
   let adminAgent;
   let authorAgent;
   let devAgent;
   let authorCsrfToken;
   let devCsrfToken;
-  let seedResult;
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
@@ -83,7 +82,7 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
     });
 
     // Run seed
-    seedResult = await seedPresentationData();
+    await seedPresentationData();
 
     // Setup HTTP Agents
     adminAgent = request.agent(app);
@@ -110,36 +109,41 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
   });
 
   // ========================================================
-  // 1. Cấu trúc cây & Seed Idempotency
+  // 1. Cấu trúc cây 3 nhánh & Seed Idempotency
   // ========================================================
-  test('Seed tạo đúng cấu trúc cây /sitecore/layout (Layouts, Renderings, Feature folder)', async () => {
+  test('Seed tạo đúng cấu trúc cây /sitecore/layout (3 nhánh: Layouts, Placeholders, Renderings)', async () => {
     const layouts = await Item.findOne({ path: '/sitecore/layout/Layouts' }).populate('templateId');
     expect(layouts).not.toBeNull();
     expect(layouts.templateId.name).toBe('Layout Folder');
     expect(layouts.sortOrder).toBe(100);
 
+    const placeholders = await Item.findOne({ path: '/sitecore/layout/Placeholders' }).populate('templateId');
+    expect(placeholders).not.toBeNull();
+    expect(placeholders.templateId.name).toBe('Placeholder Folder');
+    expect(placeholders.sortOrder).toBe(200);
+
     const renderings = await Item.findOne({ path: '/sitecore/layout/Renderings' }).populate('templateId');
     expect(renderings).not.toBeNull();
     expect(renderings.templateId.name).toBe('Rendering Folder');
-    expect(renderings.sortOrder).toBe(200);
+    expect(renderings.sortOrder).toBe(300);
 
-    const feature = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature' }).populate('templateId');
-    expect(feature).not.toBeNull();
-    expect(feature.templateId.name).toBe('Rendering Folder');
-
-    const hero = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature/Hero' }).populate('templateId');
+    const hero = await Item.findOne({ path: '/sitecore/layout/Renderings/HeroBanner' }).populate('templateId');
     expect(hero).not.toBeNull();
     expect(hero.templateId.name).toBe('Rendering');
+
+    const homeLayout = await Item.findOne({ path: '/sitecore/layout/Layouts/HomeLayout' }).populate('templateId');
+    expect(homeLayout).not.toBeNull();
+    expect(homeLayout.templateId.name).toBe('Layout');
   });
 
   test('Seed chạy lại không tạo trùng item, giữ nguyên ID', async () => {
-    const heroBefore = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature/Hero' });
+    const heroBefore = await Item.findOne({ path: '/sitecore/layout/Renderings/HeroBanner' });
     const countBefore = await Item.countDocuments({ path: { $regex: '^/sitecore/layout' } });
 
     await seedPresentationData();
 
     const countAfter = await Item.countDocuments({ path: { $regex: '^/sitecore/layout' } });
-    const heroAfter = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature/Hero' });
+    const heroAfter = await Item.findOne({ path: '/sitecore/layout/Renderings/HeroBanner' });
 
     expect(countAfter).toBe(countBefore);
     expect(heroAfter._id.toString()).toBe(heroBefore._id.toString());
@@ -159,6 +163,16 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
     expect(names).not.toContain('Page');
   });
 
+  test('Insert options: Placeholders chỉ cho phép Placeholder Folder và Placeholder', async () => {
+    const placeholdersNode = await Item.findOne({ path: '/sitecore/layout/Placeholders' });
+    const options = await templateService.getInsertOptions(placeholdersNode._id);
+    const names = options.map((o) => o.name);
+
+    expect(names).toContain('Placeholder Folder');
+    expect(names).toContain('Placeholder');
+    expect(names).not.toContain('Layout');
+  });
+
   test('Insert options: Renderings chỉ cho phép Rendering Folder và Rendering', async () => {
     const renderingsNode = await Item.findOne({ path: '/sitecore/layout/Renderings' });
     const options = await templateService.getInsertOptions(renderingsNode._id);
@@ -170,7 +184,7 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
   });
 
   test('Insert options: Layout item và Rendering item không cho tạo con thủ công', async () => {
-    const hero = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature/Hero' });
+    const hero = await Item.findOne({ path: '/sitecore/layout/Renderings/HeroBanner' });
     const options = await templateService.getInsertOptions(hero._id);
     expect(options).toEqual([]);
 
@@ -183,12 +197,15 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
   // ========================================================
   // 3. Bảo vệ Node Hệ Thống
   // ========================================================
-  test('Bảo vệ node hệ thống: chặn xoá node /sitecore/layout, Layouts, Renderings', async () => {
+  test('Bảo vệ node hệ thống: chặn xoá node /sitecore/layout, Layouts, Placeholders, Renderings', async () => {
     const layoutNode = await Item.findOne({ path: '/sitecore/layout' });
     await expect(itemService.delete(layoutNode._id)).rejects.toThrow(/Không thể xoá node hệ thống/);
 
     const layoutsFolder = await Item.findOne({ path: '/sitecore/layout/Layouts' });
     await expect(itemService.delete(layoutsFolder._id)).rejects.toThrow(/Không thể xoá node hệ thống/);
+
+    const placeholdersFolder = await Item.findOne({ path: '/sitecore/layout/Placeholders' });
+    await expect(itemService.delete(placeholdersFolder._id)).rejects.toThrow(/Không thể xoá node hệ thống/);
 
     const renderingsFolder = await Item.findOne({ path: '/sitecore/layout/Renderings' });
     await expect(itemService.delete(renderingsFolder._id)).rejects.toThrow(/Không thể xoá node hệ thống/);
@@ -205,18 +222,15 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
   // ========================================================
   // 4. Chặn xoá component đang dùng & thư mục chứa component đang dùng
   // ========================================================
-  test('Chặn xoá component đang dùng và chặn xoá thư mục chứa component đang dùng', async () => {
-    const hero = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature/Hero' });
+  test('Chặn xoá component đang dùng trong Template', async () => {
+    const hero = await Item.findOne({ path: '/sitecore/layout/Renderings/HeroBanner' });
     await expect(itemService.delete(hero._id)).rejects.toThrow(/đang được sử dụng trong/);
-
-    const featureFolder = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature' });
-    await expect(itemService.delete(featureFolder._id)).rejects.toThrow(/đang được sử dụng trong/);
   });
 
   // ========================================================
   // 5. Di chuyển Layout/Rendering giữa các folder không làm gãy tham chiếu
   // ========================================================
-  test('Di chuyển Layout/Rendering giữa các folder con không làm gãy tham chiếu', async () => {
+  test('Di chuyển Rendering giữa các folder con không làm gãy tham chiếu', async () => {
     const renderingsFolder = await Item.findOne({ path: '/sitecore/layout/Renderings' });
     const renderingFolderTpl = await Template.findOne({ name: 'Rendering Folder' });
     const renderingTpl = await Template.findOne({ name: 'Rendering' });
@@ -228,16 +242,16 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
       'Custom'
     );
 
-    // Tạo một Rendering mới trong Feature
-    const featureFolder = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature' });
+    // Tạo một Rendering mới trong Renderings/Custom
     const bannerRendering = await itemService.createFromTemplate(
-      featureFolder._id,
+      customFolder._id,
       renderingTpl._id,
       'CustomBanner'
     );
 
     // Gán vào presentation của một item thử nghiệm
     const folderTpl = await Template.findOne({ name: 'Folder' });
+    const homeLayout = await Item.findOne({ path: '/sitecore/layout/Layouts/HomeLayout' });
     const pageItem = await Item.create({
       name: 'test-move-page',
       templateId: folderTpl._id,
@@ -246,36 +260,31 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
       path: '/sitecore/test-move-page',
       presentation: {
         shared: {
-          devices: [
+          layoutId: homeLayout._id,
+          renderings: [
             {
-              deviceId: seedResult.defaultDevice._id,
-              layoutId: seedResult.mainLayout._id,
-              renderings: [
-                {
-                  uid: 'move-test-uid-1',
-                  renderingId: bannerRendering._id,
-                  placeholder: 'main',
-                  sortOrder: 100,
-                },
-              ],
+              uid: 'move-test-uid-1',
+              renderingId: bannerRendering._id,
+              placeholderKey: 'maincontent',
+              sortOrder: 100,
             },
           ],
         },
       },
     });
 
-    // Di chuyển bannerRendering từ Feature sang Custom
-    await itemService.moveTo(bannerRendering._id, customFolder._id);
+    // Di chuyển bannerRendering từ Custom ra Renderings gốc
+    await itemService.moveTo(bannerRendering._id, renderingsFolder._id);
 
     // Xác nhận đường dẫn mới
     const movedBanner = await Item.findById(bannerRendering._id);
-    expect(movedBanner.path.toLowerCase()).toBe('/sitecore/layout/renderings/custom/custombanner');
+    expect(movedBanner.path.toLowerCase()).toBe('/sitecore/layout/renderings/custombanner');
 
     // Kiểm tra getFinalPresentation vẫn nhận diện bannerRendering
     const finalPres = await presentationService.getFinalPresentation(pageItem._id);
     expect(finalPres.renderings.length).toBe(1);
     expect(finalPres.renderings[0].renderingId.toString()).toBe(bannerRendering._id.toString());
-    expect(finalPres.renderings[0].renderingName).toBe('custombanner');
+    expect(finalPres.renderings[0].name.toLowerCase()).toBe('custombanner');
   });
 
   // ========================================================
@@ -295,28 +304,28 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
       presentationService.validatePresentation({
         layoutId: outsideItem._id.toString(),
       })
-    ).rejects.toThrow(/phải nằm dưới cây \/sitecore\/layout\/Layouts/);
+    ).rejects.toThrow(/phải nằm trong nhánh \/sitecore\/layout\/Layouts/);
 
     await expect(
       presentationService.validatePresentation({
         renderings: [{ renderingId: outsideItem._id.toString() }],
       })
-    ).rejects.toThrow(/phải nằm dưới cây \/sitecore\/layout\/Renderings/);
+    ).rejects.toThrow(/phải nằm trong nhánh \/sitecore\/layout\/Renderings/);
   });
 
   // ========================================================
   // 7. Phân Quyền (presentation:write)
   // ========================================================
   test('Phân quyền: Content Author không được tạo/sửa/xoá dưới /sitecore/layout (403)', async () => {
-    const featureFolder = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature' });
+    const renderingsFolder = await Item.findOne({ path: '/sitecore/layout/Renderings' });
     const renderingTpl = await Template.findOne({ name: 'Rendering' });
 
-    // Author thử tạo item dưới Feature
+    // Author thử tạo item dưới Renderings
     const resCreate = await authorAgent
       .post('/api/items')
       .set('X-CSRF-Token', authorCsrfToken)
       .send({
-        parentId: featureFolder._id.toString(),
+        parentId: renderingsFolder._id.toString(),
         templateId: renderingTpl._id.toString(),
         name: 'UnauthorizedBanner',
       });
@@ -325,20 +334,20 @@ describe('GĐ 6 Bổ sung: Cây Item Layout trong Content Tree & Node Protection
 
     // Author thử xoá
     const resDelete = await authorAgent
-      .delete(`/api/items/${featureFolder._id}`)
+      .delete(`/api/items/${renderingsFolder._id}`)
       .set('X-CSRF-Token', authorCsrfToken);
     expect(resDelete.status).toBe(403);
   });
 
   test('Phân quyền: Developer có quyền tạo và sửa dưới /sitecore/layout', async () => {
-    const featureFolder = await Item.findOne({ path: '/sitecore/layout/Renderings/Feature' });
+    const renderingsFolder = await Item.findOne({ path: '/sitecore/layout/Renderings' });
     const renderingTpl = await Template.findOne({ name: 'Rendering' });
 
     const resCreate = await devAgent
       .post('/api/items')
       .set('X-CSRF-Token', devCsrfToken)
       .send({
-        parentId: featureFolder._id.toString(),
+        parentId: renderingsFolder._id.toString(),
         templateId: renderingTpl._id.toString(),
         name: 'DevAllowedBanner',
         displayName: 'Dev Allowed Banner',

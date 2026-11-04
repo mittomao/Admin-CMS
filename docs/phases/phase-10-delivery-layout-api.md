@@ -1,16 +1,16 @@
 ---
 phase: 10
-name: Headless Delivery API, Layout Service & Bộ nhớ đệm (Delivery API, Layout Service & Cache)
+name: Public Site Renderer (100% Server-Side EJS & In-Memory Cache)
 status: Chưa bắt đầu
 depends_on: [6, 8]
 estimate: 2.5 ngày làm việc
 started: null
 completed: null
-updated: 2026-11-03
+updated: 2026-11-04
 ---
 
-# GĐ 10 - Headless Delivery API, Layout Service & Bộ nhớ đệm
-> RESTful API công khai đọc từ items_web, Headless Layout Service phân giải component/datasource cho React frontend và In-memory Caching.
+# GĐ 10 - Public Site Renderer (100% Server-Side EJS & In-Memory Cache)
+> Bộ phân giải định tuyến công khai (Public Site Router & URL Resolver), kết xuất giao diện Server-Side EJS từ cơ sở dữ liệu `items_web`, helper `<%- placeholder(key) %>`, cơ chế bắt lỗi Error Boundary, bộ nhớ đệm trang và tối ưu hóa SEO cơ bản.
 
 ## Tài liệu cần đọc trước khi làm
 - [`docs/rules/00-workflow.md`](../rules/00-workflow.md)
@@ -20,69 +20,102 @@ updated: 2026-11-03
 - [`docs/rules/05-security.md`](../rules/05-security.md)
 - [`docs/data-model/presentation.md`](../data-model/presentation.md)
 - [`docs/data-model/items-and-tree.md`](../data-model/items-and-tree.md)
+- [`docs/decisions/DEC-031-server-side-ejs-renderer-architecture.md`](../decisions/DEC-031-server-side-ejs-renderer-architecture.md)
+- [`docs/decisions/DEC-033-viewpath-and-template-security.md`](../decisions/DEC-033-viewpath-and-template-security.md)
+- [`docs/decisions/DEC-034-public-url-resolution-rules.md`](../decisions/DEC-034-public-url-resolution-rules.md)
+- [`docs/decisions/DEC-035-component-field-inheritance-and-context.md`](../decisions/DEC-035-component-field-inheritance-and-context.md)
 
 ## Mục tiêu
-Cung cấp hệ thống RESTful JSON API công khai gồm Headless Delivery API và **Layout Service** đọc dữ liệu độc quyền từ `items_web`, hỗ trợ ứng dụng React/Next.js frontend lấy toàn bộ cấu trúc component (route, placeholders, components và datasource resolved) với hiệu năng cao nhờ In-Memory Caching và cơ chế Invalidation tức thì khi publish.
+Xây dựng phân hệ hiển thị trang web công khai (Public Site Renderer) trực tiếp từ ứng dụng Express chung trên cổng 4000:
+- Định tuyến công khai tách biệt hoàn toàn khỏi `/admin`.
+- Phân giải URL đường dẫn sang Content Item trong database `items_web`.
+- Lấy cấu hình bố cục qua `presentationService.getFinalPresentation(item, lang, version)` và kết xuất mã HTML hoàn chỉnh thông qua template layout EJS và helper `<%- placeholder(key) %>`.
+- Truyền ngữ cảnh dữ liệu phong phú (`item`, `fields`, `params`, `datasource`, `site`, `lang`) vào view của layout và component.
+- Bộ nhớ đệm trang (Page Render In-memory Cache) tối ưu hiệu năng và tự động xóa cache khi publish.
 
 ## Phạm vi
 - **Làm:**
-  - **Content Delivery API (`/api/v1/content/*`):** Đọc nội dung thô của item đã publish theo ID hoặc Path, lấy cây con, flatten fields, chuyển đổi Media ID sang Media URL đầy đủ (`/media/file/:id`).
-  - **Layout Service (`/api/v1/layout` hoặc `/api/delivery/layout`):**
-    - Endpoint: `GET /api/v1/layout?path=...&lang=...&device=...`
-    - Định dạng JSON chuẩn Sitecore JSS phong cách Headless (`route` + `placeholders`).
-    - Tự động resolve dữ liệu từ Datasource item (đọc từ `items_web`) gán vào `fields` của từng component; nếu component không có datasource riêng, fallback sử dụng chính fields của route item (context item).
-    - Xử lý khi Datasource bị thiếu (ví dụ chưa publish lên Web): Vẫn trả rendering với `fields: null` kèm cảnh báo, không làm sập response.
-    - Mã lỗi chuẩn: 404 (route/path không tồn tại), 400 (thiếu param bắt buộc), 422 (không tìm thấy layout hợp lệ cho device).
-  - **Bộ nhớ đệm (Cache):** In-memory Cache bằng `node-cache` hoặc LRU cache; tự động Invalidate cache khi Publish hoàn tất (xoá cache theo item path hoặc tag liên quan).
-  - **Bảo mật API & Tích hợp:** Cấu hình CORS cho phép React frontend kết nối; hỗ trợ API Key hoặc Bearer Token; tích hợp `express-rate-limit` chống DDoS.
-- **Không làm:** Chưa làm GraphQL API (tập trung tối ưu RESTful JSON trước).
+  1. **Định tuyến & Phân giải URL (Public Router & Resolver):**
+     - Đón nhận request tại `/` (root), `/:slug`, và `/:lang/:slug` (lồng nhiều cấp: `/*`).
+     - Bỏ qua các đường dẫn hệ thống (`/admin/*`, `/media/*`, `/public/*`).
+     - Xác định ngôn ngữ (mặc định `vi`, tiền tố `/en/...` cho tiếng Anh).
+     - Ánh xạ đường dẫn sang item tương ứng trong `items_web` bắt đầu từ Start Item `/sitecore/content/Home` (DEC-034).
+     - Trả về mã lỗi HTTP 404 và giao diện `views/site/404.ejs` nếu trang không tồn tại hoặc chưa publish lên Web.
+  2. **Trình kết xuất Layout & Helper `placeholder`:**
+     - Gọi `presentationService.getFinalPresentation` để lấy `layoutId` và danh sách renderings theo placeholder.
+     - Nạp file EJS của layout qua thuộc tính `viewPath` (được bảo vệ an toàn bởi whitelist `src/views/site/layouts/`).
+     - Cung cấp helper `<%- placeholder(placeholderKey) %>` trong view layout:
+       - Duyệt qua các renderings được gán vào `placeholderKey` theo đúng thứ tự `sortOrder`.
+       - Nạp file EJS của rendering qua `viewPath` (whitelist `src/views/site/components/`).
+       - Truyền đầy đủ ngữ cảnh `{ item, fields, params, datasource, site, lang }`. Mặc định component đọc `fields` từ chính Page Item (DEC-035).
+  3. **Cơ chế An toàn & Component Error Boundary (DEC-033):**
+     - Mặc định EJS escape an toàn (`<%= %>`); chỉ dùng `<%- %>` cho Rich Text đã qua `resolveRichText` và sanitize.
+     - Cơ chế Error Boundary: Khi một component bị lỗi biên dịch hoặc thiếu dữ liệu, hiển thị khối cảnh báo trực quan ở môi trường `development` và ghi log ẩn ở `production`, tuyệt đối không làm sập toàn bộ trang.
+  4. **SEO cơ bản:**
+     - Truyền thẻ `<title>` và `<meta name="description">` lấy từ các trường tương ứng của Page Item (`PageTitle`, `MetaDescription`).
+  5. **Bộ nhớ đệm (In-memory Render Cache):**
+     - Cache toàn bộ kết quả HTML kết xuất theo key: `site:{siteName}:{itemId}:{lang}:{version}`.
+     - Tự động invalidate cache khi Publish hoàn tất (liên kết với GĐ 8 `publishService`).
+- **Không làm:**
+  - Không làm Layout Service JSON REST API cho React/Next.js frontend.
+  - Không cấu hình CORS hay API key cho client ngoài.
+  - Không hydrate client-side JS hay dùng framework SPA.
 
 ## Checklist Task
-- [ ] **Task 10.1:** Xây dựng module cache `src/utils/cacheManager.js` quản lý lưu và xóa cache theo tag/key cho cả Content và Layout Service.
-- [ ] **Task 10.2:** Xây dựng `deliveryService.js`:
-  - `getPublishedItemByPath(path, language)`.
-  - `getPublishedItemById(id, language)`.
-  - `getChildren(id, language)`.
-  - Format fields và chuyển đổi Media ID thành URL đầy đủ.
-- [ ] **Task 10.3:** Xây dựng logic Layout Service trong `presentationService.js` / `deliveryService.js`:
-  - Phân giải Layout và Renderings của route từ `items_web`.
-  - Gom nhóm các Rendering theo từng Placeholder key (bao gồm việc xử lý các placeholder lồng nhau nếu có).
-  - Query dữ liệu của các Datasource items tương ứng từ `items_web` và format cấu trúc `{ uid, componentName, fields, params }`.
-- [ ] **Task 10.4:** Xây dựng `layoutController.js` và route `src/routes/api/v1/layoutRoutes.js` (`GET /api/v1/layout`).
-- [ ] **Task 10.5:** Xây dựng `deliveryController.js` và route `src/routes/api/v1/deliveryRoutes.js` (`GET /api/v1/content/*`).
-- [ ] **Task 10.6:** Tích hợp middleware xóa cache vào `publishService.js`: Khi publish thành công, tự động invalidate các cache key tương ứng của cả item và layout.
-- [ ] **Task 10.7:** Cấu hình CORS middleware cho phép frontend React truy cập, thiết lập rate limiting và xác thực API Key nếu được bật.
+- [ ] **Task 10.1:** Xây dựng module cache `src/utils/renderCache.js` quản lý lưu và xóa bộ nhớ đệm HTML kết xuất theo item ID / site.
+- [ ] **Task 10.2:** Xây dựng `siteRendererService.js`:
+  - `resolveItemByPath(urlPath, lang)`: Phân giải HTTP URL path sang Page Item từ database `items_web`.
+  - `resolvePageFields(item, lang)`: Phân giải giá trị các trường của Page (bao gồm fallback ngôn ngữ và Standard Values).
+  - Phân giải URL cho trường Media và rich text (`resolveRichText`).
+- [ ] **Task 10.3:** Xây dựng `siteRendererController.js`:
+  - Tiếp nhận request công khai, kiểm tra cache.
+  - Gọi `presentationService.getFinalPresentation(item, lang, version)`.
+  - Khởi tạo helper `placeholder(key)` cho EJS.
+  - Xử lý HTTP 404 cho trang chưa publish hoặc đường dẫn sai.
+  - Bổ sung dữ liệu SEO cơ bản (title, meta description).
+- [ ] **Task 10.4:** Đăng ký định tuyến công khai tại `src/routes/site/siteRoutes.js` và tích hợp vào `src/app.js` (nằm ngoài phạm vi middleware xác thực `/admin`).
+- [ ] **Task 10.5:** Tích hợp cơ chế Invalidate Cache vào `publishService.js`: Xóa cache ngay khi một item hoặc nhánh cây được publish lên Web.
+- [ ] **Task 10.6:** Viết các unit và integration test kiểm thử:
+  - Truy cập `/` trả về trang Home (HTTP 200).
+  - Truy cập `/about-us` trả về trang About us với đầy đủ component theo placeholder.
+  - Truy cập đường dẫn chưa publish trả về HTTP 404.
+  - Kiểm tra Error Boundary khi component gặp lỗi cú pháp EJS.
+  - Kiểm tra Hit / Miss Cache và Invalidation sau khi publish.
 
 ## File/Thư mục Dự kiến
-- `src/utils/cacheManager.js`
-- `src/services/deliveryService.js`
-- `src/controllers/api/deliveryController.js`, `src/controllers/api/layoutController.js`
-- `src/routes/api/v1/deliveryRoutes.js`, `src/routes/api/v1/layoutRoutes.js`
+- `src/utils/renderCache.js`
+- `src/services/siteRendererService.js`
+- `src/controllers/site/siteRendererController.js`
+- `src/routes/site/siteRoutes.js`
+- `src/views/site/404.ejs`
+- `src/views/site/partials/head.ejs`
+- `src/views/site/partials/header.ejs`
+- `src/views/site/partials/footer.ejs`
+- `tests/siteRenderer.test.js`
 
 ## Route / API Dự kiến
-- `GET /api/v1/content/item?path=...&lang=...`
-- `GET /api/v1/content/item/:id?lang=...`
-- `GET /api/v1/content/children/:id?lang=...`
-- `GET /api/v1/layout?path=/sitecore/content/home&lang=en&device=default`
+- `GET /`
+- `GET /:slug` (ví dụ `/about-us`)
+- `GET /:parentSlug/:childSlug` (ví dụ `/about-us/team`)
+- `GET /:lang/*` (ví dụ `/en/about-us`)
 
 ## Thay đổi Database
 Không thay đổi schema (truy vấn trực tiếp trên `items_web`).
 
 ## Definition of Done & Cách kiểm thử
-- Gọi `GET http://localhost:3000/api/v1/layout?path=/sitecore/content/home&lang=en` bằng Postman hoặc trình duyệt.
-- Nhận về phản hồi JSON chuẩn có HTTP 200, chứa đúng `route` và mảng components gom theo `placeholders` (ví dụ `main: [{ componentName: "HeroBanner", ... }]`).
-- Dữ liệu `fields` của component HeroBanner hiển thị đầy đủ tiêu đề và URL hình ảnh media đã resolve chính xác.
-- Lần gọi thứ 2: Response time dưới 10ms do hit cache (`X-Cache: HIT`).
-- Sửa presentation của item trong Admin CMS và Publish lại -> Gọi lại API, cache được làm mới tự động và trả về dữ liệu mới nhất.
-- Thử gọi path không tồn tại -> Trả về HTTP 404 với error message rõ ràng.
+- Khởi động server tại cổng 4000 (`http://localhost:4000/`).
+- Truy cập `http://localhost:4000/` trên trình duyệt:
+  - Trang chủ hiển thị chuẩn mã HTML SSR với đầy đủ layout `HomeLayout` và các khối `HeroBanner`, `Introduction`, `ImageText` trong placeholder `maincontent`.
+  - Tiêu đề `<title>` hiển thị đúng giá trị `HeroTitle` hoặc `PageTitle`.
+- Truy cập `http://localhost:4000/about-us`: Hiển thị đúng nội dung trang About us đã publish.
+- Truy cập một trang chưa publish hoặc không tồn tại (ví dụ `/draft-page`): Trả về mã lỗi 404 và render giao diện `404.ejs`.
+- Lần gọi thứ 2 đến `/about-us`: Tốc độ phản hồi dưới 10ms do đọc từ bộ nhớ đệm render cache.
+- Thay đổi nội dung trang trong Content Editor, bấm "Publish Item" -> Truy cập lại `http://localhost:4000/about-us`: Cache tự động xóa và hiển thị nội dung mới ngay lập tức.
+- Thử nghiệm tạo component cố tình chứa lỗi cú pháp trong `src/views/site/components/`: Trang web không bị sập (crash server 500); ở môi trường dev hiển thị khối viền đỏ báo lỗi riêng của component đó.
 
 ## Rủi ro & Giảm thiểu
-- *Rủi ro:* Lộ dữ liệu nhạy cảm hoặc dữ liệu draft chưa qua phê duyệt.
-- *Giảm thiểu:* Delivery API và Layout Service tuyệt đối không truy vấn vào collection `items_master`, chỉ đọc từ `items_web` và lọc bỏ các metadata nội bộ không cần thiết.
+- *Rủi ro:* Lỗi trong một component EJS làm crash tiến trình Node.js hoặc sập toàn bộ trang web.
+- *Giảm thiểu:* Bọc từng lệnh render component trong khối `try...catch` (Error Boundary), ghi log bằng Winston và hiển thị fallback an toàn.
 
 ## Ghi chú / Kết quả
 *(Chưa bắt đầu - Chờ phê duyệt `APPROVE GĐ 10`)*
-
-> [!NOTE]
-> **Nhắc nhở GĐ 4.1 / DEC-029:** Ngôn ngữ mặc định toàn hệ thống hiện tại là `vi`. Khi gọi Content Delivery API (`/api/v1/content/*`) và Layout Service (`GET /api/v1/layout?path=...`) mà client không gửi param `lang`, endpoint phải tự động mặc định ngôn ngữ là `vi` (thay vì `en`). Thử nghiệm DoD cũng cần kiểm tra với `lang=vi` làm chuẩn mặc định.
-

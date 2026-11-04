@@ -137,18 +137,22 @@ describe('Template Manager API & SSR Endpoints', () => {
   // ==========================================
   // SSR UI Endpoints
   // ==========================================
-  test('GET /admin/template-manager renders 200 with ribbon and templates', async () => {
-    const res = await agent.get('/admin/template-manager').expect(200);
+  test('GET /admin/template-manager redirects 302 to Content Editor templates node', async () => {
+    const res = await agent.get('/admin/template-manager').expect(302);
+    expect(res.headers.location).toContain('/admin/content-editor?path=/sitecore/templates');
+  });
+
+  test('GET /admin/template-manager/:id redirects 302 to Content Editor with template item', async () => {
+    const res = await agent.get(`/admin/template-manager/${articleTemplate._id}`).expect(302);
+    expect(res.headers.location).toBe(`/admin/content-editor/${articleTemplate._id}`);
+  });
+
+  test('GET /admin/template-manager?legacy=true renders 200 with ribbon and templates', async () => {
+    const res = await agent.get('/admin/template-manager?legacy=true').expect(200);
     expect(res.text).toContain('Template Manager');
     expect(res.text).toContain('Article');
     expect(res.text).toContain('Base Page');
     expect(res.text).toContain('id="templateWorkspaceTabs"');
-  });
-
-  test('GET /admin/template-manager/:id renders active template view', async () => {
-    const res = await agent.get(`/admin/template-manager/${articleTemplate._id}`).expect(200);
-    expect(res.text).toContain('Template Manager');
-    expect(res.text).toContain('Article');
   });
 
   test('GET /admin/template-manager/:id/builder returns builder partial with sections & fields', async () => {
