@@ -1,8 +1,8 @@
 # DEC-028: Đối Chiếu Kiến Trúc & Kế Thừa Module Media Library + Rich Text Editor từ Dự Án Tham Chiếu
 > File: `docs/decisions/DEC-028-media-richtext-reference.md`  
 > Giai đoạn: GĐ 5 (Media Library & Rich Text Editor)  
-> Ngày quyết định: 2026-11-03  
-> Trạng thái: **Đang áp dụng (Phân tích & Thống nhất Bước 1)**
+> Ngày quyết định: 2026-11-03 (Điều chỉnh: 2026-11-05)  
+> Trạng thái: **Đã được thay thế (Superseded by DEC-038)**
 
 ---
 

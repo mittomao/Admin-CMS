@@ -590,9 +590,11 @@ function attachItemFormEvents() {
           onSelect: (assets) => {
             if (!assets || assets.length === 0) return;
             const asset = assets[0];
-            input.value = asset._id;
+            const directUrl = asset.secure_url || asset.url || `/media/file/${asset._id}`;
+            const thumbUrl = asset.thumbnailUrl || directUrl;
+            input.value = directUrl;
             if (previewBox && previewImg) {
-              previewImg.src = `/media/file/${asset._id}?thumb=1`;
+              previewImg.src = thumbUrl;
               previewBox.classList.remove('d-none');
             }
             isFormDirty = true;
@@ -613,10 +615,123 @@ function attachItemFormEvents() {
         updateDirtyState(true);
       });
     }
+
+    if (input && previewBox && previewImg) {
+      input.addEventListener('input', () => {
+        const val = input.value.trim();
+        if (val) {
+          previewImg.onerror = () => {
+            previewBox.classList.add('d-none');
+          };
+          previewImg.src = val.startsWith('http') || val.startsWith('/') ? val : `/media/file/${val}?thumb=1`;
+          previewBox.classList.remove('d-none');
+        } else {
+          previewBox.classList.add('d-none');
+        }
+      });
+    }
   });
 
   // Rich Text Editor TinyMCE 6 Integration
   initRichTextEditors(form, { csrfToken: getCsrfToken() });
+
+  // Upload / Replace Media Asset directly from Item Form
+  const replaceBtn = form.querySelector('#btnReplaceMediaAsset');
+  const fileInput = form.querySelector('#mediaAssetFileInput');
+  const dropzone = form.querySelector('.js-media-upload-dropzone');
+
+  if (fileInput) {
+    if (replaceBtn) {
+      replaceBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput.click();
+      });
+    }
+
+    if (dropzone) {
+      dropzone.addEventListener('click', () => {
+        fileInput.click();
+      });
+      dropzone.addEventListener('dragover', (e) => {
+        if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('border-primary');
+        }
+      });
+      dropzone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('border-primary');
+      });
+      dropzone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('border-primary');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          await uploadMediaAssetForItem(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    fileInput.addEventListener('change', async (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        const file = e.target.files[0];
+        e.target.value = '';
+        await uploadMediaAssetForItem(file);
+      }
+    });
+  }
+}
+
+async function uploadMediaAssetForItem(file) {
+  if (!file || !currentItemId) return;
+
+  const replaceBtn = document.getElementById('btnReplaceMediaAsset');
+  const origBtnHtml = replaceBtn ? replaceBtn.innerHTML : '';
+  if (replaceBtn) {
+    replaceBtn.disabled = true;
+    replaceBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`/api/media/${currentItemId}/replace`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-Token': getCsrfToken(),
+        'CSRF-Token': getCsrfToken()
+      },
+      body: formData
+    });
+
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.message || 'Upload failed');
+    }
+
+    showToast('Tải lên tệp thành công!', 'success');
+
+    // Cập nhật tên node trên cây nếu đổi
+    const activeNode = treeInstance?.getActiveNode();
+    if (activeNode && result.media?.displayName) {
+      activeNode.setTitle(result.media.displayName);
+    }
+
+    // Tải lại workspace của item để hiển thị preview ảnh mới
+    await loadItemWorkspace(currentItemId, currentViewMode);
+  } catch (err) {
+    console.error('Error uploading media asset:', err);
+    alert(`Lỗi tải lên: ${err.message}`);
+  } finally {
+    if (replaceBtn) {
+      replaceBtn.disabled = false;
+      replaceBtn.innerHTML = origBtnHtml;
+    }
+  }
 }
 
 async function submitItemForm() {
@@ -741,6 +856,85 @@ function attachFolderViewEvents() {
   const folderInsertBtn = document.getElementById('folderViewInsertBtn');
   if (folderInsertBtn) {
     folderInsertBtn.addEventListener('click', () => openInsertModal());
+  }
+
+  const folderUploadBtn = document.getElementById('folderViewUploadBtn');
+  const folderFileInput = document.getElementById('folderViewFileInput');
+  if (folderUploadBtn && folderFileInput) {
+    folderUploadBtn.addEventListener('click', () => folderFileInput.click());
+    folderFileInput.addEventListener('change', async (e) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      await uploadMediaToCurrentFolder(files);
+      folderFileInput.value = '';
+    });
+  }
+
+  // Drag & drop files directly onto folder view container
+  const folderWorkspace = document.getElementById('itemWorkspace');
+  if (folderWorkspace && folderUploadBtn) {
+    folderWorkspace.addEventListener('dragover', (e) => {
+      if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+        e.preventDefault();
+        e.stopPropagation();
+        folderWorkspace.classList.add('bg-azure-lt');
+      }
+    });
+    folderWorkspace.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      folderWorkspace.classList.remove('bg-azure-lt');
+    });
+    folderWorkspace.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      folderWorkspace.classList.remove('bg-azure-lt');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        await uploadMediaToCurrentFolder(e.dataTransfer.files);
+      }
+    });
+  }
+}
+
+async function uploadMediaToCurrentFolder(files) {
+  if (!files || files.length === 0 || !currentItemId) return;
+
+  const formData = new FormData();
+  formData.append('folderId', currentItemId);
+  for (let i = 0; i < files.length; i++) {
+    formData.append('files', files[i]);
+  }
+
+  const toastStatus = document.getElementById('treeStatusText');
+  if (toastStatus) toastStatus.textContent = `Uploading ${files.length} file(s)...`;
+
+  try {
+    const res = await fetch('/api/media/upload', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': getCsrfToken()
+      },
+      body: formData
+    });
+
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.error?.message || result.message || 'Upload failed');
+    }
+
+    if (toastStatus) toastStatus.textContent = 'Upload completed successfully';
+
+    // Reload tree node children and workspace
+    const activeNode = treeInstance?.getNodeByKey(currentItemId);
+    if (activeNode && typeof activeNode.load === 'function') {
+      activeNode.load(true);
+    }
+
+    await loadItemWorkspace(currentItemId, currentViewMode);
+  } catch (err) {
+    console.error('[ContentEditor] Upload error:', err);
+    alert(`Lỗi upload media: ${err.message}`);
+    if (toastStatus) toastStatus.textContent = 'Upload failed';
   }
 }
 

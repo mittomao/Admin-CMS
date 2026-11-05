@@ -5,6 +5,11 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const requiredEnvVars = ['PORT', 'NODE_ENV', 'MONGO_URI'];
 
+// Validate Cloudinary credentials in non-test environments if provider is cloudinary
+if (process.env.STORAGE_PROVIDER === 'cloudinary' && process.env.NODE_ENV !== 'test') {
+  requiredEnvVars.push('CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET');
+}
+
 const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
 
 if (missingVars.length > 0) {
@@ -23,6 +28,11 @@ const env = {
   SESSION_NAME: process.env.SESSION_NAME || 'cms_session_id',
   SESSION_MAX_AGE: parseInt(process.env.SESSION_MAX_AGE, 10) || 86400000,
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
+  STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || 'cloudinary',
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  CLOUDINARY_ROOT_FOLDER: process.env.CLOUDINARY_ROOT_FOLDER || process.env.CLOUDINARY_API_FOLDER || 'AdminCMS',
   isDev: (process.env.NODE_ENV || 'development') === 'development',
   isProd: process.env.NODE_ENV === 'production',
 };

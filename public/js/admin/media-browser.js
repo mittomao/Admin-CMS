@@ -13,12 +13,15 @@ export class MediaBrowser {
     this.isPicker = this.rootEl.dataset.isPicker === 'true';
     this.csrfToken =
       options.csrfToken ||
+      this.rootEl?.dataset?.csrfToken ||
       document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
       '';
 
     this.currentFolder = null;
     this.currentFolderId = null;
     this.folderTree = [];
+    this.folderMap = new Map();
+    this.expandedFolderIds = new Set();
     this.assets = [];
     this.selectedAssets = new Map();
     this.activeAsset = null;
@@ -31,6 +34,7 @@ export class MediaBrowser {
     this.totalCount = 0;
     this.isLoading = false;
     this.activeAltLang = 'en';
+    this.cacheBustTimestamps = {};
 
     // Callbacks khi chạy ở chế độ Picker
     this.onSelect = options.onSelect || null;
@@ -42,8 +46,11 @@ export class MediaBrowser {
       uploadTrigger: this.rootEl.querySelector('.js-upload-trigger'),
       fileInput: this.rootEl.querySelector('.js-file-input'),
       newFolderBtn: this.rootEl.querySelector('.js-new-folder-btn'),
+      deleteFolderBtn: this.rootEl.querySelector('.js-delete-folder-btn'),
       toggleBulkBtn: this.rootEl.querySelector('.js-toggle-bulk-mode'),
       refreshBtn: this.rootEl.querySelector('.js-refresh-btn'),
+      syncCloudinaryBtn: this.rootEl.querySelector('.js-sync-cloudinary-btn'),
+      syncDirectionSelect: this.rootEl.querySelector('.js-sync-direction-select'),
       formatFilter: this.rootEl.querySelector('.js-format-filter'),
       sortFilter: this.rootEl.querySelector('.js-sort-filter'),
       searchInput: this.rootEl.querySelector('.js-search-input'),
@@ -89,6 +96,30 @@ export class MediaBrowser {
       inspectorCopyBtn: this.rootEl.querySelector('.js-inspector-copy-btn'),
       inspectorDeleteBtn: this.rootEl.querySelector('.js-inspector-delete-btn')
     };
+  }
+
+  getCsrfToken() {
+    return (
+      this.csrfToken ||
+      this.rootEl?.dataset?.csrfToken ||
+      document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+      window._csrfToken ||
+      ''
+    );
+  }
+
+  async parseJsonResponse(res) {
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await res.text();
+      let msg = `Server error (${res.status})`;
+      if (text.includes('<title>')) {
+        const m = text.match(/<title>(.*?)<\/title>/i);
+        if (m && m[1]) msg = m[1].trim();
+      }
+      throw new Error(msg);
+    }
+    return await res.json();
   }
 
   /**
@@ -147,9 +178,13 @@ export class MediaBrowser {
       });
     }
 
-    // 3. New folder button
+    // 3. New folder & Delete folder buttons
     if (this.dom.newFolderBtn) {
       this.dom.newFolderBtn.addEventListener('click', () => this.promptCreateFolder());
+    }
+
+    if (this.dom.deleteFolderBtn) {
+      this.dom.deleteFolderBtn.addEventListener('click', () => this.promptDeleteFolder());
     }
 
     // 4. Filters & Sort
@@ -223,6 +258,56 @@ export class MediaBrowser {
       });
     }
 
+    // 7.1 Sync Cloudinary (Pull / Push / Both)
+    if (this.dom.syncCloudinaryBtn) {
+      this.dom.syncCloudinaryBtn.addEventListener('click', async () => {
+        const direction = this.dom.syncDirectionSelect?.value || 'both';
+        let confirmMsg = 'Bạn có muốn đồng bộ 2 chiều giữa Cloudinary và CMS không?';
+        if (direction === 'pull') {
+          confirmMsg = 'Bạn có muốn kéo toàn bộ tài nguyên từ Cloudinary về CMS không?';
+        } else if (direction === 'push') {
+          confirmMsg = 'Bạn có muốn đẩy từ CMS lên Cloudinary (đảm bảo thư mục và dọn dẹp các ảnh đã xóa trên CMS) không?';
+        }
+
+        if (!confirm(confirmMsg)) return;
+        this.dom.syncCloudinaryBtn.disabled = true;
+        this.dom.syncCloudinaryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Syncing...';
+        try {
+          const res = await fetch('/api/media/sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-Token': this.getCsrfToken(),
+              'CSRF-Token': this.getCsrfToken()
+            },
+            body: JSON.stringify({ direction })
+          });
+          const data = await this.parseJsonResponse(res);
+          if (data.success) {
+            if (direction === 'both') {
+              const pull = data.report?.pull || {};
+              const push = data.report?.push || {};
+              this.showToast(`Đồng bộ 2 chiều thành công! Tạo mới: ${pull.created || 0}, Cập nhật: ${pull.updated || 0}, Dọn dẹp Cloudinary: ${push.purged || 0}`);
+            } else if (direction === 'pull') {
+              this.showToast(`Đồng bộ Pull thành công! Tạo mới: ${data.report?.created || 0}, Cập nhật: ${data.report?.updated || 0}`);
+            } else if (direction === 'push') {
+              this.showToast(`Đồng bộ Push thành công! Đã dọn dẹp trên Cloudinary: ${data.report?.purged || 0}, Thư mục tạo: ${data.report?.foldersCreated || 0}`);
+            }
+            await this.loadFolders();
+            await this.loadAssets();
+          } else {
+            alert(data.message || 'Lỗi khi đồng bộ từ Cloudinary.');
+          }
+        } catch (err) {
+          alert(`Đồng bộ thất bại: ${err.message}`);
+        } finally {
+          this.dom.syncCloudinaryBtn.disabled = false;
+          this.dom.syncCloudinaryBtn.innerHTML = '<i class="ti ti-refresh me-1"></i> Sync';
+        }
+      });
+    }
+
     // 8. Load More button
     if (this.dom.loadMoreBtn) {
       this.dom.loadMoreBtn.addEventListener('click', () => {
@@ -235,7 +320,7 @@ export class MediaBrowser {
     if (this.dom.inspectorCopyBtn) {
       this.dom.inspectorCopyBtn.addEventListener('click', () => {
         if (!this.activeAsset) return;
-        const url = `${window.location.origin}/media/file/${this.activeAsset._id}`;
+        const url = this.activeAsset.secure_url || this.activeAsset.url || `${window.location.origin}/media/file/${this.activeAsset._id}`;
         navigator.clipboard.writeText(url).then(() => {
           this.showToast('Copied file URL to clipboard!');
         });
@@ -263,11 +348,13 @@ export class MediaBrowser {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'CSRF-Token': this.csrfToken
+              'Accept': 'application/json',
+              'X-CSRF-Token': this.getCsrfToken(),
+              'CSRF-Token': this.getCsrfToken()
             },
             body: JSON.stringify({ displayName: newName.trim() })
           });
-          const data = await res.json();
+          const data = await this.parseJsonResponse(res);
           if (data.success) {
             this.showToast('Asset renamed successfully.');
             this.activeAsset.displayName = data.media?.displayName || newName.trim();
@@ -305,18 +392,31 @@ export class MediaBrowser {
           const res = await fetch(`/api/media/${this.activeAsset._id}/replace`, {
             method: 'POST',
             headers: {
-              'CSRF-Token': this.csrfToken
+              'Accept': 'application/json',
+              'X-CSRF-Token': this.getCsrfToken(),
+              'CSRF-Token': this.getCsrfToken()
             },
             body: formData
           });
 
           this.hideProgress();
-          const data = await res.json();
+          const data = await this.parseJsonResponse(res);
           if (data.success) {
             this.showToast('File replaced successfully.');
+            const assetId = this.activeAsset._id;
+            this.cacheBustTimestamps[assetId] = Date.now();
             this.activeAsset = data.media;
+
+            // Cập nhật ngay lập tức card ảnh trên DOM nếu đang hiển thị
+            const activeCardImg = this.dom.grid.querySelector(`.media-card[data-id="${assetId}"] .card-thumb-img`);
+            if (activeCardImg) {
+              const cbTime = this.cacheBustTimestamps[assetId];
+              const newThumb = data.media.thumbnailUrl || data.media.secure_url;
+              activeCardImg.src = `${newThumb}${newThumb.includes('?') ? '&' : '?'}_t=${cbTime}`;
+            }
+
             this.renderInspector(this.activeAsset);
-            this.loadAssets();
+            await this.loadAssets();
           } else {
             alert(data.message || 'Failed to replace file.');
           }
@@ -350,14 +450,15 @@ export class MediaBrowser {
   }
 
   /**
-   * Tải danh sách cây thư mục
+   * Tải danh sách cây thư mục (hỗ trợ phân cấp đệ quy)
    */
   async loadFolders() {
     try {
-      const res = await fetch('/api/media/folders');
+      const res = await fetch('/api/media/folders?recursive=true');
       const data = await res.json();
       if (data.success) {
         this.folderTree = data.folders || [];
+        this.buildFolderMap();
         this.renderFolderTree();
       }
     } catch (err) {
@@ -365,54 +466,204 @@ export class MediaBrowser {
     }
   }
 
+  buildFolderMap() {
+    this.folderMap = new Map();
+    let rootNode = null;
+
+    for (const f of this.folderTree) {
+      this.folderMap.set(f._id, { ...f, children: [] });
+      if (!f.parentId || f.path === '/sitecore/media library') {
+        rootNode = this.folderMap.get(f._id);
+      }
+    }
+
+    for (const f of this.folderTree) {
+      if (f.parentId && this.folderMap.has(f.parentId)) {
+        this.folderMap.get(f.parentId).children.push(this.folderMap.get(f._id));
+      }
+    }
+
+    // Luôn mở rộng root node theo mặc định
+    if (rootNode) {
+      this.expandedFolderIds.add(rootNode._id);
+    }
+  }
+
   renderFolderTree() {
     if (!this.dom.folderTreeContainer) return;
 
-    let html = `
-      <div class="tree-item ${!this.currentFolderId ? 'active' : ''}" data-folder-id="">
-        <i class="ti ti-folder text-primary"></i>
-        <span class="tree-name">Media Library (Root)</span>
-      </div>
-    `;
+    let rootNode = null;
+    for (const [, node] of this.folderMap) {
+      if (!node.parentId || node.path === '/sitecore/media library') {
+        rootNode = node;
+        break;
+      }
+    }
 
-    for (const folder of this.folderTree) {
-      const isActive = this.currentFolderId === folder._id;
-      html += `
-        <div class="tree-item tree-sub-item ${isActive ? 'active' : ''}" data-folder-id="${folder._id}">
-          <i class="ti ti-folder${isActive ? '-open text-primary' : ''}"></i>
-          <span class="tree-name" title="${folder.displayName}">${folder.displayName}</span>
+    let html = '';
+    if (rootNode) {
+      html = this.renderFolderNode(rootNode, 0);
+    } else {
+      html = `
+        <div class="tree-item ${!this.currentFolderId ? 'active' : ''}" data-folder-id="">
+          <i class="ti ti-folder text-primary"></i>
+          <span class="tree-name">Media Library</span>
+          <span class="badge bg-secondary-lt tree-root-badge">Root</span>
         </div>
       `;
     }
 
     this.dom.folderTreeContainer.innerHTML = html;
 
-    // Gắn sự kiện click node thư mục
+    // Gắn sự kiện click mở/thu gọn chevron
+    this.dom.folderTreeContainer.querySelectorAll('.js-tree-toggle').forEach((toggle) => {
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const nodeId = toggle.dataset.nodeId;
+        if (this.expandedFolderIds.has(nodeId)) {
+          this.expandedFolderIds.delete(nodeId);
+        } else {
+          this.expandedFolderIds.add(nodeId);
+        }
+        this.renderFolderTree();
+      });
+    });
+
+    // Gắn sự kiện click chọn node thư mục & kéo thả tệp tin vào thư mục con
     this.dom.folderTreeContainer.querySelectorAll('.tree-item').forEach((item) => {
       item.addEventListener('click', () => {
         const folderId = item.dataset.folderId || null;
         this.selectFolder(folderId);
       });
+
+      // Kéo thả trực tiếp vào node thư mục
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        item.classList.add('drag-over');
+      });
+
+      item.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        item.classList.remove('drag-over');
+      });
+
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        item.classList.remove('drag-over');
+        const folderId = item.dataset.folderId || null;
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          this.selectFolder(folderId);
+          this.handleUpload(e.dataTransfer.files, folderId);
+        }
+      });
     });
   }
 
+  renderFolderNode(node, depth = 0) {
+    const isRoot = !node.parentId || node.path === '/sitecore/media library';
+    const folderId = isRoot ? '' : node._id;
+    const isActive = (this.currentFolderId || '') === folderId;
+    const hasChildren = node.children && node.children.length > 0;
+    const isExpanded = this.expandedFolderIds.has(node._id);
+
+    const padLeft = depth * 16 + 10;
+    const folderIcon = isActive || isExpanded
+      ? 'ti-folder-open text-primary'
+      : (isRoot ? 'ti-folder text-primary' : 'ti-folder-filled text-warning');
+
+    let html = `
+      <div class="tree-item ${isActive ? 'active' : ''}" data-folder-id="${folderId}" style="padding-left: ${padLeft}px;">
+        ${
+          hasChildren
+            ? `<span class="tree-expander js-tree-toggle" data-node-id="${node._id}" title="${isExpanded ? 'Collapse' : 'Expand'}">
+                 <i class="ti ti-chevron-${isExpanded ? 'down' : 'right'}"></i>
+               </span>`
+            : `<span class="tree-expander-spacer"></span>`
+        }
+        <i class="ti ${folderIcon} me-1"></i>
+        <span class="tree-name" title="${node.displayName || node.name}">${node.displayName || node.name}</span>
+        ${isRoot ? '<span class="badge bg-secondary-lt tree-root-badge">Root</span>' : ''}
+      </div>
+    `;
+
+    if (hasChildren && isExpanded) {
+      for (const child of node.children) {
+        html += this.renderFolderNode(child, depth + 1);
+      }
+    }
+
+    return html;
+  }
+
   selectFolder(folderId) {
-    this.currentFolderId = folderId;
-    this.currentFolder = this.folderTree.find((f) => f._id === folderId) || null;
+    this.currentFolderId = folderId || null;
+    this.currentFolder = (folderId && this.folderMap) ? this.folderMap.get(folderId) : null;
     this.page = 1;
     this.clearSelection();
+
+    // Hiện/ẩn nút Delete Folder (chỉ hiện khi đang ở thư mục con)
+    if (this.dom.deleteFolderBtn) {
+      if (this.currentFolderId) {
+        this.dom.deleteFolderBtn.classList.remove('d-none');
+      } else {
+        this.dom.deleteFolderBtn.classList.add('d-none');
+      }
+    }
+
+    // Đảm bảo tổ tiên của folder được mở rộng trong cây
+    if (this.currentFolder && this.currentFolder.ancestors) {
+      for (const ancId of this.currentFolder.ancestors) {
+        this.expandedFolderIds.add(ancId.toString());
+      }
+    }
+
     this.renderFolderTree();
-    this.updateBreadcrumbs();
     this.loadAssets();
   }
 
-  updateBreadcrumbs() {
+  updateBreadcrumbs(crumbs = null) {
     if (!this.dom.breadcrumbs) return;
 
-    let html = '<span class="breadcrumb-item js-crumb" data-folder-id=""><i class="ti ti-folder text-primary me-1"></i> Media Library</span>';
-    if (this.currentFolder) {
-      html += ` <span class="breadcrumb-separator">/</span> <span class="breadcrumb-item active">${this.currentFolder.displayName}</span>`;
+    if (!crumbs || crumbs.length === 0) {
+      if (this.currentFolder && this.folderMap && this.folderMap.has(this.currentFolderId)) {
+        const chain = [];
+        let curr = this.folderMap.get(this.currentFolderId);
+        while (curr) {
+          chain.unshift(curr);
+          curr = curr.parentId ? this.folderMap.get(curr.parentId) : null;
+        }
+        crumbs = chain;
+      }
     }
+
+    if (!crumbs || crumbs.length === 0) {
+      this.dom.breadcrumbs.innerHTML = `
+        <span class="breadcrumb-item active"><i class="ti ti-folder text-primary me-1"></i> Media Library</span>
+      `;
+      return;
+    }
+
+    let html = '';
+    crumbs.forEach((crumb, index) => {
+      const isLast = index === crumbs.length - 1;
+      const isRoot = !crumb.parentId || crumb.path === '/sitecore/media library';
+      const cId = isRoot ? '' : (crumb._id || '');
+      const label = isRoot ? 'Media Library' : (crumb.displayName || crumb.name);
+
+      if (index > 0) {
+        html += '<span class="breadcrumb-separator">/</span>';
+      }
+
+      if (isLast) {
+        html += `<span class="breadcrumb-item active fw-semibold">${label}</span>`;
+      } else {
+        html += `<span class="breadcrumb-item js-crumb" data-folder-id="${cId}">${label}</span>`;
+      }
+    });
+
     this.dom.breadcrumbs.innerHTML = html;
 
     this.dom.breadcrumbs.querySelectorAll('.js-crumb').forEach((crumb) => {
@@ -447,6 +698,11 @@ export class MediaBrowser {
           this.assets.push(...(data.assets || []));
         } else {
           this.assets = data.assets || [];
+        }
+        if (data.breadcrumbs) {
+          this.updateBreadcrumbs(data.breadcrumbs);
+        } else {
+          this.updateBreadcrumbs();
         }
         this.renderGrid(append);
       }
@@ -502,19 +758,27 @@ export class MediaBrowser {
   renderCardHtml(asset) {
     const isSelected = this.selectedAssets.has(asset._id);
     const isActive = this.activeAsset && this.activeAsset._id === asset._id;
-    const isImg = asset.fileDetails?.mimeType?.startsWith('image/');
-    const thumbUrl = asset.fileDetails?.thumbnailPath
-      ? `/media/file/${asset._id}?thumb=1`
-      : `/media/file/${asset._id}`;
-    const ext = (asset.fileDetails?.extension || '').toUpperCase();
-    const sizeStr = this.formatBytes(asset.fileDetails?.fileSize || 0);
+    const isImg =
+      asset.fileDetails?.mimeType?.startsWith('image/') ||
+      /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(asset.displayName || asset.name);
+    let directUrl = asset.secure_url || asset.url || `/media/file/${asset._id}`;
+    let thumbUrl = asset.thumbnailUrl || directUrl;
+
+    const cb = this.cacheBustTimestamps[asset._id] || (asset.updatedAt ? new Date(asset.updatedAt).getTime() : null);
+    if (cb) {
+      thumbUrl = `${thumbUrl}${thumbUrl.includes('?') ? '&' : '?'}_t=${cb}`;
+      directUrl = `${directUrl}${directUrl.includes('?') ? '&' : '?'}_t=${cb}`;
+    }
+
+    const ext = (asset.fileDetails?.extension || asset.format || '').toUpperCase();
+    const sizeStr = this.formatBytes(asset.fileDetails?.fileSize || asset.bytes || 0);
 
     return `
       <div class="media-card ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}" data-id="${asset._id}">
         <div class="card-thumb-box">
           ${
             isImg
-              ? `<img src="${thumbUrl}" alt="${asset.displayName}" class="card-thumb-img" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';" /><div class="card-file-icon" style="display: none;">🖼️</div>`
+              ? `<img src="${thumbUrl}" alt="${asset.displayName}" class="card-thumb-img" loading="lazy" onerror="if(this.src!=='${directUrl}' && '${directUrl}' && !this.dataset.triedDirect){this.dataset.triedDirect='1';this.src='${directUrl}';}else{this.onerror=null;this.style.display='none';if(!this.parentElement.querySelector('.card-file-icon')){this.parentElement.insertAdjacentHTML('afterbegin','<div class=\\'card-file-icon\\'>🖼️</div>');}}" />`
               : `<div class="card-file-icon">📄</div>`
           }
           <span class="card-badge badge-${ext.toLowerCase()}">${ext}</span>
@@ -554,10 +818,13 @@ export class MediaBrowser {
         this.selectAsset(asset);
       });
 
-      // Double Click: Chèn ảnh ngay lập tức nếu đang ở chế độ Picker
+      // Double Click: Chèn ảnh nếu ở chế độ Picker, hoặc mở xem file gốc nếu standalone
       card.addEventListener('dblclick', () => {
         if (this.isPicker) {
           this.insertSingleAsset(asset);
+        } else {
+          const viewUrl = asset.secure_url || asset.url || `/media/file/${asset._id}`;
+          window.open(viewUrl, '_blank');
         }
       });
     });
@@ -585,27 +852,61 @@ export class MediaBrowser {
     if (this.dom.inspectorEmpty) this.dom.inspectorEmpty.classList.add('d-none');
     this.dom.inspectorContent.classList.remove('d-none');
 
-    const isImg = asset.fileDetails?.mimeType?.startsWith('image/');
-    const fileUrl = `/media/file/${asset._id}`;
+    const isImg =
+      asset.fileDetails?.mimeType?.startsWith('image/') ||
+      /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(asset.displayName || asset.name);
+    let fileUrl = asset.secure_url || asset.url || `/media/file/${asset._id}`;
+    let thumbUrl = asset.thumbnailUrl || fileUrl;
+
+    const cb = this.cacheBustTimestamps[asset._id] || (asset.updatedAt ? new Date(asset.updatedAt).getTime() : null);
+    if (cb) {
+      if (fileUrl) fileUrl = `${fileUrl}${fileUrl.includes('?') ? '&' : '?'}_t=${cb}`;
+      if (thumbUrl) thumbUrl = `${thumbUrl}${thumbUrl.includes('?') ? '&' : '?'}_t=${cb}`;
+    }
 
     if (isImg) {
       if (this.dom.inspectorPreview) {
-        this.dom.inspectorPreview.src = fileUrl;
-        this.dom.inspectorPreview.classList.remove('d-none');
+        this.dom.inspectorPreview.dataset.triedFallback = '';
+        this.dom.inspectorPreview.onerror = () => {
+          if (thumbUrl && this.dom.inspectorPreview.src !== thumbUrl && !this.dom.inspectorPreview.dataset.triedFallback) {
+            this.dom.inspectorPreview.dataset.triedFallback = '1';
+            this.dom.inspectorPreview.src = thumbUrl;
+          } else {
+            this.dom.inspectorPreview.classList.add('d-none');
+            if (this.dom.inspectorFileIcon) {
+              this.dom.inspectorFileIcon.innerHTML = '🖼️';
+              this.dom.inspectorFileIcon.classList.remove('d-none');
+            }
+          }
+        };
+        const initialSrc = fileUrl || thumbUrl;
+        if (initialSrc) {
+          this.dom.inspectorPreview.src = initialSrc;
+          this.dom.inspectorPreview.classList.remove('d-none');
+          if (this.dom.inspectorFileIcon) this.dom.inspectorFileIcon.classList.add('d-none');
+        } else {
+          this.dom.inspectorPreview.classList.add('d-none');
+          if (this.dom.inspectorFileIcon) {
+            this.dom.inspectorFileIcon.innerHTML = '🖼️';
+            this.dom.inspectorFileIcon.classList.remove('d-none');
+          }
+        }
       }
-      if (this.dom.inspectorFileIcon) this.dom.inspectorFileIcon.classList.add('d-none');
     } else {
       if (this.dom.inspectorPreview) this.dom.inspectorPreview.classList.add('d-none');
-      if (this.dom.inspectorFileIcon) this.dom.inspectorFileIcon.classList.remove('d-none');
+      if (this.dom.inspectorFileIcon) {
+        this.dom.inspectorFileIcon.innerHTML = '📄';
+        this.dom.inspectorFileIcon.classList.remove('d-none');
+      }
     }
 
     if (this.dom.inspectorName) this.dom.inspectorName.value = asset.displayName || asset.name;
     if (this.dom.inspectorFormat)
-      this.dom.inspectorFormat.textContent = (asset.fileDetails?.extension || '').toUpperCase();
+      this.dom.inspectorFormat.textContent = (asset.fileDetails?.extension || asset.format || '').toUpperCase();
     if (this.dom.inspectorSize)
-      this.dom.inspectorSize.textContent = this.formatBytes(asset.fileDetails?.fileSize || 0);
+      this.dom.inspectorSize.textContent = this.formatBytes(asset.fileDetails?.fileSize || asset.bytes || 0);
 
-    const dims = asset.fileDetails?.dimensions;
+    const dims = asset.fileDetails?.dimensions || { width: asset.width, height: asset.height };
     if (this.dom.inspectorDimensions) {
       this.dom.inspectorDimensions.textContent =
         dims && dims.width && dims.height ? `${dims.width} x ${dims.height} px` : 'N/A';
@@ -639,7 +940,9 @@ export class MediaBrowser {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'CSRF-Token': this.csrfToken
+          'Accept': 'application/json',
+          'X-CSRF-Token': this.getCsrfToken(),
+          'CSRF-Token': this.getCsrfToken()
         },
         body: JSON.stringify({
           altText: {
@@ -648,7 +951,7 @@ export class MediaBrowser {
         })
       });
 
-      const data = await res.json();
+      const data = await this.parseJsonResponse(res);
       if (data.success) {
         this.activeAsset.altText = data.media.altText;
         this.showToast(`Saved Alt text for [${this.activeAltLang.toUpperCase()}]`);
@@ -693,7 +996,7 @@ export class MediaBrowser {
   /**
    * Xử lý tải lên nhiều tệp tin (Multi-upload kèm XHR Progress)
    */
-  async handleUpload(fileList) {
+  async handleUpload(fileList, targetFolderId = null) {
     if (!fileList || fileList.length === 0) return;
 
     this.showProgress(0, `Compressing ${fileList.length} file(s)...`);
@@ -705,9 +1008,10 @@ export class MediaBrowser {
       compressedFiles.push({ blob, originalName: file.name });
     }
 
+    const activeFolderId = targetFolderId || this.currentFolderId;
     const formData = new FormData();
-    if (this.currentFolderId) {
-      formData.append('folderId', this.currentFolderId);
+    if (activeFolderId) {
+      formData.append('folderId', activeFolderId);
     }
 
     for (const item of compressedFiles) {
@@ -717,7 +1021,9 @@ export class MediaBrowser {
     // Gửi XHR để theo dõi tiến độ
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/media/upload');
-    xhr.setRequestHeader('CSRF-Token', this.csrfToken);
+    xhr.setRequestHeader('X-CSRF-Token', this.getCsrfToken());
+    xhr.setRequestHeader('CSRF-Token', this.getCsrfToken());
+    xhr.setRequestHeader('Accept', 'application/json');
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
@@ -824,12 +1130,14 @@ export class MediaBrowser {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'CSRF-Token': this.csrfToken
+          'Accept': 'application/json',
+          'X-CSRF-Token': this.getCsrfToken(),
+          'CSRF-Token': this.getCsrfToken()
         },
         body: JSON.stringify({ mediaIds: ids })
       });
 
-      const data = await res.json();
+      const data = await this.parseJsonResponse(res);
       if (data.success) {
         this.showToast(`Deleted ${data.deleted} items successfully.`);
         this.clearSelection();
@@ -861,10 +1169,12 @@ export class MediaBrowser {
       const res = await fetch(`/api/media/${assetId}`, {
         method: 'DELETE',
         headers: {
-          'CSRF-Token': this.csrfToken
+          'Accept': 'application/json',
+          'X-CSRF-Token': this.getCsrfToken(),
+          'CSRF-Token': this.getCsrfToken()
         }
       });
-      const data = await res.json();
+      const data = await this.parseJsonResponse(res);
       if (data.success) {
         this.showToast('Item deleted.');
         this.clearInspector();
@@ -885,7 +1195,9 @@ export class MediaBrowser {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'CSRF-Token': this.csrfToken
+          'Accept': 'application/json',
+          'X-CSRF-Token': this.getCsrfToken(),
+          'CSRF-Token': this.getCsrfToken()
         },
         body: JSON.stringify({
           name: folderName.trim(),
@@ -893,9 +1205,12 @@ export class MediaBrowser {
         })
       });
 
-      const data = await res.json();
+      const data = await this.parseJsonResponse(res);
       if (data.success) {
         this.showToast(`Folder "${folderName}" created.`);
+        if (this.currentFolderId) {
+          this.expandedFolderIds.add(this.currentFolderId);
+        }
         await this.loadFolders();
         this.selectFolder(data.folder._id);
       } else {
@@ -903,6 +1218,39 @@ export class MediaBrowser {
       }
     } catch (err) {
       console.error('Error creating folder:', err);
+    }
+  }
+
+  async promptDeleteFolder() {
+    if (!this.currentFolderId) return;
+
+    const folderName = this.currentFolder?.displayName || this.currentFolder?.name || 'this folder';
+    if (!confirm(`Are you sure you want to delete folder "${folderName}"? The folder must be completely empty.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/media/folders/${this.currentFolderId}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'X-CSRF-Token': this.getCsrfToken(),
+          'CSRF-Token': this.getCsrfToken()
+        }
+      });
+
+      const data = await this.parseJsonResponse(res);
+      if (data.success) {
+        this.showToast(`Folder "${folderName}" deleted.`);
+        const parentId = this.currentFolder?.parentId || null;
+        await this.loadFolders();
+        this.selectFolder(parentId);
+      } else {
+        alert(data.message || 'Failed to delete folder.');
+      }
+    } catch (err) {
+      console.error('Error deleting folder:', err);
+      alert('Error occurred while deleting folder.');
     }
   }
 

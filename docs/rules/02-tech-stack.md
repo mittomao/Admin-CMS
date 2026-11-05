@@ -16,7 +16,7 @@
 | **TinyMCE** | Rich Text WYSIWYG Editor | Chuẩn công nghiệp cho CMS doanh nghiệp; hỗ trợ plugin Media Picker tùy biến, kiểm soát chặt chẽ mã HTML đầu ra. |
 | **MongoDB + Mongoose** | Cơ sở dữ liệu NoSQL | Cấu trúc Item linh hoạt (schema-less ở cấp độ fields động do template quy định), hỗ trợ truy vấn phân cấp mạnh mẽ qua Ancestors Array / Materialized Path và Transaction ACID khi cần. |
 | **express-session + connect-mongo** | Quản lý Session | Lưu trữ session tập trung trong collection `sessions` của MongoDB, an toàn, hỗ trợ mở rộng nhiều node server và không bị mất đăng nhập khi khởi động lại ứng dụng. |
-| **Multer + Sharp** | File Upload & Xử lý ảnh | Multer kiểm soát upload file streaming, giới hạn kích thước và định dạng an toàn; Sharp tạo thumbnail tự động tối ưu hóa tốc độ xem trước ảnh trong Media Library. |
+| **Multer + Cloudinary SDK** | File Upload & Lưu trữ Đám mây (GĐ 5.1 & DEC-038) | Multer kiểm soát upload file streaming trong bộ nhớ (memory buffer); Cloudinary SDK truyền tải nhị phân lên Cloudinary (`AdminCMS`), sinh transformation URL tự động (thay thế xử lý cục bộ của `sharp`). |
 | **Helmet + CSURF / Double-Submit Cookie** | Bảo mật Web | Thiết lập các HTTP response headers bảo vệ (X-Frame-Options, CSP, HSTS); cơ chế chống giả mạo yêu cầu chéo trang (CSRF) cho cả Form POST và Fetch/AJAX. |
 | **DOMPurify / sanitize-html** | Làm sạch dữ liệu Rich Text | Ngăn chặn triệt để tấn công Stored XSS khi biên tập viên dán mã HTML/JS từ bên ngoài vào; cấu hình lọc script, iframe tại tầng server. |
 | **bcryptjs** | Băm mật khẩu | Tiêu chuẩn mã hóa một chiều an toàn chống rainbow table và brute-force với salt rounds = 10 đóng gói trực tiếp trong User Mongoose schema. |

@@ -51,12 +51,12 @@ Tầng `aclService.js` cung cấp hàm chuẩn kiểm tra quyền của user tr�
 
 ---
 
-## 4. Bảo mật Tải lên & Phục vụ Tệp tin (Media Upload & Serving Security)
-- **Kiểm tra Magic Bytes nhị phân:** Không chỉ dựa vào đuôi mở rộng file (`.jpg`, `.png`) hay MIME type do client khai báo. Mọi file upload đều được quét Magic Bytes thực tế (`src/utils/fileSniffer.js`), ngăn chặn kẻ xấu đổi đuôi file mã độc thực thi (`.exe`, `.sh`, `.php` đổi thành `.jpg`).
-- **Khử độc file SVG (SVG Sanitization):** File vector SVG bản chất là XML text có nguy cơ chứa mã JavaScript độc hại. Mọi tệp SVG tải lên đều được tự động làm sạch qua `sanitize-html` loại bỏ thẻ `<script>`, `onload`, `onclick`, `javascript:`.
-- **Chống duyệt thư mục (Path Traversal Guard):** Tầng lưu trữ `LocalStorageProvider` chuẩn hóa đường dẫn với `path.resolve` và kiểm tra nghiêm ngặt `filePath.startsWith(baseDir)`, triệt tiêu hoàn toàn nguy cơ đọc/ghi file tùy ý ra ngoài thư mục `storage/`.
+## 4. Bảo mật Tải lên & Phục vụ Tệp tin (Media Upload & Serving Security — GĐ 5.1 & DEC-038)
+- **Bảo mật Cloudinary Credentials:** `CLOUDINARY_API_SECRET` chỉ được sử dụng nghiêm ngặt tại backend Node.js (`src/services/storage/CloudinaryStorageProvider.js`), tuyệt đối không gửi ra phía client hoặc render trong mã nguồn frontend EJS.
+- **Kiểm tra Magic Bytes nhị phân:** Không chỉ dựa vào đuôi mở rộng file (`.jpg`, `.png`) hay MIME type do client khai báo. Mọi file upload đều được quét Magic Bytes thực tế (`src/utils/fileSniffer.js`) trong bộ nhớ buffer trước khi stream lên Cloudinary, ngăn chặn kẻ xấu đổi đuôi file mã độc thực thi (`.exe`, `.sh`, `.php` đổi thành `.jpg`).
+- **Khử độc file SVG (SVG Sanitization):** File vector SVG bản chất là XML text có nguy cơ chứa mã JavaScript độc hại. Mọi tệp SVG tải lên đều được tự động làm sạch qua `sanitize-html` loại bỏ thẻ `<script>`, `onload`, `onclick`, `javascript:` trước khi tải lên Cloudinary.
 - **Giới hạn kích thước:** Server áp dụng Multer memory limit tối đa 10MB/tệp; Client hỗ trợ nén canvas HTML5 trước khi truyền tải qua mạng.
-- **HTTP Caching an toàn:** Endpoint `GET /media/file/:id` sinh mã băm `ETag` (file size + mtime + thumb flag), kích hoạt HTTP 304 Not Modified tiết kiệm băng thông và tăng tốc tải tài nguyên.
+- **Bảo vệ Transformation & CDN Caching:** Giới hạn whitelisted transformation presets (`thumb`, `medium`, `large`), ngăn chặn tấn công spam tham số biến đổi làm cạn kiệt hạn ngạch Cloudinary. Endpoint `GET /media/file/:id` chuyển hướng HTTP 302 trực tiếp sang Cloudinary CDN kèm header `Cache-Control: public, max-age=31536000, immutable`.
 
 ---
 

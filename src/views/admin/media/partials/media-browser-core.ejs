@@ -1,5 +1,5 @@
 <%# Core Media Browser View Fragment (Dual-mode: Standalone & Modal Picker) %>
-<div class="media-browser-root" id="<%= typeof browserId !== 'undefined' ? browserId : 'mediaBrowserApp' %>" data-is-picker="<%= typeof isPicker !== 'undefined' && isPicker ? 'true' : 'false' %>">
+<div class="media-browser-root" id="<%= typeof browserId !== 'undefined' ? browserId : 'mediaBrowserApp' %>" data-is-picker="<%= typeof isPicker !== 'undefined' && isPicker ? 'true' : 'false' %>" data-csrf-token="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   
   <!-- 1. TOP TOOLBAR & CONTROLS -->
   <div class="media-toolbar">
@@ -21,9 +21,24 @@
         <i class="ti ti-folder-plus me-1"></i> New Folder
       </button>
 
+      <button type="button" class="btn btn-sm btn-outline-danger js-delete-folder-btn d-none" title="Delete current folder">
+        <i class="ti ti-folder-x me-1"></i> Delete Folder
+      </button>
+
       <button type="button" class="btn btn-sm btn-outline js-toggle-bulk-mode" title="Toggle multi-select mode">
         <i class="ti ti-checkbox me-1"></i> Select
       </button>
+
+      <div class="input-group input-group-sm sync-control-group d-inline-flex" style="width: auto;">
+        <select class="form-select form-select-sm js-sync-direction-select" style="max-width: 195px;" title="Chọn hướng đồng bộ Cloudinary">
+          <option value="both" selected>⇄ Đồng bộ 2 chiều</option>
+          <option value="pull">↓ Cloudinary → CMS (Pull)</option>
+          <option value="push">↑ CMS → Cloudinary (Push)</option>
+        </select>
+        <button type="button" class="btn btn-sm btn-outline-primary js-sync-cloudinary-btn" title="Thực hiện đồng bộ">
+          <i class="ti ti-refresh me-1"></i> Sync
+        </button>
+      </div>
 
       <button type="button" class="btn btn-sm btn-icon js-refresh-btn" title="Refresh">
         <i class="ti ti-refresh"></i>

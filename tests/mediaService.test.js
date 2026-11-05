@@ -1,18 +1,74 @@
-const fs = require('fs');
-const path = require('path');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const Media = require('../src/models/Media');
 const User = require('../src/models/User');
 const Role = require('../src/models/Role');
+const Item = require('../src/models/Item');
 const mediaService = require('../src/services/mediaService');
-const { setStorageProvider, LocalStorageProvider } = require('../src/services/storage');
+const { ensureMediaTemplates, MEDIA_TEMPLATES } = require('../src/services/mediaTemplateService');
+const { setStorageProvider } = require('../src/services/storage');
+
+class MockCloudinaryProvider {
+  constructor() {
+    this.cloudName = 'test-cloud';
+    this.folder = 'TestCMS';
+  }
+  async saveFile({ buffer, originalName, _mimeType = '', folder = null }) {
+    const crypto = require('crypto');
+    const hash = crypto.createHash('sha256').update(buffer).digest('hex');
+    const publicId = `${folder ? folder + '/' : ''}${Date.now()}_${originalName.replace(/\.[^/.]+$/, '')}`;
+    const secureUrl = `https://res.cloudinary.com/test-cloud/image/upload/${publicId}.png`;
+    return {
+      storagePath: secureUrl,
+      fileSize: buffer.length,
+      checksum: hash,
+      provider: 'cloudinary',
+      publicId,
+      secureUrl,
+      thumbnailUrl: `https://res.cloudinary.com/test-cloud/image/upload/c_fill,h_300,w_300/${publicId}.webp`,
+      dimensions: { width: 1, height: 1, format: 'png' }
+    };
+  }
+  async generateThumbnail(publicId) {
+    return `https://res.cloudinary.com/test-cloud/image/upload/c_fill,h_300,w_300/${publicId}.webp`;
+  }
+  async getImageMetadata(_publicId) {
+    return { width: 1, height: 1, format: 'png' };
+  }
+  getReadStream() {
+    const { PassThrough } = require('stream');
+    const pt = new PassThrough();
+    process.nextTick(() => pt.end(Buffer.from('fake-bytes')));
+    return pt;
+  }
+  async deleteFile() {
+    return { result: 'ok' };
+  }
+  async deleteResources(publicIds) {
+    const del = {};
+    for (const id of publicIds) del[id] = 'deleted';
+    return { deleted: del };
+  }
+  async getAllFolders() {
+    return [{ name: 'TestCMS', path: 'TestCMS' }];
+  }
+  async getSubFolders() {
+    return [];
+  }
+  async createFolder(folderPath) {
+    return { success: true, path: folderPath };
+  }
+  async deleteFolder(folderPath) {
+    return { success: true, path: folderPath };
+  }
+  async getMediaAssets() {
+    return { assets: [], total_count: 0 };
+  }
+}
 
 describe('GĐ 5: mediaService Unit & Integration Tests', () => {
   let mongoServer;
   let adminUser;
   let authorUser;
-  let tempStorageDir;
 
   // 1x1 transparent PNG buffer
   const samplePngBuffer = Buffer.from(
@@ -24,8 +80,7 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
     mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri());
 
-    tempStorageDir = path.join(__dirname, 'temp_media_storage');
-    const testProvider = new LocalStorageProvider(tempStorageDir);
+    const testProvider = new MockCloudinaryProvider();
     setStorageProvider(testProvider);
 
     const adminRole = await Role.create({ name: 'Administrator', isSystem: true });
@@ -53,9 +108,6 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
   afterAll(async () => {
     await mongoose.disconnect();
     await mongoServer.stop();
-    if (fs.existsSync(tempStorageDir)) {
-      fs.rmSync(tempStorageDir, { recursive: true, force: true });
-    }
   });
 
   it('1. should create or return the root media library folder', async () => {
@@ -170,6 +222,47 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
     expect(replacedDoc.fileDetails.originalName).toBe('replaced.png');
   });
 
+  it('5b. should upload file to an empty media item created from template in Content Editor', async () => {
+    const root = await mediaService.getOrCreateRootFolder();
+    const templates = await ensureMediaTemplates();
+    const imageTpl = templates[MEDIA_TEMPLATES.IMAGE];
+
+    // Create an empty item like in Content Editor "Insert Item"
+    const emptyItem = await Item.create({
+      name: 'contact-banner',
+      displayName: 'contact-banner',
+      templateId: imageTpl._id,
+      parentId: root._id,
+      ancestors: [...(root.ancestors || []), root._id],
+      path: `${root.path}/contact-banner`,
+      fields: {},
+      sharedFields: {},
+      languages: [
+        {
+          code: 'vi',
+          unversionedFields: {},
+          versions: [{ version: 1, fields: { title: 'contact-banner' } }]
+        }
+      ]
+    });
+
+    const fileToUpload = {
+      buffer: samplePngBuffer,
+      originalname: 'banner-uploaded.png',
+      detectedMime: 'image/png',
+      detectedExt: 'png'
+    };
+
+    const uploadedDoc = await mediaService.replaceFile(emptyItem._id, {
+      file: fileToUpload,
+      userId: adminUser._id
+    });
+
+    expect(uploadedDoc._id.toString()).toBe(emptyItem._id.toString());
+    expect(uploadedDoc.fileDetails.originalName).toBe('banner-uploaded.png');
+    expect(uploadedDoc.fileDetails.secureUrl).toBeTruthy();
+  });
+
   it('6. should update multilingual altText, title and description', async () => {
     const root = await mediaService.getOrCreateRootFolder();
     const file = {
@@ -268,8 +361,9 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
     const result = await mediaService.bulkDelete([file1._id, file2._id], adminUser._id);
     expect(result.deleted).toBe(2);
 
-    const check1 = await Media.findById(file1._id);
-    expect(check1.isDeleted).toBe(true);
+    const Item = require('../src/models/Item');
+    const check1 = await Item.findById(file1._id);
+    expect(check1.deleted).toBe(true);
   });
 
   it('10. should correctly enforce canPerform permissions', () => {
@@ -280,5 +374,26 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
     expect(mediaService.canPerform(authorUser, null, 'media:read')).toBe(true);
     expect(mediaService.canPerform(authorUser, null, 'media:upload')).toBe(true);
     expect(mediaService.canPerform(authorUser, null, 'media:delete')).toBe(false);
+  });
+
+  it('11. should query usage of media in content items without $regex error on Map fields', async () => {
+    const Item = require('../src/models/Item');
+    const mediaId = new mongoose.Types.ObjectId();
+
+    await Item.create({
+      name: 'home-page',
+      path: '/sitecore/content/home-page',
+      templateId: new mongoose.Types.ObjectId(),
+      fields: {
+        heroImage: mediaId.toString(),
+        description: `<p><img src="/media/file/${mediaId.toString()}"></p>`
+      }
+    });
+
+    const usage = await mediaService.getUsage(mediaId);
+    expect(usage).toBeDefined();
+    expect(Array.isArray(usage)).toBe(true);
+    expect(usage.length).toBe(1);
+    expect(usage[0].name).toBe('home-page');
   });
 });

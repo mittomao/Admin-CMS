@@ -15,7 +15,12 @@ const fileDetailsSchema = new Schema(
       height: { type: Number, default: null }
     },
     extension: { type: String, trim: true, lowercase: true },
-    checksum: { type: String, index: true }
+    checksum: { type: String, index: true },
+    // Cloudinary Storage extensions
+    provider: { type: String, enum: ['local', 'cloudinary'], default: 'local', index: true },
+    publicId: { type: String, default: null, index: true },
+    secureUrl: { type: String, default: null },
+    thumbnailUrl: { type: String, default: null }
   },
   { _id: false }
 );

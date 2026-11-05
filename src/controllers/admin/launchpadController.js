@@ -70,8 +70,8 @@ const defaultFallbackApps = [
     icon: 'ti ti-photo',
     iconBg: 'green',
     group: 'Content Editing',
-    url: '#',
-    isStub: true,
+    url: '/admin/media-library',
+    isStub: false,
   },
   {
     name: 'Workbox',
@@ -165,15 +165,18 @@ const getLaunchpad = async (req, res) => {
     });
 
     // Normalize icons to Tabler class
-    const normalizedApps = visibleApps.map((app) => ({
-      name: app.name,
-      description: app.description,
-      icon: mapToTablerIcon(app.icon),
-      iconBg: app.iconBg || 'blue',
-      group: app.group || 'Content Editing',
-      url: app.url,
-      isStub: app.isStub,
-    }));
+    const normalizedApps = visibleApps.map((app) => {
+      const isMediaLib = app.name === 'Media Library';
+      return {
+        name: app.name,
+        description: app.description,
+        icon: mapToTablerIcon(app.icon),
+        iconBg: app.iconBg || 'blue',
+        group: app.group || 'Content Editing',
+        url: isMediaLib ? '/admin/media-library' : app.url,
+        isStub: isMediaLib ? false : app.isStub,
+      };
+    });
 
     // Group apps by category
     const groupedApps = normalizedApps.reduce((acc, app) => {

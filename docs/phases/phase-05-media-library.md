@@ -11,6 +11,8 @@ updated: 2026-11-03
 
 # GĐ 5 - Media Library & Rich Text Editor (Quản lý Tài nguyên Số & Trình soạn thảo văn bản)
 > Ứng dụng Media Library phân cấp cây thư mục, upload ảnh/file đa tệp, Sharp thumbnail, cửa sổ chọn Media Picker modal, và Rich Text Editor (TinyMCE 6) tích hợp sâu vào Content Editor theo tài liệu tham chiếu `/docs/modules/media-editor/`.
+> 
+> **[Ghi chú Quan trọng - Điều chỉnh bởi GĐ 5.1]:** Giai đoạn này được điều chỉnh kiến trúc lưu trữ từ Local Disk (`sharp`) sang Cloudinary Cloud Storage độc quyền và chuẩn hóa mô hình "Mọi Media đều là Item" trong `items_master` theo kế hoạch tại [`docs/phases/phase-05-1-cloudinary-media.md`](./phase-05-1-cloudinary-media.md) và quyết định kiến trúc [`DEC-038`](../decisions/DEC-038-cloudinary-media-item-unification.md) (thay thế `DEC-028`).
 
 ## Tài liệu cần đọc trước khi làm
 - [`docs/rules/00-workflow.md`](../rules/00-workflow.md)

@@ -11,6 +11,8 @@ updated: 2026-11-04
 
 # GĐ 10 - Public Site Renderer (100% Server-Side EJS & In-Memory Cache)
 > Bộ phân giải định tuyến công khai (Public Site Router & URL Resolver), kết xuất giao diện Server-Side EJS từ cơ sở dữ liệu `items_web`, helper `<%- placeholder(key) %>`, cơ chế bắt lỗi Error Boundary, bộ nhớ đệm trang và tối ưu hóa SEO cơ bản.
+> 
+> **[Ghi chú Quan trọng - Điều chỉnh bởi GĐ 5.1]:** Khi kết xuất trang web công khai, các thẻ ảnh `<img>` trong component EJS và nội dung Rich Text nhận Cloudinary CDN URLs trực tiếp (kèm responsive transformation preset `f_auto,q_auto`) từ `items_web` theo [`phase-05-1-cloudinary-media.md`](./phase-05-1-cloudinary-media.md).
 
 ## Tài liệu cần đọc trước khi làm
 - [`docs/rules/00-workflow.md`](../rules/00-workflow.md)

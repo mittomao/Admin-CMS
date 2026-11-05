@@ -58,21 +58,42 @@ async function resolveRichText(html, _options = {}) {
       .filter((id) => mongoose.Types.ObjectId.isValid(id))
       .map((id) => new mongoose.Types.ObjectId(id));
 
-    const mediaDocs = await Media.find({
+    // Tra cứu trước trong Item (GĐ 5.1: Mọi Media là Item), sau đó fallback sang Media cũ
+    const itemMediaDocs = await Item.find({
       _id: { $in: objectIds },
-      isDeleted: false
+      deleted: { $ne: true }
     }).lean();
 
-    const mediaMap = new Map(mediaDocs.map((doc) => [doc._id.toString(), doc]));
+    const mediaMap = new Map();
+    for (const doc of itemMediaDocs) {
+      mediaMap.set(doc._id.toString(), {
+        _id: doc._id,
+        secureUrl: doc.sharedFields?.secureUrl || doc.fileDetails?.secureUrl || `/media/file/${doc._id}`
+      });
+    }
+
+    // Fallback sang legacy Media collection cho các ID chưa tìm thấy
+    const missingIds = objectIds.filter((id) => !mediaMap.has(id.toString()));
+    if (missingIds.length > 0) {
+      const legacyDocs = await Media.find({
+        _id: { $in: missingIds },
+        isDeleted: false
+      }).lean();
+      for (const doc of legacyDocs) {
+        mediaMap.set(doc._id.toString(), {
+          _id: doc._id,
+          secureUrl: doc.fileDetails?.secureUrl || `/media/file/${doc._id}`
+        });
+      }
+    }
 
     for (const match of mediaMatches) {
       const fullImgTag = match[0];
       const mediaId = match[1];
       const media = mediaMap.get(mediaId);
 
-      if (media) {
-        const fileUrl = `/media/file/${media._id}`;
-        // Cập nhật lại src thành URL chuẩn
+      if (media && media.secureUrl) {
+        const fileUrl = media.secureUrl;
         let updatedTag = fullImgTag.replace(/src=["'][^"']*["']/i, `src="${fileUrl}"`);
         sanitized = sanitized.replace(fullImgTag, updatedTag);
       }

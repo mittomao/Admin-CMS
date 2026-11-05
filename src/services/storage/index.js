@@ -1,21 +1,13 @@
 'use strict';
 
-const LocalStorageProvider = require('./LocalStorageProvider');
+const CloudinaryStorageProvider = require('./CloudinaryStorageProvider');
 
 let currentProvider = null;
 
 function getStorageProvider() {
   if (!currentProvider) {
-    const providerType = (process.env.STORAGE_PROVIDER || 'local').toLowerCase();
-
-    switch (providerType) {
-      case 'local':
-      default:
-        currentProvider = new LocalStorageProvider();
-        break;
-    }
+    currentProvider = new CloudinaryStorageProvider();
   }
-
   return currentProvider;
 }
 
@@ -27,6 +19,5 @@ function setStorageProvider(provider) {
 module.exports = {
   getStorageProvider,
   setStorageProvider,
-  LocalStorageProvider
+  CloudinaryStorageProvider
 };
-

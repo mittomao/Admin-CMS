@@ -11,6 +11,8 @@ updated: 2026-11-04
 
 # GĐ 6 - Presentation (Layout, Rendering, Placeholders & Presentation Details)
 > Quản trị Server-Side EJS Presentation: Cây cấu trúc 3 nhánh (`Layouts`, `Placeholders`, `Renderings`), thuộc tính `viewPath`, modal Presentation Details với SortableJS, Standard Presentation kết hợp Base Component Templates, và thuật toán phân giải `getFinalPresentation`.
+> 
+> **[Ghi chú Quan trọng - Điều chỉnh bởi GĐ 5.1]:** Các Rendering Components sử dụng trường hình ảnh (`Image`) và Rich Text được kết xuất thông qua Cloudinary CDN URLs (`secure_url` kèm transformation) do Item Media cung cấp theo [`phase-05-1-cloudinary-media.md`](./phase-05-1-cloudinary-media.md).
 
 ## Tài liệu cần đọc trước khi làm
 - [`docs/rules/00-workflow.md`](../rules/00-workflow.md)

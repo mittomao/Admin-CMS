@@ -57,5 +57,80 @@ Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp v
   2. Báo cáo danh sách rendering không khớp được để người dùng tự xử lý.
   3. Gỡ các base template thuộc `Feature/Components` ra khỏi các Page Template (`Home`, `About us`).
   4. Bảo toàn nguyên vẹn 100% dữ liệu field đã nhập của các item (nhờ lưu theo `fieldId`).
-- **Lựa chọn B:** Xoá sạch DB và chạy lại Seed mới hoàn toàn.
-- **Lý do đề xuất:** Kiểm chứng hoàn hảo quy trình nâng cấp an toàn dữ liệu thực tế của một Enterprise CMS, đồng thời sẵn sàng script cho các môi trường triển khai tiếp theo.
+---
+
+# CÂU HỎI CẦN XÁC NHẬN CHO GIAI ĐOẠN 5.1 (TÁI ĐỊNH NGHĨA MEDIA LIBRARY)
+
+Tài liệu này lưu trữ danh sách 8 câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho yêu cầu thay đổi: **Tái định nghĩa Media Library (Cloudinary Storage độc quyền & Mọi Media là Item)**, kèm theo đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Cho phép sử dụng chính thức package `cloudinary`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038: Tái Định Nghĩa Media Library](decisions/DEC-038-cloudinary-media-item-unification.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Sử dụng SDK chính thức `cloudinary@^2.5.1` (hiện đã có trong dependencies dự án), không cài thêm wrapper ngoài.
+- **Lựa chọn B:** Không sử dụng SDK, tự viết HTTP client gọi REST API của Cloudinary.
+- **Lý do đề xuất:** SDK chính thức hỗ trợ sẵn stream upload, ký chữ ký HMAC-SHA256, phân trang Admin API và tự động sinh transformation URL an toàn.
+
+---
+
+### 2. Tài khoản Cloudinary đang dùng fixed folder mode hay dynamic folder mode?
+- **Trạng thái:** Đã kiểm tra thực tế trên tài khoản `v41qu0lg` (Chờ ghi nhận)
+- **Quyết định liên quan:** [DEC-038: Mục 2.2](decisions/DEC-038-cloudinary-media-item-unification.md)
+- **Kết quả kiểm tra thực tế:** Tài khoản Cloudinary của dự án đang kích hoạt **Dynamic Folder Mode** (API trả về cả trường `asset_folder` và `display_name`).
+- **Đề xuất kỹ thuật:** `CloudinaryStorageProvider` gửi tham số `folder: 'AdminCMS/<subpath>'` và `public_id: '<cleanBaseName>'`, hỗ trợ đồng thời cả Dynamic Folders và Fixed Folders để tương thích tối đa.
+
+---
+
+### 3. Hai file khác đuôi cùng tên (`image1.jpg`, `image1.png`) trong một thư mục: Chặn hay tự thêm hậu tố?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038: Mục 2.1](decisions/DEC-038-cloudinary-media-item-unification.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Chặn và báo lỗi rõ ràng (HTTP 409 Conflict).** Vì Item name trên CMS không chứa đuôi mở rộng, cả 2 file sẽ cùng tạo ra Item có tên `image1` trong cùng một thư mục cha, gây vi phạm ràng buộc duy nhất `path`. Hệ thống thông báo lỗi: *"Item 'image1' đã tồn tại trong thư mục này. Vui lòng đổi tên tệp trước khi tải lên."*
+- **Lựa chọn B:** Tự động thêm hậu tố thời gian hoặc số thứ tự (ví dụ `image1-1`).
+- **Lý do đề xuất:** Tránh việc tự ý biến dạng tên item gây khó kiểm soát tài nguyên cho tác giả nội dung; đúng chuẩn bảo đảm tính toàn vẹn đường dẫn của CMS.
+
+---
+
+### 4. Xóa item: Chỉ soft-delete ở CMS, giữ file trên Cloudinary đến GĐ 9?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038: Mục 2.3](decisions/DEC-038-cloudinary-media-item-unification.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Khi xóa media trên Content Editor, chỉ đánh dấu `isDeleted: true` trên Item CMS (đưa vào Recycle Bin), giữ nguyên file trên Cloudinary để có thể khôi phục (Restore). Chỉ khi nào dọn sạch vĩnh viễn thùng rác (Purge Recycle Bin ở GĐ 9), hệ thống mới gọi lệnh `cloudinary.uploader.destroy`.
+- **Lựa chọn B:** Xóa tức thì file vật lý trên Cloudinary ngay khi xóa Item trên CMS.
+- **Lý do đề xuất:** Tránh rủi ro xóa nhầm làm mất vĩnh viễn tệp gốc của khách hàng mà không thể hoàn tác; phù hợp hoàn hảo với kiến trúc Recycle Bin của Sitecore XM.
+
+---
+
+### 5. Dữ liệu media hiện có: Migration lên Cloudinary hay reset?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** `scripts/migrate-legacy-media-to-items.js`, [DEC-038](decisions/DEC-038-cloudinary-media-item-unification.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Cung cấp script Migration giữ nguyên dữ liệu** (`scripts/migrate-legacy-media-to-items.js` có `--dry-run`, giữ nguyên `_id` cũ). Nếu toàn bộ dữ liệu hiện có chỉ là ảnh thử nghiệm dev, cho phép chạy lệnh reset database và seed lại chuẩn.
+- **Lựa chọn B:** Bắt buộc reset toàn bộ CSDL và seed lại từ đầu.
+- **Lý do đề xuất:** Tạo sẵn script migration phục vụ việc nâng cấp dữ liệu thực tế mà không làm đứt gãy các tham chiếu Image field và Rich Text đã nhập.
+
+---
+
+### 6. Route `/media/file/:id` cũ: Redirect sang Cloudinary hay bỏ?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038: Mục 2.5](decisions/DEC-038-cloudinary-media-item-unification.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Redirect HTTP 302** trực tiếp sang Cloudinary CDN URL (`secure_url`), kèm header `Cache-Control: public, max-age=31536000, immutable`.
+- **Lựa chọn B:** Xóa bỏ hoàn toàn route `/media/file/:id`.
+- **Lý do đề xuất:** Đảm bảo toàn bộ liên kết ảnh cũ trong các bài viết Rich Text hoặc bookmark của người dùng không bị gãy (404), đồng thời chuyển gánh nặng truyền tải sang CDN toàn cầu của Cloudinary.
+
+---
+
+### 7. Gỡ bỏ thư viện `sharp` sau khi chuyển sang Cloudinary Transformation?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038: Mục 2.5](decisions/DEC-038-cloudinary-media-item-unification.md), `docs/rules/02-tech-stack.md`
+- **Lựa chọn A (Đề xuất mặc định):** **Gỡ bỏ `sharp` khỏi `package.json`** khi bước vào triển khai GĐ 5.1.
+- **Lựa chọn B:** Giữ lại `sharp` làm dự phòng nếu offline.
+- **Lý do đề xuất:** Cloudinary đảm nhiệm 100% việc resize, nén WebP, crop tự động qua transformation URL; gỡ `sharp` giúp giảm đáng kể kích thước `node_modules` và tránh các vấn đề biên dịch native C++ binary trên các môi trường CI/CD hoặc container.
+
+---
+
+### 8. Tệp tin Video/PDF/tài liệu khác (`raw`) có nằm trong phạm vi?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038: Mục 2.1](decisions/DEC-038-cloudinary-media-item-unification.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Hỗ trợ tệp tin tài liệu (PDF, Word, Zip) thông qua System Template `File` với `resourceType: 'raw'` trên Cloudinary.
+- **Lựa chọn B:** Chỉ hỗ trợ duy nhất hình ảnh (`resourceType: 'image'`).
+- **Lý do đề xuất:** Media Library chuẩn của CMS cần quản lý cả tài liệu đính kèm (catalogues, báo cáo tài chính PDF); Cloudinary hỗ trợ lưu trữ raw files rất tốt.
+

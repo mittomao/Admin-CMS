@@ -1,9 +1,7 @@
 'use strict';
 
 const mediaService = require('../../services/mediaService');
-const { getStorageProvider } = require('../../services/storage');
 const AppError = require('../../utils/AppError');
-const logger = require('../../utils/logger');
 
 class MediaController {
   /**
@@ -22,7 +20,7 @@ class MediaController {
         layout: 'layouts/shell',
         user: req.user,
         rootFolder: root,
-        csrfToken: req.csrfToken ? req.csrfToken() : '',
+        csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : ''),
         currentApp: 'media-library'
       });
     } catch (err) {
@@ -44,7 +42,7 @@ class MediaController {
       res.render('admin/media/modals/media-picker-modal', {
         layout: false,
         rootFolder: root,
-        csrfToken: req.csrfToken ? req.csrfToken() : ''
+        csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : '')
       });
     } catch (err) {
       next(err);
@@ -61,42 +59,21 @@ class MediaController {
       const isThumb = req.query.thumb === '1' || req.query.thumb === 'true';
 
       const media = await mediaService.getMediaById(id);
-      if (media.isFolder || !media.fileDetails) {
+      if (!media || media.isFolder) {
         throw new AppError('Tài nguyên không phải là tệp tin hợp lệ.', 404);
       }
 
-      const storageProvider = getStorageProvider();
-      let targetPath = media.fileDetails.storagePath;
-      let contentType = media.fileDetails.mimeType;
-
-      if (isThumb && media.fileDetails.thumbnailPath) {
-        targetPath = media.fileDetails.thumbnailPath;
-        contentType = 'image/webp';
+      let targetUrl = media.secure_url || media.fileDetails?.secureUrl || media.fileDetails?.storagePath;
+      if (isThumb && (media.thumbnailUrl || media.fileDetails?.thumbnailUrl)) {
+        targetUrl = media.thumbnailUrl || media.fileDetails?.thumbnailUrl;
       }
 
-      // Kiểm tra ETag để hỗ trợ caching 304 Not Modified
-      const etag = `"${media.fileDetails.checksum || id}"`;
-      if (req.headers['if-none-match'] === etag) {
-        return res.status(304).end();
+      if (!targetUrl || !targetUrl.startsWith('http')) {
+        throw new AppError('Tệp tin không tồn tại trên Cloudinary.', 404);
       }
 
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
-      res.setHeader('ETag', etag);
-      res.setHeader(
-        'Content-Disposition',
-        `inline; filename="${encodeURIComponent(media.fileDetails.originalName || media.name)}"`
-      );
-
-      const stream = storageProvider.getReadStream(targetPath, isThumb);
-      stream.on('error', (err) => {
-        logger.error(`Error streaming file ${targetPath}: ${err.message}`);
-        if (!res.headersSent) {
-          res.status(404).send('File not found on storage.');
-        }
-      });
-
-      stream.pipe(res);
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.redirect(302, targetUrl);
     } catch (err) {
       next(err);
     }
@@ -113,7 +90,8 @@ class MediaController {
       }
 
       const parentId = req.query.parent || null;
-      const folders = await mediaService.getFolderTree(parentId);
+      const recursive = req.query.recursive === 'true' || req.query.all === 'true' || !parentId;
+      const folders = await mediaService.getFolderTree(parentId, recursive);
 
       res.json({
         success: true,
@@ -171,9 +149,22 @@ class MediaController {
         q
       });
 
+      let breadcrumbs = [];
+      try {
+        if (folderId) {
+          breadcrumbs = await mediaService.getBreadcrumbs(folderId);
+        } else {
+          const root = await mediaService.getOrCreateRootFolder();
+          breadcrumbs = [root];
+        }
+      } catch {
+        breadcrumbs = [];
+      }
+
       res.json({
         success: true,
-        ...result
+        ...result,
+        breadcrumbs
       });
     } catch (err) {
       next(err);
@@ -240,21 +231,22 @@ class MediaController {
       }
 
       const firstDoc = uploadedDocs[0];
-      const location = `/media/file/${firstDoc._id}`;
+      const directUrl = firstDoc.secure_url || firstDoc.fileDetails?.secureUrl || `/media/file/${firstDoc._id}`;
 
       // Response tương thích đồng thời cả TinyMCE location và MediaBrowser
       res.status(201).json({
         success: true,
-        location,
-        url: location,
+        location: directUrl,
+        url: directUrl,
+        media: firstDoc,
         files: uploadedDocs.map((doc) => ({
           _id: doc._id,
           name: doc.name,
           displayName: doc.displayName,
-          url: `/media/file/${doc._id}`,
-          thumbnailUrl: doc.fileDetails?.thumbnailPath
-            ? `/media/file/${doc._id}?thumb=1`
-            : `/media/file/${doc._id}`,
+          public_id: doc.public_id || doc.fileDetails?.publicId || doc._id,
+          secure_url: doc.secure_url || doc.fileDetails?.secureUrl || directUrl,
+          url: doc.secure_url || doc.fileDetails?.secureUrl || directUrl,
+          thumbnailUrl: doc.thumbnailUrl || doc.fileDetails?.thumbnailUrl || directUrl,
           fileDetails: doc.fileDetails
         }))
       });
@@ -424,6 +416,50 @@ class MediaController {
       res.json({
         success: true,
         usage: items
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * API: Đồng bộ hai chiều từ Cloudinary
+   * POST /api/media/sync
+   */
+  async apiSync(req, res, next) {
+    try {
+      if (!mediaService.canPerform(req.user, null, 'media:sync')) {
+        throw new AppError('Bạn không có quyền thực hiện đồng bộ Cloudinary.', 403);
+      }
+
+      const mediaSyncService = require('../../services/mediaSyncService');
+      const dryRun = req.body.dryRun === true;
+      const rootFolder = req.body.rootFolder || process.env.CLOUDINARY_API_FOLDER || 'AdminCMS';
+      const direction = (req.body.direction || 'both').toLowerCase();
+
+      let report;
+      if (direction === 'pull') {
+        report = await mediaSyncService.syncFromCloudinary({
+          dryRun,
+          rootFolder,
+          userId: req.user?._id
+        });
+      } else if (direction === 'push') {
+        report = await mediaSyncService.syncToCloudinary({
+          dryRun,
+          rootFolder
+        });
+      } else {
+        report = await mediaSyncService.syncBoth({
+          dryRun,
+          rootFolder,
+          userId: req.user?._id
+        });
+      }
+
+      res.json({
+        success: true,
+        report
       });
     } catch (err) {
       next(err);

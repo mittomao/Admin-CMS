@@ -14,8 +14,10 @@ const csrfMiddleware = {
         req.session.csrfToken = crypto.randomBytes(24).toString('hex');
       }
       res.locals.csrfToken = req.session.csrfToken;
+      req.csrfToken = () => req.session.csrfToken;
     } else {
       res.locals.csrfToken = '';
+      req.csrfToken = () => '';
     }
     next();
   },
@@ -42,8 +44,15 @@ const csrfMiddleware = {
     const sessionToken = req.session ? req.session.csrfToken : null;
 
     if (!sessionToken || !providedToken || providedToken !== sessionToken) {
-      // If request expects JSON / AJAX
-      if (req.xhr || req.headers.accept?.includes('application/json') || req.path.startsWith('/api/')) {
+      // If request expects JSON / AJAX or is an API route
+      const isApi =
+        Boolean(req.xhr) ||
+        Boolean(req.headers.accept?.includes('application/json')) ||
+        Boolean(req.originalUrl?.startsWith('/api/')) ||
+        Boolean(req.baseUrl?.startsWith('/api')) ||
+        Boolean(req.path?.startsWith('/api/'));
+
+      if (isApi) {
         return res.status(403).json({
           success: false,
           message: 'Invalid or missing CSRF token.',

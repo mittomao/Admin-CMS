@@ -31,7 +31,7 @@
     }
   %>
   <div class="mt-2 p-1 border rounded bg-light text-center js-image-preview-box <%= previewSrc ? '' : 'd-none' %>" style="max-width: 200px;">
-    <img src="<%= previewSrc %>" alt="Preview" class="img-fluid rounded js-image-preview-img" style="max-height: 100px;" onerror="this.src=''" />
+    <img src="<%= previewSrc %>" alt="Preview" class="img-fluid rounded js-image-preview-img" style="max-height: 100px;" onerror="this.onerror=null;this.closest('.js-image-preview-box').classList.add('d-none');" />
   </div>
   <div class="invalid-feedback"></div>
 </div>

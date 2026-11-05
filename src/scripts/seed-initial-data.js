@@ -7,7 +7,6 @@ const LaunchpadApp = require('../models/LaunchpadApp');
 const Template = require('../models/Template');
 const Item = require('../models/Item');
 const Language = require('../models/Language');
-const Media = require('../models/Media');
 
 const getMaskedUri = (uri) => (uri ? uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@') : '');
 
@@ -397,6 +396,89 @@ const seedData = async () => {
           },
         ],
       },
+      {
+        name: 'Media Folder',
+        displayName: 'Media Folder',
+        icon: 'ti ti-folder',
+        isSystem: true,
+        description: 'System folder item to organize media assets',
+        path: '/sitecore/templates/System/Media Folder',
+        sections: [
+          {
+            name: 'Folder Info',
+            sortOrder: 10,
+            fields: [],
+          },
+        ],
+      },
+      {
+        name: 'Image',
+        displayName: 'Image',
+        icon: 'ti ti-photo',
+        isSystem: true,
+        description: 'System template for image media item hosted on Cloudinary',
+        path: '/sitecore/templates/System/Image',
+        sections: [
+          {
+            name: 'Image Info',
+            sortOrder: 10,
+            fields: [
+              { name: 'publicId', title: 'Cloudinary Public ID', type: 'Single-Line Text', required: true, sortOrder: 10 },
+              { name: 'assetId', title: 'Cloudinary Asset ID', type: 'Single-Line Text', required: false, sortOrder: 20 },
+              { name: 'format', title: 'Format', type: 'Single-Line Text', required: false, sortOrder: 30 },
+              { name: 'extension', title: 'Extension', type: 'Single-Line Text', required: false, sortOrder: 40 },
+              { name: 'secureUrl', title: 'Secure URL', type: 'Single-Line Text', required: true, sortOrder: 50 },
+              { name: 'fileSize', title: 'File Size (Bytes)', type: 'Number', required: false, sortOrder: 60 },
+              { name: 'width', title: 'Width (px)', type: 'Number', required: false, sortOrder: 70 },
+              { name: 'height', title: 'Height (px)', type: 'Number', required: false, sortOrder: 80 },
+              { name: 'checksum', title: 'SHA-256 Checksum', type: 'Single-Line Text', required: false, sortOrder: 90 },
+              { name: 'syncedAt', title: 'Synced At', type: 'Date', required: false, sortOrder: 100 },
+            ],
+          },
+          {
+            name: 'Content',
+            sortOrder: 20,
+            fields: [
+              { name: 'altText', title: 'Alt Text', type: 'Single-Line Text', required: false, sortOrder: 10 },
+              { name: 'title', title: 'Title', type: 'Single-Line Text', required: false, sortOrder: 20 },
+              { name: 'description', title: 'Description', type: 'Multi-Line Text', required: false, sortOrder: 30 },
+            ],
+          },
+        ],
+      },
+      {
+        name: 'File',
+        displayName: 'File',
+        icon: 'ti ti-file',
+        isSystem: true,
+        description: 'System template for binary document or raw file hosted on Cloudinary',
+        path: '/sitecore/templates/System/File',
+        sections: [
+          {
+            name: 'File Info',
+            sortOrder: 10,
+            fields: [
+              { name: 'publicId', title: 'Cloudinary Public ID', type: 'Single-Line Text', required: true, sortOrder: 10 },
+              { name: 'assetId', title: 'Cloudinary Asset ID', type: 'Single-Line Text', required: false, sortOrder: 20 },
+              { name: 'format', title: 'Format', type: 'Single-Line Text', required: false, sortOrder: 30 },
+              { name: 'extension', title: 'Extension', type: 'Single-Line Text', required: false, sortOrder: 40 },
+              { name: 'secureUrl', title: 'Secure URL', type: 'Single-Line Text', required: true, sortOrder: 50 },
+              { name: 'fileSize', title: 'File Size (Bytes)', type: 'Number', required: false, sortOrder: 60 },
+              { name: 'resourceType', title: 'Resource Type', type: 'Single-Line Text', required: false, defaultValue: 'raw', sortOrder: 70 },
+              { name: 'checksum', title: 'SHA-256 Checksum', type: 'Single-Line Text', required: false, sortOrder: 80 },
+              { name: 'syncedAt', title: 'Synced At', type: 'Date', required: false, sortOrder: 90 },
+            ],
+          },
+          {
+            name: 'Content',
+            sortOrder: 20,
+            fields: [
+              { name: 'title', title: 'Title', type: 'Single-Line Text', required: false, sortOrder: 10 },
+              { name: 'description', title: 'Description', type: 'Multi-Line Text', required: false, sortOrder: 20 },
+            ],
+          },
+        ],
+      },
     ];
 
     const templatesMap = {};
@@ -437,6 +519,9 @@ const seedData = async () => {
     });
     await Template.findByIdAndUpdate(templatesMap['Sample Item'], {
       insertOptions: [templatesMap['Sample Item']],
+    });
+    await Template.findByIdAndUpdate(templatesMap['Media Folder'], {
+      insertOptions: [templatesMap['Media Folder'], templatesMap['Image'], templatesMap['File']],
     });
 
     // 6. Seed Sitecore Content Tree Root & Core Nodes
@@ -489,12 +574,13 @@ const seedData = async () => {
     const branchesMap = {};
     for (const b of branches) {
       const bPath = `/sitecore/${b.name}`;
+      const targetTemplateId = b.name === 'media library' ? templatesMap['Media Folder'] : templatesMap['Folder'];
       let branchItem = await Item.findOne({ path: bPath, deleted: false });
       if (!branchItem) {
         branchItem = await Item.create({
           name: b.name,
           displayName: b.displayName,
-          templateId: templatesMap['Folder'],
+          templateId: targetTemplateId,
           parentId: sitecoreRoot._id,
           ancestors: [sitecoreRoot._id],
           path: bPath,
@@ -593,49 +679,49 @@ const seedData = async () => {
       logger.info(`Created Sample Page node: ${homePath}`);
     }
 
-    // 8. Seed Media Library Root & Folders
-    let mediaRoot = await Media.findOne({ path: '/sitecore/media library', isDeleted: false });
-    if (!mediaRoot) {
-      mediaRoot = await Media.create({
-        name: 'media library',
-        displayName: 'Media Library',
-        isFolder: true,
-        parentId: null,
-        ancestors: [],
-        path: '/sitecore/media library',
-        createdBy: adminUser._id,
-      });
-      logger.info('Created Media Library root node.');
-    }
+    // 8. Seed Media Library Folders as Items (GĐ 5.1: Mọi Media là Item)
+    const mediaLibraryBranch = await Item.findOne({ path: '/sitecore/media library', deleted: false });
+    if (mediaLibraryBranch) {
+      if (mediaLibraryBranch.templateId.toString() !== templatesMap['Media Folder'].toString()) {
+        mediaLibraryBranch.templateId = templatesMap['Media Folder'];
+        await mediaLibraryBranch.save();
+      }
 
-    const sampleBannersPath = '/sitecore/media library/banners';
-    let bannersFolder = await Media.findOne({ path: sampleBannersPath, isDeleted: false });
-    if (!bannersFolder) {
-      bannersFolder = await Media.create({
-        name: 'banners',
-        displayName: 'Banners',
-        isFolder: true,
-        parentId: mediaRoot._id,
-        ancestors: [mediaRoot._id],
-        path: sampleBannersPath,
-        createdBy: adminUser._id,
-      });
-      logger.info('Created Media Library subfolder: Banners');
-    }
+      const sampleBannersPath = '/sitecore/media library/banners';
+      let bannersFolder = await Item.findOne({ path: sampleBannersPath, deleted: false });
+      if (!bannersFolder) {
+        bannersFolder = await Item.create({
+          name: 'banners',
+          displayName: 'Banners',
+          templateId: templatesMap['Media Folder'],
+          parentId: mediaLibraryBranch._id,
+          ancestors: [...mediaLibraryBranch.ancestors, mediaLibraryBranch._id],
+          path: sampleBannersPath,
+          sortOrder: 100,
+          fields: {},
+          sharedFields: {},
+          createdBy: adminUser._id
+        });
+        logger.info('Created Media Library subfolder Item: Banners');
+      }
 
-    const editorUploadsPath = '/sitecore/media library/editor-uploads';
-    let editorUploadsFolder = await Media.findOne({ path: editorUploadsPath, isDeleted: false });
-    if (!editorUploadsFolder) {
-      editorUploadsFolder = await Media.create({
-        name: 'editor-uploads',
-        displayName: 'Editor Uploads',
-        isFolder: true,
-        parentId: mediaRoot._id,
-        ancestors: [mediaRoot._id],
-        path: editorUploadsPath,
-        createdBy: adminUser._id,
-      });
-      logger.info('Created Media Library subfolder: Editor Uploads');
+      const editorUploadsPath = '/sitecore/media library/editor-uploads';
+      let editorUploadsFolder = await Item.findOne({ path: editorUploadsPath, deleted: false });
+      if (!editorUploadsFolder) {
+        editorUploadsFolder = await Item.create({
+          name: 'editor-uploads',
+          displayName: 'Editor Uploads',
+          templateId: templatesMap['Media Folder'],
+          parentId: mediaLibraryBranch._id,
+          ancestors: [...mediaLibraryBranch.ancestors, mediaLibraryBranch._id],
+          path: editorUploadsPath,
+          sortOrder: 200,
+          fields: {},
+          sharedFields: {},
+          createdBy: adminUser._id
+        });
+        logger.info('Created Media Library subfolder Item: Editor Uploads');
+      }
     }
 
     // 9. Seed Presentation System Items (GĐ 6)

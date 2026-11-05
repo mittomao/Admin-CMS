@@ -98,5 +98,6 @@ sitecore
 ```
 - **Node Hệ thống Cốt lõi:** Bị cấm đổi tên, di chuyển và xóa (`/sitecore`, `/sitecore/content`, `/sitecore/layout`, `/sitecore/media library`, `/sitecore/system`, `/sitecore/templates`, và 3 nhánh sub-root của layout: `Layouts`, `Placeholders`, `Renderings`).
 - **Phân quyền Presentation:** Mọi thao tác ghi dưới `/sitecore/layout/*` yêu cầu quyền `presentation:write`.
+- **Media Items dưới `/sitecore/media library` (DEC-038 & GĐ 5.1):** Tuân thủ triết lý "Mọi Media đều là Item". Toàn bộ tệp ảnh, tài liệu và thư mục media là các Item thuộc collection `items_master`, gắn với các System Templates tại `/sitecore/templates/System` (`Media Folder`, `Image`, `File`). Tên Item không chứa đuôi file; metadata nhị phân ánh xạ 1-1 với Cloudinary (`AdminCMS/<path>`). Chi tiết tại [`docs/data-model/media.md`](./media.md).
 
 

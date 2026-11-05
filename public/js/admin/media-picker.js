@@ -3,7 +3,7 @@
  * API chuẩn: MediaPicker.open({ type: 'image', multiple: false, onSelect: (assets) => void })
  */
 
-import { MediaBrowser } from './media-browser.js';
+import { MediaBrowser } from './media-browser.js?v=2';
 
 let modalInstance = null;
 let browserInstance = null;
@@ -18,9 +18,12 @@ function updateFooterSummary(asset) {
   if (!summaryEl || !confirmBtn) return;
 
   if (asset) {
-    const isImg = asset.fileDetails?.mimeType?.startsWith('image/');
+    const isImg =
+      asset.fileDetails?.mimeType?.startsWith('image/') ||
+      /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(asset.displayName || asset.name);
+    const thumbUrl = asset.thumbnailUrl || asset.secure_url || asset.url || `/media/file/${asset._id}?thumb=1`;
     const thumbHtml = isImg
-      ? `<img src="/media/file/${asset._id}?thumb=1" alt="" class="picker-selected-thumb" onerror="this.style.display='none'" />`
+      ? `<img src="${thumbUrl}" alt="" class="picker-selected-thumb" onerror="this.onerror=null; this.src='${asset.secure_url || asset.url || ''}'" />`
       : `<span class="picker-selected-icon">📄</span>`;
 
     const dims = asset.fileDetails?.dimensions;
@@ -75,7 +78,9 @@ export const MediaPicker = {
     // Khởi tạo MediaBrowser instance cho modal nếu chưa có
     const rootEl = modalEl.querySelector('#modalMediaBrowser');
     if (rootEl && !browserInstance) {
+      const metaCsrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       browserInstance = new MediaBrowser(rootEl, {
+        csrfToken: rootEl.dataset?.csrfToken || metaCsrf || '',
         onSelect: (assets) => {
           if (typeof currentCallback === 'function') {
             currentCallback(assets);

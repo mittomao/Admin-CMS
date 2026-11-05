@@ -482,6 +482,56 @@
 /* ==========================================================================
    MEDIA LIBRARY & MEDIA PICKER STYLING
    ========================================================================== */
+.media-library-window {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  min-height: 550px;
+  background: #ffffff;
+  border: 1px solid var(--sc-border-medium, #dee2e6);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.media-library-window .window-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--sc-border-medium, #dee2e6);
+}
+
+.media-library-window .window-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.media-library-window .window-actions .close-btn {
+  text-decoration: none;
+  color: #adb5bd;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.media-library-window .window-actions .close-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.media-library-window .window-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .media-browser-root {
   display: flex;
   flex-direction: column;
@@ -646,12 +696,14 @@
 .tree-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 6px 12px;
   cursor: pointer;
   border-left: 3px solid transparent;
   color: #495057;
   user-select: none;
+  font-size: 13px;
+  transition: background-color 0.15s;
 }
 
 .tree-item:hover {
@@ -665,8 +717,53 @@
   font-weight: 600;
 }
 
-.tree-sub-item {
-  padding-left: 24px;
+.tree-expander {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  color: #868e96;
+  font-size: 11px;
+  transition: transform 0.15s;
+}
+
+.tree-expander:hover {
+  color: #212529;
+}
+
+.tree-expander-spacer {
+  width: 16px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.tree-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 auto;
+}
+
+.tree-root-badge {
+  font-size: 10px;
+  color: #868e96;
+  margin-left: 4px;
+}
+
+.breadcrumb-separator {
+  color: #adb5bd;
+  margin: 0 4px;
+}
+
+.media-breadcrumbs .breadcrumb-item.js-crumb {
+  cursor: pointer;
+}
+
+.media-breadcrumbs .breadcrumb-item.js-crumb:hover {
+  text-decoration: underline;
+  color: #1971c2;
 }
 
 /* Content Area */

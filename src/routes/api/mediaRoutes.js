@@ -49,12 +49,20 @@ router.post('/:id/rename', csrfMiddleware.verifyToken, (req, res, next) =>
   mediaController.apiRename(req, res, next)
 );
 
+router.delete('/folders/:id', csrfMiddleware.verifyToken, (req, res, next) =>
+  mediaController.apiDelete(req, res, next)
+);
+
 router.delete('/:id', csrfMiddleware.verifyToken, (req, res, next) =>
   mediaController.apiDelete(req, res, next)
 );
 
 router.post('/bulk-delete', csrfMiddleware.verifyToken, (req, res, next) =>
   mediaController.apiBulkDelete(req, res, next)
+);
+
+router.post('/sync', csrfMiddleware.verifyToken, (req, res, next) =>
+  mediaController.apiSync(req, res, next)
 );
 
 module.exports = router;

@@ -1,12 +1,68 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const fs = require('fs');
-const path = require('path');
 const app = require('../src/app');
 const User = require('../src/models/User');
 const Role = require('../src/models/Role');
-const { setStorageProvider, LocalStorageProvider } = require('../src/services/storage');
+const { setStorageProvider } = require('../src/services/storage');
+
+class MockCloudinaryProvider {
+  constructor() {
+    this.cloudName = 'test-cloud';
+    this.folder = 'TestCMS';
+  }
+  async saveFile({ buffer, originalName, _mimeType = '', folder = null }) {
+    const crypto = require('crypto');
+    const hash = crypto.createHash('sha256').update(buffer).digest('hex');
+    const publicId = `${folder ? folder + '/' : ''}${Date.now()}_${originalName.replace(/\.[^/.]+$/, '')}`;
+    const secureUrl = `https://res.cloudinary.com/test-cloud/image/upload/${publicId}.png`;
+    return {
+      storagePath: secureUrl,
+      fileSize: buffer.length,
+      checksum: hash,
+      provider: 'cloudinary',
+      publicId,
+      secureUrl,
+      thumbnailUrl: `https://res.cloudinary.com/test-cloud/image/upload/c_fill,h_300,w_300/${publicId}.webp`,
+      dimensions: { width: 1, height: 1, format: 'png' }
+    };
+  }
+  async generateThumbnail(publicId) {
+    return `https://res.cloudinary.com/test-cloud/image/upload/c_fill,h_300,w_300/${publicId}.webp`;
+  }
+  async getImageMetadata(_publicId) {
+    return { width: 1, height: 1, format: 'png' };
+  }
+  getReadStream() {
+    const { PassThrough } = require('stream');
+    const pt = new PassThrough();
+    process.nextTick(() => pt.end(Buffer.from('fake-bytes')));
+    return pt;
+  }
+  async deleteFile() {
+    return { result: 'ok' };
+  }
+  async deleteResources(publicIds) {
+    const del = {};
+    for (const id of publicIds) del[id] = 'deleted';
+    return { deleted: del };
+  }
+  async getAllFolders() {
+    return [{ name: 'TestCMS', path: 'TestCMS' }];
+  }
+  async getSubFolders() {
+    return [];
+  }
+  async createFolder(folderPath) {
+    return { success: true, path: folderPath };
+  }
+  async deleteFolder(folderPath) {
+    return { success: true, path: folderPath };
+  }
+  async getMediaAssets() {
+    return { assets: [], total_count: 0 };
+  }
+}
 
 describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
   let mongoServer;
@@ -14,7 +70,6 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
   let authorAgent;
   let anonymousAgent;
   let adminCsrfToken;
-  let tempStorageDir;
 
   const samplePngBuffer = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -28,8 +83,7 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
     }
     await mongoose.connect(mongoServer.getUri());
 
-    tempStorageDir = path.join(__dirname, 'temp_media_api_storage');
-    const testProvider = new LocalStorageProvider(tempStorageDir);
+    const testProvider = new MockCloudinaryProvider();
     setStorageProvider(testProvider);
 
     const adminRole = await Role.create({ name: 'Administrator', isSystem: true });
@@ -81,9 +135,6 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
     if (mongoServer) {
       await mongoServer.stop();
     }
-    if (fs.existsSync(tempStorageDir)) {
-      fs.rmSync(tempStorageDir, { recursive: true, force: true });
-    }
   });
 
   test('1. GET /admin/media-library requires authentication', async () => {
@@ -115,18 +166,11 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
 
     const uploadedId = res.body.files[0]._id;
 
-    // 4. GET /media/file/:id streams the uploaded file publicly
+    // 4. GET /media/file/:id redirects 302 directly to Cloudinary CDN
     const streamRes = await anonymousAgent.get(`/media/file/${uploadedId}`);
-    expect(streamRes.status).toBe(200);
-    expect(streamRes.header['content-type']).toBe('image/png');
-    expect(streamRes.header['etag']).toBeDefined();
-
-    // 5. Caching: If-None-Match header returns 304 Not Modified
-    const etag = streamRes.header['etag'];
-    const cachedRes = await anonymousAgent
-      .get(`/media/file/${uploadedId}`)
-      .set('If-None-Match', etag);
-    expect(cachedRes.status).toBe(304);
+    expect(streamRes.status).toBe(302);
+    expect(streamRes.headers.location).toBeDefined();
+    expect(streamRes.headers['cache-control']).toBeDefined();
   });
 
   test('6. POST /api/media/upload blocks files with fake extensions (Magic Bytes check)', async () => {
@@ -222,6 +266,38 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
     expect(bulkRes.status).toBe(200);
     expect(bulkRes.body.success).toBe(true);
     expect(bulkRes.body.deleted).toBe(2);
+  });
+
+  test('11. GET /media/file/:id redirects 302 to Cloudinary CDN when provider is cloudinary', async () => {
+    const Media = require('../src/models/Media');
+    const cloudMedia = await Media.create({
+      name: 'cloud-banner.jpg',
+      displayName: 'Cloud Banner',
+      isFolder: false,
+      path: '/sitecore/media library/cloud-banner.jpg',
+      fileDetails: {
+        originalName: 'cloud-banner.jpg',
+        storagePath: 'https://res.cloudinary.com/v41qu0lg/image/upload/v1234/AdminCMS/cloud-banner.jpg',
+        thumbnailPath: 'https://res.cloudinary.com/v41qu0lg/image/upload/c_fill,h_300,w_300/AdminCMS/cloud-banner.jpg',
+        mimeType: 'image/jpeg',
+        fileSize: 2048,
+        provider: 'cloudinary',
+        publicId: 'AdminCMS/cloud-banner',
+        secureUrl: 'https://res.cloudinary.com/v41qu0lg/image/upload/v1234/AdminCMS/cloud-banner.jpg',
+        thumbnailUrl: 'https://res.cloudinary.com/v41qu0lg/image/upload/c_fill,h_300,w_300/AdminCMS/cloud-banner.jpg'
+      }
+    });
+
+    // Request original file
+    const fileRes = await anonymousAgent.get(`/media/file/${cloudMedia._id}`);
+    expect(fileRes.status).toBe(302);
+    expect(fileRes.headers.location).toBe('https://res.cloudinary.com/v41qu0lg/image/upload/v1234/AdminCMS/cloud-banner.jpg');
+    expect(fileRes.headers['cache-control']).toContain('public');
+
+    // Request thumbnail with ?thumb=1
+    const thumbRes = await anonymousAgent.get(`/media/file/${cloudMedia._id}?thumb=1`);
+    expect(thumbRes.status).toBe(302);
+    expect(thumbRes.headers.location).toBe('https://res.cloudinary.com/v41qu0lg/image/upload/c_fill,h_300,w_300/AdminCMS/cloud-banner.jpg');
   });
 });
 

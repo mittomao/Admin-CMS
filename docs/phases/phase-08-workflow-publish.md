@@ -11,6 +11,8 @@ updated: 2026-11-04
 
 # GĐ 8 - Workflow Engine, Workbox & Publishing (Master → Web)
 > Quy trình duyệt nội dung, ứng dụng duyệt Workbox và Publishing Engine đồng bộ Master sang Web bao gồm Page Items, Presentation (Layouts, Placeholders, Renderings), Templates liên quan và Media.
+> 
+> **[Ghi chú Quan trọng - Điều chỉnh bởi GĐ 5.1]:** Khi xuất bản tài nguyên Media sang `items_web`, chỉ có bản ghi Item Media được publish; các tệp tin vật lý trên Cloudinary được dùng chung nguyên bản mà không nhân bản dữ liệu nhị phân theo [`phase-05-1-cloudinary-media.md`](./phase-05-1-cloudinary-media.md).
 
 ## Tài liệu cần đọc trước khi làm
 - [`docs/rules/00-workflow.md`](../rules/00-workflow.md)
