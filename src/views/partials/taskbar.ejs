@@ -1,29 +1,29 @@
-<footer class="sc-taskbar">
-  <div class="sc-taskbar-apps">
-    <a href="/admin/launchpad" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'launchpad' ? 'active' : '' %>" title="Launchpad">
-      <i class="ti ti-layout-grid fs-3"></i>
+<footer class="sc-taskbar fixed bottom-0 left-0 right-0 z-30 h-10 bg-slate-900 border-t-2 border-sc-red text-slate-300 flex items-center justify-between px-3 text-xs select-none shadow-lg">
+  <div class="sc-taskbar-apps flex items-center gap-1 overflow-x-auto sc-scrollbar">
+    <a href="/admin/launchpad" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'launchpad' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" title="Launchpad">
+      <i class="ti ti-layout-grid text-sm"></i>
       <span>Launchpad</span>
     </a>
-    <a href="/admin/content-editor" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'content-editor' ? 'active' : '' %>" title="Content Editor">
-      <i class="ti ti-article fs-3"></i>
+    <a href="/admin/content-editor" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'content-editor' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" title="Content Editor">
+      <i class="ti ti-article text-sm"></i>
       <span>Content Editor</span>
     </a>
-    <a href="/admin/template-manager" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'template-manager' ? 'active' : '' %>" title="Template Manager">
-      <i class="ti ti-layout-grid-add fs-3"></i>
+    <a href="/admin/template-manager" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'template-manager' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" title="Template Manager">
+      <i class="ti ti-layout-grid-add text-sm"></i>
       <span>Template Manager</span>
     </a>
-    <a href="#" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'media-library' ? 'active' : '' %>" onclick="alert('Media Library sẽ có trong GĐ 5'); return false;" title="Media Library">
-      <i class="ti ti-photo fs-3"></i>
-      <span class="d-none d-sm-inline">Media Library</span>
+    <a href="/admin/media" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'media-library' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" title="Media Library">
+      <i class="ti ti-photo text-sm"></i>
+      <span class="hidden sm:inline">Media Library</span>
     </a>
-    <a href="#" class="sc-taskbar-item <%= typeof activeApp !== 'undefined' && activeApp === 'workbox' ? 'active' : '' %>" onclick="alert('Workbox sẽ có trong GĐ 7'); return false;" title="Workbox">
-      <i class="ti ti-inbox fs-3"></i>
-      <span class="d-none d-sm-inline">Workbox</span>
+    <a href="#" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'workbox' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" onclick="alert('Workbox sẽ có trong GĐ 7'); return false;" title="Workbox">
+      <i class="ti ti-inbox text-sm"></i>
+      <span class="hidden sm:inline">Workbox</span>
     </a>
   </div>
 
-  <div class="sc-taskbar-info d-none d-md-flex">
+  <div class="sc-taskbar-info hidden md:flex items-center gap-2 text-slate-400 text-[11px]">
     <span>Sitecore XM Experience</span>
-    <span class="badge bg-secondary-lt text-white" title="Connected Database">db: master</span>
+    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] border border-slate-700" title="Connected Database">db: master</span>
   </div>
 </footer>

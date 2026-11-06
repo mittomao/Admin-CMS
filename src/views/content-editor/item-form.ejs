@@ -17,24 +17,24 @@
   <input type="hidden" name="expectedUpdatedAt" id="formExpectedUpdatedAt" value="<%= item.updatedAt ? new Date(item.updatedAt).toISOString() : '' %>" />
 
   <!-- 1. Item Header Overview Bar with Language & Version Switchers -->
-  <div class="card-header bg-white border-bottom py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-    <div class="d-flex align-items-center gap-2">
-      <span class="avatar avatar-sm bg-light border rounded d-flex align-items-center justify-content-center p-1">
+  <div class="card-header bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-2.5 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2 select-none shadow-2xs">
+    <div class="d-flex align-items-center gap-2.5">
+      <span class="avatar avatar-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg d-flex align-items-center justify-content-center p-1 shadow-2xs">
         <%- typeof renderIconHtml === 'function' ? renderIconHtml(resolvedIcon, 20) : `<img src="/img/icons/page.svg" width="20" height="20" />` %>
       </span>
       <div>
-        <div class="d-flex align-items-center gap-2">
-          <h3 class="card-title m-0 fw-bold fs-3 text-dark" id="headerDisplayName">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h3 class="card-title m-0 fw-bold fs-3 text-slate-900 dark:text-white" id="headerDisplayName">
             <%= item.displayName || item.name %>
           </h3>
-          <span class="badge bg-secondary-lt font-monospace text-muted" id="headerTechnicalName">
+          <span class="badge bg-slate-100 dark:bg-slate-800 font-monospace text-slate-500 border border-slate-200 dark:border-slate-700 text-xs" id="headerTechnicalName">
             <%= item.name %>
           </span>
-          <span class="badge bg-azure-lt">
+          <span class="badge bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 text-xs">
             <i class="<%= tplIcon %> me-1"></i><%= tplName %>
           </span>
         </div>
-        <div class="text-muted small mt-1 font-monospace" style="font-size: 0.75rem;">
+        <div class="text-slate-400 dark:text-slate-500 small mt-0.5 font-monospace text-xs">
           <i class="ti ti-folder me-1"></i><%= item.path %>
         </div>
       </div>
@@ -44,15 +44,15 @@
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <!-- Language Switcher Dropdown -->
       <div class="dropdown">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" id="langDropdownBtn">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1.5 px-2.5 py-1 rounded-lg border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150" type="button" data-bs-toggle="dropdown" id="langDropdownBtn">
           <i class="ti ti-world text-primary"></i>
-          <span class="fw-semibold text-uppercase"><%= lang %></span>
+          <span class="fw-bold text-uppercase"><%= lang %></span>
         </button>
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width: 200px;">
-          <li class="dropdown-header text-uppercase text-muted small py-1">Ngôn ngữ hệ thống</li>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg rounded-xl border border-slate-200 dark:border-slate-800" style="min-width: 200px;">
+          <li class="dropdown-header text-uppercase text-muted small py-1 font-bold">Ngôn ngữ hệ thống</li>
           <% langs.forEach(l => { %>
             <li>
-              <a class="dropdown-item d-flex align-items-center justify-content-between lang-switcher-item <%= l.code === lang ? 'active' : '' %>" 
+              <a class="dropdown-item d-flex align-items-center justify-content-between lang-switcher-item transition-colors px-3 py-1.5 <%= l.code === lang ? 'active font-bold' : '' %>" 
                  href="#" data-lang-code="<%= l.code %>">
                 <span class="d-flex align-items-center gap-2">
                   <i class="<%= l.icon || 'ti ti-world' %> text-muted"></i>
@@ -68,7 +68,7 @@
           <% }) %>
           <li><hr class="dropdown-divider my-1"></li>
           <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="#" id="btnHeaderAddLanguage">
+            <a class="dropdown-item d-flex align-items-center gap-2 text-primary font-medium" href="#" id="btnHeaderAddLanguage">
               <i class="ti ti-world-plus"></i> Thêm ngôn ngữ mới...
             </a>
           </li>
@@ -77,19 +77,19 @@
 
       <!-- Version Switcher Dropdown -->
       <div class="dropdown">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" id="versionDropdownBtn">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1.5 px-2.5 py-1 rounded-lg border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150" type="button" data-bs-toggle="dropdown" id="versionDropdownBtn">
           <i class="ti ti-stack-2 text-azure"></i>
-          <span class="fw-semibold">v<%= ver %></span>
+          <span class="fw-bold">v<%= ver %></span>
           <span class="text-muted small">(<%= vers.length %>)</span>
         </button>
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width: 220px;">
-          <li class="dropdown-header text-uppercase text-muted small py-1">Phiên bản (<%= lang.toUpperCase() %>)</li>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg rounded-xl border border-slate-200 dark:border-slate-800" style="min-width: 220px;">
+          <li class="dropdown-header text-uppercase text-muted small py-1 font-bold">Phiên bản (<%= lang.toUpperCase() %>)</li>
           <% if (vers.length === 0) { %>
             <li class="px-3 py-2 text-muted small">Chưa có phiên bản nào.</li>
           <% } else { %>
             <% vers.forEach(v => { %>
               <li>
-                <a class="dropdown-item d-flex align-items-center justify-content-between version-switcher-item <%= v.version === ver ? 'active' : '' %>" 
+                <a class="dropdown-item d-flex align-items-center justify-content-between version-switcher-item transition-colors px-3 py-1.5 <%= v.version === ver ? 'active font-bold' : '' %>" 
                    href="#" data-version="<%= v.version %>">
                   <div>
                     <span class="fw-bold">Version <%= v.version %></span>
@@ -106,12 +106,12 @@
           <% } %>
           <li><hr class="dropdown-divider my-1"></li>
           <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-primary" href="#" id="btnHeaderAddVersion">
+            <a class="dropdown-item d-flex align-items-center gap-2 text-primary font-medium" href="#" id="btnHeaderAddVersion">
               <i class="ti ti-file-plus"></i> Thêm phiên bản mới...
             </a>
           </li>
           <li>
-            <a class="dropdown-item d-flex align-items-center gap-2 text-secondary" href="#" id="btnHeaderViewHistory">
+            <a class="dropdown-item d-flex align-items-center gap-2 text-secondary font-medium" href="#" id="btnHeaderViewHistory">
               <i class="ti ti-history"></i> Lịch sử phiên bản...
             </a>
           </li>
@@ -119,11 +119,11 @@
       </div>
 
       <!-- Quick Status Badges -->
-      <span id="dirtyIndicator" class="badge bg-warning-lt d-none">
+      <span id="dirtyIndicator" class="badge bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800 d-none text-xs">
         <i class="ti ti-pencil me-1"></i>Unsaved Changes
       </span>
 
-      <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="quickSaveBtn">
+      <button type="button" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none font-bold text-white rounded-lg shadow-sm hover:shadow active:scale-95 transition-all duration-150 d-flex align-items-center gap-1.5 px-3 py-1 cursor-pointer" id="quickSaveBtn">
         <i class="ti ti-device-floppy"></i>
         <span>Save</span>
       </button>
@@ -224,10 +224,10 @@
       <div class="accordion" id="itemSectionsAccordion">
         <% sections.forEach((section, sIndex) => { %>
           <% if (section.fields && section.fields.length > 0) { %>
-            <div class="accordion-item mb-2 border rounded shadow-2xs">
+            <div class="accordion-item mb-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs">
               <h2 class="accordion-header" id="heading-<%= section._id %>">
                 <button
-                  class="accordion-button <%= sIndex === 0 ? '' : 'collapsed' %> py-2 px-3 fw-semibold bg-light-subtle"
+                  class="accordion-button <%= sIndex === 0 ? '' : 'collapsed' %> py-2.5 px-4 font-bold text-xs bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target="#collapse-<%= section._id %>"
@@ -235,16 +235,16 @@
                   aria-controls="collapse-<%= section._id %>"
                 >
                   <% if (section.origin && section.origin.isComponent) { %>
-                    <i class="ti ti-components me-2 text-purple"></i>
+                    <i class="ti ti-components me-2 text-purple-600 dark:text-purple-400 fs-3"></i>
                     <span><%= section.displayName || section.name %></span>
-                    <span class="badge bg-purple-lt ms-2" title="Trường được tự động suy ra từ rendering component">
+                    <span class="badge bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/50 ms-2 font-medium" title="Trường được tự động suy ra từ rendering component">
                       <i class="ti ti-puzzle me-1"></i>từ rendering <%= section.origin.renderingName || section.name %>
                     </span>
                   <% } else { %>
-                    <i class="ti ti-layout-navbar-expand me-2 text-primary"></i>
+                    <i class="ti ti-layout-navbar-expand me-2 text-primary fs-3"></i>
                     <span><%= section.displayName || section.name %></span>
                   <% } %>
-                  <span class="badge bg-secondary-lt ms-2 font-monospace" style="font-size: 0.65rem;">
+                  <span class="badge bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 ms-2 font-monospace" style="font-size: 0.65rem;">
                     <%= section.fields.length %> <%= section.fields.length === 1 ? 'field' : 'fields' %>
                   </span>
                 </button>
@@ -254,7 +254,7 @@
                 class="accordion-collapse collapse <%= sIndex === 0 ? 'show' : '' %>"
                 aria-labelledby="heading-<%= section._id %>"
               >
-                <div class="accordion-body p-3">
+                <div class="accordion-body p-4 bg-white dark:bg-slate-900">
                   <% section.fields.forEach(field => { %>
                     <%
                       const val = field.effectiveValue !== undefined
@@ -315,23 +315,25 @@
   </div>
 
   <!-- 3. Form Footer Bar -->
-  <div class="card-footer bg-light-subtle py-2 px-3 border-top d-flex align-items-center justify-content-between">
-    <div class="text-muted small">
-      <i class="ti ti-clock me-1"></i>Last updated:
-      <span class="font-monospace" id="footerUpdatedAt">
-        <%= item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'N/A' %>
+  <div class="card-footer bg-slate-50 dark:bg-slate-900 py-2.5 px-4 border-t border-slate-200 dark:border-slate-800 d-flex align-items-center justify-content-between select-none">
+    <div class="text-slate-500 text-xs d-flex align-items-center flex-wrap gap-2">
+      <span>
+        <i class="ti ti-clock me-1 text-slate-400"></i>Last updated:
+        <span class="font-monospace font-medium text-slate-700 dark:text-slate-300" id="footerUpdatedAt">
+          <%= item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'N/A' %>
+        </span>
       </span>
       <% if (typeof versionInfo !== 'undefined' && versionInfo && versionInfo.note) { %>
-        <span class="ms-2 badge bg-azure-lt text-azure">
+        <span class="badge bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50">
           <i class="ti ti-note me-1"></i><%= versionInfo.note %>
         </span>
       <% } %>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <button type="button" class="btn btn-outline-secondary btn-sm" id="btnDiscardChanges">
+      <button type="button" class="btn btn-outline-secondary btn-sm px-3 py-1 rounded-lg border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150" id="btnDiscardChanges">
         Discard
       </button>
-      <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="btnFooterSave">
+      <button type="submit" class="btn btn-primary btn-sm bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none font-bold text-white rounded-lg shadow-sm hover:shadow active:scale-95 transition-all duration-150 d-flex align-items-center gap-1.5 px-3.5 py-1 cursor-pointer" id="btnFooterSave">
         <i class="ti ti-device-floppy"></i>
         <span>Save Changes</span>
       </button>

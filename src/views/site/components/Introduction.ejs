@@ -1,13 +1,14 @@
-<section class="intro-section" style="padding: 3rem 0; background: #fff;">
-  <div class="container">
+<section class="py-12 sm:py-16 lg:py-20 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center">
     <% if (fields && fields.IntroHeading) { %>
-      <h2 class="intro-heading" style="font-size: 2rem; margin-bottom: 1.25rem; color: #1e293b;"><%= fields.IntroHeading %></h2>
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 mb-6">
+        <%= fields.IntroHeading %>
+      </h2>
     <% } %>
     <% if (fields && fields.IntroBody) { %>
-      <div class="intro-body" style="font-size: 1.1rem; color: #334155; line-height: 1.8;">
+      <div class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto space-y-4">
         <%- fields.IntroBody %>
       </div>
     <% } %>
   </div>
 </section>
-

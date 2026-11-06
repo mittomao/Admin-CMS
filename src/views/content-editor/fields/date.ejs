@@ -1,17 +1,17 @@
 <div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
   <%- include('./field-header', { field }) %>
-  <div class="input-icon">
+  <div class="input-icon relative">
     <span class="input-icon-addon">
-      <i class="ti ti-calendar text-muted"></i>
+      <i class="ti ti-calendar text-slate-400"></i>
     </span>
     <input
       type="date"
-      class="form-control item-field-input"
+      class="form-control form-control-sm item-field-input rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm transition-all duration-150 hover:border-slate-400 focus:border-sc-red focus:ring-2 focus:ring-sc-red/20 focus:outline-none"
       name="fields[<%= field.name %>]"
       value="<%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '') %>"
       <%= field.required ? 'required' : '' %>
     />
   </div>
-  <div class="invalid-feedback"></div>
+  <div class="invalid-feedback text-xs mt-1"></div>
 </div>
 

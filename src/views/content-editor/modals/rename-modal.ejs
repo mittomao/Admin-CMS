@@ -1,46 +1,46 @@
 <div class="modal fade" id="renameItemModal" tabindex="-1" aria-labelledby="renameItemModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title d-flex align-items-center gap-2" id="renameItemModalLabel">
-          <i class="ti ti-cursor-text text-primary"></i>
+    <div class="modal-content rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header py-3 px-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-sm font-bold text-slate-800 m-0 flex items-center gap-2" id="renameItemModalLabel">
+          <i class="ti ti-cursor-text text-primary text-base"></i>
           <span>Rename Item</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="renameItemForm">
-        <div class="modal-body">
+        <div class="modal-body p-4 text-xs space-y-3.5">
           <input type="hidden" id="renameItemId" name="id" />
 
-          <div class="mb-3">
-            <label class="form-label required" for="renameInputName">Technical Name</label>
+          <div>
+            <label class="form-label required font-semibold text-slate-700 block mb-1" for="renameInputName">Technical Name</label>
             <input
               type="text"
-              class="form-control font-monospace"
+              class="form-control font-mono text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
               id="renameInputName"
               name="name"
               required
               pattern="^[a-zA-Z0-9_-]+$"
             />
-            <div class="form-text small text-muted">
+            <div class="form-text small text-slate-400 text-[10px] mt-1">
               Changing technical name will also update the materialized path for all child items.
             </div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label" for="renameInputDisplayName">Display Name</label>
+          <div>
+            <label class="form-label font-semibold text-slate-700 block mb-1" for="renameInputDisplayName">Display Name</label>
             <input
               type="text"
-              class="form-control"
+              class="form-control text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
               id="renameInputDisplayName"
               name="displayName"
             />
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1" id="btnSubmitRename">
-            <i class="ti ti-check"></i>
+        <div class="modal-footer bg-slate-50/70 px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" class="btn btn-outline-secondary px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1.5 inline-flex items-center px-4 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" id="btnSubmitRename">
+            <i class="ti ti-check text-xs"></i>
             <span>Apply</span>
           </button>
         </div>

@@ -1,18 +1,18 @@
-<div class="empty py-5 text-center">
-  <div class="empty-icon mb-3">
-    <div style="font-size: 72px; font-weight: 800; color: var(--sc-red); line-height: 1;">404</div>
+<div class="py-16 text-center max-w-lg mx-auto">
+  <div class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-red-50 dark:bg-red-950/40 text-sc-red flex items-center justify-center font-extrabold text-3xl shadow-inner border border-red-200/50 dark:border-red-900/50">
+    404
   </div>
-  <p class="empty-title fw-bold fs-1">Item or Page Not Found</p>
-  <p class="empty-subtitle text-muted">
-    Đường dẫn <code><%= currentPath %></code> không tồn tại trên hệ thống hoặc đã bị di chuyển, đổi tên, hoặc xóa vào thùng rác.
+  <h1 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mb-2">Item or Page Not Found</h1>
+  <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+    Đường dẫn <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono"><%= currentPath %></code> không tồn tại trên hệ thống hoặc đã bị di chuyển, đổi tên, hoặc xóa vào thùng rác.
   </p>
-  <div class="empty-action d-flex align-items-center justify-content-center gap-2 mt-4">
-    <a href="/admin/launchpad" class="btn btn-primary btn-sm px-3 py-2 d-inline-flex align-items-center gap-1 shadow-sm">
-      <i class="ti ti-layout-grid"></i>
+  <div class="flex items-center justify-center gap-3">
+    <a href="/admin/launchpad" class="btn btn-primary px-4 py-2 rounded-lg bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none font-semibold text-white text-xs shadow-sm hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/40 inline-flex items-center gap-1.5 transition-all duration-150">
+      <i class="ti ti-layout-grid text-sm"></i>
       <span>Về Launchpad</span>
     </a>
-    <a href="/admin/content-editor" class="btn btn-outline-secondary btn-sm px-3 py-2 d-inline-flex align-items-center gap-1 shadow-sm">
-      <i class="ti ti-article"></i>
+    <a href="/admin/content-editor" class="btn btn-outline-secondary px-4 py-2 rounded-lg border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 inline-flex items-center gap-1.5 transition-all duration-150">
+      <i class="ti ti-article text-sm"></i>
       <span>Content Editor</span>
     </a>
   </div>

@@ -1,43 +1,43 @@
 <div class="modal fade" id="addLanguageModal" tabindex="-1" aria-labelledby="addLanguageModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header py-2 px-3 bg-light border-bottom">
-        <h5 class="modal-title d-flex align-items-center gap-2" id="addLanguageModalLabel">
-          <i class="ti ti-world-plus text-primary fs-3"></i>
+    <div class="modal-content rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header py-3 px-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-sm font-bold text-slate-800 m-0 flex items-center gap-2" id="addLanguageModalLabel">
+          <i class="ti ti-world-plus text-primary text-base"></i>
           <span>Thêm Bản Dịch Ngôn Ngữ</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <form id="addLanguageForm">
-        <div class="modal-body p-3">
-          <div class="mb-3">
-            <label class="form-label required">Chọn ngôn ngữ cần thêm:</label>
-            <select class="form-select" id="addLanguageSelect" name="lang" required>
+        <div class="modal-body p-4 text-xs space-y-3.5">
+          <div>
+            <label class="form-label required font-semibold text-slate-700 block mb-1">Chọn ngôn ngữ cần thêm:</label>
+            <select class="form-select text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full cursor-pointer bg-white" id="addLanguageSelect" name="lang" required>
               <!-- Dynamically populated from /api/languages -->
             </select>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Sao chép nội dung từ ngôn ngữ gốc:</label>
-            <select class="form-select" id="addLanguageCopyFrom" name="copyFromLang">
+          <div>
+            <label class="form-label font-semibold text-slate-700 block mb-1">Sao chép nội dung từ ngôn ngữ gốc:</label>
+            <select class="form-select text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full cursor-pointer bg-white" id="addLanguageCopyFrom" name="copyFromLang">
               <option value="">(Không sao chép - Tạo bản dịch trống)</option>
               <option value="vi" selected>Tiếng Việt (vi)</option>
               <option value="en">English (en)</option>
             </select>
-            <div class="form-text small">Sao chép dữ liệu các trường và bố cục trang để dịch thuật nhanh hơn.</div>
+            <div class="form-text small text-slate-400 text-[10px] mt-1">Sao chép dữ liệu các trường và bố cục trang để dịch thuật nhanh hơn.</div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Ghi chú (Tùy chọn):</label>
-            <input type="text" class="form-control" id="addLanguageNote" name="note" placeholder="Ví dụ: Khởi tạo bản dịch tiếng Việt..." />
+          <div>
+            <label class="form-label font-semibold text-slate-700 block mb-1">Ghi chú (Tùy chọn):</label>
+            <input type="text" class="form-control text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full" id="addLanguageNote" name="note" placeholder="Ví dụ: Khởi tạo bản dịch tiếng Việt..." />
           </div>
         </div>
 
-        <div class="modal-footer py-2 px-3 bg-light">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
-          <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="btnSubmitAddLanguage">
-            <i class="ti ti-plus"></i> Thêm Ngôn Ngữ
+        <div class="modal-footer bg-slate-50/70 px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm px-3.5 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1.5 inline-flex items-center px-4 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" id="btnSubmitAddLanguage">
+            <i class="ti ti-plus text-xs"></i> Thêm Ngôn Ngữ
           </button>
         </div>
       </form>

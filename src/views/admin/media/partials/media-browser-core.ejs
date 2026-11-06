@@ -1,58 +1,61 @@
 <%# Core Media Browser View Fragment (Dual-mode: Standalone & Modal Picker) %>
-<div class="media-browser-root" id="<%= typeof browserId !== 'undefined' ? browserId : 'mediaBrowserApp' %>" data-is-picker="<%= typeof isPicker !== 'undefined' && isPicker ? 'true' : 'false' %>" data-csrf-token="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+<div class="media-browser-root flex flex-col h-full bg-white text-slate-800" id="<%= typeof browserId !== 'undefined' ? browserId : 'mediaBrowserApp' %>" data-is-picker="<%= typeof isPicker !== 'undefined' && isPicker ? 'true' : 'false' %>" data-csrf-token="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   
   <!-- 1. TOP TOOLBAR & CONTROLS -->
-  <div class="media-toolbar">
-    <div class="media-toolbar-left">
+  <div class="media-toolbar border-b border-slate-200 bg-slate-50/80 px-4 py-2 flex items-center justify-between gap-3 h-12 min-h-[48px] max-h-[48px] flex-nowrap" style="min-height: 48px; max-height: 48px;">
+    <div class="media-toolbar-left flex items-center min-w-0">
       <!-- Breadcrumbs -->
-      <nav class="media-breadcrumbs js-media-breadcrumbs" aria-label="Media path">
-        <span class="breadcrumb-item active">📁 Media Library</span>
+      <nav class="media-breadcrumbs js-media-breadcrumbs text-xs font-medium text-slate-600 flex items-center gap-1.5" aria-label="Media path">
+        <span class="breadcrumb-item active text-slate-900 font-semibold flex items-center gap-1 bg-white px-2.5 py-1 rounded-md border border-slate-200/80 shadow-2xs">
+          <span>📁</span>
+          <span>Media Library</span>
+        </span>
       </nav>
     </div>
 
-    <div class="media-toolbar-right">
+    <div class="media-toolbar-right flex items-center gap-2 h-full flex-nowrap">
       <!-- Action buttons -->
-      <button type="button" class="btn btn-sm btn-primary js-upload-trigger" title="Upload files">
-        <i class="ti ti-upload me-1"></i> Upload
+      <button type="button" class="btn btn-sm btn-primary js-upload-trigger inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" title="Upload files">
+        <i class="ti ti-upload me-1 text-sm"></i> Upload
       </button>
       <input type="file" class="d-none js-file-input" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,application/pdf" />
 
-      <button type="button" class="btn btn-sm btn-secondary js-new-folder-btn" title="Create new folder">
-        <i class="ti ti-folder-plus me-1"></i> New Folder
+      <button type="button" class="btn btn-sm btn-secondary js-new-folder-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md shadow-2xs transition-all duration-150 active:scale-95 hover:bg-slate-200 focus:ring-2 focus:ring-slate-300 focus:outline-none" title="Create new folder">
+        <i class="ti ti-folder-plus me-1 text-sm"></i> New Folder
       </button>
 
-      <button type="button" class="btn btn-sm btn-outline-danger js-delete-folder-btn d-none" title="Delete current folder">
-        <i class="ti ti-folder-x me-1"></i> Delete Folder
+      <button type="button" class="btn btn-sm btn-outline-danger js-delete-folder-btn d-none inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-150 active:scale-95 hover:bg-rose-50 focus:ring-2 focus:ring-rose-200 focus:outline-none" title="Delete current folder">
+        <i class="ti ti-folder-x me-1 text-sm"></i> Delete Folder
       </button>
 
-      <button type="button" class="btn btn-sm btn-outline js-toggle-bulk-mode" title="Toggle multi-select mode">
-        <i class="ti ti-checkbox me-1"></i> Select
+      <button type="button" class="btn btn-sm btn-outline js-toggle-bulk-mode inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-150 active:scale-95 hover:bg-slate-100 focus:ring-2 focus:ring-slate-200 focus:outline-none" title="Toggle multi-select mode">
+        <i class="ti ti-checkbox me-1 text-sm"></i> Select
       </button>
 
-      <div class="input-group input-group-sm sync-control-group d-inline-flex" style="width: auto;">
-        <select class="form-select form-select-sm js-sync-direction-select" style="max-width: 195px;" title="Chọn hướng đồng bộ Cloudinary">
+      <div class="input-group input-group-sm sync-control-group d-inline-flex inline-flex items-stretch shadow-2xs rounded-md overflow-hidden border border-slate-300" style="width: auto;">
+        <select class="form-select form-select-sm js-sync-direction-select bg-white text-xs px-2.5 py-1 border-0 focus:ring-0 focus:outline-none cursor-pointer" style="max-width: 195px;" title="Chọn hướng đồng bộ Cloudinary">
           <option value="both" selected>⇄ Đồng bộ 2 chiều</option>
           <option value="pull">↓ Cloudinary → CMS (Pull)</option>
           <option value="push">↑ CMS → Cloudinary (Push)</option>
         </select>
-        <button type="button" class="btn btn-sm btn-outline-primary js-sync-cloudinary-btn" title="Thực hiện đồng bộ">
-          <i class="ti ti-refresh me-1"></i> Sync
+        <button type="button" class="btn btn-sm btn-outline-primary js-sync-cloudinary-btn px-2.5 py-1 text-xs font-medium bg-slate-50 hover:bg-primary/10 border-0 border-l border-slate-200 transition-all duration-150 active:scale-95" title="Thực hiện đồng bộ">
+          <i class="ti ti-refresh me-1 text-xs"></i> Sync
         </button>
       </div>
 
-      <button type="button" class="btn btn-sm btn-icon js-refresh-btn" title="Refresh">
-        <i class="ti ti-refresh"></i>
+      <button type="button" class="btn js-refresh-btn inline-flex items-center justify-center border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded-md shadow-2xs transition-all duration-150 active:scale-95 focus:ring-2 focus:ring-slate-200 focus:outline-none" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; padding: 0;" title="Refresh">
+        <i class="ti ti-refresh text-sm"></i>
       </button>
     </div>
   </div>
 
   <!-- 2. FILTER & SEARCH SUBBAR -->
-  <div class="media-subbar">
-    <div class="subbar-filters">
+  <div class="media-subbar border-b border-slate-200 bg-white px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
+    <div class="subbar-filters flex items-center flex-wrap gap-4">
       <!-- Format filter -->
-      <div class="filter-group">
-        <label for="formatFilter" class="filter-label">Type:</label>
-        <select class="form-control form-control-sm js-format-filter" id="formatFilter">
+      <div class="filter-group flex items-center gap-1.5">
+        <label for="formatFilter" class="filter-label text-slate-500 font-medium">Type:</label>
+        <select class="form-control form-control-sm js-format-filter rounded-md border-slate-300 py-1 text-xs shadow-2xs focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150" id="formatFilter">
           <option value="all">All Formats</option>
           <option value="png">PNG</option>
           <option value="jpg">JPG / JPEG</option>
@@ -64,9 +67,9 @@
       </div>
 
       <!-- Sort filter -->
-      <div class="filter-group">
-        <label for="sortFilter" class="filter-label">Sort:</label>
-        <select class="form-control form-control-sm js-sort-filter" id="sortFilter">
+      <div class="filter-group flex items-center gap-1.5">
+        <label for="sortFilter" class="filter-label text-slate-500 font-medium">Sort:</label>
+        <select class="form-control form-control-sm js-sort-filter rounded-md border-slate-300 py-1 text-xs shadow-2xs focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150" id="sortFilter">
           <option value="created_at_desc">Newest First</option>
           <option value="created_at_asc">Oldest First</option>
           <option value="name_asc">Name A-Z</option>
@@ -78,168 +81,171 @@
     </div>
 
     <!-- Live Search -->
-    <div class="subbar-search">
-      <div class="search-input-wrapper">
-        <input type="text" class="form-control form-control-sm js-search-input" placeholder="Search media by name..." />
-        <button type="button" class="search-clear-btn js-search-clear d-none" title="Clear search">×</button>
+    <div class="subbar-search w-full sm:w-auto">
+      <div class="search-input-wrapper relative flex items-center">
+        <input type="text" class="form-control form-control-sm js-search-input pl-3 pr-7 py-1 text-xs rounded-md border-slate-300 shadow-2xs focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full sm:w-64" placeholder="Search media by name..." />
+        <button type="button" class="search-clear-btn js-search-clear d-none absolute right-2 text-slate-400 hover:text-slate-600 transition-colors" title="Clear search">×</button>
       </div>
     </div>
   </div>
 
   <!-- 3. PROGRESS BAR (XHR UPLOAD) -->
-  <div class="media-progress-container js-progress-container d-none">
-    <div class="media-progress-info">
-      <span class="js-progress-label">Uploading...</span>
-      <span class="js-progress-percent">0%</span>
+  <div class="media-progress-container js-progress-container d-none bg-indigo-50/70 border-b border-indigo-100 px-4 py-2">
+    <div class="media-progress-info flex items-center justify-between text-xs font-semibold text-indigo-700 mb-1">
+      <span class="js-progress-label flex items-center gap-1"><i class="ti ti-loader animate-spin"></i> Uploading...</span>
+      <span class="js-progress-percent font-mono">0%</span>
     </div>
-    <div class="media-progress-track">
-      <div class="media-progress-bar js-progress-bar" style="width: 0%;"></div>
+    <div class="media-progress-track h-2 bg-indigo-200/60 rounded-full overflow-hidden">
+      <div class="media-progress-bar js-progress-bar h-full bg-indigo-600 transition-all duration-200 rounded-full" style="width: 0%;"></div>
     </div>
   </div>
 
   <!-- 4. BULK ACTIONS BAR (Visible when items selected) -->
-  <div class="media-bulk-bar js-bulk-bar d-none">
-    <span class="bulk-count js-bulk-count">0 items selected</span>
-    <div class="bulk-actions">
+  <div class="media-bulk-bar js-bulk-bar d-none bg-blue-50 border-b border-blue-200 px-4 py-2 flex items-center justify-between text-xs">
+    <span class="bulk-count js-bulk-count font-semibold text-blue-900">0 items selected</span>
+    <div class="bulk-actions flex items-center gap-2">
       <% if (typeof isPicker !== 'undefined' && isPicker) { %>
-        <button type="button" class="btn btn-sm btn-primary js-bulk-insert-btn">Insert Selected</button>
+        <button type="button" class="btn btn-sm btn-primary js-bulk-insert-btn px-3 py-1 rounded-md text-xs font-medium shadow-xs transition-all duration-150 active:scale-95">Insert Selected</button>
       <% } %>
-      <button type="button" class="btn btn-sm btn-danger js-bulk-delete-btn">Delete Selected</button>
-      <button type="button" class="btn btn-sm btn-secondary js-bulk-clear-btn">Clear Selection</button>
+      <button type="button" class="btn btn-sm btn-danger js-bulk-delete-btn px-3 py-1 rounded-md text-xs font-medium shadow-xs transition-all duration-150 active:scale-95">Delete Selected</button>
+      <button type="button" class="btn btn-sm btn-secondary js-bulk-clear-btn px-3 py-1 rounded-md text-xs font-medium transition-all duration-150 active:scale-95">Clear Selection</button>
     </div>
   </div>
 
   <!-- 5. THREE-COLUMN WORKSPACE BODY -->
-  <div class="media-workspace">
+  <div class="media-workspace flex-1 flex overflow-hidden">
     
     <!-- LEFT: FOLDER TREE SIDEBAR -->
-    <aside class="media-sidebar js-sidebar">
-      <div class="sidebar-header">
-        <span class="sidebar-title">FOLDERS</span>
+    <aside class="media-sidebar js-sidebar w-64 min-w-[220px] max-w-xs border-r border-slate-200 bg-slate-50/50 flex flex-col">
+      <div class="sidebar-header px-3 py-2 border-b border-slate-200 bg-slate-100/60 flex items-center justify-between">
+        <span class="sidebar-title text-xs font-bold text-slate-500 tracking-wider uppercase font-mono">Folders</span>
       </div>
-      <div class="sidebar-tree js-folder-tree-container">
+      <div class="sidebar-tree js-folder-tree-container flex-1 overflow-y-auto p-2 text-xs">
         <!-- Rendered dynamically by MediaBrowser.js -->
-        <div class="tree-loading text-muted p-2">Loading folders...</div>
+        <div class="tree-loading text-slate-400 p-2 text-center italic">Loading folders...</div>
       </div>
     </aside>
 
     <!-- MIDDLE: GRID & DROPZONE AREA -->
-    <main class="media-content-area js-dropzone-container">
+    <main class="media-content-area js-dropzone-container flex-1 flex flex-col bg-slate-50/30 overflow-hidden relative">
       <!-- Dropzone Overlay -->
-      <div class="media-dropzone-overlay js-dropzone-overlay d-none">
-        <div class="dropzone-box">
-          <span class="dropzone-icon">📂</span>
-          <p class="dropzone-text">Drop images or files here to upload</p>
+      <div class="media-dropzone-overlay js-dropzone-overlay d-none absolute inset-0 bg-blue-500/10 backdrop-blur-xs z-20 flex items-center justify-center border-2 border-dashed border-primary m-3 rounded-xl">
+        <div class="dropzone-box bg-white/90 shadow-lg px-8 py-6 rounded-xl text-center">
+          <span class="dropzone-icon text-4xl block mb-2">📂</span>
+          <p class="dropzone-text font-semibold text-slate-700 text-sm">Drop images or files here to upload</p>
         </div>
       </div>
 
       <!-- Assets Grid -->
-      <div class="media-grid js-media-grid">
+      <div class="media-grid js-media-grid grid flex-1 overflow-y-auto p-4 content-start items-start gap-3" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; align-content: start; grid-auto-rows: max-content;">
         <!-- Cards rendered dynamically by MediaBrowser.js -->
       </div>
 
       <!-- Empty State -->
-      <div class="media-empty-state js-empty-state d-none">
-        <div class="empty-icon">📁</div>
-        <p class="empty-title">This folder is empty</p>
-        <p class="empty-subtitle">Drag and drop files here, or click the <strong>Upload</strong> button above.</p>
-        <div class="mt-3">
-          <button type="button" class="btn btn-primary js-empty-upload-btn">
-            <i class="ti ti-upload me-1"></i> Upload Image Now
+      <div class="media-empty-state js-empty-state d-none flex-1 flex flex-col items-center justify-center p-8 text-center">
+        <div class="empty-icon text-5xl mb-3 opacity-60">📁</div>
+        <p class="empty-title text-base font-bold text-slate-700 m-0">This folder is empty</p>
+        <p class="empty-subtitle text-xs text-slate-500 mt-1 max-w-sm">Drag and drop files here, or click the <strong>Upload</strong> button above.</p>
+        <div class="mt-4">
+          <button type="button" class="btn btn-primary js-empty-upload-btn inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg shadow-sm transition-all duration-150 active:scale-95 hover:shadow">
+            <i class="ti ti-upload me-1 text-sm"></i> Upload Image Now
           </button>
         </div>
       </div>
 
       <!-- Pagination / Load More Footer -->
-      <div class="media-grid-footer js-grid-footer d-none">
-        <span class="footer-count js-footer-count">Showing 0 of 0 items</span>
-        <button type="button" class="btn btn-sm btn-outline js-load-more-btn d-none">Load More Assets</button>
+      <div class="media-grid-footer js-grid-footer d-none border-t border-slate-200 bg-white px-4 py-2 flex items-center justify-between text-xs text-slate-500">
+        <span class="footer-count js-footer-count font-mono">Showing 0 of 0 items</span>
+        <button type="button" class="btn btn-sm btn-outline js-load-more-btn d-none px-3 py-1 rounded-md text-xs font-medium transition-all duration-150 active:scale-95 hover:bg-slate-100">Load More Assets</button>
       </div>
     </main>
 
     <!-- RIGHT: ASSET INSPECTOR PANEL -->
-    <aside class="media-inspector js-inspector-panel">
-      <div class="inspector-empty js-inspector-empty">
-        <span class="text-muted">Select an item to view details</span>
+    <aside class="media-inspector js-inspector-panel w-80 min-w-[280px] max-w-sm border-l border-slate-200 bg-white flex flex-col">
+      <div class="inspector-empty js-inspector-empty flex-1 flex items-center justify-center p-6 text-center text-xs text-slate-400 italic">
+        <div class="flex flex-col items-center gap-2">
+          <i class="ti ti-photo-search text-3xl text-slate-300"></i>
+          <span>Select an item to view details</span>
+        </div>
       </div>
 
-      <div class="inspector-content js-inspector-content d-none">
-        <div class="inspector-header">
-          <span class="inspector-title">DETAILS</span>
+      <div class="inspector-content js-inspector-content d-none flex-1 flex flex-col overflow-y-auto">
+        <div class="inspector-header px-4 py-2.5 border-b border-slate-200 bg-slate-50/60 flex items-center justify-between">
+          <span class="inspector-title text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">Details</span>
         </div>
 
         <!-- Large Preview -->
-        <div class="inspector-preview-box">
-          <img src="" alt="" class="inspector-preview-img js-inspector-preview" />
-          <div class="inspector-file-icon js-inspector-file-icon d-none">📄</div>
+        <div class="inspector-preview-box p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-center min-h-[160px] max-h-[220px] overflow-hidden">
+          <img src="" alt="" class="inspector-preview-img js-inspector-preview max-h-[190px] w-auto max-w-full rounded-md object-contain shadow-xs border border-slate-200" />
+          <div class="inspector-file-icon js-inspector-file-icon d-none text-5xl">📄</div>
         </div>
 
         <!-- Action Buttons (Picker or Standalone) -->
-        <div class="inspector-actions">
+        <div class="inspector-actions p-3 border-b border-slate-200 flex flex-col gap-2">
           <% if (typeof isPicker !== 'undefined' && isPicker) { %>
-            <button type="button" class="btn btn-primary btn-block js-inspector-insert-btn">
-              Choose / Insert Image
+            <button type="button" class="btn btn-primary btn-block js-inspector-insert-btn w-full py-2 text-xs font-semibold rounded-md shadow-sm transition-all duration-150 active:scale-95 hover:shadow flex items-center justify-center gap-1.5">
+              <span>✓</span> Choose / Insert Image
             </button>
           <% } %>
-          <div class="btn-group-row">
-            <button type="button" class="btn btn-sm btn-outline-secondary js-inspector-rename-btn" title="Rename asset">Rename</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary js-inspector-replace-btn" title="Replace file">Replace</button>
+          <div class="btn-group-row grid grid-cols-2 gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary js-inspector-rename-btn py-1 text-xs rounded-md transition-all duration-150 active:scale-95 hover:bg-slate-100" title="Rename asset">Rename</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary js-inspector-replace-btn py-1 text-xs rounded-md transition-all duration-150 active:scale-95 hover:bg-slate-100" title="Replace file">Replace</button>
             <input type="file" class="d-none js-replace-file-input" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,application/pdf" />
           </div>
-          <div class="btn-group-row">
-            <a href="#" target="_blank" class="btn btn-sm btn-secondary js-inspector-view-btn">View Full</a>
-            <button type="button" class="btn btn-sm btn-outline js-inspector-copy-btn" title="Copy URL">Copy URL</button>
-            <button type="button" class="btn btn-sm btn-danger js-inspector-delete-btn" title="Delete">Delete</button>
+          <div class="btn-group-row grid grid-cols-3 gap-1.5">
+            <a href="#" target="_blank" class="btn btn-sm btn-secondary js-inspector-view-btn py-1 text-xs rounded-md text-center transition-all duration-150 active:scale-95 hover:bg-slate-200">View Full</a>
+            <button type="button" class="btn btn-sm btn-outline js-inspector-copy-btn py-1 text-xs rounded-md transition-all duration-150 active:scale-95 hover:bg-slate-100" title="Copy URL">Copy URL</button>
+            <button type="button" class="btn btn-sm btn-danger js-inspector-delete-btn py-1 text-xs rounded-md transition-all duration-150 active:scale-95 hover:bg-rose-600" title="Delete">Delete</button>
           </div>
         </div>
 
         <!-- Metadata Form -->
-        <div class="inspector-meta">
-          <div class="form-group mb-2">
-            <label class="form-label-sm">File Name</label>
-            <input type="text" class="form-control form-control-sm js-inspector-name" readonly />
+        <div class="inspector-meta p-3 flex-1 flex flex-col gap-3 text-xs">
+          <div class="form-group">
+            <label class="form-label-sm font-semibold text-slate-600 block mb-1">File Name</label>
+            <input type="text" class="form-control form-control-sm js-inspector-name w-full rounded-md border-slate-200 bg-slate-50 font-mono text-xs text-slate-700 py-1" readonly />
           </div>
 
-          <div class="meta-row">
+          <div class="meta-row grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-md border border-slate-100">
             <div>
-              <span class="meta-label">Format:</span>
-              <span class="meta-val js-inspector-format">-</span>
+              <span class="meta-label text-slate-400 font-medium block">Format:</span>
+              <span class="meta-val js-inspector-format font-semibold uppercase text-slate-700">-</span>
             </div>
             <div>
-              <span class="meta-label">Size:</span>
-              <span class="meta-val js-inspector-size">-</span>
+              <span class="meta-label text-slate-400 font-medium block">Size:</span>
+              <span class="meta-val js-inspector-size font-mono text-slate-700">-</span>
             </div>
           </div>
 
-          <div class="meta-row">
+          <div class="meta-row grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-md border border-slate-100">
             <div>
-              <span class="meta-label">Dimensions:</span>
-              <span class="meta-val js-inspector-dimensions">-</span>
+              <span class="meta-label text-slate-400 font-medium block">Dimensions:</span>
+              <span class="meta-val js-inspector-dimensions font-mono text-slate-700">-</span>
             </div>
             <div>
-              <span class="meta-label">Date:</span>
-              <span class="meta-val js-inspector-date">-</span>
+              <span class="meta-label text-slate-400 font-medium block">Date:</span>
+              <span class="meta-val js-inspector-date text-slate-700">-</span>
             </div>
           </div>
 
           <!-- Alt Text (Multilingual) -->
-          <div class="form-group mt-2">
-            <div class="d-flex justify-content-between align-items-center">
-              <label class="form-label-sm" for="inspectorAlt">Alt Text (<span class="js-alt-lang-badge">en</span>)</label>
-              <select class="form-select-sm js-inspector-alt-lang" style="width: auto;">
+          <div class="form-group border-t border-slate-100 pt-2">
+            <div class="d-flex justify-content-between align-items-center flex items-center justify-between mb-1">
+              <label class="form-label-sm font-semibold text-slate-600 m-0" for="inspectorAlt">Alt Text (<span class="js-alt-lang-badge uppercase font-bold text-primary">en</span>)</label>
+              <select class="form-select-sm js-inspector-alt-lang text-xs rounded border-slate-200 py-0.5" style="width: auto;">
                 <option value="en">EN</option>
                 <option value="vi">VI</option>
               </select>
             </div>
-            <input type="text" class="form-control form-control-sm js-inspector-alt" id="inspectorAlt" placeholder="Image description..." />
-            <button type="button" class="btn btn-sm btn-secondary mt-1 js-inspector-save-alt">Save Alt</button>
+            <input type="text" class="form-control form-control-sm js-inspector-alt w-full rounded-md border-slate-300 py-1 text-xs focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150" id="inspectorAlt" placeholder="Image description..." />
+            <button type="button" class="btn btn-sm btn-secondary mt-1.5 js-inspector-save-alt w-full py-1 text-xs font-medium rounded-md transition-all duration-150 active:scale-95 hover:bg-slate-200">Save Alt</button>
           </div>
 
           <!-- Usage -->
-          <div class="inspector-usage mt-3">
-            <label class="form-label-sm">Where Used (Usage)</label>
-            <div class="usage-list js-inspector-usage">
-              <span class="text-muted small">Not used in any items yet</span>
+          <div class="inspector-usage border-t border-slate-100 pt-2">
+            <label class="form-label-sm font-semibold text-slate-600 block mb-1">Where Used (Usage)</label>
+            <div class="usage-list js-inspector-usage bg-slate-50 p-2 rounded-md border border-slate-100 text-xs">
+              <span class="text-muted small text-slate-400 italic">Not used in any items yet</span>
             </div>
           </div>
         </div>

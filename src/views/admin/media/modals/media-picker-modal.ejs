@@ -1,24 +1,24 @@
-<div class="modal-overlay media-picker-modal-overlay js-media-picker-modal d-none" id="mediaPickerModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="mediaPickerTitle">
-  <div class="modal-dialog modal-xl modal-media-picker" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="mediaPickerTitle">
-          <span class="modal-title-icon">🖼️</span> Select Media Asset
+<div class="modal-overlay media-picker-modal-overlay js-media-picker-modal d-none fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6" id="mediaPickerModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="mediaPickerTitle">
+  <div class="modal-dialog modal-xl modal-media-picker w-full max-w-6xl h-[88vh] max-h-[850px] flex flex-col" role="document">
+    <div class="modal-content flex flex-col h-full bg-white rounded-xl shadow-2xl border border-slate-200/80 overflow-hidden">
+      <div class="modal-header flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-slate-50/80">
+        <h5 class="modal-title text-sm font-bold text-slate-800 flex items-center gap-2 m-0" id="mediaPickerTitle">
+          <span class="modal-title-icon text-base">🖼️</span> Select Media Asset
         </h5>
-        <button type="button" class="btn-close js-media-picker-close" aria-label="Close"></button>
+        <button type="button" class="btn-close js-media-picker-close text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md hover:bg-slate-200/60" aria-label="Close"></button>
       </div>
 
-      <div class="modal-body p-0">
+      <div class="modal-body p-0 flex-1 overflow-hidden flex flex-col">
         <%- include('../partials/media-browser-core', { browserId: 'modalMediaBrowser', isPicker: true }) %>
       </div>
 
-      <div class="modal-footer">
-        <div class="picker-selected-summary js-picker-selected-summary">
-          <span class="text-muted">No asset selected</span>
+      <div class="modal-footer px-5 py-3 border-t border-slate-200 bg-slate-50/80 flex items-center justify-between">
+        <div class="picker-selected-summary js-picker-selected-summary text-xs text-slate-600 font-medium">
+          <span class="text-muted text-slate-400 italic">No asset selected</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-          <button type="button" class="btn btn-outline-secondary js-media-picker-cancel">Cancel</button>
-          <button type="button" class="btn btn-primary js-media-picker-confirm" disabled>
+        <div class="d-flex align-items-center gap-2 flex items-center gap-2">
+          <button type="button" class="btn btn-outline-secondary js-media-picker-cancel px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 text-slate-700 transition-all duration-150 active:scale-95">Cancel</button>
+          <button type="button" class="btn btn-primary js-media-picker-confirm inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 disabled:opacity-50 disabled:pointer-events-none" disabled>
             <span>✓</span> Select Asset
           </button>
         </div>

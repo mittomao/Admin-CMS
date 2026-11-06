@@ -1,15 +1,16 @@
-<div class="desktop-window media-library-window">
-  <div class="window-header">
-    <div class="window-title">
-      <span class="window-icon">📁</span>
-      <span class="window-name">Media Library</span>
+<div class="desktop-window media-library-window flex flex-col h-full bg-slate-50 border border-slate-200/80 shadow-md rounded-lg overflow-hidden">
+  <div class="window-header bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between select-none">
+    <div class="window-title flex items-center gap-2.5 text-slate-800 font-semibold text-sm">
+      <span class="window-icon text-base">📁</span>
+      <span class="window-name tracking-tight font-medium">Media Library</span>
+      <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-600 font-mono">Digital Asset Management</span>
     </div>
-    <div class="window-actions">
-      <a href="/admin/launchpad" class="window-btn close-btn" title="Back to Launchpad">✕</a>
+    <div class="window-actions flex items-center gap-1.5">
+      <a href="/admin/launchpad" class="window-btn close-btn inline-flex items-center justify-center w-7 h-7 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all duration-150 active:scale-95" title="Back to Launchpad">✕</a>
     </div>
   </div>
 
-  <div class="window-body p-0">
+  <div class="window-body p-0 flex-1 overflow-hidden flex flex-col">
     <%- include('partials/media-browser-core', { browserId: 'mediaPageBrowser', isPicker: false }) %>
   </div>
 </div>

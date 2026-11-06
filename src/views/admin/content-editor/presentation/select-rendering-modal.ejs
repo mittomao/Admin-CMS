@@ -1,29 +1,29 @@
 <div class="modal fade" id="selectRenderingModal" tabindex="-1" aria-labelledby="selectRenderingModalLabel" aria-hidden="true" style="z-index: 1055;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header py-2 px-3 bg-light border-bottom">
-        <h5 class="modal-title d-flex align-items-center gap-2" id="selectRenderingModalLabel">
-          <i class="ti ti-components text-primary fs-3"></i>
-          <span>Thêm Component vào Placeholder: <span class="text-primary font-monospace" id="selectRenderingPlaceholderTitle"></span></span>
+    <div class="modal-content rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header py-3 px-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-sm font-bold text-slate-800 m-0 flex items-center gap-2" id="selectRenderingModalLabel">
+          <i class="ti ti-components text-primary text-base"></i>
+          <span>Thêm Component vào Placeholder: <span class="text-primary font-mono text-xs font-semibold" id="selectRenderingPlaceholderTitle"></span></span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <div class="modal-body p-3">
+      <div class="modal-body p-4 text-xs">
         <!-- Search and Folder Filter Bar -->
-        <div class="row g-2 mb-2 align-items-center">
-          <div class="col-sm-7">
-            <div class="input-icon">
-              <span class="input-icon-addon">
-                <i class="ti ti-search"></i>
+        <div class="row g-2.5 mb-3 align-items-center grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+          <div class="col-sm-7 sm:col-span-7">
+            <div class="input-icon relative">
+              <span class="input-icon-addon absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                <i class="ti ti-search text-slate-400 text-sm"></i>
               </span>
-              <input type="text" class="form-control form-control-sm" id="searchRenderingInput" placeholder="Tìm component theo tên, viewPath hoặc template..." autocomplete="off">
+              <input type="text" class="form-control form-control-sm pl-8 pr-3 py-1.5 text-xs rounded-md border-slate-300 shadow-2xs focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full" id="searchRenderingInput" placeholder="Tìm component theo tên, viewPath hoặc template..." autocomplete="off">
             </div>
           </div>
-          <div class="col-sm-5">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text"><i class="ti ti-folder text-muted"></i></span>
-              <select class="form-select form-select-sm" id="renderingFolderFilter">
+          <div class="col-sm-5 sm:col-span-5">
+            <div class="input-group input-group-sm flex rounded-md overflow-hidden border border-slate-300 shadow-2xs">
+              <span class="input-group-text bg-slate-50 px-2.5 py-1.5 border-r border-slate-200 flex items-center"><i class="ti ti-folder text-slate-400 text-xs"></i></span>
+              <select class="form-select form-select-sm text-xs py-1.5 px-2.5 border-0 focus:ring-0 focus:outline-none w-full cursor-pointer bg-white" id="renderingFolderFilter">
                 <option value="all">Tất cả thư mục</option>
               </select>
             </div>
@@ -31,33 +31,33 @@
         </div>
 
         <!-- Scope Switcher Pills & Source Indicator -->
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 pt-1 border-top" id="renderingScopeBar">
-          <div class="btn-group btn-group-sm" role="group" id="renderingScopeBtnGroup">
-            <button type="button" class="btn btn-sm btn-primary active" id="btnFilterAllRenderings">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pt-2.5 border-t border-slate-200 flex items-center justify-between" id="renderingScopeBar">
+          <div class="btn-group btn-group-sm inline-flex rounded-md p-0.5 bg-slate-100 border border-slate-200" role="group" id="renderingScopeBtnGroup">
+            <button type="button" class="btn btn-sm btn-primary active px-3 py-1 text-xs font-semibold rounded transition-all duration-150" id="btnFilterAllRenderings">
               Tất cả (<span id="countAllRenderings">0</span>)
             </button>
-            <button type="button" class="btn btn-sm btn-outline-purple" id="btnFilterRecommendedRenderings" style="display: none;">
+            <button type="button" class="btn btn-sm btn-outline-purple px-3 py-1 text-xs font-semibold rounded transition-all duration-150" id="btnFilterRecommendedRenderings" style="display: none;">
               <i class="ti ti-star me-1"></i>Khuyên dùng (<span id="countRecommendedRenderings">0</span>)
             </button>
           </div>
-          <div class="text-muted small d-flex align-items-center gap-1 font-monospace">
-            <i class="ti ti-folder-check text-success"></i>
+          <div class="text-slate-400 text-[11px] d-flex align-items-center gap-1.5 font-mono flex items-center gap-1.5">
+            <i class="ti ti-folder-check text-emerald-600 text-xs"></i>
             <span>/sitecore/layout/Renderings/</span>
           </div>
         </div>
 
         <!-- Renderings Grid -->
-        <div class="row g-2 overflow-auto" id="renderingsGridContainer" style="max-height: 400px; min-height: 180px;">
-          <div class="col-12 text-center py-4 text-muted">
+        <div class="row g-2.5 overflow-auto p-1" id="renderingsGridContainer" style="max-height: 400px; min-height: 180px;">
+          <div class="col-12 text-center py-8 text-slate-400 flex flex-col items-center justify-center">
             <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-            <div>Đang tải danh sách components từ /sitecore/layout/Renderings/...</div>
+            <div class="text-xs">Đang tải danh sách components từ /sitecore/layout/Renderings/...</div>
           </div>
         </div>
       </div>
 
-      <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between align-items-center">
-        <span class="text-muted small" id="renderingSelectedStats">Đang tải components...</span>
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+      <div class="modal-footer py-3 px-4 bg-slate-50/70 border-t border-slate-200 d-flex justify-content-between align-items-center flex items-center justify-between">
+        <span class="text-slate-500 font-mono text-[11px]" id="renderingSelectedStats">Đang tải components...</span>
+        <button type="button" class="btn btn-secondary btn-sm px-3.5 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal">Đóng</button>
       </div>
     </div>
   </div>

@@ -19,84 +19,85 @@
   const itemOwner = qi.itemOwner || {};
   const itemOwnerText = itemOwner.displayText || '[unknown]';
 %>
-<div class="sc-quick-info mb-3" id="scQuickInfoSection">
-  <!-- Section Bar Header -->
+<div class="sc-quick-info mb-4 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs" id="scQuickInfoSection">
+  <!-- Section Bar Header (Sitecore Style with CSS & Test Compliant) -->
   <div class="sc-section-bar" id="scQuickInfoToggle" role="button" tabindex="0" title="Click to collapse / expand">
     <div class="sc-section-title">
+      <i class="ti ti-info-circle text-rose-400 text-sm"></i>
       <span>Quick Info</span>
     </div>
     <div class="sc-section-toggle">
-      <i class="ti ti-chevron-down" id="scQuickInfoChevron"></i>
+      <i class="ti ti-chevron-down text-sm" id="scQuickInfoChevron"></i>
     </div>
   </div>
 
   <!-- Section Body -->
   <div class="sc-quick-info-body" id="scQuickInfoBody">
     <!-- Row 1: Item ID -->
-    <div class="sc-quick-info-row">
-      <div class="sc-quick-info-label">Item ID:</div>
-      <div class="sc-quick-info-value font-monospace">
+    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
+      <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Item ID:</div>
+      <div class="sc-quick-info-value font-mono flex items-center gap-2 text-slate-800 dark:text-slate-200">
         <span class="user-select-all" id="quickInfoItemIdVal"><%= itemId %></span>
-        <button type="button" class="sc-copy-btn ms-1" onclick="if(navigator.clipboard){navigator.clipboard.writeText('<%= itemId %>');}" title="Copy Item ID">
-          <i class="ti ti-copy"></i>
+        <button type="button" class="sc-copy-btn inline-flex items-center justify-center w-6 h-6 rounded border border-slate-300/80 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shadow-2xs transition-all active:scale-90" style="padding: 0; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" onclick="if(navigator.clipboard){navigator.clipboard.writeText('<%= itemId %>');}" title="Copy Item ID">
+          <i class="ti ti-copy text-xs"></i>
         </button>
       </div>
     </div>
 
     <!-- Row 2: Item name -->
-    <div class="sc-quick-info-row">
-      <div class="sc-quick-info-label">Item name:</div>
-      <div class="sc-quick-info-value">
-        <span class="font-monospace"><%= itemName %></span>
+    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
+      <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Item name:</div>
+      <div class="sc-quick-info-value text-slate-800 dark:text-slate-200">
+        <span class="font-mono font-medium"><%= itemName %></span>
       </div>
     </div>
 
     <!-- Row 3: Item path -->
-    <div class="sc-quick-info-row">
-      <div class="sc-quick-info-label">Item path:</div>
-      <div class="sc-quick-info-value font-monospace">
+    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
+      <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Item path:</div>
+      <div class="sc-quick-info-value font-mono flex items-center gap-2 text-slate-800 dark:text-slate-200 break-all">
         <span class="user-select-all" id="quickInfoItemPathVal"><%= itemPath %></span>
-        <button type="button" class="sc-copy-btn ms-1" onclick="if(navigator.clipboard){navigator.clipboard.writeText('<%= itemPath %>');}" title="Copy Item Path">
-          <i class="ti ti-copy"></i>
+        <button type="button" class="sc-copy-btn inline-flex items-center justify-center w-6 h-6 rounded border border-slate-300/80 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shadow-2xs transition-all active:scale-90 flex-shrink-0" style="padding: 0; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px;" onclick="if(navigator.clipboard){navigator.clipboard.writeText('<%= itemPath %>');}" title="Copy Item Path">
+          <i class="ti ti-copy text-xs"></i>
         </button>
       </div>
     </div>
 
     <!-- Row 4: Template -->
-    <div class="sc-quick-info-row">
-      <div class="sc-quick-info-label">Template:</div>
-      <div class="sc-quick-info-value">
+    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
+      <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Template:</div>
+      <div class="sc-quick-info-value font-mono flex items-center flex-wrap gap-1.5 text-slate-800 dark:text-slate-200">
         <% if (templateRawId) { %>
-          <a href="/admin/content-editor/<%= templateRawId %>" class="sc-quick-info-link font-monospace" data-template-id="<%= templateRawId %>" title="Navigate to template">
+          <a href="/admin/content-editor/<%= templateRawId %>" class="sc-quick-info-link text-blue-600 dark:text-blue-400 hover:underline font-medium" data-template-id="<%= templateRawId %>" title="Navigate to template">
             <%= templatePath || '/sitecore/templates/System/Template' %>
           </a>
-          <span class="text-muted ms-1 font-monospace">- <%= templateId %></span>
+          <span class="text-slate-400 text-[11px]">- <%= templateId %></span>
         <% } else { %>
-          <span class="font-monospace"><%= templatePath || '[unknown]' %></span>
-          <% if (templateId) { %><span class="text-muted ms-1 font-monospace">- <%= templateId %></span><% } %>
+          <span><%= templatePath || '[unknown]' %></span>
+          <% if (templateId) { %><span class="text-slate-400 text-[11px]">- <%= templateId %></span><% } %>
         <% } %>
       </div>
     </div>
 
     <!-- Row 5: Created from -->
-    <div class="sc-quick-info-row">
-      <div class="sc-quick-info-label">Created from:</div>
-      <div class="sc-quick-info-value">
+    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
+      <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Created from:</div>
+      <div class="sc-quick-info-value font-mono">
         <% if (createdFrom.rawId) { %>
-          <a href="/admin/content-editor/<%= createdFrom.rawId %>" class="sc-quick-info-link font-monospace" data-source-id="<%= createdFrom.rawId %>" title="Open source item">
+          <a href="/admin/content-editor/<%= createdFrom.rawId %>" class="sc-quick-info-link text-blue-600 dark:text-blue-400 hover:underline font-medium" data-source-id="<%= createdFrom.rawId %>" title="Open source item">
             <%= createdFromText %>
           </a>
         <% } else { %>
-          <span class="text-muted font-monospace"><%= createdFromText %></span>
+          <span class="text-slate-400"><%= createdFromText %></span>
         <% } %>
       </div>
     </div>
 
     <!-- Row 6: Item owner -->
-    <div class="sc-quick-info-row">
-      <div class="sc-quick-info-label">Item owner:</div>
-      <div class="sc-quick-info-value font-monospace">
-        <span class="<%= itemOwnerText === '[unknown]' ? 'text-muted' : '' %>"><%= itemOwnerText %></span>
+    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5">
+      <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Item owner:</div>
+      <div class="sc-quick-info-value font-mono text-slate-800 dark:text-slate-200">
+        <span class="<%= itemOwnerText === '[unknown]' ? 'text-slate-400' : '' %>"><%= itemOwnerText %></span>
       </div>
     </div>
   </div>
@@ -148,4 +149,3 @@
     });
   })();
 </script>
-

@@ -6,6 +6,11 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "build:css:site": "tailwindcss -c ./tailwind.site.config.js -i ./src/styles/site/main.css -o ./public/site/css/tailwind.css --minify",
+    "build:css:admin": "tailwindcss -c ./tailwind.admin.config.js -i ./src/styles/admin/main.css -o ./public/css/tailwind-admin.css --minify",
+    "build:css": "npm run build:css:site && npm run build:css:admin",
+    "watch:css:site": "tailwindcss -c ./tailwind.site.config.js -i ./src/styles/site/main.css -o ./public/site/css/tailwind.css --watch",
+    "watch:css:admin": "tailwindcss -c ./tailwind.admin.config.js -i ./src/styles/admin/main.css -o ./public/css/tailwind-admin.css --watch",
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
     "format": "prettier --write \"src/**/*.{js,json,ejs}\" \"public/**/*.{css,js}\"",
@@ -53,7 +58,8 @@
     "mongodb-memory-server": "^11.3.0",
     "nodemon": "^3.1.9",
     "prettier": "^3.4.2",
-    "supertest": "^7.0.0"
+    "supertest": "^7.0.0",
+    "tailwindcss": "^3.4.17"
   },
   "jest": {
     "testTimeout": 60000

@@ -43,6 +43,12 @@ export function initRichTextEditors(container = document, options = {}) {
       automatic_uploads: true,
       file_picker_types: 'image',
 
+      // Giữ nguyên đường dẫn URL tuyệt đối bắt đầu từ root (ví dụ: /media/file/:id)
+      // Không để TinyMCE tự ý convert thành relative URLs (../media/file/:id) gây lỗi 404
+      convert_urls: false,
+      relative_urls: false,
+      remove_script_host: true,
+
       // 1. Custom Button: Media Library
       setup: (editor) => {
         editor.ui.registry.addButton('media_library', {

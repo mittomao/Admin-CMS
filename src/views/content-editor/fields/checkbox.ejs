@@ -1,39 +1,39 @@
-<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+<div class="mb-3 field-container select-none" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
   <div class="d-flex align-items-center justify-content-between mt-1 mb-2">
-    <label class="form-check form-switch m-0 d-flex align-items-center gap-2">
+    <label class="form-check form-switch m-0 d-flex align-items-center gap-2 cursor-pointer">
       <input
         type="checkbox"
-        class="form-check-input item-field-input"
+        class="form-check-input item-field-input transition cursor-pointer"
         name="fields[<%= field.name %>]"
         value="true"
         <%= (value === true || value === 'true' || (!value && field.defaultValue === true)) ? 'checked' : '' %>
       />
-      <span class="form-check-label fw-semibold">
+      <span class="form-check-label text-xs font-bold text-slate-700 dark:text-slate-300 tracking-wide">
         <%= field.title || field.name %>
       </span>
     </label>
-    <div class="d-flex align-items-center gap-1">
+    <div class="d-flex align-items-center gap-1.5">
       <% if (field.origin && field.origin.isInherited) { %>
-        <span class="badge bg-purple-lt text-purple" style="font-size: 0.65rem;" title="Inherited from <%= field.origin.templateName %>">
+        <span class="badge bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/50" style="font-size: 0.65rem;" title="Inherited from <%= field.origin.templateName %>">
           <i class="ti ti-git-fork me-1"></i><%= field.origin.templateName %>
         </span>
       <% } %>
       <% if (field.isUsingStandardValue) { %>
-        <span class="badge bg-teal-lt text-teal" style="font-size: 0.65rem;" title="Using dynamic Standard Value from template">
+        <span class="badge bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-900/50" style="font-size: 0.65rem;" title="Using dynamic Standard Value from template">
           <i class="ti ti-sparkles me-1"></i>Standard Value
         </span>
       <% } else if (field.hasExplicitValue) { %>
         <button type="button" 
-                class="btn btn-ghost-secondary btn-icon btn-sm py-0 px-1 btn-reset-std-val" 
+                class="btn btn-ghost-secondary btn-icon btn-sm p-1 rounded-md btn-reset-std-val hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all duration-150" 
                 data-field-id="<%= field._id %>" 
                 data-field-name="<%= field.name %>"
                 title="Reset to Standard Value"
-                style="height: 20px; width: 20px;">
-          <i class="ti ti-rotate-2 text-warning" style="font-size: 0.75rem;"></i>
+                style="height: 22px; width: 22px;">
+          <i class="ti ti-rotate-2 text-warning fs-3"></i>
         </button>
       <% } %>
     </div>
   </div>
-  <div class="invalid-feedback"></div>
+  <div class="invalid-feedback text-xs mt-1"></div>
 </div>
 

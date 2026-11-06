@@ -1,77 +1,77 @@
-<div class="card card-md shadow-lg border-0 rounded-4 overflow-hidden">
+<div class="card shadow-2xl border-0 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-800/40">
   <!-- Header Bar -->
-  <div class="card-body text-center p-4 border-bottom" style="background-color: var(--tblr-dark, #1e293b); border-bottom: 3px solid var(--sc-red) !important;">
-    <div class="d-inline-flex align-items-center justify-content-center shadow-sm mb-3" style="width: 44px; height: 44px; background-color: var(--sc-red); border-radius: 8px; color: #ffffff; font-weight: 800; font-size: 24px;">
+  <div class="p-6 text-center bg-slate-900 border-b-2 border-sc-red">
+    <div class="w-12 h-12 mx-auto mb-3 bg-sc-red rounded-xl text-white font-extrabold text-2xl flex items-center justify-center shadow-md">
       S
     </div>
-    <h1 class="h3 fw-bold text-white mb-1" style="letter-spacing: 0.3px;">Sitecore Experience Management</h1>
-    <div class="text-white-50 small">Content Management System</div>
+    <h1 class="text-xl font-bold text-white tracking-tight mb-1">Sitecore Experience Management</h1>
+    <div class="text-xs text-slate-400 font-medium">Content Management System</div>
   </div>
 
   <!-- Form Body -->
-  <div class="card-body p-4">
+  <div class="p-6 sm:p-8 bg-white dark:bg-slate-900">
     <% if (typeof error !== 'undefined' && error) { %>
-      <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
-        <i class="ti ti-alert-circle fs-2 flex-shrink-0"></i>
-        <div class="small fw-medium"><%= error %></div>
+      <div class="alert alert-danger flex items-center gap-2.5 p-3 rounded-lg mb-5 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900/50 text-xs" role="alert">
+        <i class="ti ti-alert-circle text-lg flex-shrink-0"></i>
+        <div class="font-medium"><%= error %></div>
       </div>
     <% } %>
 
-    <form action="/admin/login" method="POST" autocomplete="off">
+    <form action="/admin/login" method="POST" autocomplete="off" class="space-y-5">
       <input type="hidden" name="returnUrl" value="<%= typeof returnUrl !== 'undefined' ? returnUrl : '/admin/launchpad' %>">
 
       <!-- Username -->
-      <div class="mb-3">
-        <label for="username" class="form-label fw-bold mb-1 required">User name</label>
-        <div class="input-icon">
+      <div>
+        <label for="username" class="form-label block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 required">User name</label>
+        <div class="input-icon relative">
           <span class="input-icon-addon">
-            <i class="ti ti-user text-muted"></i>
+            <i class="ti ti-user text-slate-400"></i>
           </span>
           <input 
             type="text" 
             id="username" 
             name="username" 
-            class="form-control form-control-sm" 
+            class="form-control form-control-md w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm transition-all duration-150 hover:border-slate-400 dark:hover:border-slate-600 focus:border-sc-red focus:ring-2 focus:ring-sc-red/20 focus:outline-none" 
             value="<%= typeof username !== 'undefined' ? username : '' %>" 
             placeholder="Nhập tên tài khoản..." 
             required 
             autofocus
           >
-          <div class="invalid-feedback">Vui lòng nhập tên tài khoản.</div>
+          <div class="invalid-feedback text-xs mt-1">Vui lòng nhập tên tài khoản.</div>
         </div>
       </div>
 
       <!-- Password -->
-      <div class="mb-4">
-        <label for="password" class="form-label fw-bold mb-1 required">Password</label>
-        <div class="input-icon">
+      <div>
+        <label for="password" class="form-label block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 required">Password</label>
+        <div class="input-icon relative">
           <span class="input-icon-addon">
-            <i class="ti ti-lock text-muted"></i>
+            <i class="ti ti-lock text-slate-400"></i>
           </span>
           <input 
             type="password" 
             id="password" 
             name="password" 
-            class="form-control form-control-sm" 
+            class="form-control form-control-md w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm transition-all duration-150 hover:border-slate-400 dark:hover:border-slate-600 focus:border-sc-red focus:ring-2 focus:ring-sc-red/20 focus:outline-none" 
             placeholder="Nhập mật khẩu..." 
             required
           >
-          <div class="invalid-feedback">Vui lòng nhập mật khẩu.</div>
+          <div class="invalid-feedback text-xs mt-1">Vui lòng nhập mật khẩu.</div>
         </div>
       </div>
 
       <!-- Submit Button -->
-      <div class="form-footer">
-        <button type="submit" class="btn btn-primary w-100 py-2 d-inline-flex align-items-center justify-content-center gap-1 shadow-sm" style="background-color: var(--sc-red); border-color: var(--sc-red);">
-          <i class="ti ti-login fs-2"></i>
-          <span class="fw-bold">Log in</span>
+      <div class="pt-2">
+        <button type="submit" class="btn btn-primary w-full py-2.5 bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none font-bold text-white rounded-lg shadow-md hover:shadow-lg active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-sc-red/30 transition-all duration-150 inline-flex items-center justify-center gap-2 cursor-pointer">
+          <i class="ti ti-login text-lg"></i>
+          <span>Log in</span>
         </button>
       </div>
     </form>
   </div>
 
   <!-- Footer Info -->
-  <div class="card-footer bg-light text-center py-2 text-muted small border-top">
-    Tài khoản quản trị mặc định: <code>admin</code> / <code>admin123</code>
+  <div class="p-3 bg-slate-50 dark:bg-slate-800/80 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
+    Tài khoản quản trị mặc định: <code class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono">admin</code> / <code class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono">admin123</code>
   </div>
 </div>

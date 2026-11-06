@@ -3,48 +3,50 @@
   const allTpls = typeof allTemplates !== 'undefined' ? allTemplates : [];
 %>
 <form id="templateInsertOptionsForm">
-  <div class="card shadow-sm border-0">
-    <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
+  <div class="card shadow-sm border border-slate-200/80 rounded-xl bg-white overflow-hidden">
+    <div class="card-header bg-slate-50/70 py-3 px-4 d-flex align-items-center justify-content-between flex items-center justify-between border-b border-slate-200">
       <div>
-        <h4 class="card-title m-0 fw-bold fs-3 text-dark">Insert Options</h4>
-        <p class="text-muted small m-0">
+        <h4 class="card-title m-0 fw-bold fs-3 text-slate-900 font-bold text-base tracking-tight">Insert Options</h4>
+        <p class="text-muted small m-0 text-xs text-slate-500 mt-0.5">
           Restrict which templates content authors are permitted to create as child items under items of this template.
         </p>
       </div>
-      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btnSaveInsertOptions">
-        <i class="ti ti-device-floppy"></i>
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" id="btnSaveInsertOptions">
+        <i class="ti ti-device-floppy text-sm"></i>
         <span>Save Insert Options</span>
       </button>
     </div>
 
-    <div class="card-body p-3">
-      <div class="mb-3" style="max-width: 320px;">
-        <div class="input-icon">
-          <span class="input-icon-addon"><i class="ti ti-search text-muted"></i></span>
-          <input type="text" class="form-control form-control-sm" id="insertOptionsSearch" placeholder="Filter templates..." />
+    <div class="card-body p-4">
+      <div class="mb-4 max-w-xs relative">
+        <div class="input-icon relative">
+          <span class="input-icon-addon absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+            <i class="ti ti-search text-slate-400 text-sm"></i>
+          </span>
+          <input type="text" class="form-control form-control-sm pl-8 pr-3 py-1.5 text-xs rounded-md border-slate-200 shadow-2xs focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full" id="insertOptionsSearch" placeholder="Filter templates..." />
         </div>
       </div>
 
-      <div class="row row-cards g-2" id="insertOptionsGrid">
+      <div class="row row-cards g-2.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5" id="insertOptionsGrid">
         <% allTpls.forEach(t => { %>
           <%
             const tId = t._id.toString();
             const isChecked = currentOptions.includes(tId);
           %>
           <div class="col-sm-6 col-md-4 insert-option-col" data-tpl-name="<%= t.name.toLowerCase() %>" data-tpl-display="<%= (t.displayName || '').toLowerCase() %>">
-            <label class="card card-sm card-link-pop h-100 p-2 cursor-pointer border <%= isChecked ? 'border-primary bg-primary-lt' : '' %>">
-              <div class="d-flex align-items-center gap-2">
+            <label class="card card-sm card-link-pop h-100 p-2.5 cursor-pointer rounded-lg border transition-all duration-150 block <%= isChecked ? 'border-primary/50 bg-primary/5 shadow-xs' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50' %>">
+              <div class="d-flex align-items-center gap-2 flex items-center gap-2.5">
                 <input
                   type="checkbox"
                   name="insertOptions[]"
                   value="<%= t._id %>"
-                  class="form-check-input m-0 insert-option-checkbox"
+                  class="form-check-input m-0 insert-option-checkbox rounded text-primary focus:ring-primary cursor-pointer"
                   <%= isChecked ? 'checked' : '' %>
                 />
-                <i class="<%= t.icon || 'ti ti-file-text' %> fs-2 text-primary"></i>
-                <div class="overflow-hidden">
-                  <div class="fw-semibold text-truncate small text-dark"><%= t.displayName || t.name %></div>
-                  <div class="text-muted font-monospace" style="font-size: 0.65rem;"><%= t.name %></div>
+                <i class="<%= t.icon || 'ti ti-file-text' %> fs-2 text-base <%= isChecked ? 'text-primary' : 'text-slate-500' %>"></i>
+                <div class="overflow-hidden min-w-0">
+                  <div class="fw-semibold text-truncate small text-slate-800 text-xs font-medium truncate"><%= t.displayName || t.name %></div>
+                  <div class="text-muted font-monospace font-mono text-[10px] text-slate-400 truncate"><%= t.name %></div>
                 </div>
               </div>
             </label>
@@ -53,12 +55,12 @@
       </div>
     </div>
 
-    <div class="card-footer bg-light-subtle py-2 px-3 border-top d-flex justify-content-between align-items-center">
-      <span class="text-muted small">
+    <div class="card-footer bg-slate-50/70 py-3 px-4 border-t border-slate-200 d-flex justify-content-between align-items-center flex items-center justify-between">
+      <span class="text-muted small text-xs text-slate-500">
         If no insert options are selected, authors can choose from all available templates by default.
       </span>
-      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
-        <i class="ti ti-device-floppy"></i>
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none">
+        <i class="ti ti-device-floppy text-sm"></i>
         <span>Save Insert Options</span>
       </button>
     </div>

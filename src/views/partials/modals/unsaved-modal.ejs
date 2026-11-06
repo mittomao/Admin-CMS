@@ -1,26 +1,28 @@
 <!-- Unsaved Changes Warning Modal -->
 <div class="modal modal-blur fade" id="adminUnsavedModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-    <div class="modal-content shadow-lg border-0">
-      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      <div class="modal-status bg-warning"></div>
-      <div class="modal-body text-center py-4">
-        <i class="ti ti-alert-circle text-warning fs-1 mb-2"></i>
-        <h3 class="fw-bold">Thay Đổi Chưa Lưu</h3>
-        <div class="text-muted small">
+    <div class="modal-content shadow-2xl rounded-2xl border border-slate-200 overflow-hidden">
+      <button type="button" class="btn-close absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors p-1 z-10" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-status bg-amber-500 h-1.5 w-full"></div>
+      <div class="modal-body text-center py-6 px-4 text-xs">
+        <div class="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 mx-auto mb-3">
+          <i class="ti ti-alert-circle text-2xl"></i>
+        </div>
+        <h3 class="fw-bold text-slate-800 text-base font-bold mb-1">Thay Đổi Chưa Lưu</h3>
+        <div class="text-slate-500 text-xs mt-1">
           Bạn có thay đổi chưa được lưu trên biểu mẫu này. Nếu rời đi bây giờ, các thay đổi sẽ bị mất.
         </div>
       </div>
-      <div class="modal-footer">
-        <div class="w-100">
-          <div class="row g-2">
-            <div class="col">
-              <button type="button" class="btn btn-outline-danger w-100 btn-sm py-2" id="adminUnsavedLeaveBtn">
+      <div class="modal-footer bg-slate-50/70 p-3 border-t border-slate-200">
+        <div class="w-100 w-full">
+          <div class="row g-2 flex items-center gap-2">
+            <div class="col flex-1">
+              <button type="button" class="btn btn-outline-danger w-100 w-full btn-sm py-2 text-xs font-semibold rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-all duration-150 active:scale-95" id="adminUnsavedLeaveBtn">
                 Rời Đi
               </button>
             </div>
-            <div class="col">
-              <button type="button" class="btn btn-primary w-100 btn-sm py-2" data-bs-dismiss="modal">
+            <div class="col flex-1">
+              <button type="button" class="btn btn-primary w-100 w-full btn-sm py-2 text-xs font-semibold rounded-lg shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm" data-bs-dismiss="modal">
                 Ở Lại Trang
               </button>
             </div>

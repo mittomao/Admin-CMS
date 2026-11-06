@@ -1,25 +1,26 @@
 <div class="modal fade" id="deleteVersionModal" tabindex="-1" aria-labelledby="deleteVersionModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content">
-      <div class="modal-header py-2 px-3 bg-danger-subtle border-bottom">
-        <h5 class="modal-title d-flex align-items-center gap-2 text-danger" id="deleteVersionModalLabel">
-          <i class="ti ti-alert-triangle fs-3"></i>
+    <div class="modal-content shadow-2xl rounded-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header py-3 px-4 bg-rose-50/80 border-b border-rose-100 flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-rose-700 text-sm font-bold m-0 flex items-center gap-2" id="deleteVersionModalLabel">
+          <i class="ti ti-alert-triangle text-base text-rose-600"></i>
           <span>Xóa Phiên Bản</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <div class="modal-body p-3">
-        <p class="mb-2">Bạn có chắc chắn muốn xóa <strong id="deleteVersionTitle">Version X</strong> của ngôn ngữ <strong id="deleteVersionLang" class="text-uppercase">EN</strong> không?</p>
-        <div class="alert alert-warning py-2 px-2 small mb-0">
-          <i class="ti ti-info-circle me-1"></i>Hành động này không thể hoàn tác. Không thể xóa nếu đây là phiên bản duy nhất còn lại.
+      <div class="modal-body p-4 text-xs">
+        <p class="mb-2 text-slate-700">Bạn có chắc chắn muốn xóa <strong id="deleteVersionTitle" class="font-bold text-slate-900">Version X</strong> của ngôn ngữ <strong id="deleteVersionLang" class="text-uppercase text-rose-600 font-bold">EN</strong> không?</p>
+        <div class="alert alert-warning py-2.5 px-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] mb-0 flex items-center gap-2">
+          <i class="ti ti-info-circle text-amber-600 text-sm flex-shrink-0"></i>
+          <span>Hành động này không thể hoàn tác. Không thể xóa nếu đây là phiên bản duy nhất còn lại.</span>
         </div>
       </div>
 
-      <div class="modal-footer py-2 px-3 bg-light">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
-        <button type="button" class="btn btn-danger btn-sm d-flex align-items-center gap-1" id="btnConfirmDeleteVersion">
-          <i class="ti ti-trash"></i> Xóa vĩnh viễn
+      <div class="modal-footer bg-slate-50/70 p-3 border-t border-slate-200 flex items-center justify-end gap-2">
+        <button type="button" class="btn btn-secondary btn-sm px-3.5 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-danger btn-sm d-flex align-items-center gap-1.5 inline-flex items-center px-4 py-1.5 text-xs font-semibold rounded-md shadow-xs hover:bg-rose-600 transition-all duration-150 active:scale-95" id="btnConfirmDeleteVersion">
+          <i class="ti ti-trash text-xs"></i> Xóa vĩnh viễn
         </button>
       </div>
     </div>

@@ -3,64 +3,66 @@
   const stdValues = resolved && resolved.standardValues ? resolved.standardValues : {};
 %>
 <form id="templateStandardValuesForm">
-  <div class="card shadow-sm border-0">
-    <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
+  <div class="card shadow-sm border border-slate-200/80 rounded-xl bg-white overflow-hidden">
+    <div class="card-header bg-slate-50/70 py-3 px-4 d-flex align-items-center justify-content-between flex items-center justify-between border-b border-slate-200">
       <div>
-        <h4 class="card-title m-0 fw-bold fs-3 text-dark">Standard Values</h4>
-        <p class="text-muted small m-0">
+        <h4 class="card-title m-0 fw-bold fs-3 text-slate-900 font-bold text-base tracking-tight">Standard Values</h4>
+        <p class="text-muted small m-0 text-xs text-slate-500 mt-0.5">
           Default values automatically applied to new items and dynamically inherited when not explicitly overridden.
         </p>
       </div>
-      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1" id="btnSaveStandardValues">
-        <i class="ti ti-device-floppy"></i>
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" id="btnSaveStandardValues">
+        <i class="ti ti-device-floppy text-sm"></i>
         <span>Save Standard Values</span>
       </button>
     </div>
 
-    <div class="card-body p-3">
+    <div class="card-body p-4">
       <% if (sections.length === 0 || sections.every(s => !s.fields || s.fields.length === 0)) { %>
-        <div class="empty py-4 text-center">
-          <div class="empty-icon text-muted"><i class="ti ti-forms fs-1"></i></div>
-          <p class="empty-title">No Fields Available</p>
-          <p class="empty-subtitle text-muted">Add fields to this template in the Builder tab before setting standard values.</p>
+        <div class="empty py-8 text-center flex flex-col items-center justify-center">
+          <div class="empty-icon text-slate-300 mb-2"><i class="ti ti-forms text-4xl"></i></div>
+          <p class="empty-title text-sm font-bold text-slate-700 m-0">No Fields Available</p>
+          <p class="empty-subtitle text-xs text-slate-500 mt-1 max-w-sm">Add fields to this template in the Builder tab before setting standard values.</p>
         </div>
       <% } else { %>
-        <div class="accordion" id="stdValuesAccordion">
+        <div class="accordion space-y-3" id="stdValuesAccordion">
           <% sections.forEach((section, sIdx) => { %>
             <% if (section.fields && section.fields.length > 0) { %>
-              <div class="accordion-item mb-2 border rounded shadow-2xs">
-                <h2 class="accordion-header" id="std-heading-<%= section._id %>">
+              <div class="accordion-item border border-slate-200/90 rounded-xl overflow-hidden shadow-2xs bg-white">
+                <h2 class="accordion-header m-0" id="std-heading-<%= section._id %>">
                   <button
-                    class="accordion-button <%= sIdx === 0 ? '' : 'collapsed' %> py-2 px-3 fw-semibold bg-light-subtle"
+                    class="accordion-button <%= sIdx === 0 ? '' : 'collapsed' %> py-2.5 px-3.5 fw-semibold bg-slate-50/80 text-xs font-bold text-slate-800 flex items-center justify-between w-full text-left border-0 cursor-pointer"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#std-collapse-<%= section._id %>"
                   >
-                    <i class="ti ti-folder text-primary me-2"></i>
-                    <span><%= section.name %></span>
-                    <% if (section.origin && section.origin.isInherited) { %>
-                      <span class="badge bg-purple-lt ms-2" style="font-size: 0.65rem;">
-                        Inherited: <%= section.origin.templateName %>
-                      </span>
-                    <% } %>
+                    <div class="flex items-center gap-2">
+                      <i class="ti ti-folder text-primary text-base"></i>
+                      <span><%= section.name %></span>
+                      <% if (section.origin && section.origin.isInherited) { %>
+                        <span class="badge bg-purple-50 text-purple-700 border border-purple-200 ms-2 font-mono text-[10px] px-2 py-0.5 rounded-full">
+                          Inherited: <%= section.origin.templateName %>
+                        </span>
+                      <% } %>
+                    </div>
                   </button>
                 </h2>
                 <div id="std-collapse-<%= section._id %>" class="accordion-collapse collapse <%= sIdx === 0 ? 'show' : '' %>">
-                  <div class="accordion-body p-3">
+                  <div class="accordion-body p-3.5 space-y-3 bg-slate-50/30">
                     <% section.fields.forEach(field => { %>
                       <%
                         const fieldId = field._id.toString();
                         const val = stdValues[fieldId] !== undefined ? stdValues[fieldId] : (stdValues[field.name] !== undefined ? stdValues[field.name] : field.defaultValue);
                         const hasStd = stdValues[fieldId] !== undefined || stdValues[field.name] !== undefined;
                       %>
-                      <div class="mb-3 border-bottom pb-2">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                          <span class="text-muted small">
-                            Field ID: <code class="font-monospace"><%= field._id %></code>
+                      <div class="border border-slate-200/80 rounded-lg p-3 bg-white shadow-2xs">
+                        <div class="d-flex align-items-center justify-content-between mb-2 flex items-center justify-between text-xs">
+                          <span class="text-slate-400 font-mono text-[10px]">
+                            Field ID: <code class="font-mono bg-slate-100 text-slate-600 px-1 py-0.5 rounded"><%= field._id %></code>
                           </span>
                           <% if (hasStd) { %>
-                            <span class="badge bg-green-lt" style="font-size: 0.65rem;">
-                              <i class="ti ti-check me-1"></i>Default Active
+                            <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <i class="ti ti-check"></i>Default Active
                             </span>
                           <% } %>
                         </div>
@@ -94,9 +96,9 @@
       <% } %>
     </div>
 
-    <div class="card-footer bg-light-subtle py-2 px-3 border-top d-flex justify-content-end">
-      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
-        <i class="ti ti-device-floppy"></i>
+    <div class="card-footer bg-slate-50/70 py-3 px-4 border-t border-slate-200 d-flex justify-content-end flex justify-end">
+      <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none">
+        <i class="ti ti-device-floppy text-sm"></i>
         <span>Save Standard Values</span>
       </button>
     </div>

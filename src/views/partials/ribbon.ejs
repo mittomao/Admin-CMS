@@ -2,13 +2,13 @@
   const activeRibbonTab = typeof ribbon !== 'undefined' && ribbon.activeTab ? ribbon.activeTab : 'home';
   const tabs = typeof ribbon !== 'undefined' && ribbon.tabs ? ribbon.tabs : [];
 %>
-<div class="ribbon-container border-bottom bg-white shadow-xs">
+<div class="ribbon-container border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs select-none">
   <!-- Ribbon Navigation Tabs -->
-  <ul class="nav nav-tabs ribbon-nav-tabs px-3 pt-1 border-0" id="ribbonTabs" role="tablist">
+  <ul class="nav nav-tabs ribbon-nav-tabs px-3 pt-1 border-0 gap-1" id="ribbonTabs" role="tablist">
     <% tabs.forEach(tab => { %>
       <li class="nav-item" role="presentation">
         <button
-          class="nav-link text-uppercase font-weight-bold px-3 py-1 <%= tab.isActive ? 'active text-primary' : '' %> <%= tab.isDisabled ? 'disabled text-muted opacity-60' : '' %>"
+          class="nav-link text-xs uppercase font-bold tracking-wider px-3.5 py-1.5 rounded-t-lg transition-all duration-150 <%= tab.isActive ? 'active border-b-2 border-sc-red text-sc-red dark:text-sc-red font-extrabold bg-slate-50/50 dark:bg-slate-800/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800' %> <%= tab.isDisabled ? 'disabled text-slate-300 dark:text-slate-600 opacity-50 cursor-not-allowed' : '' %>"
           id="ribbon-tab-<%= tab.id %>"
           data-bs-toggle="tab"
           data-bs-target="#ribbon-pane-<%= tab.id %>"
@@ -28,7 +28,7 @@
   </ul>
 
   <!-- Ribbon Tab Panes / Action Toolbars -->
-  <div class="tab-content ribbon-content-panel p-2 bg-light-subtle" id="ribbonTabContent">
+  <div class="tab-content ribbon-content-panel p-2 bg-slate-50 dark:bg-slate-950/70 border-t border-slate-100 dark:border-slate-800" id="ribbonTabContent">
     <% tabs.forEach(tab => { %>
       <div
         class="tab-pane fade <%= tab.isActive ? 'show active' : '' %>"
@@ -37,52 +37,52 @@
       >
         <% if (tab.groups && tab.groups.length > 0) { %>
           <div class="d-flex align-items-stretch flex-wrap gap-2">
-            <% tab.groups.forEach((group, idx) => { %>
-              <div class="ribbon-group d-flex flex-column justify-content-between px-2 py-1 bg-white border rounded shadow-2xs">
+            <% tab.groups.forEach((group) => { %>
+              <div class="ribbon-group d-flex flex-column justify-content-between px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
                 <!-- Group Actions -->
-                <div class="d-flex align-items-center gap-1 ribbon-group-actions">
+                <div class="d-flex align-items-center gap-1.5 ribbon-group-actions">
                   <% group.actions.forEach(act => { %>
                     <% if (act.size === 'large') { %>
                       <button
                         type="button"
-                        class="btn btn-outline-secondary ribbon-btn-large d-flex flex-column align-items-center justify-content-center p-1 <%= act.isDestructive ? 'hover-danger text-danger' : '' %>"
+                        class="btn btn-outline-secondary ribbon-btn-large d-flex flex-column align-items-center justify-content-center p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100/70 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150 <%= act.isDestructive ? 'hover-danger text-danger hover:border-red-300 dark:hover:border-red-800' : 'text-slate-700 dark:text-slate-200' %>"
                         id="<%= act.id %>"
                         data-action="<%= act.action %>"
                         data-bs-toggle="tooltip"
                         data-bs-placement="bottom"
                         title="<%= act.tooltip %>"
-                        style="min-width: 58px; height: 54px; font-size: 0.75rem;"
+                        style="min-width: 60px; height: 56px; font-size: 0.72rem;"
                       >
-                        <i class="<%= act.icon %> fs-2 mb-1"></i>
-                        <span class="text-truncate" style="max-width: 64px;"><%= act.title %></span>
+                        <i class="<%= act.icon %> fs-2 mb-1 <%= act.isDestructive ? 'text-danger' : 'text-slate-600 dark:text-slate-300' %>"></i>
+                        <span class="text-truncate font-medium" style="max-width: 64px;"><%= act.title %></span>
                       </button>
                     <% } else { %>
                       <button
                         type="button"
-                        class="btn btn-sm btn-ghost-secondary ribbon-btn-small d-flex align-items-center gap-1 px-2 py-1"
+                        class="btn btn-sm btn-ghost-secondary ribbon-btn-small d-flex align-items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150"
                         id="<%= act.id %>"
                         data-action="<%= act.action %>"
                         data-bs-toggle="tooltip"
                         data-bs-placement="bottom"
                         title="<%= act.tooltip %>"
-                        style="font-size: 0.8rem;"
+                        style="font-size: 0.78rem;"
                       >
-                        <i class="<%= act.icon %>"></i>
-                        <span><%= act.title %></span>
+                        <i class="<%= act.icon %> text-slate-500 dark:text-slate-400"></i>
+                        <span class="font-medium"><%= act.title %></span>
                       </button>
                     <% } %>
                   <% }) %>
                 </div>
                 <!-- Group Footer Label -->
-                <div class="ribbon-group-title text-center text-muted border-top mt-1 pt-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                <div class="ribbon-group-title text-center text-slate-400 dark:text-slate-500 font-bold border-t border-slate-100 dark:border-slate-800/80 mt-1.5 pt-1" style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.6px;">
                   <%= group.title %>
                 </div>
               </div>
             <% }) %>
           </div>
         <% } else { %>
-          <div class="py-2 px-3 text-muted small d-flex align-items-center gap-2">
-            <i class="ti ti-info-circle text-azure"></i>
+          <div class="py-2.5 px-3 text-slate-500 dark:text-slate-400 text-xs d-flex align-items-center gap-2">
+            <i class="ti ti-info-circle text-azure fs-3"></i>
             <span><%= tab.phaseNotice || 'This ribbon section is planned for upcoming CMS milestones.' %></span>
           </div>
         <% } %>

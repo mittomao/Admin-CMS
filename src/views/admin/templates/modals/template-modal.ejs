@@ -1,48 +1,48 @@
 <div class="modal fade" id="templateMetaModal" tabindex="-1" aria-labelledby="templateMetaModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title d-flex align-items-center gap-2" id="templateMetaModalLabel">
-          <i class="ti ti-layout-grid-add text-primary"></i>
+    <div class="modal-content rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header bg-slate-50/80 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-sm font-bold text-slate-800 m-0 flex items-center gap-2" id="templateMetaModalLabel">
+          <i class="ti ti-layout-grid-add text-primary text-base"></i>
           <span id="templateMetaModalTitle">Template Details</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="templateMetaForm">
         <input type="hidden" id="metaTemplateId" name="id" />
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label required" for="metaTemplateName">Technical Name</label>
+        <div class="modal-body p-4 space-y-3.5 text-xs">
+          <div>
+            <label class="form-label required font-semibold text-slate-700 block mb-1" for="metaTemplateName">Technical Name</label>
             <input
               type="text"
-              class="form-control font-monospace"
+              class="form-control font-mono text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
               id="metaTemplateName"
               name="name"
               required
               placeholder="e.g. BlogPost, ProductPage, _BaseSEO"
               pattern="^[a-zA-Z0-9_-]+$"
             />
-            <div class="form-text small text-muted">Only alphanumeric characters, dashes, and underscores.</div>
+            <div class="form-text small text-slate-400 text-[10px] mt-1">Only alphanumeric characters, dashes, and underscores.</div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label" for="metaTemplateDisplayName">Display Name</label>
+          <div>
+            <label class="form-label font-semibold text-slate-700 block mb-1" for="metaTemplateDisplayName">Display Name</label>
             <input
               type="text"
-              class="form-control"
+              class="form-control text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
               id="metaTemplateDisplayName"
               name="displayName"
               placeholder="e.g. Blog Post, Product Page"
             />
           </div>
 
-          <div class="mb-3">
-            <label class="form-label" for="metaTemplateIcon">Template Icon</label>
-            <div class="input-group">
-              <span class="input-group-text bg-light p-1" id="templateIconPreview" style="min-width: 42px; display: inline-flex; justify-content: center; align-items: center;">
+          <div>
+            <label class="form-label font-semibold text-slate-700 block mb-1" for="metaTemplateIcon">Template Icon</label>
+            <div class="input-group flex rounded-md overflow-hidden border border-slate-300 shadow-2xs">
+              <span class="input-group-text bg-slate-100 p-1 flex items-center justify-center border-r border-slate-200" id="templateIconPreview" style="min-width: 42px; display: inline-flex; justify-content: center; align-items: center;">
                 <img src="/img/icons/template.svg" width="22" height="22" id="metaTemplateIconImg" alt="Icon" />
               </span>
-              <select class="form-select" id="metaTemplateIcon" name="icon" onchange="const preview = document.getElementById('templateIconPreview'); if(window.CMS_ICONS) { preview.innerHTML = window.CMS_ICONS.renderIconHtml(this.value, 22); }">
+              <select class="form-select flex-1 text-xs border-0 py-1.5 px-2 bg-white focus:ring-0 focus:outline-none cursor-pointer" id="metaTemplateIcon" name="icon" onchange="const preview = document.getElementById('templateIconPreview'); if(window.CMS_ICONS) { preview.innerHTML = window.CMS_ICONS.renderIconHtml(this.value, 22); }">
                 <option value="template" selected>Template (Lined Paper - Red)</option>
                 <option value="page">Page (Document - Blue)</option>
                 <option value="folder">Folder (Yellow)</option>
@@ -53,13 +53,13 @@
                 <option value="content-root">Content Root (Sitecore Cube)</option>
               </select>
             </div>
-            <small class="form-hint">Chọn icon trực quan đại diện cho Template.</small>
+            <small class="form-hint text-[10px] text-slate-400 mt-1 block">Chọn icon trực quan đại diện cho Template.</small>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label" for="metaTemplateDescription">Description</label>
+          <div>
+            <label class="form-label font-semibold text-slate-700 block mb-1" for="metaTemplateDescription">Description</label>
             <textarea
-              class="form-control"
+              class="form-control text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
               id="metaTemplateDescription"
               name="description"
               rows="3"
@@ -67,10 +67,10 @@
             ></textarea>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1" id="btnSubmitTemplateMeta">
-            <i class="ti ti-check"></i>
+        <div class="modal-footer bg-slate-50/70 px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" class="btn btn-outline-secondary px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1.5 inline-flex items-center px-4 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" id="btnSubmitTemplateMeta">
+            <i class="ti ti-check text-sm"></i>
             <span>Save Details</span>
           </button>
         </div>

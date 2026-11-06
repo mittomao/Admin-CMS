@@ -774,7 +774,7 @@ export class MediaBrowser {
     const sizeStr = this.formatBytes(asset.fileDetails?.fileSize || asset.bytes || 0);
 
     return `
-      <div class="media-card ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}" data-id="${asset._id}">
+      <div class="media-card ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''} h-fit self-start" data-id="${asset._id}">
         <div class="card-thumb-box">
           ${
             isImg

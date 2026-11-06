@@ -1,12 +1,18 @@
 <div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
   <%- include('./field-header', { field }) %>
+  <%
+    let cleanVal = typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '');
+    if (typeof cleanVal === 'string') {
+      cleanVal = cleanVal.replace(/(src=["'])(?:\.\.\/|\/admin\/|\/admin\/content-editor\/)*media\/file\/([a-f\d]{24})/gi, '$1/media/file/$2');
+    }
+  %>
   <textarea
     class="form-control item-field-input rich-editor"
     name="fields[<%= field.name %>]"
     rows="8"
     <%= field.required ? 'required' : '' %>
     placeholder="Write content..."
-  ><%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '') %></textarea>
+  ><%= cleanVal %></textarea>
   <div class="invalid-feedback"></div>
 </div>
 

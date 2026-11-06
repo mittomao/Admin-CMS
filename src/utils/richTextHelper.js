@@ -34,7 +34,11 @@ const RICH_TEXT_SANITIZE_OPTIONS = {
  */
 function sanitizeRichText(html) {
   if (!html || typeof html !== 'string') return '';
-  return sanitizeHtml(html, RICH_TEXT_SANITIZE_OPTIONS);
+  const normalized = html.replace(
+    /(src=["'])(?:\.\.\/|\/admin\/|\/admin\/content-editor\/)*media\/file\/([a-f\d]{24})/gi,
+    '$1/media/file/$2'
+  );
+  return sanitizeHtml(normalized, RICH_TEXT_SANITIZE_OPTIONS);
 }
 
 /**

@@ -1,22 +1,22 @@
 <div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
   <%- include('./field-header', { field }) %>
-  <div class="input-group">
-    <span class="input-group-text">
-      <i class="ti ti-photo text-muted"></i>
+  <div class="input-group shadow-xs rounded-lg overflow-hidden">
+    <span class="input-group-text bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400">
+      <i class="ti ti-photo"></i>
     </span>
     <input
       type="text"
-      class="form-control item-field-input js-image-field-input"
+      class="form-control form-control-sm item-field-input js-image-field-input border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sc-red focus:ring-1 focus:ring-sc-red"
       name="fields[<%= field.name %>]"
       value="<%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '') %>"
       <%= field.required ? 'required' : '' %>
       placeholder="Select an image from Media Library or enter URL..."
     />
-    <button class="btn btn-outline-primary js-image-browse-btn" type="button" title="Browse Media Library">
-      Browse...
+    <button class="btn btn-sm btn-outline-primary js-image-browse-btn active:scale-95 transition-all duration-150" type="button" title="Browse Media Library">
+      <i class="ti ti-folder-search me-1"></i>Browse...
     </button>
-    <button class="btn btn-outline-secondary js-image-clear-btn" type="button" title="Clear image">
-      Clear
+    <button class="btn btn-sm btn-outline-secondary js-image-clear-btn active:scale-95 transition-all duration-150" type="button" title="Clear image">
+      <i class="ti ti-x me-1"></i>Clear
     </button>
   </div>
 
@@ -30,8 +30,8 @@
       }
     }
   %>
-  <div class="mt-2 p-1 border rounded bg-light text-center js-image-preview-box <%= previewSrc ? '' : 'd-none' %>" style="max-width: 200px;">
-    <img src="<%= previewSrc %>" alt="Preview" class="img-fluid rounded js-image-preview-img" style="max-height: 100px;" onerror="this.onerror=null;this.closest('.js-image-preview-box').classList.add('d-none');" />
+  <div class="mt-2.5 p-1.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-center js-image-preview-box shadow-xs <%= previewSrc ? '' : 'd-none' %>" style="max-width: 220px;">
+    <img src="<%= previewSrc %>" alt="Preview" class="img-fluid rounded-lg js-image-preview-img shadow-2xs" style="max-height: 110px;" onerror="this.onerror=null;this.closest('.js-image-preview-box').classList.add('d-none');" />
   </div>
-  <div class="invalid-feedback"></div>
+  <div class="invalid-feedback text-xs mt-1"></div>
 </div>

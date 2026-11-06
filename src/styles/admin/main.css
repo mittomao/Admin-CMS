@@ -1,0 +1,387 @@
+@tailwind components;
+@tailwind utilities;
+
+/* Interactive State Polish for Admin Buttons, Inputs & Links */
+@layer utilities {
+  .sc-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .sc-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+  }
+  .sc-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+}
+
+/* Bootstrap / Tabler Accordion & Collapse Interoperability */
+.accordion-collapse.collapse.show,
+.collapse.show {
+  visibility: visible !important;
+  display: block !important;
+}
+
+/* Sitecore Interactive System States */
+.form-control, .form-select {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out !important;
+}
+
+.form-control:hover, .form-select:hover {
+  border-color: #94a3b8;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #e03131 !important;
+  box-shadow: 0 0 0 3px rgba(224, 49, 49, 0.18) !important;
+  outline: 0 !important;
+}
+
+.btn {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn:hover {
+  filter: brightness(0.97);
+}
+
+.btn:active {
+  transform: scale(0.97) !important;
+}
+
+.btn:focus-visible {
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px rgba(224, 49, 49, 0.25) !important;
+}
+
+.btn-primary {
+  background-color: var(--sc-red, #e03131) !important;
+  border-color: var(--sc-red, #e03131) !important;
+  color: #ffffff !important;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--sc-red-hover, #c92a2a) !important;
+  border-color: var(--sc-red-hover, #c92a2a) !important;
+  color: #ffffff !important;
+}
+
+/* Media Library Component Layout Enforcements */
+.media-toolbar {
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.media-toolbar-right {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+
+.media-toolbar .js-refresh-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+}
+
+.media-toolbar .js-refresh-btn i {
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+.media-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+  gap: 12px !important;
+  align-content: start !important;
+  align-items: start !important;
+  grid-auto-rows: max-content !important;
+}
+
+.media-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  background-color: #ffffff !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
+  height: fit-content !important;
+  align-self: start !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+
+.media-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border-color: #94a3b8 !important;
+}
+
+.media-card.active {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important;
+}
+
+.media-card.selected {
+  border-color: #f59e0b !important;
+  background-color: #fffbeb !important;
+}
+
+/* Media Browser Dynamic Cards & Assets */
+.card-thumb-box {
+  aspect-ratio: 1 / 1;
+  background: #f8f9fa;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-file-icon {
+  font-size: 40px;
+  color: #adb5bd;
+}
+
+.card-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.card-badge.badge-png { background: #2b8a3e; }
+.card-badge.badge-jpg, .card-badge.badge-jpeg { background: #1971c2; }
+.card-badge.badge-webp { background: #e8590c; }
+.card-badge.badge-svg { background: #9c36b5; }
+.card-badge.badge-pdf { background: #c92a2a; }
+
+.card-checkbox-box {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+}
+
+.card-info {
+  padding: 6px 8px;
+  border-top: 1px solid #f1f3f5;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #343a40;
+}
+
+.card-sub {
+  font-size: 10px;
+  color: #868e96;
+}
+
+/* Version Comparison Diff Highlighting */
+.diff-added {
+  background-color: #dcfce7;
+  color: #166534;
+  text-decoration: none;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+.diff-removed {
+  background-color: #fee2e2;
+  color: #991b1b;
+  text-decoration: line-through;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+.diff-rich-box {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.diff-rich-box.diff-added {
+  border-color: #86efac;
+  background-color: #f0fdf4;
+}
+
+.diff-rich-box.diff-removed {
+  border-color: #fca5a5;
+  background-color: #fef2f2;
+}
+
+/* Presentation Details & SortableJS Styling */
+.placeholder-card {
+  transition: all 0.2s ease-in-out;
+  border-color: #e2e8f0;
+}
+
+.placeholder-card:focus-within {
+  border-color: #206bc4;
+}
+
+.renderings-dropzone {
+  min-height: 80px;
+  transition: background-color 0.2s ease;
+}
+
+.renderings-dropzone.sortable-drag-over {
+  background-color: #edf2ff !important;
+}
+
+.rendering-item {
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  user-select: none;
+}
+
+.rendering-item:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.rendering-item.sortable-ghost {
+  opacity: 0.4;
+  background-color: #dbeafe !important;
+  border: 2px dashed #3b82f6 !important;
+}
+
+.rendering-item.sortable-chosen {
+  background-color: #eff6ff !important;
+}
+
+.drag-handle {
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Sitecore Section Bar & Quick Info Component (DEC-037 / GĐ 6.3) */
+.sc-section-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  user-select: none !important;
+  cursor: pointer !important;
+  background-color: #334155 !important;
+  color: #ffffff !important;
+  border-left: 4px solid var(--sc-red, #e03131) !important;
+  padding: 8px 16px !important;
+  border-radius: 8px 8px 0 0 !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.sc-section-bar:hover {
+  background-color: #1e293b !important;
+}
+
+.sc-section-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+}
+
+.sc-section-toggle {
+  color: #cbd5e1 !important;
+  font-size: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: transform 0.2s ease !important;
+}
+
+.sc-section-bar.collapsed #scQuickInfoChevron,
+.sc-section-bar.collapsed .sc-section-toggle i {
+  transform: rotate(-90deg) !important;
+}
+
+.sc-quick-info-body {
+  padding: 14px 18px !important;
+  background-color: rgba(248, 250, 252, 0.7) !important;
+  font-size: 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+.sc-quick-info-body.d-none {
+  display: none !important;
+}
+
+.sc-copy-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  border-radius: 4px !important;
+  border: 1px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #64748b !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease !important;
+}
+
+.sc-copy-btn:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+.sc-copy-btn:active {
+  transform: scale(0.92) !important;
+}
+
+
+
+
+
+

@@ -1,48 +1,48 @@
 <div class="modal fade" id="fieldModal" tabindex="-1" aria-labelledby="fieldModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title d-flex align-items-center gap-2" id="fieldModalLabel">
-          <i class="ti ti-forms text-primary"></i>
+    <div class="modal-content rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header bg-slate-50/80 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-sm font-bold text-slate-800 m-0 flex items-center gap-2" id="fieldModalLabel">
+          <i class="ti ti-forms text-primary text-base"></i>
           <span id="fieldModalTitle">Field Details</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="fieldForm">
         <input type="hidden" id="fieldModalSectionId" name="sectionId" />
         <input type="hidden" id="fieldModalId" name="fieldId" />
-        <div class="modal-body">
-          <div class="row g-3">
+        <div class="modal-body p-4 text-xs">
+          <div class="row g-3.5 grid grid-cols-1 md:grid-cols-2 gap-3.5">
             <div class="col-md-6">
-              <label class="form-label required" for="fieldModalName">Technical Name</label>
+              <label class="form-label required font-semibold text-slate-700 block mb-1" for="fieldModalName">Technical Name</label>
               <input
                 type="text"
-                class="form-control font-monospace"
+                class="form-control font-mono text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
                 id="fieldModalName"
                 name="name"
                 required
                 placeholder="e.g. title, heroImage, isFeatured"
                 pattern="^[a-zA-Z0-9_-]+$"
               />
-              <div class="form-text small text-muted">Field identifier used in schema and templates.</div>
+              <div class="form-text small text-slate-400 text-[10px] mt-1">Field identifier used in schema and templates.</div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label required" for="fieldModalTitle">Display Title</label>
+              <label class="form-label required font-semibold text-slate-700 block mb-1" for="fieldModalTitle">Display Title</label>
               <input
                 type="text"
-                class="form-control"
+                class="form-control text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
                 id="fieldModalTitle"
                 name="title"
                 required
                 placeholder="e.g. Article Title, Main Hero Image"
               />
-              <div class="form-text small text-muted">Human-readable label shown on editing form.</div>
+              <div class="form-text small text-slate-400 text-[10px] mt-1">Human-readable label shown on editing form.</div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label required" for="fieldModalType">Field Type</label>
-              <select class="form-select" id="fieldModalType" name="type" required>
+              <label class="form-label required font-semibold text-slate-700 block mb-1" for="fieldModalType">Field Type</label>
+              <select class="form-select text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full cursor-pointer" id="fieldModalType" name="type" required>
                 <option value="Single-Line Text">Single-Line Text</option>
                 <option value="Multi-Line Text">Multi-Line Text</option>
                 <option value="Rich Text">Rich Text (HTML WYSIWYG)</option>
@@ -55,9 +55,9 @@
             </div>
 
             <div class="col-md-6" id="fieldSourceContainer" style="display: none;">
-              <label class="form-label" for="fieldModalSource">Options Source (one per line)</label>
+              <label class="form-label font-semibold text-slate-700 block mb-1" for="fieldModalSource">Options Source (one per line)</label>
               <textarea
-                class="form-control font-monospace"
+                class="form-control font-mono text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
                 id="fieldModalSource"
                 name="source"
                 rows="2"
@@ -65,39 +65,39 @@
               ></textarea>
             </div>
 
-            <div class="col-md-12">
-              <label class="form-label" for="fieldModalHelpText">Help Text</label>
+            <div class="col-md-12 md:col-span-2">
+              <label class="form-label font-semibold text-slate-700 block mb-1" for="fieldModalHelpText">Help Text</label>
               <input
                 type="text"
-                class="form-control"
+                class="form-control text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
                 id="fieldModalHelpText"
                 name="helpText"
                 placeholder="Guidance or instructions shown to content authors..."
               />
             </div>
 
-            <div class="col-md-12">
-              <div class="d-flex gap-4">
-                <label class="form-check form-switch m-0">
-                  <input type="checkbox" class="form-check-input" id="fieldModalRequired" name="required" value="true" />
-                  <span class="form-check-label fw-semibold">Required Field</span>
+            <div class="col-md-12 md:col-span-2 bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+              <div class="d-flex gap-5 flex items-center flex-wrap gap-5">
+                <label class="form-check form-switch m-0 flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" class="form-check-input rounded text-primary focus:ring-primary cursor-pointer" id="fieldModalRequired" name="required" value="true" />
+                  <span class="form-check-label fw-semibold text-slate-700 text-xs font-semibold">Required Field</span>
                 </label>
-                <label class="form-check form-switch m-0">
-                  <input type="checkbox" class="form-check-input" id="fieldModalShared" name="shared" value="true" />
-                  <span class="form-check-label fw-semibold" title="Value is shared across all language versions (GĐ 4)">Shared</span>
+                <label class="form-check form-switch m-0 flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" class="form-check-input rounded text-primary focus:ring-primary cursor-pointer" id="fieldModalShared" name="shared" value="true" />
+                  <span class="form-check-label fw-semibold text-slate-700 text-xs font-semibold" title="Value is shared across all language versions (GĐ 4)">Shared</span>
                 </label>
-                <label class="form-check form-switch m-0">
-                  <input type="checkbox" class="form-check-input" id="fieldModalUnversioned" name="unversioned" value="true" />
-                  <span class="form-check-label fw-semibold" title="Value is shared across all numbered versions within language (GĐ 4)">Unversioned</span>
+                <label class="form-check form-switch m-0 flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" class="form-check-input rounded text-primary focus:ring-primary cursor-pointer" id="fieldModalUnversioned" name="unversioned" value="true" />
+                  <span class="form-check-label fw-semibold text-slate-700 text-xs font-semibold" title="Value is shared across all numbered versions within language (GĐ 4)">Unversioned</span>
                 </label>
               </div>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1" id="btnSubmitField">
-            <i class="ti ti-check"></i>
+        <div class="modal-footer bg-slate-50/70 px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" class="btn btn-outline-secondary px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1.5 inline-flex items-center px-4 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" id="btnSubmitField">
+            <i class="ti ti-check text-sm"></i>
             <span>Save Field</span>
           </button>
         </div>

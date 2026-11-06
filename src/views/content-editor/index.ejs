@@ -3,105 +3,105 @@
   <%- include('../partials/ribbon') %>
 
   <!-- 2. Main Content Editor Layout (Split Pane: Left Tree + Center Workspace) -->
-  <div class="d-flex flex-fill overflow-hidden border-top">
+  <div class="d-flex flex-fill overflow-hidden border-t border-slate-200 dark:border-slate-800">
     <!-- Left Pane: Content Tree Navigation -->
     <aside
-      class="content-tree-pane bg-white border-end d-flex flex-column flex-shrink-0"
+      class="content-tree-pane bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-slate-800 d-flex flex-column flex-shrink-0"
       id="contentTreePane"
       style="width: 320px; min-width: 260px; max-width: 500px;"
     >
       <!-- Tree Filter / Search Bar -->
-      <div class="p-2 border-bottom bg-light-subtle">
-        <div class="input-icon">
+      <div class="p-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900">
+        <div class="input-icon relative">
           <span class="input-icon-addon">
-            <i class="ti ti-search text-muted"></i>
+            <i class="ti ti-search text-slate-400"></i>
           </span>
           <input
             type="text"
-            class="form-control form-control-sm"
+            class="form-control form-control-sm rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-xs transition-all duration-150 hover:border-slate-400 focus:border-sc-red focus:ring-2 focus:ring-sc-red/20 focus:outline-none"
             id="treeSearchInput"
             placeholder="Search items in tree..."
             autocomplete="off"
           />
-          <span class="input-icon-addon cursor-pointer d-none" id="clearTreeSearch">
-            <i class="ti ti-x text-muted"></i>
+          <span class="input-icon-addon cursor-pointer d-none end-0 pe-2" id="clearTreeSearch">
+            <i class="ti ti-x text-slate-400 hover:text-slate-600 transition"></i>
           </span>
         </div>
       </div>
 
       <!-- Quick Action Toolbar for Tree -->
-      <div class="px-2 py-1 border-bottom bg-white d-flex align-items-center justify-content-between small text-muted">
-        <span class="fw-semibold text-uppercase font-monospace" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+      <div class="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 d-flex align-items-center justify-content-between small text-slate-500 select-none">
+        <span class="font-bold text-uppercase font-monospace text-slate-400 dark:text-slate-500" style="font-size: 0.65rem; letter-spacing: 0.08em;">
           Content Tree
         </span>
         <div class="d-flex align-items-center gap-1">
           <button
             type="button"
-            class="btn btn-sm btn-ghost-secondary p-1"
+            class="btn btn-sm btn-ghost-secondary p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all duration-150"
             id="btnCollapseAllTree"
             title="Collapse All"
           >
-            <i class="ti ti-arrows-collapse fs-3"></i>
+            <i class="ti ti-arrows-collapse fs-3 text-slate-500"></i>
           </button>
           <button
             type="button"
-            class="btn btn-sm btn-ghost-secondary p-1"
+            class="btn btn-sm btn-ghost-secondary p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all duration-150"
             id="btnReloadTree"
             title="Reload Tree"
           >
-            <i class="ti ti-refresh fs-3"></i>
+            <i class="ti ti-refresh fs-3 text-slate-500"></i>
           </button>
         </div>
       </div>
 
       <!-- Search Results Dropdown List (Overlay when searching) -->
-      <div id="treeSearchResults" class="list-group list-group-flush border-bottom d-none overflow-auto" style="max-height: 220px;"></div>
+      <div id="treeSearchResults" class="list-group list-group-flush border-b border-slate-200 dark:border-slate-800 d-none overflow-auto shadow-md" style="max-height: 220px;"></div>
 
       <!-- Fancytree Container -->
-      <div class="p-2 flex-fill overflow-auto tree-scrollable-container" id="fancytreeContainer">
+      <div class="p-2 flex-fill overflow-auto tree-scrollable-container sc-scrollbar bg-white dark:bg-slate-900" id="fancytreeContainer">
         <div id="contentTree" class="fancytree-plain"></div>
       </div>
 
       <!-- Tree Footer Status -->
-      <div class="p-2 border-top bg-light-subtle d-flex align-items-center justify-content-between text-muted small" style="font-size: 0.72rem;">
-        <span id="treeStatusText">Ready</span>
-        <span class="badge bg-secondary-lt font-monospace">Master DB</span>
+      <div class="p-2 px-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 d-flex align-items-center justify-content-between text-slate-400 text-[11px] select-none">
+        <span id="treeStatusText" class="font-medium">Ready</span>
+        <span class="badge bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-monospace border border-slate-300 dark:border-slate-700 text-[10px]">Master DB</span>
       </div>
     </aside>
 
     <!-- Center Workspace Pane: Breadcrumbs + View Mode + Form/Folder View -->
-    <main class="content-workspace-pane flex-fill d-flex flex-column bg-light-subtle overflow-hidden">
+    <main class="content-workspace-pane flex-fill d-flex flex-column bg-slate-50/70 dark:bg-slate-950 overflow-hidden">
       <!-- Workspace Action Bar (Breadcrumbs + Mode Toggle) -->
-      <div class="workspace-top-bar bg-white border-bottom px-3 py-2 d-flex align-items-center justify-content-between gap-2 flex-wrap">
+      <div class="workspace-top-bar bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2 d-flex align-items-center justify-content-between gap-2 flex-wrap shadow-2xs">
         <!-- Breadcrumb Path Trail -->
         <nav aria-label="breadcrumb">
-          <ol class="breadcrumb m-0" id="workspaceBreadcrumb">
+          <ol class="breadcrumb m-0 font-medium text-xs text-slate-500" id="workspaceBreadcrumb">
             <% if (breadcrumbs && breadcrumbs.length > 0) { %>
               <% breadcrumbs.forEach((bItem, bIdx) => { %>
                 <% if (bIdx === breadcrumbs.length - 1) { %>
-                  <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">
+                  <li class="breadcrumb-item active fw-bold text-slate-900 dark:text-white" aria-current="page">
                     <%= bItem.displayName || bItem.name %>
                   </li>
                 <% } else { %>
                   <li class="breadcrumb-item">
-                    <a href="#" class="breadcrumb-jump-link text-decoration-none" data-item-id="<%= bItem._id %>">
+                    <a href="#" class="breadcrumb-jump-link text-slate-500 hover:text-sc-red dark:text-slate-400 dark:hover:text-sc-red text-decoration-none transition-colors duration-150" data-item-id="<%= bItem._id %>">
                       <%= bItem.displayName || bItem.name %>
                     </a>
                   </li>
                 <% } %>
               <% }) %>
             <% } else { %>
-              <li class="breadcrumb-item active">/sitecore</li>
+              <li class="breadcrumb-item active text-slate-400">/sitecore</li>
             <% } %>
           </ol>
         </nav>
 
         <!-- View Mode Switcher (Content / Folder) -->
         <div class="d-flex align-items-center gap-1">
-          <div class="btn-group btn-group-sm" role="group" aria-label="View Mode">
+          <div class="btn-group btn-group-sm rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 bg-slate-100 dark:bg-slate-800" role="group" aria-label="View Mode">
             <button
               type="button"
-              class="btn btn-outline-secondary active d-flex align-items-center gap-1"
+              class="btn btn-sm border-0 rounded-md active d-flex align-items-center gap-1.5 px-2.5 py-1 text-xs font-semibold active:scale-95 transition-all duration-150"
               id="btnModeContent"
               data-mode="content"
               title="Content Editing Form"
@@ -111,7 +111,7 @@
             </button>
             <button
               type="button"
-              class="btn btn-outline-secondary d-flex align-items-center gap-1"
+              class="btn btn-sm border-0 rounded-md d-flex align-items-center gap-1.5 px-2.5 py-1 text-xs font-semibold active:scale-95 transition-all duration-150"
               id="btnModeFolder"
               data-mode="folder"
               title="Child Items Grid"

@@ -57,7 +57,12 @@ const fieldRegistry = {
     },
     sanitize(val) {
       if (!val) return '';
-      return sanitizeHtml(val.toString(), SANITIZE_OPTIONS);
+      // Chuẩn hóa mọi relative media URLs thành URL gốc tuyệt đối (/media/file/:id)
+      let normalized = val.toString().replace(
+        /(src=["'])(?:\.\.\/|\/admin\/|\/admin\/content-editor\/)*media\/file\/([a-f\d]{24})/gi,
+        '$1/media/file/$2'
+      );
+      return sanitizeHtml(normalized, SANITIZE_OPTIONS);
     },
   },
 

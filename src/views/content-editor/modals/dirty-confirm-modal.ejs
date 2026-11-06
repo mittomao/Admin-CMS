@@ -1,29 +1,29 @@
 <div class="modal fade" id="dirtyConfirmModal" tabindex="-1" aria-labelledby="dirtyConfirmModalLabel" aria-hidden="true" data-bs-backdrop="static">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header py-2 px-3 bg-warning-subtle border-bottom">
-        <h5 class="modal-title d-flex align-items-center gap-2 text-warning-emphasis" id="dirtyConfirmModalLabel">
-          <i class="ti ti-alert-triangle fs-3 text-warning"></i>
+    <div class="modal-content rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header py-3 px-4 bg-amber-50/80 border-b border-amber-100 flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-amber-800 text-sm font-bold m-0 flex items-center gap-2" id="dirtyConfirmModalLabel">
+          <i class="ti ti-alert-triangle text-amber-600 text-base"></i>
           <span>Thay đổi chưa được lưu</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <div class="modal-body p-3">
-        <p class="mb-2">Bạn có các thay đổi trường dữ liệu chưa được lưu trong phiên bản hiện tại.</p>
-        <p class="text-muted small mb-0">Nếu bạn chuyển sang ngôn ngữ hoặc phiên bản khác ngay bây giờ, các thay đổi chưa lưu sẽ bị mất. Bạn muốn làm gì?</p>
+      <div class="modal-body p-4 text-xs">
+        <p class="mb-2 text-slate-700 font-medium">Bạn có các thay đổi trường dữ liệu chưa được lưu trong phiên bản hiện tại.</p>
+        <p class="text-slate-400 text-[11px] mb-0">Nếu bạn chuyển sang ngôn ngữ hoặc phiên bản khác ngay bây giờ, các thay đổi chưa lưu sẽ bị mất. Bạn muốn làm gì?</p>
       </div>
 
-      <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
-        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" id="btnDirtyCancel">
+      <div class="modal-footer py-3 px-4 bg-slate-50/70 border-t border-slate-200 d-flex justify-content-between flex items-center justify-between">
+        <button type="button" class="btn btn-outline-secondary btn-sm px-3.5 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal" id="btnDirtyCancel">
           Hủy (Ở lại)
         </button>
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-danger btn-sm" id="btnDirtyDiscard">
+        <div class="d-flex gap-2 flex items-center gap-2">
+          <button type="button" class="btn btn-danger btn-sm px-3.5 py-1.5 text-xs font-semibold rounded-md shadow-xs hover:bg-rose-600 transition-all duration-150 active:scale-95" id="btnDirtyDiscard">
             Bỏ qua thay đổi
           </button>
-          <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="btnDirtySaveAndContinue">
-            <i class="ti ti-device-floppy"></i> Lưu và tiếp tục
+          <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1.5 inline-flex items-center px-4 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" id="btnDirtySaveAndContinue">
+            <i class="ti ti-device-floppy text-xs"></i> Lưu và tiếp tục
           </button>
         </div>
       </div>

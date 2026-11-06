@@ -7,103 +7,103 @@
 <!-- Quick Info Section (DEC-037 / GĐ 6.3) -->
 <%- include('../../../partials/quick-info', { quickInfo: locals.quickInfo, item: template, template: resolved }) %>
 
-<div class="card shadow-sm border-0">
-  <div class="card-header bg-white py-2 px-3 d-flex align-items-center justify-content-between">
+<div class="card shadow-sm border border-slate-200/80 rounded-xl bg-white overflow-hidden">
+  <div class="card-header bg-slate-50/70 py-3 px-4 d-flex align-items-center justify-content-between flex items-center justify-between border-b border-slate-200">
     <div>
-      <h4 class="card-title m-0 fw-bold fs-3 text-dark">Data Schema Builder</h4>
-      <p class="text-muted small m-0">Define sections and fields for this template. Drag handles to reorder.</p>
+      <h4 class="card-title m-0 fw-bold fs-3 text-slate-900 font-bold text-base tracking-tight">Data Schema Builder</h4>
+      <p class="text-muted small m-0 text-xs text-slate-500 mt-0.5">Define sections and fields for this template. Drag handles to reorder.</p>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" id="builderAddSectionBtn">
-        <i class="ti ti-plus"></i>
+    <div class="d-flex align-items-center gap-2 flex items-center gap-2">
+      <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1.5 inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-all duration-150 active:scale-95" id="builderAddSectionBtn">
+        <i class="ti ti-plus text-sm"></i>
         <span>Add Section</span>
       </button>
     </div>
   </div>
 
-  <div class="card-body p-3">
+  <div class="card-body p-4">
     <% if (sections.length === 0) { %>
       <% if (compSections.length > 0) { %>
-        <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
-          <i class="ti ti-info-circle fs-2 text-info"></i>
+        <div class="alert alert-info d-flex align-items-center gap-3 mb-4 p-3.5 rounded-lg bg-sky-50 border border-sky-200 text-sky-800 text-xs">
+          <i class="ti ti-info-circle text-xl text-sky-600 flex-shrink-0"></i>
           <div>
-            <strong>Chưa có Section riêng:</strong> Template này hiện chưa tạo các section trường dữ liệu riêng. Tuy nhiên, template đang sử dụng <strong><%= compTemplates.length %> Component Template(s)</strong> gắn với Standard Presentation bên dưới. Khi tạo trang từ template này, các trường của component sẽ tự động xuất hiện trên form nhập liệu.
+            <strong class="font-semibold">Chưa có Section riêng:</strong> Template này hiện chưa tạo các section trường dữ liệu riêng. Tuy nhiên, template đang sử dụng <strong class="font-semibold"><%= compTemplates.length %> Component Template(s)</strong> gắn với Standard Presentation bên dưới. Khi tạo trang từ template này, các trường của component sẽ tự động xuất hiện trên form nhập liệu.
           </div>
         </div>
       <% } else { %>
-        <div class="empty py-4 text-center">
-          <div class="empty-icon text-muted"><i class="ti ti-layout-navbar-expand fs-1"></i></div>
-          <p class="empty-title">No Sections Defined</p>
-          <p class="empty-subtitle text-muted">Click "Add Section" above to organize fields for this template.</p>
+        <div class="empty py-8 text-center flex flex-col items-center justify-center">
+          <div class="empty-icon text-slate-300 mb-2"><i class="ti ti-layout-navbar-expand text-4xl"></i></div>
+          <p class="empty-title text-sm font-bold text-slate-700 m-0">No Sections Defined</p>
+          <p class="empty-subtitle text-xs text-slate-500 mt-1 max-w-sm">Click "Add Section" above to organize fields for this template.</p>
         </div>
       <% } %>
     <% } else { %>
       <!-- Sections Sortable Container -->
-      <div class="accordion" id="builderSectionsContainer">
+      <div class="accordion space-y-3" id="builderSectionsContainer">
         <% sections.forEach((section, sIdx) => { %>
           <%
             const isSectionInherited = section.origin && section.origin.isInherited;
           %>
           <div
-            class="accordion-item mb-3 border rounded shadow-2xs builder-section-item"
+            class="accordion-item border border-slate-200/90 rounded-xl overflow-hidden shadow-2xs bg-white builder-section-item transition-shadow duration-150 hover:shadow-xs"
             data-section-id="<%= section._id %>"
           >
             <!-- Section Header -->
-            <div class="accordion-header bg-light-subtle d-flex align-items-center justify-content-between p-2 border-bottom">
-              <div class="d-flex align-items-center gap-2 flex-fill">
-                <span class="section-drag-handle cursor-grab text-muted px-1" title="Drag to reorder section">
-                  <i class="ti ti-grip-vertical fs-3"></i>
+            <div class="accordion-header bg-slate-50/80 d-flex align-items-center justify-content-between p-2.5 border-bottom border-slate-200 flex items-center justify-between">
+              <div class="d-flex align-items-center gap-2 flex-fill flex items-center gap-2 flex-1 min-w-0">
+                <span class="section-drag-handle cursor-grab text-slate-400 hover:text-slate-600 px-1 py-0.5 rounded transition-colors" title="Drag to reorder section">
+                  <i class="ti ti-grip-vertical text-base"></i>
                 </span>
                 <button
-                  class="accordion-button py-1 px-2 fw-bold text-dark bg-transparent border-0 shadow-none d-flex align-items-center gap-2 flex-fill"
+                  class="accordion-button py-1 px-2 fw-bold text-slate-800 bg-transparent border-0 shadow-none d-flex align-items-center gap-2 flex-fill flex items-center gap-2 flex-1 text-left cursor-pointer"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target="#sec-collapse-<%= section._id %>"
                   aria-expanded="true"
                 >
-                  <i class="ti ti-folder text-primary"></i>
-                  <span><%= section.name %></span>
-                  <span class="badge bg-secondary-lt ms-2 font-monospace" style="font-size: 0.65rem;">
+                  <i class="ti ti-folder text-primary text-base"></i>
+                  <span class="text-xs font-bold text-slate-800 tracking-tight"><%= section.name %></span>
+                  <span class="badge bg-slate-200/70 text-slate-600 ms-2 font-mono text-[10px] px-2 py-0.5 rounded-full">
                     <%= section.fields ? section.fields.length : 0 %> <%= section.fields && section.fields.length === 1 ? 'field' : 'fields' %>
                   </span>
                   <% if (isSectionInherited) { %>
-                    <span class="badge bg-purple-lt" title="Section originated from base template">
-                      <i class="ti ti-git-fork me-1"></i>Inherited: <%= section.origin.templateName %>
+                    <span class="badge bg-purple-50 text-purple-700 border border-purple-200 font-mono text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" title="Section originated from base template">
+                      <i class="ti ti-git-fork me-0.5"></i>Inherited: <%= section.origin.templateName %>
                     </span>
                   <% } %>
                 </button>
               </div>
 
               <!-- Section Operations -->
-              <div class="d-flex align-items-center gap-1 pe-2">
+              <div class="d-flex align-items-center gap-1.5 pe-1 flex items-center">
                 <button
                   type="button"
-                  class="btn btn-sm btn-ghost-primary p-1 btn-add-field-to-section"
+                  class="btn btn-sm btn-ghost-primary p-1.5 rounded-md hover:bg-primary/10 text-primary transition-all duration-150 active:scale-95 btn-add-field-to-section"
                   data-section-id="<%= section._id %>"
                   data-section-name="<%= section.name %>"
                   title="Add Field to <%= section.name %>"
                 >
-                  <i class="ti ti-plus fs-3"></i>
+                  <i class="ti ti-plus text-base"></i>
                 </button>
                 <% if (!isSectionInherited) { %>
                   <button
                     type="button"
-                    class="btn btn-sm btn-ghost-secondary p-1 btn-edit-section"
+                    class="btn btn-sm btn-ghost-secondary p-1.5 rounded-md hover:bg-slate-200/70 text-slate-600 transition-all duration-150 active:scale-95 btn-edit-section"
                     data-section-id="<%= section._id %>"
                     data-section-name="<%= section.name %>"
                     data-section-sort="<%= section.sortOrder %>"
                     title="Edit Section Name"
                   >
-                    <i class="ti ti-pencil fs-3"></i>
+                    <i class="ti ti-pencil text-base"></i>
                   </button>
                   <button
                     type="button"
-                    class="btn btn-sm btn-ghost-danger p-1 btn-delete-section"
+                    class="btn btn-sm btn-ghost-danger p-1.5 rounded-md hover:bg-rose-50 text-rose-500 hover:text-rose-600 transition-all duration-150 active:scale-95 btn-delete-section"
                     data-section-id="<%= section._id %>"
                     data-section-name="<%= section.name %>"
                     title="Delete Section"
                   >
-                    <i class="ti ti-trash fs-3"></i>
+                    <i class="ti ti-trash text-base"></i>
                   </button>
                 <% } %>
               </div>
@@ -111,14 +111,14 @@
 
             <!-- Section Fields List -->
             <div id="sec-collapse-<%= section._id %>" class="accordion-collapse collapse show">
-              <div class="accordion-body p-2">
+              <div class="accordion-body p-2.5 bg-slate-50/30">
                 <div
-                  class="builder-fields-list list-group list-group-flush"
+                  class="builder-fields-list list-group list-group-flush space-y-1.5"
                   data-section-id="<%= section._id %>"
                   style="min-height: 48px;"
                 >
                   <% if (!section.fields || section.fields.length === 0) { %>
-                    <div class="text-center py-2 text-muted small empty-fields-placeholder">
+                    <div class="text-center py-4 text-slate-400 text-xs italic empty-fields-placeholder">
                       No fields in this section. Click <i class="ti ti-plus text-primary"></i> above to add a field.
                     </div>
                   <% } else { %>
@@ -127,62 +127,61 @@
                         const isFieldInherited = field.origin && field.origin.isInherited;
                       %>
                       <div
-                        class="list-group-item d-flex align-items-center justify-content-between p-2 rounded border mb-1 bg-white builder-field-item shadow-2xs"
+                        class="list-group-item d-flex align-items-center justify-content-between p-2 rounded-lg border border-slate-200/80 bg-white builder-field-item shadow-2xs hover:border-slate-300 transition-all duration-150 flex items-center justify-between"
                         data-field-id="<%= field._id %>"
                         data-field-name="<%= field.name %>"
                         data-section-id="<%= section._id %>"
                       >
-                        <div class="d-flex align-items-center gap-2 overflow-hidden flex-fill">
+                        <div class="d-flex align-items-center gap-2 overflow-hidden flex-fill flex items-center gap-2 flex-1 min-w-0">
                           <% if (!isFieldInherited) { %>
-                            <span class="field-drag-handle cursor-grab text-muted px-1" title="Drag to reorder field">
-                              <i class="ti ti-grip-vertical"></i>
+                            <span class="field-drag-handle cursor-grab text-slate-400 hover:text-slate-600 px-1 py-0.5 rounded transition-colors" title="Drag to reorder field">
+                              <i class="ti ti-grip-vertical text-sm"></i>
                             </span>
                           <% } else { %>
-                            <span class="text-muted px-1" title="Inherited from base template (cannot drag)">
-                              <i class="ti ti-lock" style="font-size: 0.8rem;"></i>
+                            <span class="text-slate-400 px-1" title="Inherited from base template (cannot drag)">
+                              <i class="ti ti-lock text-xs"></i>
                             </span>
                           <% } %>
 
-                          <span class="badge bg-blue-lt font-monospace text-uppercase" style="font-size: 0.65rem; min-width: 90px;">
+                          <span class="badge bg-blue-50 text-blue-700 border border-blue-200 font-mono uppercase text-[10px] px-2 py-0.5 rounded min-w-[85px] text-center">
                             <%= field.type %>
                           </span>
 
-                          <div class="text-truncate">
-                            <span class="fw-bold text-dark"><%= field.title || field.name %></span>
-                            <span class="font-monospace text-muted small ms-1">(<%= field.name %>)</span>
+                          <div class="text-truncate truncate flex items-center gap-1.5">
+                            <span class="fw-bold text-slate-800 text-xs font-semibold"><%= field.title || field.name %></span>
+                            <span class="font-mono text-slate-400 text-[11px]">(<%= field.name %>)</span>
                             <% if (field.required) { %>
-                              <span class="badge bg-red-lt ms-1" style="font-size: 0.6rem;">Required</span>
+                              <span class="badge bg-rose-50 text-rose-600 border border-rose-200 text-[9px] px-1.5 py-0.2 rounded font-mono">Required</span>
                             <% } %>
                             <% if (field.shared) { %>
-                              <span class="badge bg-cyan-lt ms-1" style="font-size: 0.6rem;">Shared</span>
+                              <span class="badge bg-cyan-50 text-cyan-700 border border-cyan-200 text-[9px] px-1.5 py-0.2 rounded font-mono">Shared</span>
                             <% } %>
                             <% if (isFieldInherited) { %>
-                              <span class="badge bg-purple-lt ms-1" style="font-size: 0.6rem;">
-                                <i class="ti ti-git-fork me-1"></i>From: <%= field.origin.templateName %>
+                              <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[9px] px-1.5 py-0.2 rounded font-mono flex items-center gap-0.5">
+                                <i class="ti ti-git-fork"></i>From: <%= field.origin.templateName %>
                               </span>
                             <% } %>
                           </div>
                         </div>
 
                         <!-- Field Actions -->
-                        <div class="d-flex align-items-center gap-1 ms-2">
+                        <div class="d-flex align-items-center gap-1.5 ms-2 flex items-center">
                           <% if (isFieldInherited) { %>
                             <button
                               type="button"
-                              class="btn btn-sm btn-outline-purple py-0 px-2 btn-override-field"
+                              class="btn btn-sm btn-outline-purple py-0.5 px-2 rounded text-[11px] font-medium border border-purple-300 text-purple-700 hover:bg-purple-50 transition-all duration-150 active:scale-95 btn-override-field"
                               data-field-name="<%= field.name %>"
                               data-field-title="<%= field.title %>"
                               data-field-type="<%= field.type %>"
                               data-section-id="<%= section._id %>"
                               title="Override this field definition in current template"
-                              style="font-size: 0.72rem;"
                             >
                               <i class="ti ti-replace me-1"></i>Override
                             </button>
                           <% } else { %>
                             <button
                               type="button"
-                              class="btn btn-sm btn-ghost-secondary p-1 btn-edit-field"
+                              class="btn btn-sm btn-ghost-secondary p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all duration-150 active:scale-95 btn-edit-field"
                               data-field-id="<%= field._id %>"
                               data-field-name="<%= field.name %>"
                               data-field-title="<%= field.title %>"
@@ -195,17 +194,17 @@
                               data-section-id="<%= section._id %>"
                               title="Edit Field"
                             >
-                              <i class="ti ti-pencil"></i>
+                              <i class="ti ti-pencil text-sm"></i>
                             </button>
                             <button
                               type="button"
-                              class="btn btn-sm btn-ghost-danger p-1 btn-delete-field"
+                              class="btn btn-sm btn-ghost-danger p-1 rounded hover:bg-rose-50 text-rose-500 hover:text-rose-600 transition-all duration-150 active:scale-95 btn-delete-field"
                               data-field-id="<%= field._id %>"
                               data-field-name="<%= field.name %>"
                               data-section-id="<%= section._id %>"
                               title="Delete Field"
                             >
-                              <i class="ti ti-trash"></i>
+                              <i class="ti ti-trash text-sm"></i>
                             </button>
                           <% } %>
                         </div>
@@ -221,102 +220,102 @@
     <% } %>
 
     <% if (hasPresentationRenderings) { %>
-      <div class="mt-4 pt-3 border-top">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-            <i class="ti ti-components text-purple fs-2"></i>
+      <div class="mt-6 pt-4 border-t border-slate-200">
+        <div class="d-flex align-items-center justify-content-between mb-2 flex items-center justify-between">
+          <h5 class="fw-bold mb-0 text-slate-800 d-flex align-items-center gap-2 flex items-center gap-2 text-sm font-bold">
+            <i class="ti ti-components text-purple-600 text-base"></i>
             <span>Fields từ Renderings (Standard Presentation)</span>
-            <span class="badge bg-purple-lt text-purple small">DEC-036: Effective Fields</span>
+            <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-mono px-2 py-0.5 rounded">DEC-036: Effective Fields</span>
           </h5>
-          <span class="text-muted small">
+          <span class="text-muted small text-xs text-slate-400 font-mono">
             <%= compSections.length %> section(s) · <%= compTemplates.length %> component template(s)
           </span>
         </div>
 
-        <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-3">
-          <i class="ti ti-info-circle fs-2 text-info"></i>
+        <div class="alert alert-info py-2.5 px-3.5 rounded-lg bg-sky-50 border border-sky-200 text-sky-800 text-xs d-flex align-items-center gap-2.5 mb-3 flex items-center gap-2.5">
+          <i class="ti ti-info-circle text-lg text-sky-600 flex-shrink-0"></i>
           <div>
-            Các trường bên dưới được <strong>tự động suy ra từ Standard Presentation</strong> của Template. Chúng sẽ tự động xuất hiện trên Content Editor khi biên tập trang. Cấu trúc trường được quản lý tập trung tại Component Template gốc (chỉ đọc tại đây).
+            Các trường bên dưới được <strong class="font-semibold">tự động suy ra từ Standard Presentation</strong> của Template. Chúng sẽ tự động xuất hiện trên Content Editor khi biên tập trang. Cấu trúc trường được quản lý tập trung tại Component Template gốc (chỉ đọc tại đây).
           </div>
         </div>
 
         <% if (compSections.length > 0) { %>
-          <div class="accordion" id="builderComponentSectionsContainer">
+          <div class="accordion space-y-3" id="builderComponentSectionsContainer">
             <% compSections.forEach((cSection, csIdx) => { %>
-              <div class="accordion-item mb-3 border border-purple-subtle rounded shadow-2xs">
+              <div class="accordion-item border border-purple-200 rounded-xl overflow-hidden shadow-2xs bg-white">
                 <!-- Component Section Header -->
-                <div class="accordion-header bg-purple-lt d-flex align-items-center justify-content-between p-2 border-bottom border-purple-subtle">
-                  <div class="d-flex align-items-center gap-2 flex-fill">
+                <div class="accordion-header bg-purple-50/70 d-flex align-items-center justify-content-between p-2.5 border-bottom border-purple-200 flex items-center justify-between">
+                  <div class="d-flex align-items-center gap-2 flex-fill flex items-center gap-2 flex-1 min-w-0">
                     <button
-                      class="accordion-button py-1 px-2 fw-bold text-dark bg-transparent border-0 shadow-none d-flex align-items-center gap-2 flex-fill"
+                      class="accordion-button py-1 px-2 fw-bold text-dark bg-transparent border-0 shadow-none d-flex align-items-center gap-2 flex-fill flex items-center gap-2 flex-1 text-left cursor-pointer"
                       type="button"
                       data-bs-toggle="collapse"
                       data-bs-target="#csec-collapse-<%= csIdx %>"
                       aria-expanded="true"
                     >
-                      <i class="<%= cSection.origin.icon || 'ti ti-box' %> text-purple fs-2"></i>
-                      <span class="fw-bold text-purple"><%= cSection.displayName %></span>
-                      <span class="badge bg-white text-purple border border-purple-subtle ms-2 font-monospace" style="font-size: 0.65rem;">
+                      <i class="<%= cSection.origin.icon || 'ti ti-box' %> text-purple-600 text-base"></i>
+                      <span class="fw-bold text-purple-900 text-xs"><%= cSection.displayName %></span>
+                      <span class="badge bg-white text-purple-700 border border-purple-200 ms-2 font-mono text-[10px] px-2 py-0.5 rounded-full">
                         <%= cSection.fields ? cSection.fields.length : 0 %> <%= cSection.fields && cSection.fields.length === 1 ? 'field' : 'fields' %>
                       </span>
-                      <span class="badge bg-purple text-white ms-1" style="font-size: 0.65rem;" title="Component Template">
+                      <span class="badge bg-purple-600 text-white ms-1 text-[10px] px-2 py-0.5 rounded-full font-medium" title="Component Template">
                         <i class="ti ti-puzzle me-1"></i><%= cSection.origin.templateName %>
                       </span>
                     </button>
                   </div>
 
-                  <div class="d-flex align-items-center gap-2 pe-2">
-                    <span class="badge bg-secondary-lt text-muted small">Chỉ đọc</span>
+                  <div class="d-flex align-items-center gap-2 pe-2 flex items-center gap-2">
+                    <span class="badge bg-slate-100 text-slate-500 font-mono text-[10px] px-2 py-0.5 rounded">Chỉ đọc</span>
                     <a
                       href="/admin/template-manager/<%= cSection.origin.templateId %>"
-                      class="btn btn-sm btn-ghost-purple p-1 d-flex align-items-center gap-1 text-decoration-none"
+                      class="btn btn-sm btn-ghost-purple p-1 rounded hover:bg-purple-100/60 text-purple-700 transition-all duration-150 active:scale-95 d-flex align-items-center gap-1 text-decoration-none inline-flex items-center"
                       title="Chuyển đến Component Template để chỉnh sửa cấu trúc trường"
                       target="_blank"
                     >
-                      <i class="ti ti-external-link"></i>
-                      <span class="small">Sửa Template gốc</span>
+                      <i class="ti ti-external-link text-xs"></i>
+                      <span class="text-[11px] font-medium">Sửa Template gốc</span>
                     </a>
                   </div>
                 </div>
 
                 <!-- Component Section Fields List -->
                 <div id="csec-collapse-<%= csIdx %>" class="accordion-collapse collapse show">
-                  <div class="accordion-body p-2 bg-light-subtle">
-                    <div class="list-group list-group-flush">
+                  <div class="accordion-body p-2.5 bg-slate-50/50">
+                    <div class="list-group list-group-flush space-y-1.5">
                       <% (cSection.fields || []).forEach(field => { %>
-                        <div class="list-group-item d-flex align-items-center justify-content-between p-2 rounded border mb-1 bg-white shadow-2xs">
-                          <div class="d-flex align-items-center gap-2">
-                            <span class="text-purple opacity-75">
-                              <i class="ti ti-columns-2 fs-3"></i>
+                        <div class="list-group-item d-flex align-items-center justify-content-between p-2 rounded-lg border border-slate-200/80 bg-white shadow-2xs flex items-center justify-between">
+                          <div class="d-flex align-items-center gap-2.5 flex items-center gap-2.5">
+                            <span class="text-purple-500">
+                              <i class="ti ti-columns-2 text-base"></i>
                             </span>
                             <div>
-                              <div class="fw-semibold text-dark small d-flex align-items-center gap-2">
+                              <div class="fw-semibold text-slate-800 text-xs d-flex align-items-center gap-2 flex items-center gap-2">
                                 <span><%= field.title || field.name %></span>
-                                <span class="badge bg-light text-muted font-monospace border" style="font-size: 0.65rem;">
+                                <span class="badge bg-slate-100 text-slate-500 font-mono border border-slate-200 text-[10px] px-1.5 py-0.2 rounded">
                                   <%= field.name %>
                                 </span>
                                 <% if (field.required) { %>
-                                  <span class="badge bg-danger-lt text-danger" style="font-size: 0.6rem;">Required</span>
+                                  <span class="badge bg-rose-50 text-rose-600 border border-rose-200 text-[9px] px-1.5 py-0.2 rounded font-mono">Required</span>
                                 <% } %>
                                 <% if (field.shared) { %>
-                                  <span class="badge bg-azure-lt text-azure" style="font-size: 0.6rem;">Shared</span>
+                                  <span class="badge bg-cyan-50 text-cyan-700 border border-cyan-200 text-[9px] px-1.5 py-0.2 rounded font-mono">Shared</span>
                                 <% } %>
                               </div>
-                              <div class="text-muted small" style="font-size: 0.7rem;">
-                                Kiểu: <span class="fw-medium text-dark"><%= field.type %></span>
+                              <div class="text-slate-400 text-[11px] mt-0.5">
+                                Kiểu: <span class="fw-medium text-slate-700"><%= field.type %></span>
                                 <% if (field.defaultValue) { %>
-                                  · Mặc định: <code class="text-muted"><%= field.defaultValue %></code>
+                                  · Mặc định: <code class="text-slate-500 font-mono bg-slate-100 px-1 py-0.2 rounded"><%= field.defaultValue %></code>
                                 <% } %>
                                 <% if (field.helpText) { %>
-                                  · <span class="fst-italic"><%= field.helpText %></span>
+                                  · <span class="italic text-slate-500"><%= field.helpText %></span>
                                 <% } %>
                               </div>
                             </div>
                           </div>
 
-                          <div class="d-flex align-items-center gap-1">
-                            <span class="badge bg-purple-lt text-purple" style="font-size: 0.65rem;">
-                              <i class="ti ti-lock me-1"></i>Từ Component
+                          <div class="d-flex align-items-center gap-1 flex items-center">
+                            <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] px-2 py-0.5 rounded font-mono flex items-center gap-1">
+                              <i class="ti ti-lock text-[10px]"></i>Từ Component
                             </span>
                           </div>
                         </div>

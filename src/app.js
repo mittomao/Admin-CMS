@@ -113,8 +113,12 @@ app.get('/', (req, res) => {
 });
 
 // 9. Admin App & API Routes
-// Public media file serving
-app.get('/media/file/:id', (req, res, next) => mediaController.serveFile(req, res, next));
+// Public media file serving (kèm alias phòng thủ cho các client gửi relative URL)
+app.get([
+  '/media/file/:id',
+  '/admin/media/file/:id',
+  '/admin/content-editor/media/file/:id'
+], (req, res, next) => mediaController.serveFile(req, res, next));
 
 app.use('/admin', authRoutes);
 app.use('/admin/launchpad', launchpadRoutes);

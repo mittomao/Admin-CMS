@@ -1,54 +1,67 @@
-<div class="launchpad-wrapper">
+<div class="launchpad-wrapper max-w-7xl mx-auto py-2">
   <% if (typeof groupedApps !== 'undefined' && Object.keys(groupedApps).length > 0) { %>
     <% Object.keys(groupedApps).forEach(function(groupName) { 
         const meta = (typeof groupMetaMap !== 'undefined' && groupMetaMap[groupName]) 
           ? groupMetaMap[groupName] 
-          : { icon: 'ti ti-apps', colorClass: 'text-primary', subtitle: 'Danh mục ứng dụng chuyên biệt' };
+          : { icon: 'ti ti-apps', colorClass: 'text-blue-600', subtitle: 'Danh mục ứng dụng chuyên biệt' };
         const appsInGroup = groupedApps[groupName];
     %>
-      <!-- Tier 1: Main Container Card -->
-      <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div class="d-flex align-items-center gap-2">
-            <i class="<%= meta.icon %> <%= meta.colorClass %> fs-3"></i>
+      <!-- Group Container Card -->
+      <div class="card shadow-sm border border-slate-200/80 dark:border-slate-800 rounded-2xl mb-6 bg-white dark:bg-slate-900 overflow-hidden transition-shadow">
+        <!-- Group Header -->
+        <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center gap-2 bg-slate-50/60 dark:bg-slate-800/40">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center shadow-2xs">
+              <i class="<%= meta.icon %> text-lg <%= meta.colorClass %>"></i>
+            </div>
             <div>
-              <h3 class="card-title fw-bold m-0"><%= groupName %></h3>
-              <div class="text-muted small"><%= meta.subtitle %></div>
+              <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 m-0"><%= groupName %></h3>
+              <div class="text-xs text-slate-400 font-normal"><%= meta.subtitle %></div>
             </div>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-primary-lt"><%= appsInGroup.length %> ứng dụng</span>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              <%= appsInGroup.length %> ứng dụng
+            </span>
           </div>
         </div>
 
-        <!-- Tier 2: Sub-Card / Launchpad Tiles Grid -->
-        <div class="card-body p-3">
-          <div class="row g-3">
+        <!-- Launchpad Tiles Grid -->
+        <div class="p-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <% appsInGroup.forEach(function(app) { %>
-              <div class="col-6 col-md-4 col-xl-3">
+              <div>
                 <% if (app.url && app.url !== '#' && !app.isStub) { %>
-                  <a href="<%= app.url %>" class="card card-link card-link-pop h-100 border text-decoration-none p-3 shadow-sm app-tile-card">
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                      <span class="avatar avatar-md bg-<%= app.iconBg || 'primary' %>-lt text-<%= app.iconBg || 'primary' %> rounded-3 flex-shrink-0">
-                        <i class="<%= app.icon %> fs-2"></i>
+                  <a href="<%= app.url %>" class="group relative flex flex-col h-full p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sc-red dark:hover:border-sc-red hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 transition-all duration-200 text-decoration-none">
+                    <div class="flex items-center gap-3 mb-2.5">
+                      <span class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 text-lg group-hover:scale-110 group-active:scale-95 transition-transform duration-200 shadow-2xs">
+                        <i class="<%= app.icon %>"></i>
                       </span>
                       <div class="overflow-hidden">
-                        <h4 class="m-0 fw-bold text-heading text-truncate"><%= app.name %></h4>
+                        <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-sc-red transition-colors duration-150 truncate m-0">
+                          <%= app.name %>
+                        </h4>
                       </div>
                     </div>
-                    <p class="text-muted small mb-0 line-clamp-2"><%= app.description %></p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed m-0 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors duration-150">
+                      <%= app.description %>
+                    </p>
                   </a>
                 <% } else { %>
-                  <div class="card card-link card-link-pop h-100 border text-decoration-none p-3 shadow-sm app-tile-card" style="cursor: pointer;" onclick="alert('<%= app.name %> sẽ được phát triển trong các giai đoạn tiếp theo');">
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                      <span class="avatar avatar-md bg-<%= app.iconBg || 'secondary' %>-lt text-<%= app.iconBg || 'secondary' %> rounded-3 flex-shrink-0">
-                        <i class="<%= app.icon %> fs-2"></i>
+                  <div tabindex="0" role="button" class="group relative flex flex-col h-full p-4 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 transition-all duration-200 cursor-pointer" onclick="alert('<%= app.name %> sẽ được phát triển trong các giai đoạn tiếp theo');" onkeydown="if(event.key==='Enter'||event.key===' '){alert('<%= app.name %> sẽ được phát triển trong các giai đoạn tiếp theo');}">
+                    <div class="flex items-center gap-3 mb-2.5">
+                      <span class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center flex-shrink-0 text-lg group-hover:scale-105 group-active:scale-95 transition-transform duration-200">
+                        <i class="<%= app.icon %>"></i>
                       </span>
                       <div class="overflow-hidden">
-                        <h4 class="m-0 fw-bold text-heading text-truncate"><%= app.name %></h4>
+                        <h4 class="text-xs font-bold text-slate-600 dark:text-slate-300 truncate m-0">
+                          <%= app.name %>
+                        </h4>
                       </div>
                     </div>
-                    <p class="text-muted small mb-0 line-clamp-2"><%= app.description %></p>
+                    <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed m-0">
+                      <%= app.description %>
+                    </p>
                   </div>
                 <% } %>
               </div>
@@ -58,10 +71,12 @@
       </div>
     <% }); %>
   <% } else { %>
-    <div class="empty py-5 text-center">
-      <div class="empty-icon mb-3"><i class="ti ti-folder-off fs-1 text-muted"></i></div>
-      <p class="empty-title fw-bold">Không tìm thấy ứng dụng</p>
-      <p class="empty-subtitle text-muted">Không có ứng dụng nào được kích hoạt hoặc phân quyền cho tài khoản của bạn.</p>
+    <div class="py-16 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-2xl">
+        <i class="ti ti-folder-off"></i>
+      </div>
+      <p class="font-bold text-base text-slate-800 dark:text-slate-200">Không tìm thấy ứng dụng</p>
+      <p class="text-xs text-slate-500 max-w-sm mx-auto">Không có ứng dụng nào được kích hoạt hoặc phân quyền cho tài khoản của bạn.</p>
     </div>
   <% } %>
 </div>

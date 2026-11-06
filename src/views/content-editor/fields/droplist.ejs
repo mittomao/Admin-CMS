@@ -5,12 +5,12 @@
 %>
 <div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
   <%- include('./field-header', { field }) %>
-  <select class="form-select item-field-input" name="fields[<%= field.name %>]" <%= field.required ? 'required' : '' %>>
+  <select class="form-select form-select-sm item-field-input rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm transition-all duration-150 hover:border-slate-400 focus:border-sc-red focus:ring-2 focus:ring-sc-red/20 focus:outline-none" name="fields[<%= field.name %>]" <%= field.required ? 'required' : '' %>>
     <option value="">-- Select option --</option>
     <% options.forEach(opt => { %>
       <option value="<%= opt %>" <%= value === opt ? 'selected' : '' %>><%= opt %></option>
     <% }) %>
   </select>
-  <div class="invalid-feedback"></div>
+  <div class="invalid-feedback text-xs mt-1"></div>
 </div>
 

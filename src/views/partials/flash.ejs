@@ -1,8 +1,10 @@
 <% if (typeof flashMessages !== 'undefined' && flashMessages.length > 0) { %>
-  <div class="sc-flash-container" style="padding: 10px 16px; background-color: #fef3c7; border-bottom: 1px solid #fde68a; color: #92400e;">
-    <% flashMessages.forEach(function(msg) { %>
-      <div class="sc-flash-message"><%= msg %></div>
-    <% }); %>
+  <div class="sc-flash-container bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-200 px-4 py-2.5 text-xs flex items-center gap-2">
+    <i class="ti ti-alert-triangle text-amber-600 dark:text-amber-400 text-base flex-shrink-0"></i>
+    <div class="space-y-0.5">
+      <% flashMessages.forEach(function(msg) { %>
+        <div class="sc-flash-message font-medium"><%= msg %></div>
+      <% }); %>
+    </div>
   </div>
 <% } %>
-

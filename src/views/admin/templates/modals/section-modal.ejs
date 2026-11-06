@@ -1,35 +1,35 @@
 <div class="modal fade" id="sectionModal" tabindex="-1" aria-labelledby="sectionModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title d-flex align-items-center gap-2" id="sectionModalLabel">
-          <i class="ti ti-layout-navbar-expand text-primary"></i>
+    <div class="modal-content rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header bg-slate-50/80 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-sm font-bold text-slate-800 m-0 flex items-center gap-2" id="sectionModalLabel">
+          <i class="ti ti-layout-navbar-expand text-primary text-base"></i>
           <span id="sectionModalTitle">Section Details</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="sectionForm">
         <input type="hidden" id="sectionModalId" name="sectionId" />
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label required" for="sectionModalName">Section Name</label>
+        <div class="modal-body p-4 text-xs">
+          <div>
+            <label class="form-label required font-semibold text-slate-700 block mb-1" for="sectionModalName">Section Name</label>
             <input
               type="text"
-              class="form-control"
+              class="form-control text-xs rounded-md border-slate-300 py-1.5 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"
               id="sectionModalName"
               name="name"
               required
               placeholder="e.g. Content, Page Settings, SEO & Metadata"
             />
-            <div class="form-text small text-muted">
+            <div class="form-text small text-slate-400 text-[10px] mt-1">
               Sections with the same name across base and child templates will be merged together.
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1" id="btnSubmitSection">
-            <i class="ti ti-check"></i>
+        <div class="modal-footer bg-slate-50/70 px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" class="btn btn-outline-secondary px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1.5 inline-flex items-center px-4 py-1.5 text-xs font-semibold rounded-md shadow-xs transition-all duration-150 active:scale-95 hover:shadow-sm focus:ring-2 focus:ring-primary/40 focus:outline-none" id="btnSubmitSection">
+            <i class="ti ti-check text-sm"></i>
             <span>Save Section</span>
           </button>
         </div>

@@ -1,26 +1,26 @@
 <div class="modal fade" id="previewPresentationJsonModal" tabindex="-1" aria-labelledby="previewPresentationJsonModalLabel" aria-hidden="true" style="z-index: 1065;">
   <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header py-2 px-3 bg-light border-bottom d-flex align-items-center justify-content-between">
-        <h5 class="modal-title d-flex align-items-center gap-2" id="previewPresentationJsonModalLabel">
-          <i class="ti ti-code text-primary fs-3"></i>
+    <div class="modal-content rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="modal-header py-3 px-4 bg-slate-50/80 border-b border-slate-200 d-flex align-items-center justify-content-between flex items-center justify-between">
+        <h5 class="modal-title d-flex align-items-center gap-2 text-sm font-bold text-slate-800 m-0 flex items-center gap-2" id="previewPresentationJsonModalLabel">
+          <i class="ti ti-code text-primary text-base"></i>
           <span>Cấu Trúc Bố Cục Presentation (Đã Hợp Nhất)</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close text-slate-400 hover:text-slate-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <div class="modal-body p-3 bg-dark">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <span class="text-muted small">Cấu trúc Layout & Placeholders Server-Side EJS sau khi hợp nhất Standard + Shared + Final:</span>
-          <button type="button" class="btn btn-sm btn-outline-light py-0 px-2" id="btnCopyPresentationJson">
-            <i class="ti ti-copy me-1"></i> Sao chép JSON
+      <div class="modal-body p-4 bg-slate-950 text-xs">
+        <div class="d-flex align-items-center justify-content-between mb-2.5 flex items-center justify-between">
+          <span class="text-slate-400 text-[11px]">Cấu trúc Layout & Placeholders Server-Side EJS sau khi hợp nhất Standard + Shared + Final:</span>
+          <button type="button" class="btn btn-sm btn-outline-light py-1 px-2.5 text-xs font-mono rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 transition-all duration-150 active:scale-95 inline-flex items-center gap-1" id="btnCopyPresentationJson">
+            <i class="ti ti-copy text-xs"></i> Sao chép JSON
           </button>
         </div>
-        <pre class="m-0 text-success font-monospace p-3 rounded bg-black" style="max-height: 450px; overflow: auto; font-size: 0.85rem;"><code id="presentationJsonCodeBlock"><%= jsonString %></code></pre>
+        <pre class="m-0 text-emerald-400 font-mono p-3.5 rounded-lg bg-black/90 border border-slate-800/80" style="max-height: 450px; overflow: auto; font-size: 0.85rem;"><code id="presentationJsonCodeBlock"><%= jsonString %></code></pre>
       </div>
 
-      <div class="modal-footer py-2 px-3 bg-light">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+      <div class="modal-footer py-3 px-4 bg-slate-50/70 border-t border-slate-200 flex justify-end">
+        <button type="button" class="btn btn-secondary btn-sm px-3.5 py-1.5 text-xs font-medium rounded-md border border-slate-300 hover:bg-slate-100 transition-all duration-150 active:scale-95" data-bs-dismiss="modal">Đóng</button>
       </div>
     </div>
   </div>
