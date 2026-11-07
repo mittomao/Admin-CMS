@@ -11,6 +11,11 @@ updated: 2026-11-03
 
 # GĐ 9 - Thùng rác & Nhật ký kiểm toán (Recycle Bin & Audit Log)
 > Cơ chế xóa mềm khôi phục vị trí cũ, kiểm tra toàn vẹn tham chiếu Presentation và Audit Log truy vết biến động dữ liệu.
+> 
+> **[Việc GĐ 9 Phải Bổ Sung Do GĐ 10 Làm Trước - theo DEC-040]:**
+> 1. **Kiểm tra toàn vẹn Presentation khi xoá:** Chặn hoặc cảnh báo nghiêm ngặt khi xóa các Layout, Rendering, Placeholder hoặc Datasource Item đang được tham chiếu bởi các trang công khai trên `items_web`.
+> 2. **Audit Log cho Site Renderer & Presentation:** Ghi nhận nhật ký kiểm toán cho các sự kiện Presentation update, Publish/Unpublish và cache invalidation.
+> 3. **Đồng bộ dọn dẹp Web Store (`items_web`):** Khi xóa vĩnh viễn (Hard Delete / Purge Recycle Bin) hoặc xóa mềm item trên Master, phải tự động đồng bộ gỡ bỏ khỏi Web Store (`cleanupWeb()`) để tránh trang 404/500 trên website công khai.
 
 ## Tài liệu cần đọc trước khi làm
 - [`docs/rules/00-workflow.md`](../rules/00-workflow.md)

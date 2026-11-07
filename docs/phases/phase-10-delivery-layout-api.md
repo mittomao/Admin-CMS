@@ -1,16 +1,18 @@
 ---
 phase: 10
 name: Public Site Renderer (100% Server-Side EJS & In-Memory Cache)
-status: Chưa bắt đầu
+status: Hoàn thành
 depends_on: [6, 8]
 estimate: 2.5 ngày làm việc
-started: null
-completed: null
-updated: 2026-11-04
+started: 2026-11-07
+completed: 2026-11-07
+updated: 2026-11-07
 ---
 
 # GĐ 10 - Public Site Renderer (100% Server-Side EJS & In-Memory Cache)
 > Bộ phân giải định tuyến công khai (Public Site Router & URL Resolver), kết xuất giao diện Server-Side EJS từ cơ sở dữ liệu `items_web`, helper `<%- placeholder(key) %>`, cơ chế bắt lỗi Error Boundary, bộ nhớ đệm trang và tối ưu hóa SEO cơ bản.
+> 
+> **[Ghi chú Quan trọng - Thực hiện trước GĐ 7 và GĐ 9 theo DEC-040]:** Website công khai kết xuất 100% SSR bằng EJS, chỉ đọc từ kho dữ liệu đã xuất bản `items_web`. Route Preview admin dùng chung renderer đọc Master và kiểm tra quyền qua `canPerform(user, item, 'item:read')`.
 > 
 > **[Ghi chú Quan trọng - Điều chỉnh bởi GĐ 5.1]:** Khi kết xuất trang web công khai, các thẻ ảnh `<img>` trong component EJS và nội dung Rich Text nhận Cloudinary CDN URLs trực tiếp (kèm responsive transformation preset `f_auto,q_auto`) từ `items_web` theo [`phase-05-1-cloudinary-media.md`](./phase-05-1-cloudinary-media.md).
 
@@ -26,98 +28,87 @@ updated: 2026-11-04
 - [`docs/decisions/DEC-033-viewpath-and-template-security.md`](../decisions/DEC-033-viewpath-and-template-security.md)
 - [`docs/decisions/DEC-034-public-url-resolution-rules.md`](../decisions/DEC-034-public-url-resolution-rules.md)
 - [`docs/decisions/DEC-035-component-field-inheritance-and-context.md`](../decisions/DEC-035-component-field-inheritance-and-context.md)
+- [`docs/decisions/DEC-040-execute-phase-10-before-phase-07-and-phase-09.md`](../decisions/DEC-040-execute-phase-10-before-phase-07-and-phase-09.md)
 
 ## Mục tiêu
 Xây dựng phân hệ hiển thị trang web công khai (Public Site Renderer) trực tiếp từ ứng dụng Express chung trên cổng 4000:
-- Định tuyến công khai tách biệt hoàn toàn khỏi `/admin`.
+- Định tuyến công khai tách biệt hoàn toàn khỏi `/admin`, không áp dụng session/auth/CSRF admin.
 - Phân giải URL đường dẫn sang Content Item trong database `items_web`.
-- Lấy cấu hình bố cục qua `presentationService.getFinalPresentation(item, lang, version)` và kết xuất mã HTML hoàn chỉnh thông qua template layout EJS và helper `<%- placeholder(key) %>`.
+- Lấy cấu hình bố cục qua `webItemService.getFinalPresentation` và kết xuất mã HTML hoàn chỉnh thông qua template layout EJS và helper `<%- placeholder(key) %>`.
 - Truyền ngữ cảnh dữ liệu phong phú (`item`, `fields`, `params`, `datasource`, `site`, `lang`) vào view của layout và component.
-- Bộ nhớ đệm trang (Page Render In-memory Cache) tối ưu hiệu năng và tự động xóa cache khi publish.
+- Bộ nhớ đệm trang (Page Render In-memory Cache) tối ưu hiệu năng và tự động xóa cache qua Event Bus khi publish.
 
 ## Phạm vi
 - **Làm:**
-  1. **Định tuyến & Phân giải URL (Public Router & Resolver):**
-     - Đón nhận request tại `/` (root), `/:slug`, và `/:lang/:slug` (lồng nhiều cấp: `/*`).
-     - Bỏ qua các đường dẫn hệ thống (`/admin/*`, `/media/*`, `/public/*`).
-     - Xác định ngôn ngữ (mặc định `vi`, tiền tố `/en/...` cho tiếng Anh).
-     - Ánh xạ đường dẫn sang item tương ứng trong `items_web` bắt đầu từ Start Item `/sitecore/content/Home` (DEC-034).
-     - Trả về mã lỗi HTTP 404 và giao diện `views/site/404.ejs` nếu trang không tồn tại hoặc chưa publish lên Web.
-  2. **Trình kết xuất Layout & Helper `placeholder`:**
-     - Gọi `presentationService.getFinalPresentation` để lấy `layoutId` và danh sách renderings theo placeholder.
-     - Nạp file EJS của layout qua thuộc tính `viewPath` (được bảo vệ an toàn bởi whitelist `src/views/site/layouts/`).
-     - Cung cấp helper `<%- placeholder(placeholderKey) %>` trong view layout:
-       - Duyệt qua các renderings được gán vào `placeholderKey` theo đúng thứ tự `sortOrder`.
-       - Nạp file EJS của rendering qua `viewPath` (whitelist `src/views/site/components/`).
-       - Truyền đầy đủ ngữ cảnh `{ item, fields, params, datasource, site, lang }`. Mặc định component đọc `fields` từ chính Page Item (DEC-035).
-  3. **Cơ chế An toàn & Component Error Boundary (DEC-033):**
-     - Mặc định EJS escape an toàn (`<%= %>`); chỉ dùng `<%- %>` cho Rich Text đã qua `resolveRichText` và sanitize.
-     - Cơ chế Error Boundary: Khi một component bị lỗi biên dịch hoặc thiếu dữ liệu, hiển thị khối cảnh báo trực quan ở môi trường `development` và ghi log ẩn ở `production`, tuyệt đối không làm sập toàn bộ trang.
-  4. **SEO cơ bản:**
-     - Truyền thẻ `<title>` và `<meta name="description">` lấy từ các trường tương ứng của Page Item (`PageTitle`, `MetaDescription`).
-  5. **Bộ nhớ đệm (In-memory Render Cache):**
-     - Cache toàn bộ kết quả HTML kết xuất theo key: `site:{siteName}:{itemId}:{lang}:{version}`.
-     - Tự động invalidate cache khi Publish hoàn tất (liên kết với GĐ 8 `publishService`).
+  1. **Định tuyến & Hạ tầng:**
+     - Route công khai gắn sau `/admin`, `/api`, `/media`, `/health`, static.
+     - `GET /` render Home (thay thế redirect admin cũ). Catch-all `GET /*` chuyển tới Site Renderer.
+     - Static assets `public/site/` (`/site/...`). CSP riêng cho public website.
+  2. **Bộ phân giải URL (Site Resolver):**
+     - Ánh xạ URL path sang item trong `items_web` bắt đầu từ Start Item `/sitecore/content/Home` (DEC-034).
+     - Hỗ trợ đa ngôn ngữ: `vi` mặc định (không tiền tố), `/en/...` cho tiếng Anh.
+     - Chỉ item có template Page / Presentation hợp lệ mới là trang; item khác (component, media...) trả 404.
+     - Page chưa publish, đã unpublish, hoặc cha chưa publish: 404.
+  3. **Trình kết xuất Site Renderer (Lõi):**
+     - Nạp layout `viewPath`, helper `placeholder(key)` render tuần tự các rendering của placeholder đó.
+     - Whitelist `src/views/site/`, chặn path traversal và đuôi khác `.ejs`.
+     - Error Boundary cho từng rendering: lỗi 1 component không làm sập trang.
+     - Helpers trong view: `field()`, `richText()` (qua `resolveRichText`), `imageUrl(media, preset)`, `link(itemId)`, `navItems()`.
+  4. **Trang mẫu Sample Website:**
+     - Layout `HomeLayout.ejs` và các components `HeroBanner.ejs`, `Introduction.ejs`, `ImageText.ejs`.
+     - Lệnh `npm run seed:sample` khởi tạo nội dung mẫu và publish sang Web.
+  5. **Bộ nhớ đệm & Invalidate (In-Memory Render Cache):**
+     - Cache HTML theo `(itemId, lang, versionPublished)`.
+     - Lắng nghe sự kiện từ Event Bus GĐ 8 (`item.published`, `item.unpublished`, `publish.job.finished`) để tự động xóa cache.
+     - Hỗ trợ ETag và 304 Not Modified.
+  6. **404/500, SEO, Robots & Sitemap:**
+     - Views riêng `src/views/site/errors/{404,500}.ejs`.
+     - SEO tags tự động từ trường của trang (`PageTitle`/`Title`, `MetaDescription`, `OgImage`).
+     - Route `GET /robots.txt` và `GET /sitemap.xml` chỉ liệt kê các page đã publish trên Web.
+  7. **Preview cho Admin:**
+     - `GET /admin/preview?path=&lang=` dùng chung `siteRenderer` đọc dữ liệu Master.
+     - Kiểm tra quyền qua `canPerform(user, item, 'item:read')`.
+     - Dải banner cố định trên cùng thông báo "Chế độ Xem trước (Preview)".
+     - Nút "Open published site" trên form Content Editor.
 - **Không làm:**
-  - Không làm Layout Service JSON REST API cho React/Next.js frontend.
-  - Không cấu hình CORS hay API key cho client ngoài.
-  - Không hydrate client-side JS hay dùng framework SPA.
+  - Không làm Layout Service JSON REST API cho React/Next.js.
+  - Không làm Headless client, GraphQL, SPA.
+  - Không làm personalization hay A/B testing (GĐ 11).
 
 ## Checklist Task
-- [ ] **Task 10.1:** Xây dựng module cache `src/utils/renderCache.js` quản lý lưu và xóa bộ nhớ đệm HTML kết xuất theo item ID / site.
-- [ ] **Task 10.2:** Xây dựng `siteRendererService.js`:
-  - `resolveItemByPath(urlPath, lang)`: Phân giải HTTP URL path sang Page Item từ database `items_web`.
-  - `resolvePageFields(item, lang)`: Phân giải giá trị các trường của Page (bao gồm fallback ngôn ngữ và Standard Values).
-  - Phân giải URL cho trường Media và rich text (`resolveRichText`).
-- [ ] **Task 10.3:** Xây dựng `siteRendererController.js`:
-  - Tiếp nhận request công khai, kiểm tra cache.
-  - Gọi `presentationService.getFinalPresentation(item, lang, version)`.
-  - Khởi tạo helper `placeholder(key)` cho EJS.
-  - Xử lý HTTP 404 cho trang chưa publish hoặc đường dẫn sai.
-  - Bổ sung dữ liệu SEO cơ bản (title, meta description).
-- [ ] **Task 10.4:** Đăng ký định tuyến công khai tại `src/routes/site/siteRoutes.js` và tích hợp vào `src/app.js` (nằm ngoài phạm vi middleware xác thực `/admin`).
-- [ ] **Task 10.5:** Tích hợp cơ chế Invalidate Cache vào `publishService.js`: Xóa cache ngay khi một item hoặc nhánh cây được publish lên Web.
-- [ ] **Task 10.6:** Viết các unit và integration test kiểm thử:
-  - Truy cập `/` trả về trang Home (HTTP 200).
-  - Truy cập `/about-us` trả về trang About us với đầy đủ component theo placeholder.
-  - Truy cập đường dẫn chưa publish trả về HTTP 404.
-  - Kiểm tra Error Boundary khi component gặp lỗi cú pháp EJS.
-  - Kiểm tra Hit / Miss Cache và Invalidation sau khi publish.
-
-## File/Thư mục Dự kiến
-- `src/utils/renderCache.js`
-- `src/services/siteRendererService.js`
-- `src/controllers/site/siteRendererController.js`
-- `src/routes/site/siteRoutes.js`
-- `src/views/site/404.ejs`
-- `src/views/site/partials/head.ejs`
-- `src/views/site/partials/header.ejs`
-- `src/views/site/partials/footer.ejs`
-- `tests/siteRenderer.test.js`
-
-## Route / API Dự kiến
-- `GET /`
-- `GET /:slug` (ví dụ `/about-us`)
-- `GET /:parentSlug/:childSlug` (ví dụ `/about-us/team`)
-- `GET /:lang/*` (ví dụ `/en/about-us`)
-
-## Thay đổi Database
-Không thay đổi schema (truy vấn trực tiếp trên `items_web`).
-
-## Definition of Done & Cách kiểm thử
-- Khởi động server tại cổng 4000 (`http://localhost:4000/`).
-- Truy cập `http://localhost:4000/` trên trình duyệt:
-  - Trang chủ hiển thị chuẩn mã HTML SSR với đầy đủ layout `HomeLayout` và các khối `HeroBanner`, `Introduction`, `ImageText` trong placeholder `maincontent`.
-  - Tiêu đề `<title>` hiển thị đúng giá trị `HeroTitle` hoặc `PageTitle`.
-- Truy cập `http://localhost:4000/about-us`: Hiển thị đúng nội dung trang About us đã publish.
-- Truy cập một trang chưa publish hoặc không tồn tại (ví dụ `/draft-page`): Trả về mã lỗi 404 và render giao diện `404.ejs`.
-- Lần gọi thứ 2 đến `/about-us`: Tốc độ phản hồi dưới 10ms do đọc từ bộ nhớ đệm render cache.
-- Thay đổi nội dung trang trong Content Editor, bấm "Publish Item" -> Truy cập lại `http://localhost:4000/about-us`: Cache tự động xóa và hiển thị nội dung mới ngay lập tức.
-- Thử nghiệm tạo component cố tình chứa lỗi cú pháp trong `src/views/site/components/`: Trang web không bị sập (crash server 500); ở môi trường dev hiển thị khối viền đỏ báo lỗi riêng của component đó.
-
-## Rủi ro & Giảm thiểu
-- *Rủi ro:* Lỗi trong một component EJS làm crash tiến trình Node.js hoặc sập toàn bộ trang web.
-- *Giảm thiểu:* Bọc từng lệnh render component trong khối `try...catch` (Error Boundary), ghi log bằng Winston và hiển thị fallback an toàn.
-
-## Ghi chú / Kết quả
-*(Chưa bắt đầu - Chờ phê duyệt `APPROVE GĐ 10`)*
+- [x] **Task 10.1:** Hạ tầng Định tuyến, CSP & Static Assets:
+  - Cấu hình CSP riêng cho public site trong `src/app.js` cho phép ảnh Cloudinary.
+  - Tạo `src/routes/site/siteRoutes.js` đón nhận request công khai (GET/HEAD), gắn sau các route admin.
+  - Chuyển `GET /` từ redirect admin sang gọi Site Renderer.
+- [x] **Task 10.2:** Bộ Phân giải URL (`src/services/siteResolver.js`):
+  - Chuẩn hóa URL, tách language prefix (`vi` mặc định, `/en/...`).
+  - Ánh xạ đường dẫn sang item trong `items_web` từ Start Item `/sitecore/content/Home`.
+  - Kiểm tra ràng buộc hợp lệ: chỉ Page item có presentation hợp lệ mới render; chưa publish/cha chưa publish trả 404.
+- [x] **Task 10.3:** Trình Kết xuất Lõi (`src/services/siteRenderer.js`):
+  - Phân giải bố cục qua `webItemService.getFinalPresentation` và các trường qua `webItemService.resolveFields`.
+  - Khởi tạo helper `<%- placeholder(key) %>` tuần tự render các component theo sortOrder.
+  - Error Boundary: bọc try/catch từng rendering, hiển thị cảnh báo ở dev, ẩn ở production.
+  - Các helpers phong phú: `field()`, `richText()` (resolve links & media), `imageUrl(media, preset)`, `link(itemId)`, `navItems()`.
+  - Whitelist an toàn `viewPath` nghiêm ngặt (`src/views/site/`).
+- [x] **Task 10.4:** Bộ Nhớ Đệm & Invalidate (`src/utils/renderCache.js`):
+  - In-memory cache HTML theo key `site:{itemId}:{lang}:{versionPublished}`.
+  - Đăng ký lắng nghe Event Bus GĐ 8 (`item.published`, `item.unpublished`, `publish.job.finished`) để tự động xóa cache.
+  - Sinh ETag và trả về 304 Not Modified khi có header `If-None-Match`.
+- [x] **Task 10.5:** Trang Mẫu Sample Website & Seed Script:
+  - Hoàn thiện `src/views/site/layouts/HomeLayout.ejs` và các component `HeroBanner.ejs`, `Introduction.ejs`, `ImageText.ejs`.
+  - Partials: `head.ejs`, `header.ejs`, `footer.ejs`.
+  - Script `src/scripts/seed-sample-site.js` (npm run `seed:sample`): tạo page `Home` và `About us`, gắn presentation và publish sang Web.
+- [x] **Task 10.6:** Trang Lỗi, SEO, Robots.txt & Sitemap.xml:
+  - Trang lỗi riêng `src/views/site/errors/404.ejs` và `500.ejs`.
+  - SEO tags tự động từ trường của trang (`PageTitle`/`Title`, `MetaDescription`, `OgImage`).
+  - Route `GET /robots.txt` và `GET /sitemap.xml` chỉ liệt kê các page đã publish trên Web.
+- [x] **Task 10.7:** Chế độ Xem trước (Preview) cho Admin:
+  - Route `GET /admin/preview?path=&lang=` dùng chung `siteRenderer` đọc dữ liệu Master.
+  - Kiểm tra quyền qua `canPerform(user, item, 'item:read')`.
+  - Dải banner cố định trên cùng thông báo "Chế độ Xem trước (Preview)".
+  - Nút "Open published site" trên form Content Editor.
+- [x] **Task 10.8:** Cấu hình, Hướng dẫn & Kiểm thử Hồi quy Toàn diện:
+  - Cập nhật biến môi trường trong `src/config/env.js` và `.env.example`.
+  - Tài liệu hướng dẫn `docs/guides/add-page-and-component.md`.
+  - Viết Unit & Integration tests (`tests/siteRenderer.test.js`, `tests/siteResolver.test.js`).
+  - Chạy full test suite hồi quy (GĐ 0-8 & GĐ 10) và ESLint.

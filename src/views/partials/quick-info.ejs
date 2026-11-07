@@ -21,18 +21,18 @@
 %>
 <div class="sc-quick-info mb-4 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs" id="scQuickInfoSection">
   <!-- Section Bar Header (Sitecore Style with CSS & Test Compliant) -->
-  <div class="sc-section-bar" id="scQuickInfoToggle" role="button" tabindex="0" title="Click to collapse / expand">
-    <div class="sc-section-title">
-      <i class="ti ti-info-circle text-rose-400 text-sm"></i>
+  <div class="sc-section-bar" id="scQuickInfoToggle" role="button" tabindex="0" title="Click to collapse / expand" style="display: flex; align-items: center; justify-content: space-between; user-select: none; cursor: pointer; background-color: #334155; color: #ffffff; border-left: 4px solid #e03131; padding: 8px 16px; border-radius: 8px 8px 0 0; transition: background-color 0.15s ease;">
+    <div class="sc-section-title" style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #ffffff; margin: 0;">
+      <i class="ti ti-info-circle text-rose-400 text-base" style="color: #fb7185; font-size: 15px;"></i>
       <span>Quick Info</span>
     </div>
-    <div class="sc-section-toggle">
+    <div class="sc-section-toggle" style="color: #cbd5e1; font-size: 14px; display: flex; align-items: center; transition: transform 0.2s ease;">
       <i class="ti ti-chevron-down text-sm" id="scQuickInfoChevron"></i>
     </div>
   </div>
 
   <!-- Section Body -->
-  <div class="sc-quick-info-body" id="scQuickInfoBody">
+  <div class="sc-quick-info-body" id="scQuickInfoBody" style="padding: 12px 18px; background-color: rgba(248, 250, 252, 0.7); font-size: 12px; display: flex; flex-direction: column; gap: 4px;">
     <!-- Row 1: Item ID -->
     <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
       <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Item ID:</div>

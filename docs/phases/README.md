@@ -20,7 +20,7 @@ flowchart TD
     GD1 & GD2 & GD6_3 --> GD7["GĐ 7: Bảo mật nâng cao (ACL)<br/>(Chưa bắt đầu)"]
     GD2 & GD4 & GD6_2 --> GD8["GĐ 8: Workflow & Publish<br/>(Hoàn thành)"]
     GD2 & GD8 --> GD9["GĐ 9: Recycle Bin & Audit<br/>(Chưa bắt đầu)"]
-    GD6_2 & GD8 --> GD10["GĐ 10: Public Site Renderer (EJS)<br/>(Chưa bắt đầu)"]
+    GD6_2 & GD8 --> GD10["GĐ 10: Public Site Renderer (EJS)<br/>(Đang thực hiện)"]
     GD2 & GD3 & GD8 --> GD11["GĐ 11: Mở rộng tính năng<br/>(Chưa bắt đầu)"]
     GD0 & GD1 & GD2 & GD3 & GD4 & GD5 & GD6 & GD6_2 & GD7 & GD8 & GD9 & GD10 & GD11 --> GD12["GĐ 12: Hoàn thiện & Docker<br/>(Chưa bắt đầu)"]
 ```
@@ -44,7 +44,7 @@ flowchart TD
 | **7** | Bảo mật nâng cao & Phân quyền ACL | **Chưa bắt đầu** | 1, 2, 6.3 | [`phase-07-item-acl.md`](./phase-07-item-acl.md) | - | - | Đánh số lại từ GĐ 6 cũ; bổ sung phân quyền Presentation Details |
 | **8** | Workflow Engine, Workbox & Publishing | **Hoàn thành** | 2, 4, 6 | [`phase-08-workflow-publish.md`](./phase-08-workflow-publish.md) | 2026-11-07 | 2026-11-07 | Hoàn thành trước GĐ 7 theo DEC-039; trừu tượng hóa quyền qua `canPerform`; tách Master/Web, Workflow Engine, Workbox, Publishing Engine, Publish Manager |
 | **9** | Thùng rác (Recycle Bin) & Audit Log | **Chưa bắt đầu** | 2, 8 | [`phase-09-recycle-bin-audit.md`](./phase-09-recycle-bin-audit.md) | - | - | Đánh số lại từ GĐ 8 cũ; audit log biến động Presentation & kiểm tra toàn vẹn xoá |
-| **10** | Public Site Renderer & In-Memory Cache | **Chưa bắt đầu** | 6, 8 | [`phase-10-delivery-layout-api.md`](./phase-10-delivery-layout-api.md) | - | - | Public Site Router, URL Resolver, render layout/component EJS qua placeholder helper, error boundary, render cache |
+| **10** | Public Site Renderer & In-Memory Cache | **Hoàn thành** | 6, 8 | [`phase-10-delivery-layout-api.md`](./phase-10-delivery-layout-api.md) | 2026-11-07 | 2026-11-07 | Thực hiện trước GĐ 7 và GĐ 9 theo DEC-040; Public Site Router, URL Resolver, render layout/component EJS qua placeholder helper, error boundary, render cache |
 | **11** | Mở rộng tính năng (Forms, Serialization) | **Chưa bắt đầu** | 2, 3, 8 | [`phase-11-extensions.md`](./phase-11-extensions.md) | - | - | Đánh số lại từ GĐ 10 cũ; Forms Builder, Search, Experience Editor iframe (ưu tiên thấp) |
 | **12** | Hoàn thiện, Bảo mật, E2E SSR Test & Docker | **Chưa bắt đầu** | 0 → 11 | [`phase-12-hardening.md`](./phase-12-hardening.md) | - | - | E2E test luồng Page -> Template -> Presentation -> Publish -> Site Renderer EJS |
 

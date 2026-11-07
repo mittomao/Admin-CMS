@@ -774,21 +774,21 @@ export class MediaBrowser {
     const sizeStr = this.formatBytes(asset.fileDetails?.fileSize || asset.bytes || 0);
 
     return `
-      <div class="media-card ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''} h-fit self-start" data-id="${asset._id}">
-        <div class="card-thumb-box">
+      <div class="media-card ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}" data-id="${asset._id}" style="width: 130px; max-width: 130px; min-width: 130px; height: 180px; max-height: 180px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; position: relative;">
+        <div class="card-thumb-box" style="width: 100%; height: 128px; max-height: 128px; min-height: 128px; position: relative; overflow: hidden; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
           ${
             isImg
-              ? `<img src="${thumbUrl}" alt="${asset.displayName}" class="card-thumb-img" loading="lazy" onerror="if(this.src!=='${directUrl}' && '${directUrl}' && !this.dataset.triedDirect){this.dataset.triedDirect='1';this.src='${directUrl}';}else{this.onerror=null;this.style.display='none';if(!this.parentElement.querySelector('.card-file-icon')){this.parentElement.insertAdjacentHTML('afterbegin','<div class=\\'card-file-icon\\'>🖼️</div>');}}" />`
+              ? `<img src="${thumbUrl}" alt="${asset.displayName}" class="card-thumb-img" loading="lazy" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block;" onerror="if(this.src!=='${directUrl}' && '${directUrl}' && !this.dataset.triedDirect){this.dataset.triedDirect='1';this.src='${directUrl}';}else{this.onerror=null;this.style.display='none';if(!this.parentElement.querySelector('.card-file-icon')){this.parentElement.insertAdjacentHTML('afterbegin','<div class=\\'card-file-icon\\'>🖼️</div>');}}" />`
               : `<div class="card-file-icon">📄</div>`
           }
-          <span class="card-badge badge-${ext.toLowerCase()}">${ext}</span>
-          <div class="card-checkbox-box ${this.isBulkMode ? '' : 'd-none'}">
+          <span class="card-badge badge-${ext.toLowerCase()}" style="position: absolute; top: 4px; right: 4px; font-size: 9px; font-weight: 700; padding: 2px 4px; border-radius: 3px; color: #fff; z-index: 2;">${ext}</span>
+          <div class="card-checkbox-box ${this.isBulkMode ? '' : 'd-none'}" style="position: absolute; top: 4px; left: 4px; z-index: 2;">
             <input type="checkbox" class="card-checkbox js-card-checkbox" ${isSelected ? 'checked' : ''} />
           </div>
         </div>
-        <div class="card-info">
-          <span class="card-title" title="${asset.displayName}">${asset.displayName}</span>
-          <span class="card-sub">${sizeStr}</span>
+        <div class="card-info" style="padding: 6px 8px; flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; border-top: 1px solid #f1f5f9;">
+          <span class="card-title" title="${asset.displayName}" style="display: block; font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #334155;">${asset.displayName}</span>
+          <span class="card-sub" style="display: block; font-size: 10px; color: #94a3b8; font-family: monospace;">${sizeStr}</span>
         </div>
       </div>
     `;

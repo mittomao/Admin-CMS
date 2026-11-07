@@ -8,6 +8,7 @@ const Template = require('../../models/Template');
 const treeHelper = require('../../utils/treeHelper');
 const ribbonConfig = require('../../config/ribbon');
 const logger = require('../../utils/logger');
+const { ForbiddenError, NotFoundError } = require('../../utils/errors');
 
 const contentEditorController = {
   /**
@@ -825,6 +826,49 @@ const contentEditorController = {
         success: false,
         message: error.message,
       });
+    }
+  },
+
+  /**
+   * Preview a content item from Master database (GĐ 10)
+   * GET /admin/preview?id=...&lang=... OR GET /admin/content-editor/preview?id=...
+   */
+  async previewItem(req, res, next) {
+    try {
+      const user = req.user || req.session?.user;
+      const itemId = req.query.id;
+      const itemPath = req.query.path;
+      const lang = (req.query.lang || 'vi').toLowerCase();
+
+      let item = null;
+      if (itemId) {
+        item = await itemService.getById(itemId);
+      } else if (itemPath) {
+        item = await itemService.getByPath(itemPath);
+      } else {
+        item = await itemService.getByPath('/sitecore/content/Home');
+      }
+
+      if (!item) {
+        throw new NotFoundError('Item to preview was not found');
+      }
+
+      // Check permission via canPerform (strictly NO hardcoded role checks!)
+      if (!itemService.canPerform(user, item, 'item:read')) {
+        throw new ForbiddenError('You do not have permission to preview this item');
+      }
+
+      const siteRenderer = require('../../services/siteRenderer');
+      const { html } = await siteRenderer.render(item, lang, {
+        isPreview: true,
+        req,
+        res,
+      });
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(html);
+    } catch (err) {
+      next(err);
     }
   },
 };

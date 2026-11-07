@@ -17,6 +17,7 @@
     "test": "jest --detectOpenHandles --forceExit",
     "seed": "node src/scripts/seed-initial-data.js",
     "seed:presentation": "node src/scripts/seed-presentation-data.js",
+    "seed:sample": "node src/scripts/seed-sample-site.js",
     "media:sync": "node scripts/sync-cloudinary-media.js",
     "migrate": "node src/scripts/migrate-to-versions-languages.js",
     "migrate:field-ids": "node src/scripts/migrate-to-field-ids.js"

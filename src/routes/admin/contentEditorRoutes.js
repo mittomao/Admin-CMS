@@ -5,6 +5,7 @@ const { requireAuth } = require('../../middlewares/authMiddleware');
 
 // Full page EJS Views
 router.get('/', requireAuth, contentEditorController.index);
+router.get('/preview', requireAuth, contentEditorController.previewItem);
 router.get('/:id', requireAuth, contentEditorController.index);
 
 // Partial HTML EJS Fragments for AJAX Workspace swapping

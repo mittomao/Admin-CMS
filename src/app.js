@@ -31,7 +31,10 @@ const adminWorkboxRoutes = require('./routes/admin/workboxRoutes');
 const adminPublishRoutes = require('./routes/admin/publishRoutes');
 const apiPublishRoutes = require('./routes/api/publishRoutes');
 const apiWorkboxRoutes = require('./routes/api/workboxRoutes');
+const siteRoutes = require('./routes/site/siteRoutes');
 const mediaController = require('./controllers/admin/mediaController');
+const contentEditorController = require('./controllers/admin/contentEditorController');
+const { requireAuth } = require('./middlewares/authMiddleware');
 const csrfMiddleware = require('./middlewares/csrfMiddleware');
 
 const app = express();
@@ -111,11 +114,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Root Redirect to Launchpad
-app.get('/', (req, res) => {
-  res.redirect('/admin/launchpad');
-});
-
 // 9. Admin App & API Routes
 // Public media file serving (kèm alias phòng thủ cho các client gửi relative URL)
 app.get([
@@ -125,6 +123,7 @@ app.get([
 ], (req, res, next) => mediaController.serveFile(req, res, next));
 
 app.use('/admin', authRoutes);
+app.get('/admin/preview', requireAuth, (req, res, next) => contentEditorController.previewItem(req, res, next));
 app.use('/admin/launchpad', launchpadRoutes);
 app.use('/admin/content-editor', contentEditorRoutes);
 app.use('/admin/template-manager', templateManagerRoutes);
@@ -141,7 +140,10 @@ app.use('/api/media', apiMediaRoutes);
 app.use('/api/publish', apiPublishRoutes);
 app.use('/api/workbox', apiWorkboxRoutes);
 
-// 10. Error Handling
+// 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10)
+app.use('/', siteRoutes);
+
+// 11. Error Handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 

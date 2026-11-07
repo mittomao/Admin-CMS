@@ -33,6 +33,10 @@ const env = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   CLOUDINARY_ROOT_FOLDER: process.env.CLOUDINARY_ROOT_FOLDER || process.env.CLOUDINARY_API_FOLDER || 'AdminCMS',
+  SITE_START_ITEM: process.env.SITE_START_ITEM || '/sitecore/content/Home',
+  SITE_CACHE: process.env.SITE_CACHE !== 'false',
+  SITE_CACHE_TTL: parseInt(process.env.SITE_CACHE_TTL || '300', 10),
+  SITE_CACHE_MAX_ITEMS: parseInt(process.env.SITE_CACHE_MAX_ITEMS || '500', 10),
   isDev: (process.env.NODE_ENV || 'development') === 'development',
   isProd: process.env.NODE_ENV === 'production',
 };

@@ -1,52 +1,29 @@
 <!DOCTYPE html>
 <html lang="<%= lang || 'vi' %>" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= (fields && (fields.HeroTitle || fields.PageTitle)) || (item && (item.displayName || item.name)) || 'Sitecore CMS' %></title>
-  
-  <!-- Google Font: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Modern Tailwind CSS -->
-  <link rel="stylesheet" href="/site/css/tailwind.css">
+  <%- await include('../partials/head') %>
 </head>
 <body class="min-h-full flex flex-col font-sans text-slate-800 bg-white antialiased">
-  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40 transition-colors">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <a href="/" class="flex items-center gap-2 text-white hover:text-red-400 transition-colors">
-          <span class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center font-bold text-white shadow-sm">S</span>
-          <span class="font-bold text-lg tracking-tight">Sitecore XM</span>
-        </a>
-      </div>
-      <div class="site-header-placeholder">
-        <%- placeholder('header') %>
-      </div>
+  <%- await include('../partials/header') %>
+
+  <% if (typeof placeholder === 'function') { %>
+    <div class="site-header-custom-slot">
+      <%- await placeholder('header') %>
     </div>
-  </header>
+  <% } %>
 
   <main class="flex-1 w-full">
-    <%- placeholder('maincontent') %>
+    <% if (typeof placeholder === 'function') { %>
+      <%- await placeholder('maincontent') %>
+    <% } %>
   </main>
 
-  <footer class="bg-slate-950 text-slate-400 border-t border-slate-800 mt-auto">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div class="mb-6">
-        <%- placeholder('footer') %>
-      </div>
-      <div class="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-        <p class="m-0">&copy; <%= new Date().getFullYear() %> Sitecore XM Monolithic CMS. Server-Side Rendered with Express &amp; EJS.</p>
-        <div class="flex items-center gap-4">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 text-slate-300 border border-slate-800">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Tailwind CSS
-          </span>
-        </div>
-      </div>
+  <% if (typeof placeholder === 'function') { %>
+    <div class="site-footer-custom-slot">
+      <%- await placeholder('footer') %>
     </div>
-  </footer>
+  <% } %>
+
+  <%- await include('../partials/footer') %>
 </body>
 </html>

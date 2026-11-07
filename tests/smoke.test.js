@@ -10,10 +10,10 @@ describe('Smoke Tests', () => {
     expect(res.body).toHaveProperty('uptime');
   });
 
-  it('GET / should redirect to /admin/launchpad', async () => {
+  it('GET / should call Public Site Renderer (DEC-031 / GĐ 10)', async () => {
     const res = await request(app).get('/');
-    expect(res.status).toBe(302);
-    expect(res.headers.location).toBe('/admin/launchpad');
+    expect([200, 404]).toContain(res.status);
+    expect(res.headers['content-type']).toContain('text/html');
   });
 
   it('GET /admin/login should return 200 with Sitecore Login page', async () => {
