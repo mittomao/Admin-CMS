@@ -12,11 +12,11 @@
       <i class="ti ti-layout-grid-add text-sm"></i>
       <span>Template Manager</span>
     </a>
-    <a href="/admin/media" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'media-library' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" title="Media Library">
+    <a href="/admin/media-library" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'media-library' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" title="Media Library">
       <i class="ti ti-photo text-sm"></i>
       <span class="hidden sm:inline">Media Library</span>
     </a>
-    <a href="#" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'workbox' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" onclick="alert('Workbox sẽ có trong GĐ 7'); return false;" title="Workbox">
+    <a href="/admin/workbox" class="sc-taskbar-item flex items-center gap-1.5 px-3 py-1 rounded transition-all duration-150 hover:bg-slate-800 hover:text-white active:scale-95 active:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sc-red/50 <%= typeof activeApp !== 'undefined' && activeApp === 'workbox' ? 'active bg-slate-800 text-white font-medium ring-1 ring-white/10' : 'text-slate-400' %>" title="Workbox">
       <i class="ti ti-inbox text-sm"></i>
       <span class="hidden sm:inline">Workbox</span>
     </a>
@@ -24,6 +24,34 @@
 
   <div class="sc-taskbar-info hidden md:flex items-center gap-2 text-slate-400 text-[11px]">
     <span>Sitecore XM Experience</span>
-    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] border border-slate-700" title="Connected Database">db: master</span>
+    <% const activeDb = typeof currentDb !== 'undefined' ? currentDb : 'master'; %>
+    <div class="dropdown">
+      <button class="px-2 py-0.5 rounded <%= activeDb === 'web' ? 'bg-amber-900/60 text-amber-200 border-amber-600' : 'bg-slate-800 text-slate-300 border-slate-700' %> font-mono text-[10px] border flex items-center gap-1 cursor-pointer hover:bg-slate-700 transition" type="button" data-bs-toggle="dropdown" id="taskbarDbDropdown">
+        <i class="ti <%= activeDb === 'web' ? 'ti-world' : 'ti-database' %>"></i>
+        <span>db: <%= activeDb %></span>
+        <i class="ti ti-chevron-up text-[9px] ms-0.5"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-xl rounded-lg text-xs py-1 border border-slate-700 bg-slate-900 text-slate-200" style="min-width: 160px;">
+        <li class="dropdown-header text-[10px] text-slate-400 uppercase tracking-wider px-3 py-1 font-bold">Chọn cơ sở dữ liệu</li>
+        <li>
+          <a class="dropdown-item flex items-center justify-between px-3 py-1.5 hover:bg-slate-800 text-slate-200 <%= activeDb === 'master' ? 'active bg-blue-600 text-white font-semibold' : '' %>" href="javascript:void(0)" onclick="if(window.switchDatabase){window.switchDatabase('master');}else{window.location.search='?db=master';}">
+            <span class="flex items-center gap-1.5"><i class="ti ti-database text-blue-400"></i> Master (Đọc/Ghi)</span>
+            <% if (activeDb === 'master') { %><i class="ti ti-check text-xs"></i><% } %>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item flex items-center justify-between px-3 py-1.5 hover:bg-slate-800 text-slate-200 <%= activeDb === 'web' ? 'active bg-amber-600 text-white font-semibold' : '' %>" href="javascript:void(0)" onclick="if(window.switchDatabase){window.switchDatabase('web');}else{window.location.search='?db=web';}">
+            <span class="flex items-center gap-1.5"><i class="ti ti-world text-amber-400"></i> Web (Chỉ đọc)</span>
+            <% if (activeDb === 'web') { %><i class="ti ti-check text-xs"></i><% } %>
+          </a>
+        </li>
+        <li><hr class="dropdown-divider border-slate-700 my-1"></li>
+        <li>
+          <a class="dropdown-item flex items-center gap-1.5 px-3 py-1 text-slate-400 hover:text-white hover:bg-slate-800 text-[11px]" href="/admin/databases">
+            <i class="ti ti-dashboard"></i> Đối soát Databases...
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
 </footer>

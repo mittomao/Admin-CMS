@@ -11,6 +11,16 @@
       </div>
 
       <div class="modal-body p-4 space-y-4">
+        <!-- In-Modal Alert Containers (Errors & Progress) -->
+        <div id="pubModalErrorAlert" class="alert alert-danger d-none text-xs flex items-center gap-2 mb-0">
+          <i class="ti ti-alert-circle text-base flex-shrink-0"></i>
+          <span id="pubModalErrorMessage"></span>
+        </div>
+        <div id="pubModalProgressAlert" class="alert alert-info d-none text-xs flex items-center gap-2 mb-0">
+          <div class="spinner-border spinner-border-sm text-info flex-shrink-0" role="status"></div>
+          <span id="pubModalProgressMessage">Đang chuẩn bị và gửi tác vụ xuất bản...</span>
+        </div>
+
         <!-- Target Item Summary -->
         <div class="p-3 bg-slate-100 rounded-lg flex items-center justify-between text-xs">
           <div>
@@ -108,7 +118,7 @@
       </div>
 
       <div class="modal-footer bg-slate-50 border-t border-slate-200 px-4 py-2.5 flex justify-between">
-        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="runPreflightCheck()">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnPreflightCheck" onclick="runPreflightCheck()">
           <i class="ti ti-scan"></i> Kiểm tra liên kết (Preflight)
         </button>
         <div class="flex gap-2">

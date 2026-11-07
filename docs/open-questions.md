@@ -127,10 +127,64 @@ Tài liệu này lưu trữ danh sách 8 câu hỏi kỹ thuật / nghiệp vụ
 
 ---
 
-### 8. Tệp tin Video/PDF/tài liệu khác (`raw`) có nằm trong phạm vi?
+---
+
+# CÂU HỎI CẦN XÁC NHẬN CHO GIAI ĐOẠN 8.1 (DATABASE SWITCHER)
+
+Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho yêu cầu: **Bộ chuyển Database Master / Web trong Content Editor (GĐ 8.1)**, kèm theo đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Tham số `db` trên URL, không lưu session?
 - **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
-- **Quyết định liên quan:** [DEC-038: Mục 2.1](decisions/DEC-038-cloudinary-media-item-unification.md)
-- **Lựa chọn A (Đề xuất mặc định):** **Có.** Hỗ trợ tệp tin tài liệu (PDF, Word, Zip) thông qua System Template `File` với `resourceType: 'raw'` trên Cloudinary.
-- **Lựa chọn B:** Chỉ hỗ trợ duy nhất hình ảnh (`resourceType: 'image'`).
-- **Lý do đề xuất:** Media Library chuẩn của CMS cần quản lý cả tài liệu đính kèm (catalogues, báo cáo tài chính PDF); Cloudinary hỗ trợ lưu trữ raw files rất tốt.
+- **Quyết định liên quan:** [DEC-041](decisions/DEC-041-content-editor-database-switcher-master-web.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Lưu trên URL query parameter (`?db=master|web`), không chỉ lưu session.** Điều này giúp người dùng có thể mở đồng thời 2 tab trình duyệt (1 tab xem Master, 1 tab xem Web) mà không bị lẫn lộn dữ liệu giữa các tab.
+- **Lựa chọn B:** Lưu biến `currentDb` trong Session của Express.
+- **Lý do đề xuất:** Ngăn chặn xung đột session giữa các tab; cho phép chia sẻ URL chính xác trạng thái database cho thành viên khác trong nhóm.
+
+---
+
+### 2. Role nào được xem Web DB?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-041](decisions/DEC-041-content-editor-database-switcher-master-web.md), `src/config/permissions.js`
+- **Lựa chọn A (Đề xuất mặc định):** **Chỉ cấp cho `Administrator` và `Approver`.** `Editor` và `Author` mặc định chỉ làm việc trên Master trừ khi được cấp quyền riêng ở GĐ 7.
+- **Lựa chọn B:** Cho phép tất cả người dùng có quyền đăng nhập admin (`Author`, `Editor`, `Approver`, `Administrator`) đều được xem Web DB.
+- **Lý do đề xuất:** Approver và Admin là những người trực tiếp chịu trách nhiệm nghiệm thu và xuất bản; hạn chế tác giả sơ cấp bị bối rối giữa môi trường soạn thảo và môi trường công khai.
+
+---
+
+### 3. Badge trạng thái publish trong cây Fancytree bật mặc định hay tắt?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-041](decisions/DEC-041-content-editor-database-switcher-master-web.md), Ribbon Tab VIEW
+- **Lựa chọn A (Đề xuất mặc định):** **Mặc định tắt.** Người dùng có thể chủ động bật/tắt hiển thị badge trong Ribbon tab `VIEW` (nhóm `Tree Options`). Trên Form soạn thảo thì badge luôn hiển thị.
+- **Lựa chọn B:** Luôn luôn bật hiển thị trên cây Fancytree.
+- **Lý do đề xuất:** Giúp tải cây nhanh nhất khi số lượng node lớn; chỉ tính toán so sánh khi người dùng thực sự có nhu cầu kiểm tra trạng thái cây.
+
+---
+
+### 4. Có cần xuất CSV danh sách đối soát diff?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-041](decisions/DEC-041-content-editor-database-switcher-master-web.md), `/admin/databases`
+- **Lựa chọn A (Đề xuất mặc định):** **Chưa cần ở bản đầu.** Tập trung hoàn thiện giao diện phân trang, lọc theo nhánh, tìm kiếm và liên kết mở trực tiếp item. Tính năng xuất CSV sẽ bổ sung ở GĐ 11 nếu có nhu cầu báo cáo nghiệp vụ.
+- **Lựa chọn B:** Bắt buộc xây dựng tính năng xuất file CSV ngay trong GĐ 8.1.
+- **Lý do đề xuất:** Tối ưu hóa thời gian triển khai, tập trung vào trải nghiệm xem và đối soát trực quan trên web trước.
+
+---
+
+### 5. Có cho "Open in Master" từ item mồ côi (Orphan) ở web?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-041](decisions/DEC-041-content-editor-database-switcher-master-web.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Hiển thị cảnh báo "Item này không còn tồn tại trên Master", không cung cấp nút Open in Master.** Kèm theo hướng dẫn dọn dẹp Web Store bằng Publish Manager hoặc Unpublish.
+- **Lựa chọn B:** Vẫn giữ nút và khi click thì mở trang 404 ở Master.
+- **Lý do đề xuất:** Tránh gây hiểu nhầm hoặc dẫn người dùng đến trang lỗi không tìm thấy item trên Master.
+
+---
+
+### 6. Trang `/admin/databases` đặt riêng hay trong Publish Manager?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-041](decisions/DEC-041-content-editor-database-switcher-master-web.md), Launchpad
+- **Lựa chọn A (Đề xuất mặc định):** **Đặt làm ứng dụng độc lập tại `/admin/databases`, có Tile riêng trên Launchpad** và có liên kết truy cập nhanh từ ứng dụng Publish Manager.
+- **Lựa chọn B:** Tích hợp thành một tab con bên trong trang `/admin/publish-manager`.
+- **Lý do đề xuất:** Giữ đúng triết lý của Sitecore Desktop: Các công cụ quản trị hệ thống (Databases, Publish Manager, Content Editor, Workbox) là các ứng dụng độc lập trên Launchpad để tiện mở theo từng ngữ cảnh tác vụ.
+
 

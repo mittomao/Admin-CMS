@@ -18,15 +18,23 @@ const contentEditorController = {
   async index(req, res, next) {
     try {
       const requestedId = req.params.id;
+      const rawDb = req.query.db || 'master';
+      const currentDb = itemService.validateDb(rawDb);
+      const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+
+      if (currentDb === 'web' && !canReadWeb) {
+        throw new ForbiddenError('Bạn không có quyền truy cập cơ sở dữ liệu Web (database:web:read).');
+      }
+
       let selectedItem = null;
 
       if (requestedId) {
-        selectedItem = await itemService.getById(requestedId);
+        selectedItem = await itemService.getById(requestedId, currentDb);
       }
 
       if (!selectedItem) {
         // Fallback to /sitecore/content/home or root
-        selectedItem = (await itemService.getByPath('/sitecore/content/home')) || (await itemService.getRoot());
+        selectedItem = (await itemService.getByPath('/sitecore/content/home', currentDb)) || (await itemService.getRoot(currentDb));
       }
 
       const lang = req.query.lang || 'vi';
@@ -40,20 +48,39 @@ const contentEditorController = {
       const allTemplates = await templateService.list();
 
       if (selectedItem) {
-        activeTemplate = await Template.findById(selectedItem._id);
+        if (currentDb === 'master') {
+          activeTemplate = await Template.findById(selectedItem._id);
+        }
         if (activeTemplate) {
           isTemplate = true;
           resolvedTemplate = await templateService.resolveTemplate(selectedItem._id);
           usage = await templateService.getUsage(selectedItem._id);
-          quickInfo = await itemService.getQuickInfo(selectedItem._id);
+          quickInfo = await itemService.getQuickInfo(selectedItem._id, currentDb);
         } else {
-          schemaData = await itemService.getItemWithRenderSchema(selectedItem._id, lang, version);
-          quickInfo = schemaData?.quickInfo || (await itemService.getQuickInfo(selectedItem._id));
+          schemaData = await itemService.getItemWithRenderSchema(selectedItem._id, lang, version, currentDb);
+          quickInfo = schemaData?.quickInfo || (await itemService.getQuickInfo(selectedItem._id, currentDb));
         }
       }
 
-      const breadcrumbs = selectedItem ? await itemService.getPathBreadcrumb(selectedItem) : [];
+      const breadcrumbs = selectedItem ? await itemService.getPathBreadcrumb(selectedItem, currentDb) : [];
       const templates = allTemplates;
+
+      let workflowStateInfo = null;
+      let availableCommands = [];
+      let isPublishedOnWeb = false;
+      let publishStatus = 'UNPUBLISHED';
+
+      if (selectedItem && !isTemplate) {
+        try {
+          workflowStateInfo = await workflowService.getState(selectedItem, lang, version);
+          availableCommands = await workflowService.getCommands(selectedItem, lang, version, req.user);
+          const webDoc = await PublishedItem.findById(selectedItem._id).lean();
+          isPublishedOnWeb = Boolean(webDoc && !webDoc.isDeleted);
+          publishStatus = await itemService.getPublishStatus(selectedItem, lang, version);
+        } catch (wfErr) {
+          logger.error(`Error resolving workflow/publish status in index: ${wfErr.message}`);
+        }
+      }
 
       res.render('content-editor/index', {
         title: selectedItem ? `${selectedItem.displayName || selectedItem.name} - Content Editor` : 'Content Editor',
@@ -66,11 +93,17 @@ const contentEditorController = {
         usage,
         allTemplates,
         quickInfo,
+        workflowStateInfo,
+        availableCommands,
+        isPublishedOnWeb,
+        publishStatus,
         currentLang: lang,
         currentVersion: version,
         breadcrumbs,
         templates,
         ribbon: ribbonConfig,
+        currentDb,
+        canReadWeb,
         layout: 'layouts/shell',
       });
     } catch (error) {
@@ -80,22 +113,91 @@ const contentEditorController = {
   },
 
   /**
-   * GET /admin/content-editor/item/:id/form?lang=&version=
-   * Returns partial HTML of the item editing form for specific language and version
+   * GET /admin/content-editor/item/:id/form?lang=&version=&db=
+   * Returns partial HTML of the item editing form for specific language, version, and database
    */
   async getItemFormPartial(req, res) {
     try {
       const { id } = req.params;
       const lang = req.query.lang || 'vi';
       const version = parseInt(req.query.version, 10) || 1;
+      const rawDb = req.query.db || 'master';
+      const currentDb = itemService.validateDb(rawDb);
 
+      if (currentDb === 'web') {
+        const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+        if (!canReadWeb) {
+          return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền truy cập cơ sở dữ liệu Web (database:web:read).</div>');
+        }
+
+        const schemaData = await itemService.getItemWithRenderSchema(id, lang, version, 'web');
+        if (!schemaData) {
+          const masterItem = await itemService.getById(id, 'master');
+          if (masterItem) {
+            return res.render('content-editor/partials/un节-web-alert', {
+              masterItem,
+              lang,
+            }, (renderErr, html) => {
+              if (renderErr || !html) {
+                return res.send(`
+                  <div class="p-6 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 rounded-xl shadow-xs m-4 text-center">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 mb-3">
+                      <i class="ti ti-alert-triangle text-2xl"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">Item chưa được xuất bản lên Web</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-md mx-auto">
+                      Item "<strong>${masterItem.displayName || masterItem.name}</strong>" tồn tại trên Master database nhưng chưa được xuất bản sang kho Web Store.
+                    </p>
+                    <a href="/admin/content-editor/${masterItem._id}?db=master&lang=${lang}" class="btn btn-primary bg-sc-red hover:bg-sc-red-hover text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm">
+                      <i class="ti ti-arrow-back-up me-1"></i> Mở trên Master Database
+                    </a>
+                  </div>
+                `);
+              }
+              return res.send(html);
+            });
+          }
+          return res.status(404).send('<div class="alert alert-danger m-3">Item không tồn tại hoặc đã bị xóa.</div>');
+        }
+
+        const { item, resolvedTemplate, languagesList, versionsList, hasLanguage, hasVersion, versionInfo, componentTemplates, quickInfo } = schemaData;
+        const breadcrumbs = await itemService.getPathBreadcrumb(item, 'web');
+
+        // Check orphan: item in web but not in master
+        const masterItem = await Item.findOne({ _id: id, deleted: false, isDeleted: { $ne: true } }).lean();
+        const isOrphan = !masterItem;
+
+        return res.render('content-editor/item-form', {
+          layout: false,
+          item,
+          template: resolvedTemplate,
+          breadcrumbs,
+          currentLang: lang,
+          currentVersion: version,
+          languagesList,
+          versionsList,
+          hasLanguage,
+          hasVersion,
+          versionInfo,
+          componentTemplates: componentTemplates || [],
+          quickInfo,
+          workflowStateInfo: null,
+          availableCommands: [],
+          isPublishedOnWeb: true,
+          publishStatus: 'PUBLISHED',
+          currentDb: 'web',
+          isOrphan,
+        });
+      }
+
+      // Master DB Mode:
       // 1. Check if item is a Template Definition
       const activeTemplate = await Template.findById(id);
       if (activeTemplate) {
         const resolvedTemplate = await templateService.resolveTemplate(id);
         const usage = await templateService.getUsage(id);
         const allTemplates = await templateService.list();
-        const quickInfo = await itemService.getQuickInfo(id);
+        const quickInfo = await itemService.getQuickInfo(id, 'master');
 
         return res.render('content-editor/template-workspace', {
           layout: false,
@@ -104,28 +206,31 @@ const contentEditorController = {
           usage,
           allTemplates,
           quickInfo,
+          currentDb: 'master',
         });
       }
 
       // 2. Normal Content Item
-      const schemaData = await itemService.getItemWithRenderSchema(id, lang, version);
+      const schemaData = await itemService.getItemWithRenderSchema(id, lang, version, 'master');
       if (!schemaData) {
         return res.status(404).send('<div class="alert alert-danger m-3">Item not found or has been removed.</div>');
       }
 
       const { item, resolvedTemplate, languagesList, versionsList, hasLanguage, hasVersion, versionInfo, componentTemplates, quickInfo } = schemaData;
-      const breadcrumbs = await itemService.getPathBreadcrumb(item);
+      const breadcrumbs = await itemService.getPathBreadcrumb(item, 'master');
 
-      // GĐ 8: Resolve workflow state, available commands and publish status
+      // GĐ 8 & 8.1: Resolve workflow state, available commands and publish status
       let workflowStateInfo = null;
       let availableCommands = [];
       let isPublishedOnWeb = false;
+      let publishStatus = 'UNPUBLISHED';
 
       try {
         workflowStateInfo = await workflowService.getState(item, lang, version);
         availableCommands = await workflowService.getCommands(item, lang, version, req.user);
         const webDoc = await PublishedItem.findById(item._id).lean();
         isPublishedOnWeb = Boolean(webDoc && !webDoc.isDeleted);
+        publishStatus = await itemService.getPublishStatus(item, lang, version);
       } catch (wfErr) {
         logger.error(`Error resolving workflow/publish status: ${wfErr.message}`);
       }
@@ -147,6 +252,9 @@ const contentEditorController = {
         workflowStateInfo,
         availableCommands,
         isPublishedOnWeb,
+        publishStatus,
+        currentDb: 'master',
+        isOrphan: false,
       });
     } catch (error) {
       logger.error(`Error loading item form partial: ${error.message}`);
@@ -230,21 +338,30 @@ const contentEditorController = {
   },
 
   /**
-   * GET /admin/content-editor/item/:id/folder-view
+   * GET /admin/content-editor/item/:id/folder-view?db=
    * Returns partial HTML of folder view (child item tiles)
    */
   async getItemFolderViewPartial(req, res, next) {
     try {
       const { id } = req.params;
-      const item = await itemService.getById(id);
+      const rawDb = req.query.db || 'master';
+      const currentDb = itemService.validateDb(rawDb);
+
+      if (currentDb === 'web') {
+        const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+        if (!canReadWeb) {
+          return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền truy cập cơ sở dữ liệu Web (database:web:read).</div>');
+        }
+      }
+
+      const item = await itemService.getById(id, currentDb);
       if (!item) {
         return res.status(404).send('<div class="alert alert-danger m-3">Item not found.</div>');
       }
 
-      const children = await itemService.getChildren(id);
-      const breadcrumbs = await itemService.getPathBreadcrumb(item);
-
-      const quickInfo = await itemService.getQuickInfo(item);
+      const children = await itemService.getChildren(id, { db: currentDb });
+      const breadcrumbs = await itemService.getPathBreadcrumb(item, currentDb);
+      const quickInfo = await itemService.getQuickInfo(item, currentDb);
 
       res.render('content-editor/folder-view', {
         layout: false,
@@ -252,6 +369,7 @@ const contentEditorController = {
         children,
         breadcrumbs,
         quickInfo,
+        currentDb,
       });
     } catch (error) {
       logger.error(`Error loading folder view partial: ${error.message}`);
@@ -278,29 +396,38 @@ const contentEditorController = {
   // ==========================================
 
   /**
-   * GET /api/items/:id/children
+   * GET /api/items/:id/children?db=
    * Returns Fancytree-compliant JSON for lazy loading
    */
   async getTreeNodes(req, res, next) {
     try {
       const { id } = req.params;
+      const rawDb = req.query.db || 'master';
+      const currentDb = itemService.validateDb(rawDb);
+
+      if (currentDb === 'web') {
+        const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+        if (!canReadWeb) {
+          return res.status(403).json({ error: 'Bạn không có quyền truy cập cơ sở dữ liệu Web (database:web:read).' });
+        }
+      }
 
       if (!id || id === 'root') {
         let root;
         if (req.query.path) {
-          root = await itemService.getByPath(req.query.path);
+          root = await itemService.getByPath(req.query.path, currentDb);
         } else {
-          root = await itemService.getRoot();
+          root = await itemService.getRoot(currentDb);
         }
         if (root) {
-          const directChildren = await itemService.getChildren(root._id);
+          const directChildren = await itemService.getChildren(root._id, { db: currentDb });
           const rootNode = treeHelper.toFancytreeNode(root, directChildren.length > 0, root.templateId);
           return res.json([rootNode]);
         }
         return res.json([]);
       }
 
-      const children = await itemService.getChildren(id);
+      const children = await itemService.getChildren(id, { db: currentDb });
       const nodes = children.map((child) =>
         treeHelper.toFancytreeNode(child, child.hasChildren, child.templateId)
       );
@@ -313,13 +440,15 @@ const contentEditorController = {
   },
 
   /**
-   * GET /api/items/:id/quick-info
+   * GET /api/items/:id/quick-info?db=
    * Returns JSON metadata of the item for Quick Info
    */
   async getItemQuickInfo(req, res, next) {
     try {
       const { id } = req.params;
-      const quickInfo = await itemService.getQuickInfo(id);
+      const rawDb = req.query.db || 'master';
+      const currentDb = itemService.validateDb(rawDb);
+      const quickInfo = await itemService.getQuickInfo(id, currentDb);
       if (!quickInfo) {
         return res.status(404).json({ success: false, message: 'Item not found.' });
       }
@@ -331,13 +460,23 @@ const contentEditorController = {
   },
 
   /**
-   * GET /api/items/search?q=
+   * GET /api/items/search?q=&db=
    * Search items in content tree
    */
   async searchItems(req, res, next) {
     try {
       const query = req.query.q || '';
-      const results = await itemService.search(query);
+      const rawDb = req.query.db || 'master';
+      const currentDb = itemService.validateDb(rawDb);
+
+      if (currentDb === 'web') {
+        const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+        if (!canReadWeb) {
+          return res.status(403).json({ error: 'Forbidden' });
+        }
+      }
+
+      const results = await itemService.search(query, 20, currentDb);
       res.json({ success: true, data: results });
     } catch (error) {
       next(error);

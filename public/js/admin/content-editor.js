@@ -18,21 +18,27 @@ let currentItemId = window.__INITIAL_ITEM_ID__ || null;
 let currentViewMode = 'content'; // 'content' or 'folder'
 let isFormDirty = false;
 
-// Version & Language State (GĐ 4)
+// Version & Language & Database State (GĐ 4 & GĐ 8.1)
 const initialUrlParams = new URLSearchParams(window.location.search);
 let currentLang = (initialUrlParams.get('lang') || 'vi').toLowerCase();
 let currentVersion = parseInt(initialUrlParams.get('version'), 10) || 1;
+let currentDb = (initialUrlParams.get('db') || window.__CURRENT_DB__ || 'master').toLowerCase().trim();
+let showPublishBadges = localStorage.getItem('sc_ce_show_publish_badges') === 'true';
 
 document.addEventListener('DOMContentLoaded', () => {
   window.__markFormDirty = () => {
     isFormDirty = true;
     updateDirtyState(true);
   };
+  window.switchDatabase = switchDatabase;
   initContentTree();
   initRibbonEvents();
   initWorkspaceEvents();
   initTreeSearch();
   initDirtyTracker();
+  initDatabaseSwitcherControls();
+  initPublishModalEvents();
+  updateRibbonStateForDb();
 });
 
 // ==========================================
@@ -82,14 +88,17 @@ function initContentTree() {
       preventRecursion: true,
       preventVoidMoves: true,
       dragStart: (node) => {
-        // Disallow dragging root node
+        // Disallow dragging in Web Read-Only mode or root node
+        if (currentDb === 'web') return false;
         return node.parent && node.parent.key !== 'root_node';
       },
       dragEnter: (node, data) => {
+        if (currentDb === 'web') return false;
         // Only allow dropping on valid nodes
         return true;
       },
       dragDrop: async (node, data) => {
+        if (currentDb === 'web') return;
         const sourceNode = data.otherNode;
         const targetParent = node;
 
@@ -120,19 +129,24 @@ function initContentTree() {
       },
     },
     source: {
-      url: '/api/items/root/children',
+      url: `/api/items/root/children?db=${encodeURIComponent(currentDb)}`,
       cache: false,
     },
     lazyLoad: (event, data) => {
       const node = data.node;
       data.result = {
-        url: `/api/items/${node.key}/children`,
+        url: `/api/items/${node.key}/children?db=${encodeURIComponent(currentDb)}`,
         cache: false,
       };
     },
+    loadChildren: () => {
+      if (showPublishBadges && currentDb === 'master') {
+        updatePublishBadgesForLoadedNodes();
+      }
+    },
     init: (event, data) => {
       treeInstance = $.ui.fancytree.getTree('#contentTree');
-      updateTreeStatus('Tree loaded');
+      updateTreeStatus(`Tree loaded (${currentDb})`);
 
       // Expand root and activate initial item
       const rootNode = treeInstance.getRootNode().getFirstChild();
@@ -142,6 +156,9 @@ function initContentTree() {
             activateNodeById(currentItemId);
           } else {
             rootNode.setActive(true);
+          }
+          if (showPublishBadges && currentDb === 'master') {
+            updatePublishBadgesForLoadedNodes();
           }
         });
       }
@@ -169,7 +186,11 @@ function initContentTree() {
       }
 
       loadItemWorkspace(node.key, currentViewMode);
-      window.history.pushState(null, '', `/admin/content-editor/${node.key}`);
+      const urlParams = new URLSearchParams();
+      urlParams.set('lang', currentLang);
+      urlParams.set('version', currentVersion);
+      if (currentDb === 'web') urlParams.set('db', 'web');
+      window.history.pushState(null, '', `/admin/content-editor/${node.key}?${urlParams.toString()}`);
     },
   });
 }
@@ -206,7 +227,8 @@ async function loadItemWorkspace(itemId, mode = 'content', lang = null, version 
   `;
 
   try {
-    const query = `?lang=${encodeURIComponent(currentLang)}&version=${encodeURIComponent(currentVersion)}`;
+    const dbParam = currentDb === 'web' ? '&db=web' : '';
+    const query = `?lang=${encodeURIComponent(currentLang)}&version=${encodeURIComponent(currentVersion)}${dbParam}`;
     const endpoint = mode === 'folder'
       ? `/admin/content-editor/item/${itemId}/folder-view${query}`
       : `/admin/content-editor/item/${itemId}/form${query}`;
@@ -230,11 +252,16 @@ async function loadItemWorkspace(itemId, mode = 'content', lang = null, version 
     }
 
     // Reflect in URL without page reload
-    window.history.pushState(null, '', `/admin/content-editor/${itemId}?lang=${currentLang}&version=${currentVersion}`);
+    const urlParams = new URLSearchParams();
+    urlParams.set('lang', currentLang);
+    urlParams.set('version', currentVersion);
+    if (currentDb === 'web') urlParams.set('db', 'web');
+    window.history.pushState(null, '', `/admin/content-editor/${itemId}?${urlParams.toString()}`);
 
     // Reset dirty state
     isFormDirty = false;
     updateDirtyState(false);
+    updateRibbonStateForDb();
 
     // Re-attach form events
     attachItemFormEvents();
@@ -264,11 +291,20 @@ function initRibbonEvents() {
     if (!btn) return;
 
     const action = btn.getAttribute('data-action');
-    handleRibbonAction(action);
+    handleRibbonAction(action, btn);
   });
 }
 
-async function handleRibbonAction(action) {
+async function handleRibbonAction(action, triggerBtn = null) {
+  const fallbackId = (triggerBtn && triggerBtn.getAttribute('data-item-id'))
+    || document.getElementById('formItemId')?.value
+    || document.getElementById('itemEditForm')?.getAttribute('data-item-id')
+    || window.__INITIAL_ITEM_ID__;
+
+  if (!currentItemId && fallbackId) {
+    currentItemId = fallbackId;
+  }
+
   if (!currentItemId) {
     showToast('Please select an item first.', 'warning');
     return;
@@ -386,7 +422,7 @@ async function handleRibbonAction(action) {
 
     // GĐ 8: Workflow Ribbon Actions
     case 'workflow:execute-command':
-      openWorkflowExecuteModal();
+      openWorkflowExecuteModal(triggerBtn?.getAttribute('data-item-id'));
       break;
 
     case 'workflow:view-history':
@@ -408,6 +444,19 @@ async function handleRibbonAction(action) {
 
     case 'publish:open-manager':
       window.open('/admin/publish-manager', '_blank');
+      break;
+
+    // GĐ 8.1: Database Switcher & View Ribbon Actions
+    case 'switch-db-master':
+      switchDatabase('master');
+      break;
+
+    case 'switch-db-web':
+      switchDatabase('web');
+      break;
+
+    case 'toggle-publish-badges':
+      togglePublishBadges();
       break;
   }
 }
@@ -436,6 +485,115 @@ function updateRibbonContext(node) {
   if (btnDelete) btnDelete.disabled = isProtected;
   if (btnRename) btnRename.disabled = isProtected;
   if (btnMoveTo) btnMoveTo.disabled = isProtected;
+
+  if (currentDb === 'web') {
+    updateRibbonStateForDb();
+  }
+}
+
+function updateRibbonStateForDb() {
+  if (currentDb === 'web') {
+    const writeActionIds = [
+      'btn-save', 'btn-insert-template', 'btn-duplicate', 'btn-copy-to',
+      'btn-move-to', 'btn-delete', 'btn-rename', 'btn-sort-subitems',
+      'btn-workflow-execute', 'btn-publish-item', 'btn-unpublish-item',
+      'btn-add-version', 'btn-add-language', 'btn-delete-version',
+      'btn-presentation-reset', 'quickSaveBtn', 'btnFooterSave', 'btnDiscardChanges'
+    ];
+    writeActionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = true;
+    });
+  }
+}
+
+function switchDatabase(targetDb) {
+  const cleanTarget = (targetDb || 'master').toLowerCase().trim();
+  if (cleanTarget === currentDb) return;
+
+  if (isFormDirty) {
+    if (!confirm(`Bạn có thay đổi chưa lưu trên form. Hủy bỏ thay đổi và chuyển sang database ${cleanTarget}?`)) {
+      return;
+    }
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  if (cleanTarget === 'web') {
+    searchParams.set('db', 'web');
+  } else {
+    searchParams.delete('db');
+  }
+
+  const itemId = currentItemId || '';
+  window.location.href = `/admin/content-editor/${itemId}?${searchParams.toString()}`;
+}
+
+function initDatabaseSwitcherControls() {
+  const linkMaster = document.getElementById('switchDbMasterLink');
+  if (linkMaster) {
+    linkMaster.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchDatabase('master');
+    });
+  }
+
+  const linkWeb = document.getElementById('switchDbWebLink');
+  if (linkWeb) {
+    linkWeb.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchDatabase('web');
+    });
+  }
+}
+
+async function updatePublishBadgesForLoadedNodes() {
+  if (!showPublishBadges || currentDb !== 'master' || !treeInstance) {
+    if (window.jQuery) {
+      window.jQuery('.sc-tree-publish-badge').remove();
+    }
+    return;
+  }
+
+  const nodes = [];
+  treeInstance.visit((node) => {
+    if (node.key && node.key !== 'root_node') {
+      nodes.push(node);
+    }
+  });
+
+  if (nodes.length === 0) return;
+  const ids = nodes.map((n) => n.key);
+
+  try {
+    const res = await fetch(`/api/items/publish-status-batch?ids=${ids.join(',')}&lang=${encodeURIComponent(currentLang)}`);
+    const json = await res.json();
+    if (!json.success || !json.data) return;
+
+    nodes.forEach((node) => {
+      const status = json.data[node.key] || 'UNPUBLISHED';
+      const $span = window.jQuery(node.span);
+      $span.find('.sc-tree-publish-badge').remove();
+
+      let badgeHtml = '';
+      if (status === 'PUBLISHED') {
+        badgeHtml = '<span class="sc-tree-publish-badge ms-1.5 px-1 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300" title="Đã xuất bản (Live)">Live</span>';
+      } else if (status === 'CHANGED') {
+        badgeHtml = '<span class="sc-tree-publish-badge ms-1.5 px-1 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:text-amber-300" title="Có thay đổi chưa xuất bản">Changed</span>';
+      } else {
+        badgeHtml = '<span class="sc-tree-publish-badge ms-1.5 px-1 py-0.2 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400" title="Chưa xuất bản">Draft</span>';
+      }
+      $span.find('.fancytree-title').after(badgeHtml);
+    });
+  } catch (err) {
+    console.error('Error fetching publish badges:', err);
+  }
+}
+
+function togglePublishBadges() {
+  showPublishBadges = !showPublishBadges;
+  localStorage.setItem('sc_ce_show_publish_badges', showPublishBadges ? 'true' : 'false');
+  showToast(showPublishBadges ? 'Đã bật huy hiệu Publish trên cây' : 'Đã tắt huy hiệu Publish trên cây');
+  updatePublishBadgesForLoadedNodes();
 }
 
 // ==========================================
@@ -459,6 +617,46 @@ function attachItemFormEvents() {
   if (btnDiscard) {
     btnDiscard.addEventListener('click', () => {
       loadItemWorkspace(currentItemId, currentViewMode);
+    });
+  }
+
+  // Remove Orphan Item from Web Button (GĐ 8.1)
+  const btnRemoveOrphan = form.querySelector('#btnRemoveOrphanFromWeb');
+  if (btnRemoveOrphan) {
+    btnRemoveOrphan.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const itemId = btnRemoveOrphan.getAttribute('data-item-id') || currentItemId;
+      const itemName = btnRemoveOrphan.getAttribute('data-item-name') || itemId;
+      if (!confirm(`Bạn có chắc muốn gỡ bỏ mục mồ côi "${itemName}" khỏi Web Store?`)) {
+        return;
+      }
+
+      btnRemoveOrphan.disabled = true;
+      btnRemoveOrphan.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang gỡ bỏ...';
+
+      try {
+        const res = await fetch(`/api/items/${itemId}/unpublish`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfToken(),
+          },
+          body: JSON.stringify({ includeSubitems: true }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Lỗi khi gỡ bỏ mục mồ côi.');
+        }
+
+        showToast(`Đã gỡ bỏ mục mồ côi "${itemName}" khỏi Web Store thành công!`, 'success');
+        setTimeout(() => {
+          window.location.href = '/admin/content-editor?db=master';
+        }, 1000);
+      } catch (err) {
+        showToast(err.message, 'danger');
+        btnRemoveOrphan.disabled = false;
+        btnRemoveOrphan.innerHTML = '<i class="ti ti-trash"></i> <span>Gỡ khỏi Web</span>';
+      }
     });
   }
 
@@ -1524,7 +1722,7 @@ function initTreeSearch() {
 
       // Search backend API
       try {
-        const res = await fetch(`/api/items/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/items/search?q=${encodeURIComponent(query)}&db=${encodeURIComponent(currentDb)}`);
         const result = await res.json();
 
         if (resultsDropdown && result.success && result.data.length > 0) {
@@ -2014,14 +2212,25 @@ function openDeleteVersionModal(targetVersion = null) {
 // ==========================================
 // 8. Workflow & Publishing Modals (GĐ 8)
 // ==========================================
-async function openWorkflowExecuteModal() {
-  if (!currentItemId) {
+async function openWorkflowExecuteModal(explicitItemId = null) {
+  const targetItemId = explicitItemId
+    || currentItemId
+    || document.getElementById('formItemId')?.value
+    || document.getElementById('itemEditForm')?.getAttribute('data-item-id')
+    || window.__INITIAL_ITEM_ID__;
+
+  if (!targetItemId) {
     showToast('Vui lòng chọn một item trước khi thao tác workflow.', 'warning');
     return;
   }
+  currentItemId = targetItemId;
 
   const modalEl = document.getElementById('ceWorkflowExecuteModal');
-  if (!modalEl) return;
+  if (!modalEl) {
+    console.error('Modal #ceWorkflowExecuteModal not found in DOM');
+    showToast('Không tìm thấy cửa sổ modal quy trình duyệt (#ceWorkflowExecuteModal).', 'danger');
+    return;
+  }
 
   const headerDisplayName = document.getElementById('headerDisplayName');
   const itemNameEl = document.getElementById('ceWfItemName');
@@ -2037,14 +2246,23 @@ async function openWorkflowExecuteModal() {
   if (commentError) commentError.classList.add('d-none');
   if (container) container.innerHTML = '<div class="text-xs text-slate-400 py-2"><span class="spinner-border spinner-border-sm me-1"></span> Đang tải lệnh duyệt...</div>';
 
-  const modal = new bootstrap.Modal(modalEl);
+  const modal = window.bootstrap?.Modal?.getOrCreateInstance(modalEl)
+    || (typeof bootstrap !== 'undefined' && bootstrap.Modal ? bootstrap.Modal.getOrCreateInstance(modalEl) : null)
+    || (window.bootstrap ? new window.bootstrap.Modal(modalEl) : null);
+
+  if (!modal) {
+    console.error('Bootstrap Modal instance could not be created');
+    showToast('Không thể mở cửa sổ modal phê duyệt.', 'danger');
+    return;
+  }
+
   modal.show();
 
   try {
     const resp = await fetch(`/api/items/${currentItemId}/workflow?lang=${currentLang}&version=${currentVersion}`);
     const res = await resp.json();
 
-    if (!res.success || !res.data) throw new Error('Không thể tải thông tin quy trình duyệt.');
+    if (!res.success || !res.data) throw new Error(res.message || 'Không thể tải thông tin quy trình duyệt.');
 
     const { stateInfo, commands } = res.data;
     if (stateEl) {
@@ -2141,7 +2359,9 @@ async function submitCeWorkflowCommand() {
     }
 
     const modalEl = document.getElementById('ceWorkflowExecuteModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
+    const modal = window.bootstrap?.Modal?.getInstance(modalEl)
+      || window.bootstrap?.Modal?.getOrCreateInstance(modalEl)
+      || (typeof bootstrap !== 'undefined' ? bootstrap.Modal.getInstance(modalEl) : null);
     if (modal) modal.hide();
 
     showToast(`Đã chuyển trạng thái sang "${res.data.toStateDisplayName || res.data.toState}" thành công!`, 'success');
@@ -2165,31 +2385,83 @@ async function openCeWorkflowHistoryModal() {
   window.open('/admin/workbox', '_blank');
 }
 
+function initPublishModalEvents() {
+  const btnExecutePublish = document.getElementById('btnExecutePublish');
+  if (btnExecutePublish) {
+    btnExecutePublish.addEventListener('click', (e) => {
+      e.preventDefault();
+      executePublishModalAction();
+    });
+  }
+
+  const btnPreflight = document.getElementById('btnPreflightCheck');
+  if (btnPreflight) {
+    btnPreflight.addEventListener('click', (e) => {
+      e.preventDefault();
+      runPreflightCheck();
+    });
+  }
+
+  const checkSubitems = document.getElementById('pubCheckSubitems');
+  if (checkSubitems) {
+    checkSubitems.addEventListener('change', () => {
+      runPreflightCheck();
+    });
+  }
+
+  const btnConfirmUnpub = document.getElementById('btnConfirmUnpublish');
+  if (btnConfirmUnpub) {
+    btnConfirmUnpub.addEventListener('click', (e) => {
+      e.preventDefault();
+      submitUnpublishAction();
+    });
+  }
+
+  const btnWfSubmit = document.getElementById('btnCeWfSubmit');
+  if (btnWfSubmit) {
+    btnWfSubmit.addEventListener('click', (e) => {
+      e.preventDefault();
+      submitCeWorkflowCommand();
+    });
+  }
+}
+
 async function openPublishDialogModal() {
-  if (!currentItemId) {
+  const targetItemId = currentItemId || document.getElementById('formItemId')?.value || window.__INITIAL_ITEM_ID__;
+  if (!targetItemId) {
     showToast('Vui lòng chọn một item trước khi xuất bản.', 'warning');
     return;
   }
+  currentItemId = targetItemId;
 
   const modalEl = document.getElementById('publishDialogModal');
   if (!modalEl) return;
 
+  // Reset in-modal alerts
+  const errorAlert = document.getElementById('pubModalErrorAlert');
+  if (errorAlert) errorAlert.classList.add('d-none');
+  const progressAlert = document.getElementById('pubModalProgressAlert');
+  if (progressAlert) progressAlert.classList.add('d-none');
+
   const headerDisplayName = document.getElementById('headerDisplayName');
   const itemNameEl = document.getElementById('pubDialogItemName');
-  if (itemNameEl) itemNameEl.textContent = `Item: ${headerDisplayName ? headerDisplayName.textContent.trim() : currentItemId}`;
+  if (itemNameEl) itemNameEl.textContent = `Item: ${headerDisplayName ? headerDisplayName.textContent.trim() : targetItemId}`;
 
   const itemPathEl = document.getElementById('pubDialogItemPath');
   const technicalName = document.getElementById('headerTechnicalName');
   if (itemPathEl) itemPathEl.textContent = technicalName ? technicalName.textContent.trim() : '';
 
-  const modal = new bootstrap.Modal(modalEl);
-  modal.show();
+  const modal = window.bootstrap?.Modal?.getOrCreateInstance(modalEl) || (window.bootstrap ? new window.bootstrap.Modal(modalEl) : null);
+  if (modal) {
+    modal.show();
+  }
 
   runPreflightCheck();
 }
 
 async function runPreflightCheck() {
-  if (!currentItemId) return;
+  const targetItemId = currentItemId || document.getElementById('formItemId')?.value || window.__INITIAL_ITEM_ID__;
+  if (!targetItemId) return;
 
   const warningContainer = document.getElementById('pubPreflightWarningContainer');
   const warningList = document.getElementById('pubWarningList');
@@ -2197,7 +2469,7 @@ async function runPreflightCheck() {
   const subitems = document.getElementById('pubCheckSubitems')?.checked || false;
 
   try {
-    const resp = await fetch(`/api/publish/preflight?rootItemId=${currentItemId}&includeSubitems=${subitems}&lang=${currentLang}`);
+    const resp = await fetch(`/api/publish/preflight?rootItemId=${targetItemId}&includeSubitems=${subitems}&lang=${currentLang}`);
     const res = await resp.json();
 
     if (res.success && res.data && res.data.warningsCount > 0) {
@@ -2217,7 +2489,32 @@ async function runPreflightCheck() {
 }
 
 async function executePublishModalAction() {
-  if (!currentItemId) return;
+  const targetItemId = currentItemId || document.getElementById('formItemId')?.value || window.__INITIAL_ITEM_ID__;
+  const errorAlert = document.getElementById('pubModalErrorAlert');
+  const errorMsg = document.getElementById('pubModalErrorMessage');
+  const progressAlert = document.getElementById('pubModalProgressAlert');
+  const progressMsg = document.getElementById('pubModalProgressMessage');
+
+  const showError = (msg) => {
+    if (errorAlert && errorMsg) {
+      errorMsg.textContent = msg;
+      errorAlert.classList.remove('d-none');
+    }
+    if (progressAlert) progressAlert.classList.add('d-none');
+    showToast(msg, 'danger');
+  };
+
+  const clearAlerts = () => {
+    if (errorAlert) errorAlert.classList.add('d-none');
+    if (progressAlert) progressAlert.classList.add('d-none');
+  };
+
+  clearAlerts();
+
+  if (!targetItemId) {
+    showError('Không xác định được ID item cần xuất bản. Vui lòng chọn lại item trong cây.');
+    return;
+  }
 
   const mode = document.querySelector('input[name="publishModeRadio"]:checked')?.value || 'Item';
   const includeSubitems = document.getElementById('pubCheckSubitems')?.checked || false;
@@ -2235,16 +2532,22 @@ async function executePublishModalAction() {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xuất bản...';
   }
 
+  if (progressAlert && progressMsg) {
+    progressMsg.textContent = `Đang khởi tạo tác vụ ${mode} Publish sang Web...`;
+    progressAlert.classList.remove('d-none');
+  }
+
   try {
+    const csrfToken = getCsrfToken();
     const resp = await fetch('/api/publish', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': getCsrfToken(),
+        'X-CSRF-Token': csrfToken,
       },
       body: JSON.stringify({
         mode,
-        rootItemId: currentItemId,
+        rootItemId: targetItemId,
         includeSubitems,
         includeRelated,
         languages,
@@ -2257,40 +2560,51 @@ async function executePublishModalAction() {
     }
 
     const modalEl = document.getElementById('publishDialogModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
+    if (modalEl) {
+      const modalInstance = window.bootstrap?.Modal?.getInstance(modalEl) || window.bootstrap?.Modal?.getOrCreateInstance(modalEl);
+      if (modalInstance) modalInstance.hide();
+    }
 
     showToast(`Đã đưa tác vụ ${mode} Publish vào hàng đợi xử lý!`, 'success');
-    await loadItemWorkspace(currentItemId, currentViewMode, currentLang, currentVersion);
+    await loadItemWorkspace(targetItemId, currentViewMode, currentLang, currentVersion);
   } catch (err) {
-    showToast(err.message, 'danger');
+    showError(err.message || 'Đã xảy ra lỗi khi thực hiện xuất bản.');
   } finally {
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = '<i class="ti ti-cloud-upload"></i> Bắt đầu Xuất bản';
     }
+    if (progressAlert) progressAlert.classList.add('d-none');
   }
 }
 
 function openCeUnpublishModal() {
-  if (!currentItemId) {
+  const targetItemId = currentItemId || document.getElementById('formItemId')?.value || window.__INITIAL_ITEM_ID__;
+  if (!targetItemId) {
     showToast('Vui lòng chọn một item trước khi gỡ bỏ.', 'warning');
     return;
   }
+  currentItemId = targetItemId;
 
   const modalEl = document.getElementById('unpublishModal');
   if (!modalEl) return;
 
   const headerDisplayName = document.getElementById('headerDisplayName');
   const itemNameEl = document.getElementById('unpubItemName');
-  if (itemNameEl) itemNameEl.textContent = headerDisplayName ? headerDisplayName.textContent.trim() : currentItemId;
+  if (itemNameEl) itemNameEl.textContent = headerDisplayName ? headerDisplayName.textContent.trim() : targetItemId;
 
-  const modal = new bootstrap.Modal(modalEl);
-  modal.show();
+  const modal = window.bootstrap?.Modal?.getOrCreateInstance(modalEl) || (window.bootstrap ? new window.bootstrap.Modal(modalEl) : null);
+  if (modal) {
+    modal.show();
+  }
 }
 
 async function submitUnpublishAction() {
-  if (!currentItemId) return;
+  const targetItemId = currentItemId || document.getElementById('formItemId')?.value || window.__INITIAL_ITEM_ID__;
+  if (!targetItemId) {
+    showToast('Không xác định được item cần gỡ bỏ.', 'warning');
+    return;
+  }
 
   const includeSubitems = document.getElementById('unpubIncludeSubitems')?.checked || false;
   const btn = document.getElementById('btnConfirmUnpublish');
@@ -2301,7 +2615,7 @@ async function submitUnpublishAction() {
   }
 
   try {
-    const resp = await fetch(`/api/items/${currentItemId}/unpublish`, {
+    const resp = await fetch(`/api/items/${targetItemId}/unpublish`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2316,11 +2630,13 @@ async function submitUnpublishAction() {
     }
 
     const modalEl = document.getElementById('unpublishModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
+    if (modalEl) {
+      const modalInstance = window.bootstrap?.Modal?.getInstance(modalEl) || window.bootstrap?.Modal?.getOrCreateInstance(modalEl);
+      if (modalInstance) modalInstance.hide();
+    }
 
     showToast(`Đã gỡ bỏ ${res.data?.unpublishedCount || 1} mục khỏi trang web công khai!`, 'success');
-    await loadItemWorkspace(currentItemId, currentViewMode, currentLang, currentVersion);
+    await loadItemWorkspace(targetItemId, currentViewMode, currentLang, currentVersion);
   } catch (err) {
     showToast(err.message, 'danger');
   } finally {

@@ -65,7 +65,27 @@
       <!-- Tree Footer Status -->
       <div class="p-2 px-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 d-flex align-items-center justify-content-between text-slate-400 text-[11px] select-none">
         <span id="treeStatusText" class="font-medium">Ready</span>
-        <span class="badge bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-monospace border border-slate-300 dark:border-slate-700 text-[10px]">Master DB</span>
+        <% const isWebDb = typeof currentDb !== 'undefined' && currentDb === 'web'; %>
+        <div class="dropdown">
+          <button class="badge <%= isWebDb ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700' %> font-monospace border text-[10px] dropdown-toggle cursor-pointer d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" id="treeDbSwitcherBtn">
+            <i class="ti <%= isWebDb ? 'ti-world text-amber-600 dark:text-amber-400' : 'ti-database text-blue-600 dark:text-blue-400' %>"></i>
+            <span><%= isWebDb ? 'Web (Read-Only)' : 'Master DB' %></span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-md rounded-lg text-xs py-1 border border-slate-200 dark:border-slate-800" style="min-width: 170px;">
+            <li>
+              <a class="dropdown-item d-flex align-items-center justify-content-between px-3 py-1.5 <%= !isWebDb ? 'active font-bold' : '' %>" href="javascript:void(0)" id="switchDbMasterLink">
+                <span class="d-flex align-items-center gap-1.5"><i class="ti ti-database text-blue-500"></i> Master DB</span>
+                <% if (!isWebDb) { %><i class="ti ti-check text-xs"></i><% } %>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center justify-content-between px-3 py-1.5 <%= isWebDb ? 'active font-bold' : '' %>" href="javascript:void(0)" id="switchDbWebLink">
+                <span class="d-flex align-items-center gap-1.5"><i class="ti ti-world text-amber-500"></i> Web DB (Chỉ đọc)</span>
+                <% if (isWebDb) { %><i class="ti ti-check text-xs"></i><% } %>
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </aside>
 
@@ -146,7 +166,11 @@
             hasVersion: schemaData.hasVersion,
             versionInfo: schemaData.versionInfo,
             componentTemplates: schemaData.componentTemplates || [],
-            quickInfo: typeof quickInfo !== 'undefined' ? quickInfo : null
+            quickInfo: typeof quickInfo !== 'undefined' ? quickInfo : null,
+            workflowStateInfo: typeof workflowStateInfo !== 'undefined' ? workflowStateInfo : null,
+            availableCommands: typeof availableCommands !== 'undefined' ? availableCommands : [],
+            isPublishedOnWeb: typeof isPublishedOnWeb !== 'undefined' ? isPublishedOnWeb : false,
+            publishStatus: typeof publishStatus !== 'undefined' ? publishStatus : 'UNPUBLISHED'
           }) %>
         <% } else if (selectedItem) { %>
           <%- include('./item-form', {
@@ -156,7 +180,11 @@
             currentLang: typeof currentLang !== 'undefined' ? currentLang : 'vi',
             currentVersion: typeof currentVersion !== 'undefined' ? currentVersion : 1,
             componentTemplates: [],
-            quickInfo: typeof quickInfo !== 'undefined' ? quickInfo : null
+            quickInfo: typeof quickInfo !== 'undefined' ? quickInfo : null,
+            workflowStateInfo: typeof workflowStateInfo !== 'undefined' ? workflowStateInfo : null,
+            availableCommands: typeof availableCommands !== 'undefined' ? availableCommands : [],
+            isPublishedOnWeb: typeof isPublishedOnWeb !== 'undefined' ? isPublishedOnWeb : false,
+            publishStatus: typeof publishStatus !== 'undefined' ? publishStatus : 'UNPUBLISHED'
           }) %>
         <% } else { %>
           <div class="empty py-5 text-center">
@@ -198,9 +226,11 @@
 <%- include('../admin/templates/modals/field-modal') %>
 <%- include('../admin/templates/modals/preview-modal') %>
 
-<!-- Pass Selected Item Initial ID to Client Script -->
+<!-- Pass Selected Item Initial ID and DB Context to Client Script -->
 <script>
   window.__INITIAL_ITEM_ID__ = "<%= selectedItem ? selectedItem._id : '' %>";
+  window.__CURRENT_DB__ = "<%= typeof currentDb !== 'undefined' ? currentDb : 'master' %>";
+  window.__CAN_READ_WEB__ = <%= typeof canReadWeb !== 'undefined' ? canReadWeb : false %>;
 </script>
 
 <!-- External TinyMCE 6 Community Edition via CDN -->
@@ -220,4 +250,4 @@
 <script src="/js/admin/template-manager.js"></script>
 
 <!-- Content Editor Client Script -->
-<script type="module" src="/js/admin/content-editor.js"></script>
+<script type="module" src="/js/admin/content-editor.js?v=<%= Date.now() %>"></script>

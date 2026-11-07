@@ -4,12 +4,53 @@ const contentEditorController = require('../../controllers/admin/contentEditorCo
 const presentationController = require('../../controllers/admin/presentationController');
 const { requireAuth } = require('../../middlewares/authMiddleware');
 const csrfMiddleware = require('../../middlewares/csrfMiddleware');
+const itemService = require('../../services/itemService');
+const workflowService = require('../../services/workflowService');
+const publishService = require('../../services/publishService');
+const PublishedItem = require('../../models/PublishedItem');
 
 // All item API endpoints require authentication
 router.use(requireAuth);
 
+// Database validation and write protection guard (GĐ 8.1)
+router.use((req, res, next) => {
+  try {
+    const rawDb = req.query.db || (req.body && req.body.db);
+    if (rawDb) {
+      itemService.validateDb(rawDb);
+    }
+
+    const mutatingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+    if (mutatingMethods.includes(req.method)) {
+      const db = (req.query.db || (req.body && req.body.db) || 'master').toLowerCase().trim();
+      if (db === 'web') {
+        return res.status(403).json({
+          success: false,
+          message: 'Web database là kho dữ liệu chỉ đọc (Strict Read-Only). Không được phép chỉnh sửa trực tiếp.',
+        });
+      }
+    }
+    next();
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+});
+
 // Read operations
 router.get('/search', contentEditorController.searchItems);
+router.get('/publish-status-batch', async (req, res, next) => {
+  try {
+    const rawIds = req.query.ids || '';
+    const ids = Array.isArray(rawIds)
+      ? rawIds
+      : rawIds.split(',').map((s) => s.trim()).filter(Boolean);
+    const lang = req.query.lang || 'vi';
+    const statusMap = await itemService.getPublishStatusBatch(ids, lang);
+    res.json({ success: true, data: statusMap });
+  } catch (err) {
+    next(err);
+  }
+});
 router.get('/:id/quick-info', contentEditorController.getItemQuickInfo);
 router.get('/:id/children', contentEditorController.getTreeNodes);
 router.get('/:id/languages', contentEditorController.getItemLanguages);
@@ -39,11 +80,6 @@ router.put('/:id/presentation', csrfMiddleware.verifyToken, presentationControll
 router.post('/:id/presentation/reset', csrfMiddleware.verifyToken, presentationController.resetPresentation);
 
 // Workflow operations (GĐ 8)
-const workflowService = require('../../services/workflowService');
-const publishService = require('../../services/publishService');
-const itemService = require('../../services/itemService');
-const PublishedItem = require('../../models/PublishedItem');
-
 router.get('/:id/workflow', async (req, res, next) => {
   try {
     const { id } = req.params;

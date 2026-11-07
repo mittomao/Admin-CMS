@@ -1,0 +1,492 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Sitecore XM Architecture &bull; GĐ 8.1
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-database text-primary"></i>
+          <span>Database Manager & Đối soát Dữ liệu</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          So sánh và đối soát tính toàn vẹn dữ liệu giữa kho nội dung <strong>Master Database</strong> và kho xuất bản <strong>Web Store</strong>.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/content-editor?db=master" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-article"></i>
+          <span>Content Editor (Master)</span>
+        </a>
+        <a href="/admin/content-editor?db=web" class="btn btn-outline-warning d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-world"></i>
+          <span>Content Editor (Web)</span>
+        </a>
+        <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" id="btnCleanupWeb" title="Dọn dẹp các item mồ côi hoặc không còn tồn tại trên Master khỏi Web Store">
+          <i class="ti ti-trash"></i>
+          <span>Dọn dẹp Web DB</span>
+        </button>
+        <button type="button" class="btn btn-primary bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm" id="btnRefreshDbStats">
+          <i class="ti ti-refresh"></i>
+          <span>Làm mới</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stat Cards Overview -->
+  <div class="row row-cards mb-4">
+    <div class="col-sm-6 col-lg-4">
+      <div class="card card-sm border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-body p-3">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="avatar rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <i class="ti ti-database fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium text-slate-500 text-xs uppercase tracking-wide">Master Database</div>
+              <div class="text-slate-900 dark:text-white fw-bold fs-2" id="statMasterTotal">-</div>
+              <div class="text-slate-400 text-[11px]">Kho biên tập (items_master)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-4">
+      <div class="card card-sm border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-body p-3">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="avatar rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                <i class="ti ti-world fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium text-slate-500 text-xs uppercase tracking-wide">Web Store</div>
+              <div class="text-slate-900 dark:text-white fw-bold fs-2" id="statWebTotal">-</div>
+              <div class="text-slate-400 text-[11px]">Kho công khai (items_web)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-4">
+      <div class="card card-sm border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-body p-3">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="avatar rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                <i class="ti ti-arrows-diff fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium text-slate-500 text-xs uppercase tracking-wide">Chênh lệch Item</div>
+              <div class="text-amber-600 dark:text-amber-400 fw-bold fs-2" id="statDiffTotal">-</div>
+              <div class="text-slate-400 text-[11px]">Item chưa xuất bản / mồ côi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Branch Summary Table -->
+  <div class="card border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-xs mb-4">
+    <div class="card-header border-b border-slate-200 dark:border-slate-800 py-3 px-4 d-flex align-items-center justify-content-between">
+      <h3 class="card-title text-sm fw-bold text-slate-800 dark:text-slate-100 m-0 d-flex align-items-center gap-2">
+        <i class="ti ti-git-fork text-primary"></i>
+        <span>Thống kê theo Nhánh Cây Gốc</span>
+      </h3>
+      <span class="badge bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px]">4 Root Branches</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table text-xs">
+        <thead>
+          <tr>
+            <th class="w-1">Nhánh</th>
+            <th>Đường dẫn gốc</th>
+            <th class="text-center">Master Count</th>
+            <th class="text-center">Web Count</th>
+            <th class="text-center">Chênh lệch</th>
+            <th class="text-end">Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="branchStatsTableBody">
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+              <span>Đang tải thống kê các nhánh...</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detailed Differences & Reconciliation Table -->
+  <div class="card border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-xs">
+    <div class="card-header border-b border-slate-200 dark:border-slate-800 py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <h3 class="card-title text-sm fw-bold text-slate-800 dark:text-slate-100 m-0 d-flex align-items-center gap-2">
+          <i class="ti ti-list-search text-warning"></i>
+          <span>Danh sách Item Khác biệt (Reconciliation Diff)</span>
+        </h3>
+        <span class="badge bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-bold" id="diffCountBadge">0 items</span>
+      </div>
+
+      <!-- Controls: Branch Filter & Type Selector -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <select class="form-select form-select-sm text-xs rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800" id="filterBranchSelect" style="width: 180px;">
+          <option value="all">Tất cả các nhánh</option>
+          <option value="/sitecore/content">/sitecore/content</option>
+          <option value="/sitecore/layout">/sitecore/layout</option>
+          <option value="/sitecore/templates">/sitecore/templates</option>
+          <option value="/sitecore/media library">/sitecore/media library</option>
+        </select>
+
+        <div class="btn-group btn-group-sm" role="group" id="diffTypeButtonGroup">
+          <button type="button" class="btn btn-outline-secondary active" data-type="all">Tất cả (<span id="countAllDiff">0</span>)</button>
+          <button type="button" class="btn btn-outline-secondary" data-type="missing">Chưa publish (<span id="countMissing">0</span>)</button>
+          <button type="button" class="btn btn-outline-secondary" data-type="changed">Có thay đổi (<span id="countChanged">0</span>)</button>
+          <button type="button" class="btn btn-outline-secondary" data-type="orphan">Mồ côi (<span id="countOrphan">0</span>)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table text-xs">
+        <thead>
+          <tr>
+            <th>Item Name</th>
+            <th>Đường dẫn (Path)</th>
+            <th>Phân loại</th>
+            <th>Phiên bản</th>
+            <th>Cập nhật gần nhất</th>
+            <th class="text-end">Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="diffTableBody">
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+              <span>Đang kiểm tra đối soát...</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    <div class="card-footer border-t border-slate-200 dark:border-slate-800 py-2.5 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="text-slate-500 text-xs" id="paginationInfo">
+        Hiển thị 0 / 0 items
+      </div>
+      <div class="d-flex align-items-center gap-1" id="paginationControls">
+        <!-- Buttons injected dynamically -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    let currentBranch = 'all';
+    let currentType = 'all';
+    let currentPage = 1;
+
+    async function loadSummary() {
+      try {
+        const res = await fetch('/api/databases/summary');
+        const json = await res.json();
+        if (!json.success || !json.data) return;
+
+        const { branches, totals } = json.data;
+        document.getElementById('statMasterTotal').textContent = (totals.master || 0).toLocaleString();
+        document.getElementById('statWebTotal').textContent = (totals.web || 0).toLocaleString();
+        document.getElementById('statDiffTotal').textContent = Math.abs(totals.diff || 0).toLocaleString();
+
+        const tbody = document.getElementById('branchStatsTableBody');
+        tbody.innerHTML = branches.map((b) => `
+          <tr>
+            <td><strong class="text-slate-800 dark:text-slate-200">${b.name}</strong></td>
+            <td class="font-mono text-slate-500 text-[11px]">${b.branch}</td>
+            <td class="text-center font-bold text-blue-600 dark:text-blue-400">${b.masterCount.toLocaleString()}</td>
+            <td class="text-center font-bold text-emerald-600 dark:text-emerald-400">${b.webCount.toLocaleString()}</td>
+            <td class="text-center">
+              <span class="badge ${b.diff > 0 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'} font-bold">
+                ${b.diff > 0 ? '+' + b.diff : b.diff}
+              </span>
+            </td>
+            <td class="text-end">
+              <button class="btn btn-xs btn-outline-secondary js-filter-branch" data-branch="${b.branch}">
+                <i class="ti ti-filter me-1"></i>Xem khác biệt
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        document.querySelectorAll('.js-filter-branch').forEach((btn) => {
+          btn.addEventListener('click', function() {
+            currentBranch = this.getAttribute('data-branch');
+            document.getElementById('filterBranchSelect').value = currentBranch;
+            currentPage = 1;
+            loadDiff();
+          });
+        });
+      } catch (err) {
+        console.error('Error loading DB summary:', err);
+      }
+    }
+
+    async function loadDiff() {
+      const tbody = document.getElementById('diffTableBody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center text-muted py-5">
+            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+            <span>Đang tải danh sách khác biệt...</span>
+          </td>
+        </tr>
+      `;
+
+      try {
+        const query = new URLSearchParams({
+          branch: currentBranch,
+          type: currentType,
+          page: currentPage,
+          limit: 15,
+        });
+
+        const res = await fetch('/api/databases/diff?' + query.toString());
+        const json = await res.json();
+        if (!json.success || !json.data) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Lỗi tải dữ liệu đối soát.</td></tr>`;
+          return;
+        }
+
+        const { items, pagination, counts } = json.data;
+
+        document.getElementById('countAllDiff').textContent = counts.totalDiff || 0;
+        document.getElementById('countMissing').textContent = counts.missing || 0;
+        document.getElementById('countChanged').textContent = counts.changed || 0;
+        document.getElementById('countOrphan').textContent = counts.orphan || 0;
+        document.getElementById('diffCountBadge').textContent = (pagination.total || 0) + ' items';
+
+        if (items.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">
+                <i class="ti ti-circle-check fs-1 text-emerald-500 mb-2 d-block"></i>
+                <div class="fw-bold">Hai cơ sở dữ liệu hoàn toàn đồng bộ</div>
+                <div class="small text-slate-400">Không tìm thấy item nào khác biệt theo điều kiện lọc hiện tại.</div>
+              </td>
+            </tr>
+          `;
+          renderPagination(pagination);
+          return;
+        }
+
+        tbody.innerHTML = items.map((item) => {
+          let badge = '';
+          if (item.type === 'missing') {
+            badge = '<span class="badge bg-slate-100 text-slate-600 border border-slate-300 dark:bg-slate-800 dark:text-slate-300 font-bold">Chưa xuất bản (Missing)</span>';
+          } else if (item.type === 'changed') {
+            badge = '<span class="badge bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:text-amber-300 font-bold">Có thay đổi (Changed)</span>';
+          } else {
+            badge = '<span class="badge bg-red-100 text-red-800 border border-red-300 dark:bg-red-950 dark:text-red-300 font-bold">Mồ côi ở Web (Orphan)</span>';
+          }
+
+          const versionStr = (item.type === 'orphan')
+            ? `Web: v${item.webVersion || 1}`
+            : (item.type === 'changed' ? `Master: v${item.masterVersion} &rarr; Web: v${item.webVersion}` : `Master: v${item.masterVersion}`);
+
+          const updatedStr = (item.type === 'orphan')
+            ? `Web: ${item.webUpdatedAt ? new Date(item.webUpdatedAt).toLocaleString('vi-VN') : '-'}`
+            : `Master: ${item.masterUpdatedAt ? new Date(item.masterUpdatedAt).toLocaleString('vi-VN') : '-'}`;
+
+          return `
+            <tr>
+              <td>
+                <strong class="text-slate-800 dark:text-slate-200">${item.displayName || item.name}</strong>
+                <div class="font-monospace text-slate-400 text-[10px]">${item.name}</div>
+              </td>
+              <td class="font-mono text-slate-500 text-[11px] max-w-xs text-truncate" title="${item.path}">
+                ${item.path}
+              </td>
+              <td>${badge}</td>
+              <td class="font-mono text-slate-600 dark:text-slate-300 text-[11px]">${versionStr}</td>
+              <td class="text-slate-500 text-[11px]">${updatedStr}</td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  ${item.type !== 'orphan' ? `
+                    <a href="/admin/content-editor/${item._id}?db=master" target="_blank" class="btn btn-outline-primary btn-xs" title="Mở trên Master DB">
+                      <i class="ti ti-database me-1"></i>Master
+                    </a>
+                  ` : ''}
+                  ${item.type !== 'missing' ? `
+                    <a href="/admin/content-editor/${item._id}?db=web" target="_blank" class="btn btn-outline-warning btn-xs" title="Mở trên Web DB">
+                      <i class="ti ti-world me-1"></i>Web
+                    </a>
+                  ` : ''}
+                  ${item.type === 'orphan' ? `
+                    <button type="button" class="btn btn-outline-danger btn-xs btn-remove-orphan" data-item-id="${item._id}" data-item-name="${item.name || item.displayName || item._id}" title="Gỡ bỏ item mồ côi này khỏi Web Store">
+                      <i class="ti ti-trash me-1"></i>Gỡ bỏ
+                    </button>
+                  ` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        renderPagination(pagination);
+      } catch (err) {
+        console.error('Error loading diff:', err);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Lỗi mạng khi tải diff: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderPagination(pagination) {
+      const { total, page, totalPages, limit } = pagination;
+      const start = total === 0 ? 0 : (page - 1) * limit + 1;
+      const end = Math.min(page * limit, total);
+      document.getElementById('paginationInfo').textContent = `Hiển thị ${start} - ${end} trên tổng số ${total} items`;
+
+      const controls = document.getElementById('paginationControls');
+      if (totalPages <= 1) {
+        controls.innerHTML = '';
+        return;
+      }
+
+      controls.innerHTML = `
+        <button class="btn btn-sm btn-outline-secondary px-2.5 py-1 ${page <= 1 ? 'disabled' : ''}" id="btnPrevPage">
+          <i class="ti ti-chevron-left"></i>
+        </button>
+        <span class="px-2 text-xs font-semibold text-slate-600 dark:text-slate-300">Trang ${page} / ${totalPages}</span>
+        <button class="btn btn-sm btn-outline-secondary px-2.5 py-1 ${page >= totalPages ? 'disabled' : ''}" id="btnNextPage">
+          <i class="ti ti-chevron-right"></i>
+        </button>
+      `;
+
+      const btnPrev = document.getElementById('btnPrevPage');
+      if (btnPrev && page > 1) {
+        btnPrev.addEventListener('click', () => {
+          currentPage--;
+          loadDiff();
+        });
+      }
+      const btnNext = document.getElementById('btnNextPage');
+      if (btnNext && page < totalPages) {
+        btnNext.addEventListener('click', () => {
+          currentPage++;
+          loadDiff();
+        });
+      }
+    }
+
+    document.getElementById('filterBranchSelect').addEventListener('change', function() {
+      currentBranch = this.value;
+      currentPage = 1;
+      loadDiff();
+    });
+
+    document.querySelectorAll('#diffTypeButtonGroup button').forEach((btn) => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('#diffTypeButtonGroup button').forEach((b) => b.classList.remove('active'));
+        this.classList.add('active');
+        currentType = this.getAttribute('data-type');
+        currentPage = 1;
+        loadDiff();
+      });
+    });
+
+    document.getElementById('btnRefreshDbStats').addEventListener('click', () => {
+      loadSummary();
+      loadDiff();
+    });
+
+    // Cleanup Web DB Button handler
+    const btnCleanup = document.getElementById('btnCleanupWeb');
+    if (btnCleanup) {
+      btnCleanup.addEventListener('click', async () => {
+        if (!confirm('Bạn có chắc chắn muốn dọn dẹp Web DB? Các item mồ côi (đã bị xóa trên Master) sẽ bị xóa vĩnh viễn khỏi Web Store.')) {
+          return;
+        }
+
+        const origHtml = btnCleanup.innerHTML;
+        btnCleanup.disabled = true;
+        btnCleanup.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang dọn dẹp...';
+
+        try {
+          const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+          const res = await fetch('/api/publish/cleanup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrf,
+            },
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.message || 'Lỗi khi dọn dẹp Web DB.');
+          }
+
+          alert(`Đã dọn dẹp Web DB thành công! Đã gỡ bỏ ${data.removedCount || 0} mục lỗi thời/mồ côi.`);
+          loadSummary();
+          loadDiff();
+        } catch (err) {
+          alert('Lỗi: ' + err.message);
+        } finally {
+          btnCleanup.disabled = false;
+          btnCleanup.innerHTML = origHtml;
+        }
+      });
+    }
+
+    // Individual Orphan Quick Remove handler
+    const diffTableBody = document.getElementById('diffTableBody');
+    if (diffTableBody) {
+      diffTableBody.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-remove-orphan');
+        if (!btn) return;
+        const itemId = btn.getAttribute('data-item-id');
+        const itemName = btn.getAttribute('data-item-name') || itemId;
+        if (!confirm(`Bạn có chắc muốn gỡ bỏ mục mồ côi "${itemName}" khỏi Web DB?`)) return;
+
+        const origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        try {
+          const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+          const res = await fetch(`/api/items/${itemId}/unpublish`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrf,
+            },
+            body: JSON.stringify({ includeSubitems: true }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.message || 'Lỗi khi gỡ bỏ.');
+          loadSummary();
+          loadDiff();
+        } catch (err) {
+          alert('Lỗi: ' + err.message);
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+      });
+    }
+
+    // Initial Load
+    loadSummary();
+    loadDiff();
+  })();
+</script>
+

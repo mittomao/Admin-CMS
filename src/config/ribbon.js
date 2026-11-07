@@ -168,10 +168,10 @@ const ribbonConfig = {
           actions: [
             {
               id: 'btn-workflow-execute',
-              title: 'Workflow Command',
+              title: 'Lệnh duyệt...',
               icon: 'ti ti-send',
               size: 'large',
-              tooltip: 'Thực thi lệnh chuyển trạng thái quy trình phê duyệt',
+              tooltip: 'Thực thi lệnh chuyển bước quy trình (Submit, Approve, Reject...)',
               action: 'workflow:execute-command',
             },
             {
@@ -371,9 +371,45 @@ const ribbonConfig = {
       id: 'view',
       title: 'View',
       isActive: false,
-      isDisabled: true,
-      phaseNotice: 'Standard view settings',
-      groups: [],
+      isDisabled: false,
+      groups: [
+        {
+          id: 'database-switch',
+          title: 'Database',
+          actions: [
+            {
+              id: 'btn-db-master',
+              title: 'Master DB',
+              icon: 'ti ti-database',
+              size: 'large',
+              tooltip: 'Chuyển sang soạn thảo trên Master Database (Đọc / Ghi)',
+              action: 'switch-db-master',
+            },
+            {
+              id: 'btn-db-web',
+              title: 'Web DB',
+              icon: 'ti ti-world-download',
+              size: 'large',
+              tooltip: 'Chuyển sang xem Web Database (Chỉ đọc)',
+              action: 'switch-db-web',
+            },
+          ],
+        },
+        {
+          id: 'tree-options',
+          title: 'Tree Options',
+          actions: [
+            {
+              id: 'btn-toggle-publish-badges',
+              title: 'Publish Badges',
+              icon: 'ti ti-badge',
+              size: 'large',
+              tooltip: 'Bật / tắt huy hiệu trạng thái xuất bản trên cây nội dung',
+              action: 'toggle-publish-badges',
+            },
+          ],
+        },
+      ],
     },
   ],
 };

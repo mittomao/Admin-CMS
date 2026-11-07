@@ -183,6 +183,16 @@ const seedData = async () => {
         allowedRoles: [rolesMap['Administrator']],
       },
       {
+        name: 'Databases',
+        description: 'Overview and reconciliation between Master and Web databases',
+        icon: 'ti ti-database',
+        iconBg: 'indigo',
+        group: 'Control Panel & Maintenance',
+        url: '/admin/databases',
+        sortOrder: 15,
+        allowedRoles: [rolesMap['Administrator'], rolesMap['Editor']],
+      },
+      {
         name: 'Template Manager',
         description: 'Design item templates, sections, and field definitions',
         icon: 'ti ti-layout-grid',

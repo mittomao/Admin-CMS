@@ -3,22 +3,29 @@
     <!-- Left: Brand, Waffle App Switcher, Breadcrumb -->
     <div class="d-flex align-items-center gap-3">
       <!-- Brand Logo -->
-      <a href="/admin/launchpad" class="navbar-brand d-flex align-items-center gap-2 text-decoration-none group rounded-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30 p-1 transition-all duration-150">
-        <div style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; background-color: var(--sc-red); color: #ffffff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;" class="group-hover:scale-105 group-active:scale-95 transition-transform duration-150 shadow-xs">
+      <a href="/admin/launchpad"
+        class="navbar-brand d-flex align-items-center gap-2 text-decoration-none group rounded-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30 p-1 transition-all duration-150">
+        <div
+          style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; background-color: var(--sc-red); color: #ffffff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;"
+          class="group-hover:scale-105 group-active:scale-95 transition-transform duration-150 shadow-xs">
           S
         </div>
         <span class="fw-bold fs-2 text-heading group-hover:text-sc-red transition-colors duration-150">Sitecore</span>
       </a>
 
       <!-- Direct Launchpad Link -->
-      <a href="/admin/launchpad" class="btn btn-sm btn-ghost-primary d-none d-sm-inline-flex align-items-center gap-1 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 focus-visible:ring-2 focus-visible:ring-sc-red/30 focus-visible:outline-none <%= typeof activeApp !== 'undefined' && activeApp === 'launchpad' ? 'active' : '' %>" title="Về Launchpad">
+      <a href="/admin/launchpad"
+        class="btn btn-sm btn-ghost-primary d-none d-sm-inline-flex align-items-center gap-1 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 focus-visible:ring-2 focus-visible:ring-sc-red/30 focus-visible:outline-none <%= typeof activeApp !== 'undefined' && activeApp === 'launchpad' ? 'active' : '' %>"
+        title="Về Launchpad">
         <i class="ti ti-layout-grid fs-2"></i>
         <span>Launchpad</span>
       </a>
 
       <!-- Waffle Menu (App Switcher 9 Chấm) -->
       <div class="dropdown">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-1 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 focus-visible:ring-2 focus-visible:ring-sc-red/30 focus-visible:outline-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Menu ứng dụng nhanh">
+        <button
+          class="btn btn-sm btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-1 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 focus-visible:ring-2 focus-visible:ring-sc-red/30 focus-visible:outline-none"
+          type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Menu ứng dụng nhanh">
           <i class="ti ti-apps fs-2"></i>
           <span class="d-none d-md-inline">Ứng Dụng</span>
         </button>
@@ -30,15 +37,21 @@
                 Biên Tập Nội Dung
               </div>
               <div class="d-flex flex-column gap-1">
-                <a href="/admin/content-editor" class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
-                  <span class="avatar avatar-xs bg-primary-lt text-primary rounded transition-transform duration-150 group-hover:scale-110"><i class="ti ti-article"></i></span>
+                <a href="/admin/content-editor"
+                  class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
+                  <span
+                    class="avatar avatar-xs bg-primary-lt text-primary rounded transition-transform duration-150 group-hover:scale-110"><i
+                      class="ti ti-article"></i></span>
                   <div>
                     <div class="fw-semibold small">Content Editor</div>
                     <div class="text-muted" style="font-size: 11px;">Quản lý cây nội dung và trường dữ liệu</div>
                   </div>
                 </a>
-                <a href="/admin/template-manager" class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
-                  <span class="avatar avatar-xs bg-indigo-lt text-indigo rounded transition-transform duration-150 group-hover:scale-110"><i class="ti ti-layout-grid-add"></i></span>
+                <a href="/admin/template-manager"
+                  class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
+                  <span
+                    class="avatar avatar-xs bg-indigo-lt text-indigo rounded transition-transform duration-150 group-hover:scale-110"><i
+                      class="ti ti-layout-grid-add"></i></span>
                   <div>
                     <div class="fw-semibold small">Template Manager</div>
                     <div class="text-muted" style="font-size: 11px;">Thiết kế mẫu item, sections &amp; fields</div>
@@ -53,15 +66,21 @@
                 Tài Nguyên &amp; Duyệt Bài
               </div>
               <div class="d-flex flex-column gap-1">
-                <a href="/admin/media" class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
-                  <span class="avatar avatar-xs bg-success-lt text-success rounded transition-transform duration-150 group-hover:scale-110"><i class="ti ti-photo"></i></span>
+                <a href="/admin/media-library"
+                  class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
+                  <span
+                    class="avatar avatar-xs bg-success-lt text-success rounded transition-transform duration-150 group-hover:scale-110"><i
+                      class="ti ti-photo"></i></span>
                   <div>
                     <div class="fw-semibold small">Media Library</div>
                     <div class="text-muted" style="font-size: 11px;">Quản lý hình ảnh và tệp Cloudinary</div>
                   </div>
                 </a>
-                <a href="#" onclick="alert('Workbox sẽ có trong GĐ 7'); return false;" class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
-                  <span class="avatar avatar-xs bg-warning-lt text-warning rounded transition-transform duration-150 group-hover:scale-110"><i class="ti ti-inbox"></i></span>
+                <a href="/admin/workbox"
+                  class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
+                  <span
+                    class="avatar avatar-xs bg-warning-lt text-warning rounded transition-transform duration-150 group-hover:scale-110"><i
+                      class="ti ti-inbox"></i></span>
                   <div>
                     <div class="fw-semibold small">Workbox</div>
                     <div class="text-muted" style="font-size: 11px;">Kiểm duyệt và phê duyệt workflow</div>
@@ -76,15 +95,21 @@
                 Hệ Thống &amp; Bảo Mật
               </div>
               <div class="d-flex flex-column gap-1">
-                <a href="#" onclick="alert('Bảo mật người dùng sẽ có trong GĐ 6'); return false;" class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
-                  <span class="avatar avatar-xs bg-purple-lt text-purple rounded transition-transform duration-150 group-hover:scale-110"><i class="ti ti-users"></i></span>
+                <a href="#" onclick="alert('Bảo mật người dùng sẽ có trong GĐ 6'); return false;"
+                  class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
+                  <span
+                    class="avatar avatar-xs bg-purple-lt text-purple rounded transition-transform duration-150 group-hover:scale-110"><i
+                      class="ti ti-users"></i></span>
                   <div>
                     <div class="fw-semibold small">Bảo Mật (Security)</div>
                     <div class="text-muted" style="font-size: 11px;">Quản lý User, Role và Item ACL</div>
                   </div>
                 </a>
-                <a href="#" onclick="alert('Control Panel sẽ có trong GĐ 10'); return false;" class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
-                  <span class="avatar avatar-xs bg-danger-lt text-danger rounded transition-transform duration-150 group-hover:scale-110"><i class="ti ti-settings"></i></span>
+                <a href="#" onclick="alert('Control Panel sẽ có trong GĐ 10'); return false;"
+                  class="d-flex align-items-center gap-2.5 p-2 rounded-2 text-decoration-none text-reset transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30">
+                  <span
+                    class="avatar avatar-xs bg-danger-lt text-danger rounded transition-transform duration-150 group-hover:scale-110"><i
+                      class="ti ti-settings"></i></span>
                   <div>
                     <div class="fw-semibold small">Control Panel</div>
                     <div class="text-muted" style="font-size: 11px;">Cấu hình hệ thống và Re-index</div>
@@ -100,7 +125,10 @@
       <div class="d-none d-lg-flex align-items-center border-start ps-3 text-muted small">
         <i class="ti ti-chevron-right me-1 fs-3"></i>
         <span class="fw-medium text-heading">
-          <%= typeof activeApp !== 'undefined' && activeApp === 'content-editor' ? 'Content Editor' : (typeof activeApp !== 'undefined' && activeApp === 'template-manager' ? 'Template Manager' : (typeof activeApp !== 'undefined' && activeApp === 'media-library' ? 'Media Library' : 'Launchpad')) %>
+          <%= typeof activeApp !=='undefined' && activeApp==='content-editor' ? 'Content Editor' : (typeof activeApp
+            !=='undefined' && activeApp==='template-manager' ? 'Template Manager' : (typeof activeApp !=='undefined' &&
+            activeApp==='media-library' ? 'Media Library' : (typeof activeApp !=='undefined' && activeApp==='databases'
+            ? 'Databases' : 'Launchpad' ))) %>
         </span>
       </div>
     </div>
@@ -111,24 +139,33 @@
       <div class="d-none d-md-block" style="width: 220px;">
         <div class="input-icon">
           <span class="input-icon-addon"><i class="ti ti-search text-muted"></i></span>
-          <input type="text" id="globalSearchInput" class="form-control form-control-sm transition-all duration-150 hover:border-slate-400 dark:hover:border-slate-600 focus:border-sc-red focus:ring-2 focus:ring-sc-red/20 focus:outline-none" placeholder="Tìm kiếm nhanh...">
+          <input type="text" id="globalSearchInput"
+            class="form-control form-control-sm transition-all duration-150 hover:border-slate-400 dark:hover:border-slate-600 focus:border-sc-red focus:ring-2 focus:ring-sc-red/20 focus:outline-none"
+            placeholder="Tìm kiếm nhanh...">
           <span class="input-icon-addon end-0 pe-2" style="left: auto;">
-            <kbd class="kbd kbd-sm" style="font-size: 10px; padding: 2px 4px; border: 1px solid var(--tblr-border-color); border-radius: 3px; background: var(--tblr-bg-surface-secondary); color: var(--tblr-muted);">Ctrl K</kbd>
+            <kbd class="kbd kbd-sm"
+              style="font-size: 10px; padding: 2px 4px; border: 1px solid var(--tblr-border-color); border-radius: 3px; background: var(--tblr-bg-surface-secondary); color: var(--tblr-muted);">Ctrl
+              K</kbd>
           </span>
         </div>
       </div>
 
       <!-- Theme Switcher (Dark / Light Mode) -->
-      <a href="javascript:void(0);" class="nav-link px-2 text-muted rounded-2 transition-all duration-150 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30" data-theme-toggle title="Đổi giao diện Sáng / Tối">
+      <a href="javascript:void(0);"
+        class="nav-link px-2 text-muted rounded-2 transition-all duration-150 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30"
+        data-theme-toggle title="Đổi giao diện Sáng / Tối">
         <i class="ti ti-sun theme-icon-sun fs-2"></i>
         <i class="ti ti-moon theme-icon-moon fs-2"></i>
       </a>
 
       <!-- Notifications Bell -->
       <div class="nav-item dropdown">
-        <a href="javascript:void(0);" class="nav-link px-2 text-muted position-relative rounded-2 transition-all duration-150 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
+        <a href="javascript:void(0);"
+          class="nav-link px-2 text-muted position-relative rounded-2 transition-all duration-150 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30"
+          data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
           <i class="ti ti-bell fs-2"></i>
-          <span class="badge badge-sm bg-red badge-blink position-absolute top-0 end-0 mt-1 me-1 p-1 rounded-circle"></span>
+          <span
+            class="badge badge-sm bg-red badge-blink position-absolute top-0 end-0 mt-1 me-1 p-1 rounded-circle"></span>
         </a>
         <div class="dropdown-menu dropdown-menu-end dropdown-menu-card p-3 shadow-lg rounded-3" style="width: 300px;">
           <div class="fw-bold mb-2 small text-heading">Thông Báo Mới</div>
@@ -141,25 +178,38 @@
 
       <!-- User Profile Dropdown -->
       <div class="nav-item dropdown ms-2">
-        <a href="javascript:void(0);" class="nav-link d-flex lh-1 text-reset p-1 rounded-2 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30" data-bs-toggle="dropdown" aria-label="Mở thực đơn người dùng">
-          <span class="avatar avatar-sm rounded-circle bg-primary-lt text-primary fw-bold transition-transform duration-150 hover:scale-105" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;">
-            <%= typeof user !== 'undefined' && user && user.fullName ? user.fullName.charAt(0).toUpperCase() : 'A' %>
+        <a href="javascript:void(0);"
+          class="nav-link d-flex lh-1 text-reset p-1 rounded-2 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30"
+          data-bs-toggle="dropdown" aria-label="Mở thực đơn người dùng">
+          <span
+            class="avatar avatar-sm rounded-circle bg-primary-lt text-primary fw-bold transition-transform duration-150 hover:scale-105"
+            style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;">
+            <%= typeof user !=='undefined' && user && user.fullName ? user.fullName.charAt(0).toUpperCase() : 'A' %>
           </span>
           <div class="d-none d-xl-block ps-2">
-            <div class="fw-semibold small"><%= typeof user !== 'undefined' && user && user.fullName ? user.fullName : 'System Administrator' %></div>
+            <div class="fw-semibold small">
+              <%= typeof user !=='undefined' && user && user.fullName ? user.fullName : 'System Administrator' %>
+            </div>
             <div class="text-muted" style="font-size: 11px;">
-              <%= typeof user !== 'undefined' && user && user.roleNames && user.roleNames.length > 0 ? user.roleNames.join(', ') : 'Administrator' %>
+              <%= typeof user !=='undefined' && user && user.roleNames && user.roleNames.length> 0 ?
+                user.roleNames.join(', ') : 'Administrator' %>
             </div>
           </div>
         </a>
         <div class="dropdown-menu dropdown-menu-end shadow-sm rounded-3">
           <div class="dropdown-header">Tài khoản</div>
-          <a class="dropdown-item transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-slate-800" href="/admin/launchpad"><i class="ti ti-layout-grid me-2 text-muted"></i> Launchpad</a>
-          <a class="dropdown-item transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-slate-800" href="/admin/content-editor"><i class="ti ti-article me-2 text-muted"></i> Content Editor</a>
-          <a class="dropdown-item transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-slate-800" href="/admin/media"><i class="ti ti-photo me-2 text-muted"></i> Media Library</a>
+          <a class="dropdown-item transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-slate-800"
+            href="/admin/launchpad"><i class="ti ti-layout-grid me-2 text-muted"></i> Launchpad</a>
+          <a class="dropdown-item transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-slate-800"
+            href="/admin/content-editor"><i class="ti ti-article me-2 text-muted"></i> Content Editor</a>
+          <a class="dropdown-item transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-slate-800"
+            href="/admin/media"><i class="ti ti-photo me-2 text-muted"></i> Media Library</a>
+          <a class="dropdown-item transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-slate-800"
+            href="/admin/databases"><i class="ti ti-database me-2 text-muted"></i> Databases</a>
           <div class="dropdown-divider"></div>
           <form action="/admin/logout" method="POST" class="m-0 p-0">
-            <button type="submit" class="dropdown-item text-danger transition-colors duration-150 hover:bg-red-50 dark:hover:bg-red-950/40">
+            <button type="submit"
+              class="dropdown-item text-danger transition-colors duration-150 hover:bg-red-50 dark:hover:bg-red-950/40">
               <i class="ti ti-logout me-2"></i> Đăng xuất
             </button>
           </form>

@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 const Item = require('../models/Item');
+const PublishedItem = require('../models/PublishedItem');
 const Template = require('../models/Template');
 const User = require('../models/User');
 const { getFieldHandler } = require('../fields');
 const templateService = require('./templateService');
 const versionService = require('./versionService');
+const webItemService = require('./webItemService');
 const { resolveItemIcon, getIconUrl } = require('../config/icons');
 
 class ConflictError extends Error {
@@ -55,9 +57,10 @@ const itemService = {
    */
   canPerform(user, item, action) {
     if (!user) return false;
-    const userRoles = Array.isArray(user.roles)
-      ? user.roles.map((r) => (r.name ? r.name : r.toString()))
-      : [];
+    const userRoles = [
+      ...(Array.isArray(user.roles) ? user.roles.map((r) => (r.name ? r.name : r.toString())) : []),
+      ...(Array.isArray(user.roleNames) ? user.roleNames : []),
+    ];
 
     const isAdmin = userRoles.includes('Administrator');
     const isDeveloper = userRoles.includes('Developer');
@@ -128,20 +131,46 @@ const itemService = {
       return isAdmin;
     }
 
+    // GĐ 8.1: Database Switcher Actions
+    if (action === 'database:web:read' || action === 'database:compare') {
+      return isAdmin || isApprover;
+    }
+
     return true;
+  },
+
+  /**
+   * Validate and normalize database name (whitelist: 'master' | 'web')
+   */
+  validateDb(db = 'master') {
+    const clean = (db || 'master').toLowerCase().trim();
+    if (clean !== 'master' && clean !== 'web') {
+      throw new ValidationError(`Cơ sở dữ liệu không hợp lệ [${db}]. Chỉ chấp nhận: 'master', 'web'.`);
+    }
+    return clean;
+  },
+
+  /**
+   * Get Repository Model for specific database (GĐ 8.1)
+   */
+  getItemRepository(db = 'master') {
+    const clean = this.validateDb(db);
+    return clean === 'web' ? PublishedItem : Item;
   },
 
   /**
    * Get the root item of the CMS tree (/sitecore)
    */
-  async getRoot() {
-    let root = await Item.findOne({ path: '/sitecore', deleted: false })
+  async getRoot(db = 'master') {
+    const cleanDb = this.validateDb(db);
+    const Repo = this.getItemRepository(cleanDb);
+    let root = await Repo.findOne({ path: '/sitecore', isDeleted: { $ne: true }, deleted: { $ne: true } })
       .populate('templateId')
       .lean();
 
     if (!root) {
       // Fallback: look for item with parentId: null
-      root = await Item.findOne({ parentId: null, deleted: false })
+      root = await Repo.findOne({ parentId: null, isDeleted: { $ne: true }, deleted: { $ne: true } })
         .populate('templateId')
         .lean();
     }
@@ -151,9 +180,11 @@ const itemService = {
   /**
    * Get an item by ID
    */
-  async getById(id) {
+  async getById(id, db = 'master') {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
-    const item = await Item.findOne({ _id: id, deleted: false })
+    const cleanDb = this.validateDb(db);
+    const Repo = this.getItemRepository(cleanDb);
+    const item = await Repo.findOne({ _id: id, isDeleted: { $ne: true }, deleted: { $ne: true } })
       .populate('templateId')
       .lean();
     if (!item) return null;
@@ -184,10 +215,91 @@ const itemService = {
   },
 
   /**
-   * Get an item with resolved inherited template and calculated field values (handling dynamic standard values and versioning)
+   * Get an item with resolved inherited template and calculated field values
    */
-  async getItemWithRenderSchema(id, langCode = 'vi', versionNumber = 1) {
-    const item = await this.getById(id);
+  async getItemWithRenderSchema(id, langCode = 'vi', versionNumber = 1, db = 'master') {
+    const cleanDb = this.validateDb(db);
+
+    // 1. Web Database Mode (Strict Read-Only)
+    if (cleanDb === 'web') {
+      const item = await this.getById(id, 'web');
+      if (!item) return null;
+
+      const code = (langCode || 'vi').toLowerCase().trim();
+      const languages = Array.isArray(item.languages) ? item.languages : [];
+      const langEntry = languages.find((l) => l.code === code) || null;
+      const pubVersion = langEntry ? langEntry.publishedVersion : (item.sourceVersion || 1);
+
+      const effectiveTemplate = await templateService.resolveEffectiveTemplate(item, code, pubVersion);
+      const resolvedTemplate = effectiveTemplate || (await templateService.resolveTemplate(item.templateId._id || item.templateId));
+      const standardValues = effectiveTemplate ? effectiveTemplate.standardValues : (await templateService.resolveStandardValues(item.templateId._id || item.templateId));
+
+      const resolvedResult = await webItemService.resolveFields(item, code);
+      const resolvedFields = resolvedResult.fields || {};
+
+      // Augment fields on template
+      if (resolvedTemplate && resolvedTemplate.sections) {
+        for (const sec of resolvedTemplate.sections) {
+          if (sec.fields) {
+            for (const f of sec.fields) {
+              const fieldId = f._id.toString();
+              const fieldName = f.name;
+
+              let effectiveValue = '';
+              let hasExplicitValue = false;
+              let origin = 'standard';
+
+              if (resolvedFields[fieldId] !== undefined) {
+                effectiveValue = resolvedFields[fieldId];
+                hasExplicitValue = true;
+                origin = 'version';
+              } else if (resolvedFields[fieldName] !== undefined) {
+                effectiveValue = resolvedFields[fieldName];
+                hasExplicitValue = true;
+                origin = 'version';
+              } else {
+                effectiveValue = f.defaultValue !== undefined ? f.defaultValue : '';
+              }
+
+              f.effectiveValue = effectiveValue;
+              f.isUsingStandardValue = !hasExplicitValue;
+              f.hasExplicitValue = hasExplicitValue;
+              f.origin = origin;
+            }
+          }
+        }
+      }
+
+      const languagesList = languages.map((l) => l.code);
+      const versionsList = langEntry ? [{ version: langEntry.publishedVersion }] : [{ version: 1 }];
+      const quickInfo = await this.getQuickInfo(item, 'web');
+      const componentTemplates = await templateService.getComponentTemplates();
+
+      return {
+        item,
+        resolvedTemplate,
+        standardValues,
+        lang: code,
+        version: pubVersion,
+        versionInfo: {
+          version: pubVersion,
+          createdAt: langEntry?.publishedAt || item.publishedAt || item.updatedAt,
+          updatedAt: langEntry?.publishedAt || item.publishedAt || item.updatedAt,
+        },
+        languagesList,
+        versionsList,
+        hasLanguage: Boolean(langEntry),
+        hasVersion: Boolean(langEntry),
+        componentTemplates,
+        quickInfo,
+        isReadOnly: true,
+        isPublishedOnWeb: true,
+        currentDb: 'web',
+      };
+    }
+
+    // 2. Master Database Mode (Default)
+    const item = await this.getById(id, 'master');
     if (!item) return null;
 
     const effectiveTemplate = await templateService.resolveEffectiveTemplate(item, langCode, versionNumber);
@@ -235,7 +347,7 @@ const itemService = {
 
     // Retrieve available component templates for rendering items
     const componentTemplates = await templateService.getComponentTemplates();
-    const quickInfo = await this.getQuickInfo(item);
+    const quickInfo = await this.getQuickInfo(item, 'master');
 
     return {
       item,
@@ -250,20 +362,24 @@ const itemService = {
       hasVersion: resolvedResult.hasVersion,
       componentTemplates,
       quickInfo,
+      isReadOnly: false,
+      currentDb: 'master',
     };
   },
 
   /**
-   * Get Sitecore Quick Info metadata for an item (DEC-037 / GĐ 6.3)
+   * Get Sitecore Quick Info metadata for an item (DEC-037 / DEC-041)
    */
-  async getQuickInfo(itemOrId) {
+  async getQuickInfo(itemOrId, db = 'master') {
     if (!itemOrId) return null;
+    const cleanDb = this.validateDb(db);
+    const Repo = this.getItemRepository(cleanDb);
 
     let item = itemOrId;
     if (typeof itemOrId === 'string' || itemOrId instanceof mongoose.Types.ObjectId || !itemOrId.name || !itemOrId.path) {
-      item = await Item.findById(itemOrId).lean();
+      item = await Repo.findById(itemOrId).lean();
     }
-    if (!item) {
+    if (!item && cleanDb === 'master') {
       // Check if it's a Template document (in case called with template ID)
       const tpl = await Template.findById(itemOrId).lean();
       if (tpl) {
@@ -286,9 +402,10 @@ const itemService = {
     const templateIdToQuery = item.templateId ? (item.templateId._id || item.templateId) : null;
     const createdFromId = item.createdFrom ? (item.createdFrom._id || item.createdFrom) : null;
     const createdById = item.createdBy ? (item.createdBy._id || item.createdBy) : null;
+    const publishedById = item.publishedBy ? (item.publishedBy._id || item.publishedBy) : null;
 
     // Fetch related records in parallel to prevent N+1 queries
-    const [templateDoc, sourceItem, ownerUser] = await Promise.all([
+    const [templateDoc, sourceItem, ownerUser, publishedByUser] = await Promise.all([
       templateIdToQuery
         ? Template.findById(templateIdToQuery).select('name displayName path').lean()
         : null,
@@ -297,6 +414,9 @@ const itemService = {
         : null,
       createdById
         ? User.findById(createdById).select('username domain fullName').lean()
+        : null,
+      publishedById
+        ? User.findById(publishedById).select('username domain fullName').lean()
         : null,
     ]);
 
@@ -317,6 +437,10 @@ const itemService = {
       name: item.name,
       displayName: item.displayName || item.name,
       path: item.path,
+      database: cleanDb,
+      publishedAt: item.publishedAt || null,
+      publishedBy: publishedByUser ? `${publishedByUser.domain || 'sitecore'}\\${publishedByUser.username}` : (item.publishedBy ? item.publishedBy.toString() : null),
+      sourceVersion: item.sourceVersion || 1,
       template: {
         rawId: templateIdToQuery ? templateIdToQuery.toString() : null,
         id: templateIdStr ? `{${templateIdStr}}` : '',
@@ -373,8 +497,10 @@ const itemService = {
   /**
    * Get an item by Path
    */
-  async getByPath(rawPath) {
+  async getByPath(rawPath, db = 'master') {
     if (!rawPath) return null;
+    const cleanDb = this.validateDb(db);
+    const Repo = this.getItemRepository(cleanDb);
     let targetPath = rawPath.trim();
 
     // Normalize path aliases for templates
@@ -388,7 +514,11 @@ const itemService = {
       targetPath = '/sitecore/templates/' + targetPath.slice('/sitecore/template/'.length);
     }
 
-    return Item.findOne({ path: new RegExp(`^${targetPath}$`, 'i'), deleted: false })
+    return Repo.findOne({
+      path: new RegExp(`^${targetPath}$`, 'i'),
+      isDeleted: { $ne: true },
+      deleted: { $ne: true },
+    })
       .populate('templateId')
       .lean();
   },
@@ -396,11 +526,14 @@ const itemService = {
   /**
    * Get direct children of an item
    */
-  async getChildren(parentId, _options = {}) {
+  async getChildren(parentId, options = {}) {
     if (!parentId || !mongoose.Types.ObjectId.isValid(parentId)) return [];
-    const query = { parentId, deleted: false };
+    const db = options.db || (typeof options === 'string' ? options : 'master');
+    const cleanDb = this.validateDb(db);
+    const Repo = this.getItemRepository(cleanDb);
+    const query = { parentId, isDeleted: { $ne: true }, deleted: { $ne: true } };
 
-    const children = await Item.find(query)
+    const children = await Repo.find(query)
       .populate('templateId')
       .sort({ sortOrder: 1, name: 1 })
       .lean();
@@ -409,8 +542,8 @@ const itemService = {
 
     // Check which children have subitems of their own
     const childIds = children.map((c) => c._id);
-    const subChildrenCounts = await Item.aggregate([
-      { $match: { parentId: { $in: childIds }, deleted: false } },
+    const subChildrenCounts = await Repo.aggregate([
+      { $match: { parentId: { $in: childIds }, isDeleted: { $ne: true }, deleted: { $ne: true } } },
       { $group: { _id: '$parentId', count: { $sum: 1 } } },
     ]);
 
@@ -429,10 +562,13 @@ const itemService = {
   /**
    * Get path breadcrumb trail from root to item
    */
-  async getPathBreadcrumb(item) {
+  async getPathBreadcrumb(item, db = 'master') {
     if (!item) return [];
+    const cleanDb = this.validateDb(db);
+    const Repo = this.getItemRepository(cleanDb);
+
     const trailIds = [...(item.ancestors || []), item._id];
-    const items = await Item.find({ _id: { $in: trailIds } })
+    const items = await Repo.find({ _id: { $in: trailIds } })
       .select('name displayName path templateId')
       .populate('templateId', 'name icon')
       .lean();
@@ -1204,13 +1340,17 @@ const itemService = {
   /**
    * Search items in the content tree by keyword
    */
-  async search(query, limit = 20) {
+  async search(query, limit = 20, db = 'master') {
     if (!query || !query.trim()) return [];
+    const cleanDb = this.validateDb(db);
+    const Repo = this.getItemRepository(cleanDb);
+
     const q = query.trim();
     const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 
-    const items = await Item.find({
-      deleted: false,
+    const items = await Repo.find({
+      isDeleted: { $ne: true },
+      deleted: { $ne: true },
       $or: [{ name: regex }, { displayName: regex }],
     })
       .select('name displayName path templateId icon sortOrder')
@@ -1227,6 +1367,89 @@ const itemService = {
         iconUrl: getIconUrl(iconKey),
       };
     });
+  },
+
+  /**
+   * Get Publish Status for a single item (UNPUBLISHED, PUBLISHED, CHANGED)
+   */
+  async getPublishStatus(itemOrId, langCode = 'vi', _versionNumber = 1) {
+    if (!itemOrId) return 'UNPUBLISHED';
+    const id = itemOrId._id || itemOrId;
+    const masterItem = itemOrId.name ? itemOrId : await Item.findById(id).lean();
+    if (!masterItem || masterItem.isDeleted || masterItem.deleted) return 'UNPUBLISHED';
+
+    const webItem = await PublishedItem.findById(id).lean();
+    if (!webItem || webItem.isDeleted) return 'UNPUBLISHED';
+
+    const code = (langCode || 'vi').toLowerCase().trim();
+    const webLang = (webItem.languages || []).find((l) => l.code === code);
+    if (!webLang) return 'UNPUBLISHED';
+
+    // Check version difference
+    const masterLang = (masterItem.languages || []).find((l) => l.code === code);
+    const masterVersions = masterLang?.versions || [];
+    const latestMasterVersion = masterVersions.length > 0
+      ? Math.max(...masterVersions.map((v) => v.version))
+      : 1;
+
+    if (latestMasterVersion > webLang.publishedVersion) {
+      return 'CHANGED';
+    }
+
+    if (new Date(masterItem.updatedAt).getTime() > new Date(webItem.updatedAt).getTime() + 1000) {
+      return 'CHANGED';
+    }
+
+    return 'PUBLISHED';
+  },
+
+  /**
+   * Get Publish Status Batch for multiple items (optimized with $in)
+   */
+  async getPublishStatusBatch(ids, langCode = 'vi') {
+    if (!Array.isArray(ids) || ids.length === 0) return {};
+    const validIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    if (validIds.length === 0) return {};
+
+    const [masterItems, webItems] = await Promise.all([
+      Item.find({ _id: { $in: validIds } }).select('_id updatedAt languages isDeleted deleted').lean(),
+      PublishedItem.find({ _id: { $in: validIds } }).select('_id updatedAt sourceVersion languages isDeleted').lean(),
+    ]);
+
+    const code = (langCode || 'vi').toLowerCase().trim();
+    const webMap = new Map(webItems.map((w) => [w._id.toString(), w]));
+    const statusMap = {};
+
+    for (const m of masterItems) {
+      const idStr = m._id.toString();
+      const w = webMap.get(idStr);
+      if (!w || w.isDeleted) {
+        statusMap[idStr] = 'UNPUBLISHED';
+        continue;
+      }
+
+      const webLang = (w.languages || []).find((l) => l.code === code);
+      if (!webLang) {
+        statusMap[idStr] = 'UNPUBLISHED';
+        continue;
+      }
+
+      const masterLang = (m.languages || []).find((l) => l.code === code);
+      const masterVersions = masterLang?.versions || [];
+      const latestMasterVersion = masterVersions.length > 0
+        ? Math.max(...masterVersions.map((v) => v.version))
+        : 1;
+
+      if (latestMasterVersion > webLang.publishedVersion) {
+        statusMap[idStr] = 'CHANGED';
+      } else if (new Date(m.updatedAt).getTime() > new Date(w.updatedAt).getTime() + 1000) {
+        statusMap[idStr] = 'CHANGED';
+      } else {
+        statusMap[idStr] = 'PUBLISHED';
+      }
+    }
+
+    return statusMap;
   },
 };
 

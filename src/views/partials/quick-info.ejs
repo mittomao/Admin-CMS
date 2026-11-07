@@ -94,12 +94,50 @@
     </div>
 
     <!-- Row 6: Item owner -->
-    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5">
+    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
       <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Item owner:</div>
       <div class="sc-quick-info-value font-mono text-slate-800 dark:text-slate-200">
         <span class="<%= itemOwnerText === '[unknown]' ? 'text-slate-400' : '' %>"><%= itemOwnerText %></span>
       </div>
     </div>
+
+    <!-- Row 7: Database (GĐ 8.1) -->
+    <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 <%= qi.database === 'web' ? 'border-b border-slate-200/60 dark:border-slate-800/80' : '' %>">
+      <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Database:</div>
+      <div class="sc-quick-info-value font-mono text-slate-800 dark:text-slate-200 flex items-center gap-2">
+        <span class="badge <%= qi.database === 'web' ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300' %> border text-[11px] font-bold">
+          <%= qi.database || 'master' %>
+        </span>
+      </div>
+    </div>
+
+    <% if (qi.database === 'web') { %>
+      <!-- Row 8: Published at -->
+      <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
+        <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Published at:</div>
+        <div class="sc-quick-info-value font-mono text-slate-800 dark:text-slate-200">
+          <%= qi.publishedAt ? new Date(qi.publishedAt).toLocaleString('vi-VN') : '[unknown]' %>
+        </div>
+      </div>
+
+      <!-- Row 9: Published by -->
+      <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5 border-b border-slate-200/60 dark:border-slate-800/80">
+        <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Published by:</div>
+        <div class="sc-quick-info-value font-mono text-slate-800 dark:text-slate-200">
+          <%= qi.publishedBy || '[system]' %>
+        </div>
+      </div>
+
+      <!-- Row 10: Source version -->
+      <div class="sc-quick-info-row flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-1.5">
+        <div class="sc-quick-info-label sm:w-28 text-slate-500 font-semibold flex-shrink-0">Source version:</div>
+        <div class="sc-quick-info-value font-mono text-slate-800 dark:text-slate-200">
+          <span class="badge bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 font-bold text-[11px]">
+            v<%= qi.sourceVersion || 1 %>
+          </span>
+        </div>
+      </div>
+    <% } %>
   </div>
 </div>
 

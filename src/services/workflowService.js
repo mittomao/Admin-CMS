@@ -43,9 +43,7 @@ class WorkflowService {
     this.registerAction('validate', async ({ item, lang, version }) => {
       logger.info(`[Workflow Action] Validating item ${item._id} (${lang} v${version})`);
       const ver = item.getVersion ? item.getVersion(lang, version) : null;
-      if (!ver) {
-        throw new ValidationError(`Version ${version} in language ${lang} not found for validation`);
-      }
+
       // Check required fields based on template
       const effectiveTemplate = await templateService.resolveEffectiveTemplate(item, lang, version);
       if (effectiveTemplate && Array.isArray(effectiveTemplate.sections)) {
@@ -53,7 +51,10 @@ class WorkflowService {
           if (Array.isArray(sec.fields)) {
             for (const f of sec.fields) {
               if (f.required) {
-                const val = ver.fields instanceof Map ? ver.fields.get(f.name) : ver.fields?.[f.name];
+                let val = ver && ver.fields ? (ver.fields instanceof Map ? ver.fields.get(f.name) : ver.fields?.[f.name]) : undefined;
+                if (val === undefined && item.fields) {
+                  val = item.fields instanceof Map ? item.fields.get(f.name) : item.fields[f.name];
+                }
                 if (val === undefined || val === null || val === '') {
                   throw new ValidationError(`Trường bắt buộc "${f.title || f.name}" không được để trống khi chuyển duyệt.`);
                 }
@@ -419,7 +420,36 @@ class WorkflowService {
       throw new ValidationError('Không tìm thấy trạng thái đích cho lệnh này.');
     }
 
-    // 7. Execute pre-transition actions (e.g. validate)
+    // 7. Ensure language and version entry exist before executing actions
+    let langEntry = item.getLanguage(lang);
+    if (!langEntry) {
+      item.languages.push({
+        code: lang,
+        unversionedFields: new Map(),
+        versions: [{
+          version: parseInt(version, 10) || 1,
+          fields: new Map(),
+          workflowState: fromState._id,
+          createdBy: user._id,
+          updatedBy: user._id,
+        }],
+      });
+      langEntry = item.getLanguage(lang);
+    }
+
+    let ver = langEntry.versions.find((v) => v.version === parseInt(version, 10));
+    if (!ver) {
+      langEntry.versions.push({
+        version: parseInt(version, 10) || 1,
+        fields: new Map(),
+        workflowState: fromState._id,
+        createdBy: user._id,
+        updatedBy: user._id,
+      });
+      ver = langEntry.versions.find((v) => v.version === parseInt(version, 10));
+    }
+
+    // 8. Execute pre-transition actions (e.g. validate)
     if (Array.isArray(cmd.actions)) {
       for (const act of cmd.actions) {
         const handler = this.actionRegistry.get(act.actionType);
@@ -429,29 +459,10 @@ class WorkflowService {
       }
     }
 
-    // 8. Atomically update item's version workflowState
-    let langEntry = item.getLanguage(lang);
-    if (!langEntry) {
-      item.languages.push({
-        code: lang,
-        versions: [{ version, workflowState: toState._id, createdBy: user._id, updatedBy: user._id }],
-      });
-      langEntry = item.getLanguage(lang);
-    }
-
-    const ver = langEntry.versions.find((v) => v.version === parseInt(version, 10));
-    if (!ver) {
-      langEntry.versions.push({
-        version: parseInt(version, 10),
-        workflowState: toState._id,
-        createdBy: user._id,
-        updatedBy: user._id,
-      });
-    } else {
-      ver.workflowState = toState._id;
-      ver.updatedBy = user._id;
-      ver.updatedAt = new Date();
-    }
+    // 9. Atomically update item's version workflowState
+    ver.workflowState = toState._id;
+    ver.updatedBy = user._id;
+    ver.updatedAt = new Date();
 
     item.updatedBy = user._id;
     item.updatedAt = new Date();
@@ -569,6 +580,8 @@ class WorkflowService {
 
     const items = await Item.find({
       'languages.versions.workflowState': sId,
+      deleted: { $ne: true },
+      isDeleted: { $ne: true },
     })
       .populate('templateId', 'name displayName icon')
       .populate('updatedBy', 'username fullName')

@@ -1,45 +1,50 @@
-<div class="desktop-window workbox-window flex flex-col h-[calc(100vh-120px)] bg-slate-50 border border-slate-200 shadow-md rounded-lg overflow-hidden">
+<div class="card border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900 my-2 h-[calc(100vh-140px)] flex flex-col">
   <!-- Window Header -->
-  <div class="window-header bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between select-none">
-    <div class="window-title flex items-center gap-2.5 text-slate-800 font-semibold text-sm">
-      <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-indigo-100 text-indigo-700">
+  <div class="window-header bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between select-none">
+    <div class="window-title flex items-center gap-2.5 text-slate-800 dark:text-slate-100 font-semibold text-sm">
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50 shadow-2xs">
         <i class="ti ti-checkbox text-base"></i>
       </span>
-      <span class="window-name tracking-tight font-medium">Workbox</span>
-      <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-600 font-mono">Content Approval & Publishing Queue</span>
+      <span class="window-name tracking-tight font-bold text-slate-900 dark:text-white">Workbox</span>
+      <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium">Content Approval & Publishing Queue</span>
     </div>
     <div class="window-actions flex items-center gap-2">
-      <a href="/admin/launchpad" class="inline-flex items-center justify-center w-7 h-7 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition" title="Đóng">✕</a>
+      <a href="/admin/launchpad" class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Đóng về Launchpad">✕</a>
     </div>
   </div>
 
-  <!-- Workbox Toolbar / Ribbon -->
-  <div class="workbox-toolbar bg-white border-b border-slate-200 px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
-    <div class="flex items-center gap-2">
-      <button type="button" class="btn btn-sm btn-outline-secondary d-flex items-center gap-1.5" onclick="window.location.reload()">
-        <i class="ti ti-refresh"></i> Refresh
+  <!-- Workbox Toolbar -->
+  <div class="workbox-toolbar bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
+    <div class="flex items-center gap-2 flex-wrap">
+      <button type="button" class="btn btn-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 d-inline-flex align-items-center gap-1.5 shadow-2xs rounded-lg px-2.5 py-1" id="btnWorkboxRefresh">
+        <i class="ti ti-refresh text-slate-500"></i>
+        <span>Refresh</span>
       </button>
 
       <% if (canBulk && itemsData.items.length > 0 && selectedState && selectedState.commands.length > 0) { %>
-        <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllBtn" onclick="toggleSelectAll(true)">
-            <i class="ti ti-check-all"></i> Chọn tất cả
+        <div class="btn-group shadow-2xs" role="group">
+          <button type="button" class="btn btn-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium px-2.5 py-1" id="selectAllBtn">
+            <i class="ti ti-check-all text-blue-600 me-1"></i> Chọn tất cả
           </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllBtn" onclick="toggleSelectAll(false)">
+          <button type="button" class="btn btn-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium px-2.5 py-1" id="deselectAllBtn">
             Bỏ chọn
           </button>
         </div>
 
         <div class="dropdown">
-          <button class="btn btn-sm btn-primary dropdown-toggle d-flex items-center gap-1.5" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="bulkActionsBtn" disabled>
-            <i class="ti ti-bolt"></i> Thao tác hàng loạt (<span id="selectedCountBadge">0</span>)
+          <button class="btn btn-sm btn-primary bg-indigo-600 hover:bg-indigo-700 text-white font-semibold dropdown-toggle d-inline-flex align-items-center gap-1.5 shadow-2xs rounded-lg px-3 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="bulkActionsBtn" disabled>
+            <i class="ti ti-bolt"></i>
+            <span>Thao tác hàng loạt</span> (<span id="selectedCountBadge">0</span>)
           </button>
-          <ul class="dropdown-menu shadow">
+          <ul class="dropdown-menu shadow-lg rounded-xl border border-slate-200 dark:border-slate-800">
             <% selectedState.commands.forEach(cmd => { %>
               <li>
-                <button class="dropdown-item d-flex items-center gap-2" type="button" onclick="openBulkCommandModal('<%= cmd.name %>', '<%= cmd.displayName || cmd.name %>', <%= Boolean(cmd.requireComment) %>)">
-                  <i class="<%= cmd.icon || 'ti ti-player-play' %>"></i>
-                  Chạy <%= cmd.displayName || cmd.name %> cho các mục đã chọn
+                <button class="dropdown-item d-flex align-items-center gap-2 py-1.5 text-xs bulk-command-item" type="button"
+                        data-command="<%= cmd.name %>"
+                        data-display="<%= cmd.displayName || cmd.name %>"
+                        data-require-comment="<%= Boolean(cmd.requireComment) %>">
+                  <i class="<%= cmd.icon || 'ti ti-player-play' %> text-indigo-600"></i>
+                  <span>Chạy <strong><%= cmd.displayName || cmd.name %></strong> cho các mục đã chọn</span>
                 </button>
               </li>
             <% }) %>
@@ -49,20 +54,22 @@
     </div>
 
     <!-- Search & Filter Form -->
-    <form method="GET" action="/admin/workbox" class="flex items-center gap-2">
+    <form method="GET" action="/admin/workbox" class="flex items-center gap-2 flex-wrap">
       <% if (selectedStateId) { %>
         <input type="hidden" name="stateId" value="<%= selectedStateId %>" />
       <% } %>
-      <div class="input-group input-group-sm w-44">
-        <select name="lang" class="form-select text-xs" onchange="this.form.submit()">
+      <div class="w-40">
+        <select name="lang" class="form-select form-select-sm text-xs rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" onchange="this.form.submit()">
           <option value="">Tất cả ngôn ngữ</option>
           <option value="vi" <%= query.lang === 'vi' ? 'selected' : '' %>>Tiếng Việt (vi)</option>
           <option value="en" <%= query.lang === 'en' ? 'selected' : '' %>>English (en)</option>
         </select>
       </div>
       <div class="input-group input-group-sm w-56">
-        <input type="text" name="search" value="<%= query.search || '' %>" placeholder="Tìm kiếm tên, path..." class="form-control text-xs" />
-        <button class="btn btn-outline-secondary" type="submit"><i class="ti ti-search"></i></button>
+        <input type="text" name="search" value="<%= query.search || '' %>" placeholder="Tìm kiếm tên, path..." class="form-control form-control-sm text-xs rounded-start-lg border-slate-200 dark:border-slate-700" />
+        <button class="btn btn-sm btn-white border border-slate-200 dark:border-slate-700 px-2.5 rounded-end-lg" type="submit">
+          <i class="ti ti-search text-slate-500"></i>
+        </button>
       </div>
     </form>
   </div>
@@ -70,28 +77,31 @@
   <!-- Workbox Main Split View -->
   <div class="window-body flex-1 overflow-hidden flex">
     <!-- Left Sidebar: Workflows & States -->
-    <div class="w-72 bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
-      <div class="p-3 border-b border-slate-100 bg-slate-50/50">
-        <h6 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0">Quy trình & Trạng thái</h6>
+    <div class="w-72 bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-slate-800 flex flex-col flex-shrink-0">
+      <div class="px-3 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex items-center justify-between">
+        <h6 class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0">Quy trình & Trạng thái</h6>
+        <span class="badge bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-mono text-[10px]">
+          <%= workflows.reduce((acc, wf) => acc + (wf.totalItems || 0), 0) %>
+        </span>
       </div>
-      <div class="overflow-y-auto flex-1 p-2 space-y-4">
+      <div class="overflow-y-auto flex-1 p-2 space-y-3">
         <% workflows.forEach(wf => { %>
           <div class="workflow-group">
-            <div class="flex items-center justify-between px-2 py-1 text-xs font-bold text-slate-700">
+            <div class="flex items-center justify-between px-2 py-1 text-xs font-bold text-slate-800 dark:text-slate-200">
               <span class="truncate" title="<%= wf.name %>"><%= wf.displayName || wf.name %></span>
-              <span class="badge bg-slate-100 text-slate-600 rounded-pill"><%= wf.totalItems %></span>
+              <span class="badge bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-pill"><%= wf.totalItems %></span>
             </div>
             <div class="mt-1 space-y-0.5">
               <% wf.states.forEach(st => { 
                    const isSelected = selectedStateId === st.id;
               %>
                 <a href="/admin/workbox?stateId=<%= st.id %><%= query.lang ? '&lang=' + query.lang : '' %>"
-                   class="flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition <%= isSelected ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100' %>">
+                   class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition <%= isSelected ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 font-bold border-l-4 border-blue-600' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' %>">
                   <span class="flex items-center gap-2 truncate">
-                    <i class="<%= st.icon %> text-slate-400 <%= isSelected ? 'text-indigo-600' : '' %>"></i>
+                    <i class="<%= st.icon %> text-slate-400 <%= isSelected ? 'text-blue-600 dark:text-blue-400' : '' %>"></i>
                     <span class="truncate"><%= st.displayName || st.name %></span>
                   </span>
-                  <span class="badge <%= isSelected ? 'bg-indigo-600 text-white' : (st.itemCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500') %> rounded-pill">
+                  <span class="badge <%= isSelected ? 'bg-blue-600 text-white' : (st.itemCount > 0 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-400') %> rounded-pill font-mono text-[10px]">
                     <%= st.itemCount %>
                   </span>
                 </a>
@@ -103,136 +113,165 @@
     </div>
 
     <!-- Center/Right Area: Items List in Selected State -->
-    <div class="flex-1 flex flex-col bg-slate-50/50 overflow-hidden">
+    <div class="flex-1 flex flex-col bg-slate-50/50 dark:bg-slate-900/50 overflow-hidden">
       <!-- State Header Banner -->
-      <div class="bg-white px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-        <div>
-          <h5 class="text-sm font-semibold text-slate-800 mb-0 flex items-center gap-2">
-            <% if (selectedState) { %>
-              <i class="<%= selectedState.icon %> text-indigo-600"></i>
-              <span><%= selectedState.displayName || selectedState.name %></span>
-              <span class="text-xs font-normal text-slate-500">(Workflow: <%= selectedWorkflow?.displayName || selectedWorkflow?.name %>)</span>
-              <% if (selectedState.isFinal) { %>
-                <span class="badge bg-emerald-100 text-emerald-700 text-[10px]">Trạng thái Đã duyệt / Sẵn sàng Publish</span>
-              <% } else if (selectedState.isInitial) { %>
-                <span class="badge bg-slate-100 text-slate-600 text-[10px]">Bản nháp ban đầu</span>
-              <% } %>
+      <div class="bg-white dark:bg-slate-900 px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <% if (selectedState) { %>
+            <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <i class="<%= selectedState.icon %> text-base"></i>
+            </div>
+            <div>
+              <span class="text-sm font-bold text-slate-800 dark:text-slate-100"><%= selectedState.displayName || selectedState.name %></span>
+              <span class="text-xs text-slate-400 ms-1">(Workflow: <%= selectedWorkflow?.displayName || selectedWorkflow?.name %>)</span>
+            </div>
+            <% if (selectedState.isFinal) { %>
+              <span class="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] border border-emerald-200">
+                <i class="ti ti-check me-0.5"></i> Đã duyệt / Sẵn sàng Publish
+              </span>
+            <% } else if (selectedState.isInitial) { %>
+              <span class="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px] border border-slate-200">
+                <i class="ti ti-file-pencil me-0.5"></i> Bản nháp ban đầu
+              </span>
             <% } else { %>
-              <span>Chọn một trạng thái để xem danh sách item</span>
+              <span class="badge bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-[10px] border border-amber-200">
+                <i class="ti ti-clock me-0.5"></i> Chờ duyệt
+              </span>
             <% } %>
-          </h5>
+          <% } else { %>
+            <span class="text-sm text-slate-500">Chọn một trạng thái để xem danh sách item</span>
+          <% } %>
         </div>
-        <div class="text-xs text-slate-500">
-          Tổng số: <strong class="text-slate-800"><%= itemsData.total %></strong> mục
+        <div class="text-xs text-slate-500 dark:text-slate-400">
+          Tổng số: <strong class="text-slate-900 dark:text-slate-100"><%= itemsData.total %></strong> mục
         </div>
       </div>
 
       <!-- Items Table Container -->
-      <div class="flex-1 overflow-auto p-4">
+      <div class="flex-1 overflow-auto p-3">
         <% if (itemsData.items.length === 0) { %>
-          <div class="h-64 flex flex-col items-center justify-center text-center p-6 bg-white border border-dashed border-slate-200 rounded-lg">
-            <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
-              <i class="ti ti-inbox text-2xl"></i>
+          <div class="h-64 flex flex-col items-center justify-center text-center p-6 bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+            <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-3 text-2xl">
+              <i class="ti ti-inbox"></i>
             </div>
-            <h6 class="text-sm font-medium text-slate-700 mb-1">Không có item nào trong trạng thái này</h6>
-            <p class="text-xs text-slate-400 mb-0">Tất cả bài viết và trang nội dung đã được xử lý hoặc chưa được gửi duyệt.</p>
+            <h6 class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Không có item nào trong trạng thái này</h6>
+            <p class="text-xs text-slate-400 mb-0 max-w-sm">Tất cả trang và bài viết trong trạng thái này đã được phê duyệt chuyển bước hoặc chưa được tác giả gửi duyệt.</p>
           </div>
         <% } else { %>
-          <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-            <table class="table table-hover table-vcenter text-xs mb-0">
-              <thead class="bg-slate-50 border-b border-slate-200 text-slate-600">
-                <tr>
-                  <% if (canBulk) { %>
-                    <th class="w-1 text-center py-2 px-3">
-                      <input type="checkbox" class="form-check-input" id="tableHeaderCheck" onchange="toggleSelectAll(this.checked)" />
-                    </th>
-                  <% } %>
-                  <th class="py-2">Item / Đường dẫn</th>
-                  <th class="py-2">Template</th>
-                  <th class="py-2">Ngôn ngữ & Phiên bản</th>
-                  <th class="py-2">Cập nhật bởi</th>
-                  <th class="py-2">Ghi chú / Comment gần nhất</th>
-                  <th class="py-2 text-end px-3">Hành động</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                <% itemsData.items.forEach(it => { %>
-                  <tr class="hover:bg-indigo-50/30 transition">
+          <div class="card border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-2xs bg-white dark:bg-slate-900">
+            <div class="table-responsive">
+              <table class="table table-vcenter table-hover align-middle text-xs mb-0">
+                <thead class="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+                  <tr>
                     <% if (canBulk) { %>
-                      <td class="text-center px-3">
-                        <input type="checkbox" class="form-check-input item-checkbox"
-                               data-item-id="<%= it.itemId %>"
-                               data-lang="<%= it.lang %>"
-                               data-version="<%= it.version %>"
-                               onchange="updateBulkSelectionState()" />
-                      </td>
+                      <th style="width: 44px;" class="text-center px-2">
+                        <input type="checkbox" class="form-check-input cursor-pointer m-0" id="tableHeaderCheck" />
+                      </th>
                     <% } %>
-                    <td>
-                      <div class="font-medium text-slate-800 flex items-center gap-1.5">
-                        <i class="ti ti-file-text text-slate-400"></i>
-                        <span><%= it.displayName || it.name %></span>
-                      </div>
-                      <div class="text-[11px] text-slate-400 font-mono truncate max-w-xs" title="<%= it.path %>">
-                        <%= it.path %>
-                      </div>
-                    </td>
-                    <td>
-                      <span class="badge bg-slate-100 text-slate-700 border border-slate-200">
-                        <%= it.template?.displayName || it.template?.name || 'Page' %>
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge bg-blue-50 text-blue-700 uppercase font-mono"><%= it.lang %></span>
-                      <span class="badge bg-slate-100 text-slate-600 font-mono">v<%= it.version %></span>
-                    </td>
-                    <td>
-                      <div class="text-slate-700"><%= it.updatedBy?.fullName || it.updatedBy?.username || 'admin' %></div>
-                      <div class="text-[10px] text-slate-400">
-                        <%= it.updatedAt ? new Date(it.updatedAt).toLocaleString('vi-VN') : '-' %>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="text-slate-600 italic max-w-xs truncate" title="<%= it.latestComment %>">
-                        <%= it.latestComment || it.note || '<Chưa có ghi chú>' %>
-                      </div>
-                    </td>
-                    <td class="text-end px-3">
-                      <div class="flex items-center justify-end gap-1.5">
-                        <!-- Open in Content Editor -->
-                        <a href="/admin/content-editor?id=<%= it.itemId %>&lang=<%= it.lang %>&version=<%= it.version %>"
-                           class="btn btn-xs btn-outline-secondary"
-                           title="Mở trong Content Editor"
-                           target="_blank">
-                          <i class="ti ti-external-link"></i>
-                        </a>
-
-                        <!-- View History -->
-                        <button type="button" class="btn btn-xs btn-outline-secondary" title="Xem lịch sử duyệt"
-                                onclick="openHistoryModal('<%= it.itemId %>', '<%= it.lang %>', <%= it.version %>, '<%= it.name %>')">
-                          <i class="ti ti-history"></i>
-                        </button>
-
-                        <!-- Workflow Command Action Buttons -->
-                        <% if (it.availableCommands && it.availableCommands.length > 0) { %>
-                          <% it.availableCommands.forEach(cmd => { %>
-                            <button type="button" class="btn btn-xs <%= cmd.name.toLowerCase().includes('reject') ? 'btn-outline-danger' : (cmd.name.toLowerCase().includes('approve') ? 'btn-success' : 'btn-primary') %>"
-                                    onclick="openSingleCommandModal('<%= it.itemId %>', '<%= it.lang %>', <%= it.version %>, '<%= cmd.name %>', '<%= cmd.displayName || cmd.name %>', <%= Boolean(cmd.requireComment) %>, '<%= it.name %>')">
-                              <i class="<%= cmd.icon %>"></i> <%= cmd.displayName || cmd.name %>
-                            </button>
-                          <% }) %>
-                        <% } %>
-                      </div>
-                    </td>
+                    <th style="min-width: 220px;" class="py-2.5">Item / Đường dẫn</th>
+                    <th style="width: 150px;" class="py-2.5">Template</th>
+                    <th style="width: 120px;" class="py-2.5">Ngôn ngữ & Phiên bản</th>
+                    <th style="width: 140px;" class="py-2.5">Cập nhật bởi</th>
+                    <th style="min-width: 150px;" class="py-2.5">Ghi chú gần nhất</th>
+                    <th style="width: 230px;" class="py-2.5 text-end pe-3">Hành động</th>
                   </tr>
-                <% }) %>
-              </tbody>
-            </table>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <% itemsData.items.forEach(it => { %>
+                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+                      <% if (canBulk) { %>
+                        <td class="text-center px-2">
+                          <input type="checkbox" class="form-check-input item-checkbox cursor-pointer m-0"
+                                 data-item-id="<%= it.itemId %>"
+                                 data-lang="<%= it.lang %>"
+                                 data-version="<%= it.version %>" />
+                        </td>
+                      <% } %>
+                      <td class="py-2.5">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs">
+                          <i class="ti ti-file-text text-blue-500"></i>
+                          <span><%= it.displayName || it.name %></span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 font-mono truncate max-w-xs mt-0.5" title="<%= it.path %>">
+                          <%= it.path %>
+                        </div>
+                      </td>
+                      <td class="py-2.5">
+                        <span class="badge bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-normal">
+                          <i class="<%= it.template?.icon || 'ti ti-layout' %> me-1 text-slate-400"></i>
+                          <%= it.template?.displayName || it.template?.name || 'Page' %>
+                        </span>
+                      </td>
+                      <td class="py-2.5">
+                        <div class="d-flex align-items-center gap-1">
+                          <span class="badge bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase font-mono border border-blue-200 dark:border-blue-900/50"><%= it.lang %></span>
+                          <span class="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-700">v<%= it.version %></span>
+                        </div>
+                      </td>
+                      <td class="py-2.5">
+                        <div class="font-semibold text-slate-700 dark:text-slate-300"><%= it.updatedBy?.fullName || it.updatedBy?.username || 'admin' %></div>
+                        <div class="text-[10px] text-slate-400 font-mono">
+                          <%= it.updatedAt ? new Date(it.updatedAt).toLocaleString('vi-VN') : '-' %>
+                        </div>
+                      </td>
+                      <td class="py-2.5">
+                        <div class="text-slate-600 dark:text-slate-400 italic text-[11px] max-w-xs truncate" title="<%= it.latestComment %>">
+                          <%= it.latestComment ? `"${it.latestComment}"` : (it.note ? `"${it.note}"` : '—') %>
+                        </div>
+                      </td>
+                      <td class="py-2.5 text-end pe-3">
+                        <div class="d-inline-flex align-items-center justify-content-end gap-1.5 flex-nowrap">
+                          <!-- Open in Content Editor -->
+                          <a href="/admin/content-editor?id=<%= it.itemId %>&lang=<%= it.lang %>&version=<%= it.version %>"
+                             class="btn btn-sm btn-ghost-secondary border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                             title="Mở trong Content Editor"
+                             target="_blank">
+                            <i class="ti ti-external-link"></i>
+                          </a>
+
+                          <!-- View History -->
+                          <button type="button" class="btn btn-sm btn-ghost-secondary border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 btn-history-trigger"
+                                  title="Xem lịch sử duyệt"
+                                  data-item-id="<%= it.itemId %>"
+                                  data-lang="<%= it.lang %>"
+                                  data-version="<%= it.version %>"
+                                  data-item-name="<%= it.displayName || it.name %>">
+                            <i class="ti ti-history"></i>
+                          </button>
+
+                          <!-- Workflow Command Action Buttons -->
+                          <% if (it.availableCommands && it.availableCommands.length > 0) { %>
+                            <% it.availableCommands.forEach(cmd => { 
+                                 const isReject = cmd.name.toLowerCase().includes('reject');
+                                 const isApprove = cmd.name.toLowerCase().includes('approve');
+                            %>
+                              <button type="button" 
+                                      class="btn btn-sm <%= isReject ? 'btn-outline-danger' : (isApprove ? 'btn-success text-white' : 'btn-primary text-white') %> font-semibold text-xs px-2.5 py-1 rounded-lg shadow-2xs d-inline-flex align-items-center gap-1 btn-cmd-trigger"
+                                      data-item-id="<%= it.itemId %>"
+                                      data-lang="<%= it.lang %>"
+                                      data-version="<%= it.version %>"
+                                      data-command="<%= cmd.name %>"
+                                      data-display="<%= cmd.displayName || cmd.name %>"
+                                      data-require-comment="<%= Boolean(cmd.requireComment) %>"
+                                      data-item-name="<%= it.displayName || it.name %>">
+                                <i class="<%= cmd.icon || (isReject ? 'ti ti-x' : (isApprove ? 'ti ti-check' : 'ti ti-send')) %>"></i>
+                                <span><%= cmd.displayName || cmd.name %></span>
+                              </button>
+                            <% }) %>
+                          <% } %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <!-- Pagination -->
           <% if (itemsData.totalPages > 1) { %>
-            <div class="mt-4 flex items-center justify-between">
-              <span class="text-xs text-slate-500">
+            <div class="mt-3 flex items-center justify-between">
+              <span class="text-xs text-slate-500 dark:text-slate-400">
                 Hiển thị trang <%= itemsData.page %> / <%= itemsData.totalPages %> (<%= itemsData.total %> kết quả)
               </span>
               <ul class="pagination pagination-sm mb-0">
@@ -253,29 +292,29 @@
 <!-- Modal: Execute Workflow Command (Single) -->
 <div class="modal fade" id="workflowCommandModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow border-0">
-      <div class="modal-header bg-slate-50 border-b border-slate-200">
-        <h5 class="modal-title text-sm font-semibold text-slate-800 flex items-center gap-2">
+    <div class="modal-content shadow border-0 rounded-xl overflow-hidden">
+      <div class="modal-header bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <h5 class="modal-title text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           <i class="ti ti-player-play text-indigo-600"></i>
           <span id="modalCommandTitle">Thực thi lệnh duyệt</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4 space-y-3">
-        <p class="text-xs text-slate-600 mb-0">
-          Bạn đang thực hiện lệnh <strong id="modalCommandName" class="text-indigo-600"></strong> trên mục: <strong id="modalItemName" class="text-slate-800"></strong>.
+        <p class="text-xs text-slate-600 dark:text-slate-300 mb-0">
+          Bạn đang thực hiện lệnh <strong id="modalCommandName" class="text-indigo-600 font-bold"></strong> trên mục: <strong id="modalItemName" class="text-slate-800 dark:text-slate-100 font-bold"></strong>.
         </p>
         <div>
-          <label class="form-label text-xs font-medium text-slate-700">
+          <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200">
             Lý do / Ghi chú phê duyệt <span id="commentRequiredStar" class="text-rose-500 d-none">*</span>
           </label>
-          <textarea id="modalCommentInput" rows="3" class="form-control text-xs" placeholder="Nhập lý do hoặc nhận xét..."></textarea>
-          <div id="commentErrorMsg" class="text-[11px] text-rose-500 mt-1 d-none">Lệnh này bắt buộc phải nhập lý do/nhận xét.</div>
+          <textarea id="modalCommentInput" rows="3" class="form-control text-xs" placeholder="Nhập lý do hoặc nhận xét chuyển bước..."></textarea>
+          <div id="commentErrorMsg" class="text-[11px] text-rose-500 mt-1 d-none font-medium">Lệnh này bắt buộc phải nhập lý do/nhận xét.</div>
         </div>
       </div>
-      <div class="modal-footer bg-slate-50 border-t border-slate-200 px-4 py-2 flex justify-end gap-2">
+      <div class="modal-footer bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-2 flex justify-end gap-2">
         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-        <button type="button" class="btn btn-sm btn-primary" id="confirmCommandBtn" onclick="submitSingleCommand()">
+        <button type="button" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover text-white font-semibold" id="confirmCommandBtn">
           Xác nhận thực hiện
         </button>
       </div>
@@ -286,29 +325,29 @@
 <!-- Modal: Execute Bulk Workflow Command -->
 <div class="modal fade" id="bulkCommandModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow border-0">
-      <div class="modal-header bg-slate-50 border-b border-slate-200">
-        <h5 class="modal-title text-sm font-semibold text-slate-800 flex items-center gap-2">
+    <div class="modal-content shadow border-0 rounded-xl overflow-hidden">
+      <div class="modal-header bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <h5 class="modal-title text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           <i class="ti ti-bolt text-indigo-600"></i>
           <span>Thực thi Thao tác Hàng loạt</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4 space-y-3">
-        <p class="text-xs text-slate-600 mb-0">
-          Bạn sắp thực hiện lệnh <strong id="bulkCommandNameLabel" class="text-indigo-600"></strong> trên <strong id="bulkItemsCountLabel" class="text-slate-800"></strong> mục đã chọn.
+        <p class="text-xs text-slate-600 dark:text-slate-300 mb-0">
+          Bạn sắp thực hiện lệnh <strong id="bulkCommandNameLabel" class="text-indigo-600 font-bold"></strong> trên <strong id="bulkItemsCountLabel" class="text-slate-800 dark:text-slate-100 font-bold"></strong> mục đã chọn.
         </p>
         <div>
-          <label class="form-label text-xs font-medium text-slate-700">
+          <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200">
             Lý do / Ghi chú thao tác <span id="bulkCommentRequiredStar" class="text-rose-500 d-none">*</span>
           </label>
           <textarea id="bulkCommentInput" rows="3" class="form-control text-xs" placeholder="Nhập ghi chú chung cho đợt duyệt này..."></textarea>
-          <div id="bulkCommentErrorMsg" class="text-[11px] text-rose-500 mt-1 d-none">Lệnh này bắt buộc phải nhập lý do/nhận xét.</div>
+          <div id="bulkCommentErrorMsg" class="text-[11px] text-rose-500 mt-1 d-none font-medium">Lệnh này bắt buộc phải nhập lý do/nhận xét.</div>
         </div>
       </div>
-      <div class="modal-footer bg-slate-50 border-t border-slate-200 px-4 py-2 flex justify-end gap-2">
+      <div class="modal-footer bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-2 flex justify-end gap-2">
         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-        <button type="button" class="btn btn-sm btn-primary" id="confirmBulkCommandBtn" onclick="submitBulkCommand()">
+        <button type="button" class="btn btn-sm btn-primary bg-indigo-600 hover:bg-indigo-700 text-white font-semibold" id="confirmBulkCommandBtn">
           Chạy tác vụ hàng loạt
         </button>
       </div>
@@ -319,18 +358,18 @@
 <!-- Modal: Workflow History Viewer -->
 <div class="modal fade" id="workflowHistoryModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content shadow border-0">
-      <div class="modal-header bg-slate-50 border-b border-slate-200">
-        <h5 class="modal-title text-sm font-semibold text-slate-800 flex items-center gap-2">
+    <div class="modal-content shadow border-0 rounded-xl overflow-hidden">
+      <div class="modal-header bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <h5 class="modal-title text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           <i class="ti ti-history text-indigo-600"></i>
-          <span>Lịch sử Phê duyệt: <span id="historyItemTitle"></span></span>
+          <span>Lịch sử Phê duyệt: <span id="historyItemTitle" class="font-bold"></span></span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4 max-h-[60vh] overflow-y-auto" id="historyTimelineContainer">
         <!-- Rendered dynamically -->
       </div>
-      <div class="modal-footer bg-slate-50 border-t border-slate-200 px-4 py-2">
+      <div class="modal-footer bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-2">
         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
       </div>
     </div>
@@ -340,6 +379,21 @@
 <script>
   let currentSingleCmd = null;
   let currentBulkCmd = null;
+
+  const getCsrfToken = () => {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '<%= csrfToken %>';
+  };
+
+  const getBootstrapModal = (modalEl) => {
+    if (!modalEl) return null;
+    if (window.bootstrap?.Modal) {
+      return window.bootstrap.Modal.getOrCreateInstance(modalEl);
+    }
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      return bootstrap.Modal.getOrCreateInstance(modalEl);
+    }
+    return null;
+  };
 
   function updateBulkSelectionState() {
     const checkboxes = document.querySelectorAll('.item-checkbox:checked');
@@ -358,8 +412,10 @@
 
   function toggleSelectAll(checked) {
     document.querySelectorAll('.item-checkbox').forEach(cb => {
-      cb.checked = checked;
+      cb.checked = Boolean(checked);
     });
+    const headerCheck = document.getElementById('tableHeaderCheck');
+    if (headerCheck) headerCheck.checked = Boolean(checked);
     updateBulkSelectionState();
   }
 
@@ -376,8 +432,9 @@
       else star.classList.add('d-none');
     }
 
-    const modal = new bootstrap.Modal(document.getElementById('workflowCommandModal'));
-    modal.show();
+    const modalEl = document.getElementById('workflowCommandModal');
+    const modal = getBootstrapModal(modalEl);
+    if (modal) modal.show();
   }
 
   async function submitSingleCommand() {
@@ -390,14 +447,14 @@
 
     const btn = document.getElementById('confirmCommandBtn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Đang xử lý...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Đang xử lý...';
 
     try {
       const resp = await fetch(`/api/items/${currentSingleCmd.itemId}/workflow/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': '<%= csrfToken %>'
+          'X-CSRF-Token': getCsrfToken()
         },
         body: JSON.stringify({
           lang: currentSingleCmd.lang,
@@ -436,8 +493,9 @@
       else star.classList.add('d-none');
     }
 
-    const modal = new bootstrap.Modal(document.getElementById('bulkCommandModal'));
-    modal.show();
+    const modalEl = document.getElementById('bulkCommandModal');
+    const modal = getBootstrapModal(modalEl);
+    if (modal) modal.show();
   }
 
   async function submitBulkCommand() {
@@ -456,14 +514,14 @@
 
     const btn = document.getElementById('confirmBulkCommandBtn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Đang xử lý hàng loạt...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Đang xử lý hàng loạt...';
 
     try {
       const resp = await fetch('/api/workbox/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': '<%= csrfToken %>'
+          'X-CSRF-Token': getCsrfToken()
         },
         body: JSON.stringify({
           stateId: '<%= selectedStateId %>',
@@ -491,10 +549,11 @@
   async function openHistoryModal(itemId, lang, version, itemName) {
     document.getElementById('historyItemTitle').textContent = itemName;
     const container = document.getElementById('historyTimelineContainer');
-    container.innerHTML = '<div class="text-center py-4"><span class="spinner-border spinner-border-sm text-indigo-600"></span> Đang tải lịch sử...</div>';
+    container.innerHTML = '<div class="text-center py-4 text-xs text-slate-400"><span class="spinner-border spinner-border-sm text-indigo-600 me-1"></span> Đang tải lịch sử...</div>';
 
-    const modal = new bootstrap.Modal(document.getElementById('workflowHistoryModal'));
-    modal.show();
+    const modalEl = document.getElementById('workflowHistoryModal');
+    const modal = getBootstrapModal(modalEl);
+    if (modal) modal.show();
 
     try {
       const resp = await fetch(`/api/items/${itemId}/workflow/history?lang=${lang}&version=${version}`);
@@ -508,20 +567,100 @@
       res.data.forEach(h => {
         html += `
           <div class="border-l-2 border-indigo-400 pl-3 py-1 text-xs">
-            <div class="flex items-center justify-between text-slate-700 font-medium">
-              <span>Lệnh: <strong>${h.command?.name || h.command || 'Action'}</strong> (${h.fromState?.name || h.fromState || 'Start'} &rarr; <span class="text-indigo-600 font-bold">${h.toState?.name || h.toState}</span>)</span>
-              <span class="text-[11px] text-slate-400">${new Date(h.at).toLocaleString('vi-VN')}</span>
+            <div class="flex items-center justify-between text-slate-700 dark:text-slate-200 font-medium">
+              <span>Lệnh: <strong class="text-slate-800 dark:text-slate-100">${h.command?.displayName || h.command?.name || h.command || 'Action'}</strong> (${h.fromState?.displayName || h.fromState?.name || 'Start'} &rarr; <span class="text-indigo-600 dark:text-indigo-400 font-bold">${h.toState?.displayName || h.toState?.name || h.toState}</span>)</span>
+              <span class="text-[11px] text-slate-400 font-mono">${new Date(h.at).toLocaleString('vi-VN')}</span>
             </div>
             <div class="text-slate-500 mt-0.5">Bởi: <strong>${h.username || 'System'}</strong></div>
-            ${h.comment ? `<div class="mt-1 bg-slate-50 p-2 rounded text-slate-600 italic border border-slate-100">"${h.comment}"</div>` : ''}
+            ${h.comment ? `<div class="mt-1 bg-slate-50 dark:bg-slate-800 p-2 rounded text-slate-600 dark:text-slate-300 italic border border-slate-100 dark:border-slate-700">"${h.comment}"</div>` : ''}
           </div>
         `;
       });
       html += '</div>';
       container.innerHTML = html;
     } catch (err) {
-      container.innerHTML = `<div class="text-rose-500 text-xs">Lỗi khi tải lịch sử: ${err.message}</div>`;
+      container.innerHTML = `<div class="text-rose-500 text-xs py-2">Lỗi khi tải lịch sử: ${err.message}</div>`;
     }
   }
-</script>
 
+  // Bind Events on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Refresh
+    const btnRefresh = document.getElementById('btnWorkboxRefresh');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => {
+        btnRefresh.querySelector('i')?.classList.add('animate-spin');
+        window.location.reload();
+      });
+    }
+
+    // 2. Select All / Deselect All
+    const btnSelectAll = document.getElementById('selectAllBtn');
+    if (btnSelectAll) {
+      btnSelectAll.addEventListener('click', () => toggleSelectAll(true));
+    }
+    const btnDeselectAll = document.getElementById('deselectAllBtn');
+    if (btnDeselectAll) {
+      btnDeselectAll.addEventListener('click', () => toggleSelectAll(false));
+    }
+
+    // 3. Table Header Checkbox
+    const headerCheck = document.getElementById('tableHeaderCheck');
+    if (headerCheck) {
+      headerCheck.addEventListener('change', () => toggleSelectAll(headerCheck.checked));
+    }
+
+    // 4. Item Checkboxes
+    document.addEventListener('change', (e) => {
+      if (e.target.classList.contains('item-checkbox')) {
+        updateBulkSelectionState();
+      }
+    });
+
+    // 5. Command Action Trigger Buttons
+    document.addEventListener('click', (e) => {
+      const btnCmd = e.target.closest('.btn-cmd-trigger');
+      if (btnCmd) {
+        e.preventDefault();
+        const { itemId, lang, version, command, display, requireComment, itemName } = btnCmd.dataset;
+        openSingleCommandModal(itemId, lang, parseInt(version, 10), command, display, requireComment === 'true', itemName);
+        return;
+      }
+
+      const btnHistory = e.target.closest('.btn-history-trigger');
+      if (btnHistory) {
+        e.preventDefault();
+        const { itemId, lang, version, itemName } = btnHistory.dataset;
+        openHistoryModal(itemId, lang, parseInt(version, 10), itemName);
+        return;
+      }
+
+      const btnBulkItem = e.target.closest('.bulk-command-item');
+      if (btnBulkItem) {
+        e.preventDefault();
+        const { command, display, requireComment } = btnBulkItem.dataset;
+        openBulkCommandModal(command, display, requireComment === 'true');
+        return;
+      }
+    });
+
+    // 6. Confirm Buttons in Modals
+    const confirmBtn = document.getElementById('confirmCommandBtn');
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', submitSingleCommand);
+    }
+    const confirmBulkBtn = document.getElementById('confirmBulkCommandBtn');
+    if (confirmBulkBtn) {
+      confirmBulkBtn.addEventListener('click', submitBulkCommand);
+    }
+  });
+
+  // Expose global methods for fallbacks
+  window.toggleSelectAll = toggleSelectAll;
+  window.updateBulkSelectionState = updateBulkSelectionState;
+  window.openSingleCommandModal = openSingleCommandModal;
+  window.submitSingleCommand = submitSingleCommand;
+  window.openBulkCommandModal = openBulkCommandModal;
+  window.submitBulkCommand = submitBulkCommand;
+  window.openHistoryModal = openHistoryModal;
+</script>

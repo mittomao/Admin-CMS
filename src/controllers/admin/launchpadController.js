@@ -1,4 +1,5 @@
 const LaunchpadApp = require('../../models/LaunchpadApp');
+require('../../models/Role');
 const logger = require('../../utils/logger');
 
 // Icon fallback mapping helper to ensure 100% Tabler icon font usage
@@ -79,8 +80,8 @@ const defaultFallbackApps = [
     icon: 'ti ti-inbox',
     iconBg: 'amber',
     group: 'Content Editing',
-    url: '#',
-    isStub: true,
+    url: '/admin/workbox',
+    isStub: false,
   },
   {
     name: 'User Manager',
@@ -108,6 +109,15 @@ const defaultFallbackApps = [
     group: 'Access Management',
     url: '#',
     isStub: true,
+  },
+  {
+    name: 'Databases',
+    description: 'Overview and reconciliation between Master and Web databases',
+    icon: 'ti ti-database',
+    iconBg: 'cyan',
+    group: 'Control Panel & Maintenance',
+    url: '/admin/databases',
+    isStub: false,
   },
   {
     name: 'Control Panel',
@@ -164,17 +174,19 @@ const getLaunchpad = async (req, res) => {
       return app.allowedRoles.some((role) => userRoleIds.includes((role._id || role).toString()));
     });
 
-    // Normalize icons to Tabler class
+    // Normalize icons to Tabler class and resolve operational apps
     const normalizedApps = visibleApps.map((app) => {
       const isMediaLib = app.name === 'Media Library';
+      const isWorkbox = app.name === 'Workbox';
+      const isDatabases = app.name === 'Databases';
       return {
         name: app.name,
         description: app.description,
         icon: mapToTablerIcon(app.icon),
         iconBg: app.iconBg || 'blue',
         group: app.group || 'Content Editing',
-        url: isMediaLib ? '/admin/media-library' : app.url,
-        isStub: isMediaLib ? false : app.isStub,
+        url: isMediaLib ? '/admin/media-library' : (isWorkbox ? '/admin/workbox' : (isDatabases ? '/admin/databases' : app.url)),
+        isStub: isMediaLib || isWorkbox || isDatabases ? false : Boolean(app.isStub),
       };
     });
 

@@ -51,6 +51,11 @@ flowchart TD
   - `GET /api/media/assets`, `POST /api/media/upload`: Tải lên và duyệt danh sách media có phân trang/lọc.
   - `PUT /api/media/:id`, `POST /api/media/:id/move`, `DELETE /api/media/:id`: Cập nhật metadata, di chuyển và xóa media.
   - `GET /media/file/:id`: Phục vụ tệp tin qua HTTP 302 Redirect trực tiếp sang Cloudinary CDN `secure_url` (kèm `?thumb=1` cho preset transformation thu nhỏ).
+  - `GET /admin/databases`: Dashboard quản lý và đối soát Master vs Web Database (GĐ 8.1).
+  - `GET /api/databases/summary`: Báo cáo thống kê tổng quan số lượng item giữa Master và Web.
+  - `GET /api/databases/diff`: Danh sách đối soát chi tiết các item Missing, Changed, Orphan.
+  - `GET /api/items/publish-status-batch`: Tính toán huy hiệu trạng thái xuất bản theo lô cho Fancytree.
+  - Mọi route Content Editor và API Item đều hỗ trợ tham số `?db=master|web` (chế độ Web là chỉ đọc).
 
 ### 4. Public Site Renderer Routes (`/`, `/:slug`, `/:lang/:slug`)
 - **Đặc điểm:** Tuyến đường công khai phục vụ người dùng cuối xem website chính thức, đọc dữ liệu hoàn toàn từ database `items_web` (sau khi đã publish từ Master).

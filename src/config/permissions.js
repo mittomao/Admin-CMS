@@ -39,6 +39,10 @@ const ACTIONS = {
   MEDIA_UPLOAD: 'media:upload',
   MEDIA_DELETE: 'media:delete',
   MEDIA_SYNC: 'media:sync',
+
+  // Database Switcher & Compare Operations (GĐ 8.1)
+  DATABASE_WEB_READ: 'database:web:read',
+  DATABASE_COMPARE: 'database:compare',
 };
 
 module.exports = {

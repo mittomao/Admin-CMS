@@ -32,6 +32,7 @@ class PublishService {
     if (options.includeSubitems) {
       const descendants = await Item.find({
         path: { $regex: new RegExp(`^${root.path}/`, 'i') },
+        deleted: { $ne: true },
         isDeleted: { $ne: true },
       }).lean();
       itemsToInspect.push(...descendants);
@@ -193,6 +194,7 @@ class PublishService {
     // Query valid items from Master
     return Item.find({
       _id: { $in: Array.from(relatedIds) },
+      deleted: { $ne: true },
       isDeleted: { $ne: true },
     }).lean();
   }
@@ -202,7 +204,7 @@ class PublishService {
    */
   async publishSingleItemToWeb(itemDoc, languages = ['vi'], user = null) {
     const item = itemDoc.toObject ? itemDoc : await Item.findById(itemDoc._id);
-    if (!item || item.isDeleted) {
+    if (!item || item.deleted || item.isDeleted) {
       // Remove from web if deleted
       await PublishedItem.deleteOne({ _id: itemDoc._id });
       return { action: 'DELETED', itemId: itemDoc._id };
@@ -332,7 +334,10 @@ class PublishService {
     let targetItems = [];
 
     if (mode === 'Site') {
-      targetItems = await Item.find({ isDeleted: { $ne: true } }).lean();
+      targetItems = await Item.find({
+        deleted: { $ne: true },
+        isDeleted: { $ne: true },
+      }).lean();
     } else {
       const rootItem = await Item.findById(rootItemId);
       if (!rootItem) throw new NotFoundError('Root item not found for publishing');
@@ -342,6 +347,7 @@ class PublishService {
       if (includeSubitems) {
         const descendants = await Item.find({
           path: { $regex: new RegExp(`^${rootItem.path}/`, 'i') },
+          deleted: { $ne: true },
           isDeleted: { $ne: true },
         }).lean();
         targetItems.push(...descendants);
@@ -486,7 +492,10 @@ class PublishService {
    */
   async cleanupWeb() {
     const webItems = await PublishedItem.find({}, { _id: 1, path: 1 }).lean();
-    const masterItems = await Item.find({ isDeleted: { $ne: true } }, { _id: 1, path: 1 }).lean();
+    const masterItems = await Item.find({
+      deleted: { $ne: true },
+      isDeleted: { $ne: true },
+    }, { _id: 1, path: 1 }).lean();
 
     const masterMap = new Map(masterItems.map((m) => [m._id.toString(), m.path]));
     const toDeleteIds = [];
@@ -627,6 +636,7 @@ class PublishService {
     // Find items whose validFrom <= now and not yet published on web
     const itemsToPublish = await Item.find({
       'languages.versions.validFrom': { $lte: now },
+      deleted: { $ne: true },
       isDeleted: { $ne: true },
     }).select('_id');
 
@@ -637,6 +647,8 @@ class PublishService {
     // Find items whose validTo <= now that are currently published
     const expiredItems = await Item.find({
       'languages.versions.validTo': { $lte: now },
+      deleted: { $ne: true },
+      isDeleted: { $ne: true },
     }).select('_id');
 
     for (const exp of expiredItems) {

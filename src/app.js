@@ -29,8 +29,10 @@ const adminPresentationRoutes = require('./routes/admin/presentationRoutes');
 const apiPresentationRoutes = require('./routes/api/presentationRoutes');
 const adminWorkboxRoutes = require('./routes/admin/workboxRoutes');
 const adminPublishRoutes = require('./routes/admin/publishRoutes');
+const adminDatabaseRoutes = require('./routes/admin/databaseRoutes');
 const apiPublishRoutes = require('./routes/api/publishRoutes');
 const apiWorkboxRoutes = require('./routes/api/workboxRoutes');
+const apiDatabaseRoutes = require('./routes/api/databaseRoutes');
 const siteRoutes = require('./routes/site/siteRoutes');
 const mediaController = require('./controllers/admin/mediaController');
 const contentEditorController = require('./controllers/admin/contentEditorController');
@@ -132,6 +134,7 @@ app.use('/admin/media-library', adminMediaRoutes);
 app.use('/admin/media', adminMediaRoutes);
 app.use('/admin/workbox', adminWorkboxRoutes);
 app.use('/admin/publish-manager', adminPublishRoutes);
+app.use('/admin/databases', adminDatabaseRoutes);
 app.use('/api/presentation', apiPresentationRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);
@@ -139,6 +142,7 @@ app.use('/api/languages', languageRoutes);
 app.use('/api/media', apiMediaRoutes);
 app.use('/api/publish', apiPublishRoutes);
 app.use('/api/workbox', apiWorkboxRoutes);
+app.use('/api/databases', apiDatabaseRoutes);
 
 // 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10)
 app.use('/', siteRoutes);

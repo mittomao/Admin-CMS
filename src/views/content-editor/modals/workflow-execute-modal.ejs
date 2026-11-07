@@ -37,7 +37,7 @@
 
       <div class="modal-footer bg-slate-50 border-t border-slate-200 px-4 py-2 flex justify-end gap-2">
         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-        <button type="button" class="btn btn-sm btn-primary" id="btnCeWfSubmit" onclick="submitCeWorkflowCommand()">
+        <button type="button" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover text-white font-semibold" id="btnCeWfSubmit" onclick="if(typeof window.submitCeWorkflowCommand === 'function') window.submitCeWorkflowCommand();">
           Thực thi lệnh
         </button>
       </div>
