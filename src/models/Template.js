@@ -170,6 +170,17 @@ const templateSchema = new mongoose.Schema(
       },
     ],
     sections: [sectionSchema],
+    // GĐ 8: Workflow assignment for items instantiated from this template
+    workflowId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Workflow',
+      default: null,
+    },
+    workflow: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Workflow',
+      default: null,
+    },
     // Key: fieldId (String of field._id), Value: default value
     standardValues: {
       type: Map,

@@ -27,6 +27,10 @@ const languageRoutes = require('./routes/api/languageRoutes');
 const apiMediaRoutes = require('./routes/api/mediaRoutes');
 const adminPresentationRoutes = require('./routes/admin/presentationRoutes');
 const apiPresentationRoutes = require('./routes/api/presentationRoutes');
+const adminWorkboxRoutes = require('./routes/admin/workboxRoutes');
+const adminPublishRoutes = require('./routes/admin/publishRoutes');
+const apiPublishRoutes = require('./routes/api/publishRoutes');
+const apiWorkboxRoutes = require('./routes/api/workboxRoutes');
 const mediaController = require('./controllers/admin/mediaController');
 const csrfMiddleware = require('./middlewares/csrfMiddleware');
 
@@ -127,11 +131,15 @@ app.use('/admin/template-manager', templateManagerRoutes);
 app.use('/admin/content-editor', adminPresentationRoutes);
 app.use('/admin/media-library', adminMediaRoutes);
 app.use('/admin/media', adminMediaRoutes);
+app.use('/admin/workbox', adminWorkboxRoutes);
+app.use('/admin/publish-manager', adminPublishRoutes);
 app.use('/api/presentation', apiPresentationRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/languages', languageRoutes);
 app.use('/api/media', apiMediaRoutes);
+app.use('/api/publish', apiPublishRoutes);
+app.use('/api/workbox', apiWorkboxRoutes);
 
 // 10. Error Handling
 app.use(notFoundHandler);

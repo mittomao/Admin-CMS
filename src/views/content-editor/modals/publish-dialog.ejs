@@ -1,0 +1,124 @@
+<!-- Publish Dialog Modal (GĐ 8) -->
+<div class="modal fade" id="publishDialogModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow border-0">
+      <div class="modal-header bg-slate-50 border-b border-slate-200">
+        <h5 class="modal-title text-sm font-semibold text-slate-800 flex items-center gap-2">
+          <i class="ti ti-cloud-upload text-primary"></i>
+          <span>Xuất bản Nội dung sang Web (Publishing Engine)</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4 space-y-4">
+        <!-- Target Item Summary -->
+        <div class="p-3 bg-slate-100 rounded-lg flex items-center justify-between text-xs">
+          <div>
+            <div class="font-bold text-slate-800" id="pubDialogItemName">Item: -</div>
+            <div class="text-slate-500 font-mono" id="pubDialogItemPath">/sitecore/...</div>
+          </div>
+          <div>
+            <span class="badge bg-indigo-100 text-indigo-700 font-mono" id="pubDialogItemState">State: -</span>
+          </div>
+        </div>
+
+        <!-- Preflight Warnings Container -->
+        <div id="pubPreflightWarningContainer" class="d-none">
+          <div class="alert alert-warning text-xs mb-0 d-flex gap-2.5 align-items-start">
+            <i class="ti ti-alert-triangle fs-3 text-amber-600 flex-shrink-0 mt-0.5"></i>
+            <div>
+              <div class="font-bold text-amber-900 mb-1" id="pubWarningTitle">Cảnh báo liên kết chưa xuất bản</div>
+              <ul class="mb-0 ps-3 space-y-1 text-amber-800" id="pubWarningList">
+                <!-- Dynamically filled -->
+              </ul>
+              <div class="form-check mt-2 pt-1 border-t border-amber-200">
+                <input class="form-check-input" type="checkbox" id="pubCheckIncludeRelatedAuto" checked />
+                <label class="form-check-label font-medium text-amber-950" for="pubCheckIncludeRelatedAuto">
+                  Tự động xuất bản kèm theo các Datasources, Templates và Media được tham chiếu
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Publishing Mode Selector -->
+        <div>
+          <label class="form-label text-xs font-semibold text-slate-700">Chế độ Xuất bản (Publish Mode)</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="flex items-start gap-2 p-2.5 border rounded-lg cursor-pointer hover:bg-slate-50 transition">
+              <input type="radio" name="publishModeRadio" value="Item" checked class="form-check-input mt-0.5" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Item Publish</div>
+                <div class="text-[11px] text-slate-500">Chỉ xuất bản mục hiện tại (tuỳ chọn kèm nhánh con)</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2 p-2.5 border rounded-lg cursor-pointer hover:bg-slate-50 transition">
+              <input type="radio" name="publishModeRadio" value="Smart" class="form-check-input mt-0.5" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Smart Publish</div>
+                <div class="text-[11px] text-slate-500">So sánh và chỉ xuất bản các mục có thay đổi từ lần trước</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2 p-2.5 border rounded-lg cursor-pointer hover:bg-slate-50 transition">
+              <input type="radio" name="publishModeRadio" value="Republish" class="form-check-input mt-0.5" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Republish</div>
+                <div class="text-[11px] text-slate-500">Ghi đè lại toàn bộ nhánh được chọn sang Web</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Options: Subitems & Related -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="form-label text-xs font-semibold text-slate-700">Phạm vi Cây</label>
+            <div class="space-y-1.5 text-xs">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="pubCheckSubitems" checked />
+                <label class="form-check-label" for="pubCheckSubitems">
+                  Bao gồm các mục con (Publish Subitems)
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="pubCheckRelated" checked />
+                <label class="form-check-label" for="pubCheckRelated">
+                  Bao gồm Layout, Rendering & Media liên quan
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label text-xs font-semibold text-slate-700">Ngôn ngữ Xuất bản</label>
+            <div class="space-y-1.5 text-xs">
+              <div class="form-check">
+                <input class="form-check-input pub-lang-check" type="checkbox" value="vi" id="pubLangVi" checked />
+                <label class="form-check-label" for="pubLangVi">Tiếng Việt (vi)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input pub-lang-check" type="checkbox" value="en" id="pubLangEn" />
+                <label class="form-check-label" for="pubLangEn">English (en)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-slate-50 border-t border-slate-200 px-4 py-2.5 flex justify-between">
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="runPreflightCheck()">
+          <i class="ti ti-scan"></i> Kiểm tra liên kết (Preflight)
+        </button>
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-sm btn-primary" id="btnExecutePublish" onclick="executePublishModalAction()">
+            <i class="ti ti-cloud-upload"></i> Bắt đầu Xuất bản
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

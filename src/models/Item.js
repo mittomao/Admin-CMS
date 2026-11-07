@@ -90,6 +90,24 @@ const itemVersionSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    // GĐ 8: Workflow & Publishing control per version
+    workflowState: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Item',
+      default: null,
+    },
+    validFrom: {
+      type: Date,
+      default: null,
+    },
+    validTo: {
+      type: Date,
+      default: null,
+    },
+    neverPublish: {
+      type: Boolean,
+      default: false,
+    },
   },
   { _id: true }
 );
@@ -153,6 +171,12 @@ const itemSchema = new mongoose.Schema(
     sortOrder: {
       type: Number,
       default: 100,
+    },
+    // GĐ 8: Optional workflow assignment override on item level
+    workflowId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Item',
+      default: null,
     },
     // Dynamic fields mapping (legacy/fallback from GĐ 2 & 3)
     fields: {
@@ -295,6 +319,8 @@ itemSchema.index({ 'presentation.shared.renderings.renderingId': 1 });
 itemSchema.index({ 'presentation.final.renderings.renderingId': 1 });
 itemSchema.index({ 'presentation.shared.renderings.datasourceId': 1 });
 itemSchema.index({ 'presentation.final.renderings.datasourceId': 1 });
+itemSchema.index({ 'languages.versions.workflowState': 1 });
+itemSchema.index({ workflowId: 1 });
 
 /**
  * Instance helper to get a field's value checking fieldId first, then fieldName (legacy support)

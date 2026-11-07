@@ -383,6 +383,32 @@ async function handleRibbonAction(action) {
         window.PresentationDetails.openPreviewJson(currentItemId, { lang: currentLang, version: currentVersion });
       }
       break;
+
+    // GĐ 8: Workflow Ribbon Actions
+    case 'workflow:execute-command':
+      openWorkflowExecuteModal();
+      break;
+
+    case 'workflow:view-history':
+      openCeWorkflowHistoryModal();
+      break;
+
+    case 'workflow:open-workbox':
+      window.open('/admin/workbox', '_blank');
+      break;
+
+    // GĐ 8: Publishing Ribbon Actions
+    case 'publish:open-dialog':
+      openPublishDialogModal();
+      break;
+
+    case 'publish:unpublish-item':
+      openCeUnpublishModal();
+      break;
+
+    case 'publish:open-manager':
+      window.open('/admin/publish-manager', '_blank');
+      break;
   }
 }
 
@@ -1984,3 +2010,333 @@ function openDeleteVersionModal(targetVersion = null) {
   const bsModal = new bootstrap.Modal(modalEl);
   bsModal.show();
 }
+
+// ==========================================
+// 8. Workflow & Publishing Modals (GĐ 8)
+// ==========================================
+async function openWorkflowExecuteModal() {
+  if (!currentItemId) {
+    showToast('Vui lòng chọn một item trước khi thao tác workflow.', 'warning');
+    return;
+  }
+
+  const modalEl = document.getElementById('ceWorkflowExecuteModal');
+  if (!modalEl) return;
+
+  const headerDisplayName = document.getElementById('headerDisplayName');
+  const itemNameEl = document.getElementById('ceWfItemName');
+  if (itemNameEl) itemNameEl.textContent = headerDisplayName ? headerDisplayName.textContent.trim() : currentItemId;
+
+  const stateEl = document.getElementById('ceWfCurrentState');
+  const container = document.getElementById('ceWfCommandsContainer');
+  const noCmdMsg = document.getElementById('ceWfNoCommandsMsg');
+  const commentInput = document.getElementById('ceWfCommentInput');
+  const commentError = document.getElementById('ceWfCommentError');
+
+  if (commentInput) commentInput.value = '';
+  if (commentError) commentError.classList.add('d-none');
+  if (container) container.innerHTML = '<div class="text-xs text-slate-400 py-2"><span class="spinner-border spinner-border-sm me-1"></span> Đang tải lệnh duyệt...</div>';
+
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+
+  try {
+    const resp = await fetch(`/api/items/${currentItemId}/workflow?lang=${currentLang}&version=${currentVersion}`);
+    const res = await resp.json();
+
+    if (!res.success || !res.data) throw new Error('Không thể tải thông tin quy trình duyệt.');
+
+    const { stateInfo, commands } = res.data;
+    if (stateEl) {
+      stateEl.textContent = stateInfo?.state?.displayName || stateInfo?.state?.name || 'Không dùng Workflow';
+    }
+
+    if (!commands || commands.length === 0) {
+      if (container) container.innerHTML = '';
+      if (noCmdMsg) noCmdMsg.classList.remove('d-none');
+      const submitBtn = document.getElementById('btnCeWfSubmit');
+      if (submitBtn) submitBtn.disabled = true;
+      return;
+    }
+
+    if (noCmdMsg) noCmdMsg.classList.add('d-none');
+    const submitBtn = document.getElementById('btnCeWfSubmit');
+    if (submitBtn) submitBtn.disabled = false;
+
+    let html = '';
+    commands.forEach((cmd, idx) => {
+      html += `
+        <label class="flex items-center gap-2.5 p-2 rounded border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
+          <input type="radio" name="ceWfCommandRadio" value="${cmd.name}" data-require-comment="${Boolean(cmd.requireComment)}" ${idx === 0 ? 'checked' : ''} class="form-check-input mt-0" />
+          <i class="${cmd.icon || 'ti ti-player-play'} text-indigo-600"></i>
+          <span class="font-medium text-slate-800">${cmd.displayName || cmd.name}</span>
+          ${cmd.requireComment ? '<span class="text-rose-500 font-bold" title="Bắt buộc nhập nhận xét">*</span>' : ''}
+        </label>
+      `;
+    });
+    if (container) container.innerHTML = html;
+
+    const radios = container.querySelectorAll('input[name="ceWfCommandRadio"]');
+    const updateStar = () => {
+      const selected = container.querySelector('input[name="ceWfCommandRadio"]:checked');
+      const req = selected && selected.getAttribute('data-require-comment') === 'true';
+      const star = document.getElementById('ceWfCommentStar');
+      if (star) {
+        if (req) star.classList.remove('d-none');
+        else star.classList.add('d-none');
+      }
+    };
+    radios.forEach((r) => r.addEventListener('change', updateStar));
+    updateStar();
+  } catch (err) {
+    if (container) container.innerHTML = `<div class="text-rose-500 text-xs py-2">${err.message}</div>`;
+  }
+}
+
+async function submitCeWorkflowCommand() {
+  const container = document.getElementById('ceWfCommandsContainer');
+  const selected = container ? container.querySelector('input[name="ceWfCommandRadio"]:checked') : null;
+  if (!selected) {
+    showToast('Vui lòng chọn một lệnh duyệt.', 'warning');
+    return;
+  }
+
+  const command = selected.value;
+  const requireComment = selected.getAttribute('data-require-comment') === 'true';
+  const comment = (document.getElementById('ceWfCommentInput')?.value || '').trim();
+  const commentError = document.getElementById('ceWfCommentError');
+
+  if (requireComment && !comment) {
+    if (commentError) commentError.classList.remove('d-none');
+    return;
+  }
+  if (commentError) commentError.classList.add('d-none');
+
+  const btn = document.getElementById('btnCeWfSubmit');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xử lý...';
+  }
+
+  try {
+    const expectedUpdatedAt = document.getElementById('formExpectedUpdatedAt')?.value || null;
+    const resp = await fetch(`/api/items/${currentItemId}/workflow/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfToken(),
+      },
+      body: JSON.stringify({
+        lang: currentLang,
+        version: currentVersion,
+        command,
+        comment,
+        expectedUpdatedAt,
+      }),
+    });
+
+    const res = await resp.json();
+    if (!resp.ok || !res.success) {
+      throw new Error(res.message || 'Lỗi khi thực thi lệnh workflow.');
+    }
+
+    const modalEl = document.getElementById('ceWorkflowExecuteModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    showToast(`Đã chuyển trạng thái sang "${res.data.toStateDisplayName || res.data.toState}" thành công!`, 'success');
+    await loadItemWorkspace(currentItemId, currentViewMode, currentLang, currentVersion);
+  } catch (err) {
+    showToast(err.message, 'danger');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Thực thi lệnh';
+    }
+  }
+}
+
+async function openCeWorkflowHistoryModal() {
+  if (!currentItemId) {
+    showToast('Vui lòng chọn một item để xem lịch sử workflow.', 'warning');
+    return;
+  }
+
+  window.open('/admin/workbox', '_blank');
+}
+
+async function openPublishDialogModal() {
+  if (!currentItemId) {
+    showToast('Vui lòng chọn một item trước khi xuất bản.', 'warning');
+    return;
+  }
+
+  const modalEl = document.getElementById('publishDialogModal');
+  if (!modalEl) return;
+
+  const headerDisplayName = document.getElementById('headerDisplayName');
+  const itemNameEl = document.getElementById('pubDialogItemName');
+  if (itemNameEl) itemNameEl.textContent = `Item: ${headerDisplayName ? headerDisplayName.textContent.trim() : currentItemId}`;
+
+  const itemPathEl = document.getElementById('pubDialogItemPath');
+  const technicalName = document.getElementById('headerTechnicalName');
+  if (itemPathEl) itemPathEl.textContent = technicalName ? technicalName.textContent.trim() : '';
+
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+
+  runPreflightCheck();
+}
+
+async function runPreflightCheck() {
+  if (!currentItemId) return;
+
+  const warningContainer = document.getElementById('pubPreflightWarningContainer');
+  const warningList = document.getElementById('pubWarningList');
+  const warningTitle = document.getElementById('pubWarningTitle');
+  const subitems = document.getElementById('pubCheckSubitems')?.checked || false;
+
+  try {
+    const resp = await fetch(`/api/publish/preflight?rootItemId=${currentItemId}&includeSubitems=${subitems}&lang=${currentLang}`);
+    const res = await resp.json();
+
+    if (res.success && res.data && res.data.warningsCount > 0) {
+      if (warningContainer) warningContainer.classList.remove('d-none');
+      if (warningTitle) warningTitle.textContent = `Phát hiện ${res.data.warningsCount} cảnh báo cần lưu ý`;
+      if (warningList) {
+        warningList.innerHTML = res.data.warnings
+          .map((w) => `<li><strong>${w.type}:</strong> ${w.message}</li>`)
+          .join('');
+      }
+    } else {
+      if (warningContainer) warningContainer.classList.add('d-none');
+    }
+  } catch (err) {
+    console.error('Preflight check error:', err);
+  }
+}
+
+async function executePublishModalAction() {
+  if (!currentItemId) return;
+
+  const mode = document.querySelector('input[name="publishModeRadio"]:checked')?.value || 'Item';
+  const includeSubitems = document.getElementById('pubCheckSubitems')?.checked || false;
+  const includeRelated = document.getElementById('pubCheckRelated')?.checked || false;
+
+  const languages = [];
+  document.querySelectorAll('.pub-lang-check:checked').forEach((cb) => {
+    languages.push(cb.value);
+  });
+  if (languages.length === 0) languages.push(currentLang || 'vi');
+
+  const btn = document.getElementById('btnExecutePublish');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xuất bản...';
+  }
+
+  try {
+    const resp = await fetch('/api/publish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfToken(),
+      },
+      body: JSON.stringify({
+        mode,
+        rootItemId: currentItemId,
+        includeSubitems,
+        includeRelated,
+        languages,
+      }),
+    });
+
+    const res = await resp.json();
+    if (!resp.ok || !res.success) {
+      throw new Error(res.message || 'Lỗi khi xuất bản sang Web.');
+    }
+
+    const modalEl = document.getElementById('publishDialogModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    showToast(`Đã đưa tác vụ ${mode} Publish vào hàng đợi xử lý!`, 'success');
+    await loadItemWorkspace(currentItemId, currentViewMode, currentLang, currentVersion);
+  } catch (err) {
+    showToast(err.message, 'danger');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-cloud-upload"></i> Bắt đầu Xuất bản';
+    }
+  }
+}
+
+function openCeUnpublishModal() {
+  if (!currentItemId) {
+    showToast('Vui lòng chọn một item trước khi gỡ bỏ.', 'warning');
+    return;
+  }
+
+  const modalEl = document.getElementById('unpublishModal');
+  if (!modalEl) return;
+
+  const headerDisplayName = document.getElementById('headerDisplayName');
+  const itemNameEl = document.getElementById('unpubItemName');
+  if (itemNameEl) itemNameEl.textContent = headerDisplayName ? headerDisplayName.textContent.trim() : currentItemId;
+
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+}
+
+async function submitUnpublishAction() {
+  if (!currentItemId) return;
+
+  const includeSubitems = document.getElementById('unpubIncludeSubitems')?.checked || false;
+  const btn = document.getElementById('btnConfirmUnpublish');
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang gỡ bỏ...';
+  }
+
+  try {
+    const resp = await fetch(`/api/items/${currentItemId}/unpublish`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfToken(),
+      },
+      body: JSON.stringify({ includeSubitems }),
+    });
+
+    const res = await resp.json();
+    if (!resp.ok || !res.success) {
+      throw new Error(res.message || 'Lỗi khi gỡ bỏ khỏi Web.');
+    }
+
+    const modalEl = document.getElementById('unpublishModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    showToast(`Đã gỡ bỏ ${res.data?.unpublishedCount || 1} mục khỏi trang web công khai!`, 'success');
+    await loadItemWorkspace(currentItemId, currentViewMode, currentLang, currentVersion);
+  } catch (err) {
+    showToast(err.message, 'danger');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-cloud-off"></i> Xác nhận Gỡ bỏ';
+    }
+  }
+}
+
+window.openWorkflowExecuteModal = openWorkflowExecuteModal;
+window.submitCeWorkflowCommand = submitCeWorkflowCommand;
+window.openCeWorkflowHistoryModal = openCeWorkflowHistoryModal;
+window.openPublishDialogModal = openPublishDialogModal;
+window.runPreflightCheck = runPreflightCheck;
+window.executePublishModalAction = executePublishModalAction;
+window.openCeUnpublishModal = openCeUnpublishModal;
+window.submitUnpublishAction = submitUnpublishAction;
+

@@ -38,5 +38,81 @@ router.post('/:id/versions/:lang/:version/restore', csrfMiddleware.verifyToken, 
 router.put('/:id/presentation', csrfMiddleware.verifyToken, presentationController.savePresentation);
 router.post('/:id/presentation/reset', csrfMiddleware.verifyToken, presentationController.resetPresentation);
 
+// Workflow operations (GĐ 8)
+const workflowService = require('../../services/workflowService');
+const publishService = require('../../services/publishService');
+const itemService = require('../../services/itemService');
+const PublishedItem = require('../../models/PublishedItem');
+
+router.get('/:id/workflow', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { lang = 'vi', version = 1 } = req.query;
+    const stateInfo = await workflowService.getState(id, lang, parseInt(version, 10));
+    const commands = await workflowService.getCommands(id, lang, parseInt(version, 10), req.user);
+    res.json({ success: true, data: { stateInfo, commands } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/workflow/execute', csrfMiddleware.verifyToken, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { lang = 'vi', version = 1, command, comment = '', expectedUpdatedAt } = req.body;
+    const result = await workflowService.execute(id, lang, parseInt(version, 10), command, comment, req.user, expectedUpdatedAt);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/workflow/history', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { lang, version } = req.query;
+    const history = await workflowService.getHistory(id, lang, version ? parseInt(version, 10) : null);
+    res.json({ success: true, data: history });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Publishing operations (GĐ 8)
+router.post('/:id/unpublish', csrfMiddleware.verifyToken, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const item = await itemService.getById(id);
+    if (!itemService.canPerform(req.user, item, 'item:unpublish')) {
+      return res.status(403).json({ success: false, message: 'Bạn không có quyền gỡ bỏ item khỏi Web (item:unpublish).' });
+    }
+    const result = await publishService.unpublishItem(id, {
+      includeSubitems: Boolean(req.body.includeSubitems),
+      user: req.user,
+    });
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/publish-status', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const webDoc = await PublishedItem.findById(id).lean();
+    res.json({
+      success: true,
+      data: {
+        isPublished: Boolean(webDoc && !webDoc.isDeleted),
+        publishedAt: webDoc?.publishedAt || null,
+        sourceVersion: webDoc?.sourceVersion || null,
+        languages: webDoc?.languages?.map((l) => ({ code: l.code, version: l.publishedVersion })) || [],
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
 

@@ -33,6 +33,16 @@
           <span class="badge bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 text-xs">
             <i class="<%= tplIcon %> me-1"></i><%= tplName %>
           </span>
+          <% if (typeof workflowStateInfo !== 'undefined' && workflowStateInfo && workflowStateInfo.state) { %>
+            <span class="badge <%= workflowStateInfo.isFinal ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400' %> border text-xs" title="Quy trình: <%= workflowStateInfo.workflow.displayName || workflowStateInfo.workflow.name %>">
+              <i class="<%= workflowStateInfo.state.icon || 'ti ti-clock' %> me-1"></i><%= workflowStateInfo.state.displayName || workflowStateInfo.state.name %>
+            </span>
+          <% } %>
+          <% if (typeof isPublishedOnWeb !== 'undefined') { %>
+            <span class="badge <%= isPublishedOnWeb ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800' %> border text-xs" title="<%= isPublishedOnWeb ? 'Đã xuất bản trên Web' : 'Chưa xuất bản trên Web' %>">
+              <i class="ti <%= isPublishedOnWeb ? 'ti-world' : 'ti-world-off' %> me-1"></i><%= isPublishedOnWeb ? 'Live on Web' : 'Unpublished' %>
+            </span>
+          <% } %>
         </div>
         <div class="text-slate-400 dark:text-slate-500 small mt-0.5 font-monospace text-xs">
           <i class="ti ti-folder me-1"></i><%= item.path %>

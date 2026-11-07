@@ -67,6 +67,15 @@ Xây dựng hệ thống bảo mật phân quyền chi tiết tới từng Item 
 ## Thay đổi Database
 Collection `access_control_lists` với index `{ itemId: 1, identityType: 1, identityId: 1 }`.
 
+## Việc GĐ 7 Phải Bổ Sung Do GĐ 8 Làm Trước (Theo DEC-039)
+Do GĐ 8 (Workflow, Workbox & Publish) được chủ động triển khai trước GĐ 7, toàn bộ cơ chế phân quyền của GĐ 8 đã được trừu tượng hóa nghiêm ngặt thông qua hàm `canPerform(user, item, action)` và `workboxService.filterVisible(items, user)`. Khi triển khai GĐ 7, bắt buộc phải hoàn thiện các đầu việc tích hợp sau:
+1. **Thay thế logic bên trong `canPerform`:** Chuyển đổi từ cơ chế ánh xạ Role tạm thời sang thuật toán đánh giá quyền hiệu dụng đầy đủ (Item-Level ACL: Deny > Allow > Inherited).
+2. **Workbox lọc theo ACL:** Cập nhật `workboxService.filterVisible(items, user)` để lọc danh sách các item chờ duyệt dựa trên quyền `workflow:read` và `workflow:execute:<commandId>` theo từng item cụ thể mà user được gán quyền.
+3. **Quyền Publish theo nhánh:** Kiểm tra quyền `item:publish` và `item:unpublish` trên từng item và toàn bộ chuỗi nhánh con khi thực hiện Publish Subitems / Republish.
+4. **Publish Manager lọc theo ACL:** Khi mở Publish Manager hoặc chọn phạm vi xuất bản, chỉ cho phép chọn những nhánh/item mà user sở hữu quyền publish thực tế.
+5. **Quyền Workflow Command theo Item:** Cho phép gán quyền thực thi từng Command riêng biệt (`Submit`, `Approve`, `Reject`) theo vai trò hoặc user trực tiếp trên từng Item.
+6. **Viết lại test phân quyền của GĐ 8 theo ACL thật:** Bổ sung các test case gán bản ghi `AccessControl` thực tế và xác nhận `workflowService`, `workboxService`, `publishService` tuân thủ đúng quyền mà không cần mock `canPerform`.
+
 ## Definition of Done & Cách kiểm thử
 - Tạo một Role mới `Content Authors` và một User `john_editor` thuộc role này.
 - Cấu hình quyền trên node `/sitecore/content/home`: Role `Content Authors` được quyền `Read`, `Write` và `presentation:read`, nhưng bị `Deny Delete` và `Deny presentation:write`.

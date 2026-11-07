@@ -35,6 +35,11 @@ const seedData = async () => {
         description: 'Review and publishing permissions for content workflows',
         isSystem: true,
       },
+      {
+        name: 'Approver',
+        description: 'Content approval permissions for workflow review and publication (GĐ 8 / DEC-039)',
+        isSystem: true,
+      },
     ];
 
     const rolesMap = {};
@@ -123,9 +128,19 @@ const seedData = async () => {
         icon: 'ti ti-checkbox',
         iconBg: 'indigo',
         group: 'Content Editing',
-        url: '#',
+        url: '/admin/workbox',
         sortOrder: 40,
-        allowedRoles: [rolesMap['Administrator'], rolesMap['Author'], rolesMap['Editor']],
+        allowedRoles: [rolesMap['Administrator'], rolesMap['Author'], rolesMap['Editor'], rolesMap['Approver']],
+      },
+      {
+        name: 'Publish Manager',
+        description: 'Manage publishing queue, schedules, and site synchronization',
+        icon: 'ti ti-cloud-upload',
+        iconBg: 'emerald',
+        group: 'Content Editing',
+        url: '/admin/publish-manager',
+        sortOrder: 45,
+        allowedRoles: [rolesMap['Administrator'], rolesMap['Approver']],
       },
       {
         name: 'User Manager',

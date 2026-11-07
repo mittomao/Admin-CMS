@@ -293,9 +293,22 @@ const versionService = {
       }
     }
 
+    let initWfStateId = null;
+    try {
+      const workflowService = require('./workflowService');
+      const wf = await workflowService.resolveWorkflowForItem(item);
+      if (wf) {
+        const initState = wf.states.find((s) => s.isInitial) || wf.states[0];
+        initWfStateId = initState?._id || null;
+      }
+    } catch {
+      /* ignore workflow resolution failure during version creation */
+    }
+
     // Push new version
     const newVersionDoc = {
       version: nextVersion,
+      workflowState: initWfStateId,
       fields: initialFields,
       createdBy: userId,
       createdAt: new Date(),
@@ -707,6 +720,15 @@ const versionService = {
     item.updatedAt = new Date();
 
     await item.save();
+
+    // GĐ 8: If this version was in a Final (Approved) workflow state and is edited,
+    // automatically transition it back to initial (Draft) state per DEC-039.
+    try {
+      const workflowService = require('./workflowService');
+      await workflowService.handleItemEdited(item, code, vNum, { _id: userId });
+    } catch {
+      // Ignore if workflow not assigned
+    }
 
     return {
       item,

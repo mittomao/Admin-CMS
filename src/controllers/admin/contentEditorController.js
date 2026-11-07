@@ -1,7 +1,9 @@
 const itemService = require('../../services/itemService');
 const templateService = require('../../services/templateService');
 const versionService = require('../../services/versionService');
+const workflowService = require('../../services/workflowService');
 const Item = require('../../models/Item');
+const PublishedItem = require('../../models/PublishedItem');
 const Template = require('../../models/Template');
 const treeHelper = require('../../utils/treeHelper');
 const ribbonConfig = require('../../config/ribbon');
@@ -113,6 +115,20 @@ const contentEditorController = {
       const { item, resolvedTemplate, languagesList, versionsList, hasLanguage, hasVersion, versionInfo, componentTemplates, quickInfo } = schemaData;
       const breadcrumbs = await itemService.getPathBreadcrumb(item);
 
+      // GĐ 8: Resolve workflow state, available commands and publish status
+      let workflowStateInfo = null;
+      let availableCommands = [];
+      let isPublishedOnWeb = false;
+
+      try {
+        workflowStateInfo = await workflowService.getState(item, lang, version);
+        availableCommands = await workflowService.getCommands(item, lang, version, req.user);
+        const webDoc = await PublishedItem.findById(item._id).lean();
+        isPublishedOnWeb = Boolean(webDoc && !webDoc.isDeleted);
+      } catch (wfErr) {
+        logger.error(`Error resolving workflow/publish status: ${wfErr.message}`);
+      }
+
       res.render('content-editor/item-form', {
         layout: false,
         item,
@@ -127,6 +143,9 @@ const contentEditorController = {
         versionInfo,
         componentTemplates: componentTemplates || [],
         quickInfo,
+        workflowStateInfo,
+        availableCommands,
+        isPublishedOnWeb,
       });
     } catch (error) {
       logger.error(`Error loading item form partial: ${error.message}`);

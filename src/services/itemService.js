@@ -51,7 +51,7 @@ const itemService = {
   isProtectedSystemPath,
 
   /**
-   * Permission check placeholder (will be fully integrated with ACL in GĐ 7)
+   * Permission check gateway (DEC-039 / Phase 8 abstraction, will be fully integrated with ACL in GĐ 7)
    */
   canPerform(user, item, action) {
     if (!user) return false;
@@ -63,6 +63,7 @@ const itemService = {
     const isDeveloper = userRoles.includes('Developer');
     const isEditor = userRoles.includes('Editor');
     const isAuthor = userRoles.includes('Author');
+    const isApprover = userRoles.includes('Approver');
 
     if (isAdmin) return true;
 
@@ -84,11 +85,47 @@ const itemService = {
     }
 
     if (action === 'version:delete') {
-      return isEditor; // Only admin or editor can delete versions
+      return isEditor || isApprover;
     }
 
     if (action === 'version:create' || action === 'version:restore') {
-      return isAuthor || isEditor;
+      return isAuthor || isEditor || isApprover;
+    }
+
+    // GĐ 8: Workflow Actions
+    if (action === 'workflow:read') {
+      return true; // All authenticated users can read workflow state of items they can see
+    }
+
+    if (action === 'workflow:manage') {
+      return isAdmin || isDeveloper;
+    }
+
+    if (action === 'workbox:read') {
+      return isAdmin || isApprover || isEditor || isAuthor;
+    }
+
+    if (action === 'workbox:bulk') {
+      return isAdmin || isApprover;
+    }
+
+    if (action.startsWith('workflow:execute')) {
+      const parts = action.split(':');
+      const cmdName = (parts[2] || '').toLowerCase();
+      if (cmdName === 'submit') {
+        return isAuthor || isEditor || isApprover;
+      }
+      // Approve, Reject and other commands require Approver
+      return isApprover;
+    }
+
+    // GĐ 8: Publishing Actions
+    if (action === 'item:publish' || action === 'item:unpublish') {
+      return isAdmin || isApprover;
+    }
+
+    if (action === 'publish:manage') {
+      return isAdmin;
     }
 
     return true;
