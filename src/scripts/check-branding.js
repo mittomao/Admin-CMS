@@ -13,6 +13,7 @@ const ALLOWLIST_PATTERNS = [
   /^src\/scripts\/migrate-phase-r1-root-rename\.js$/,
   /^docs\/decisions\/DEC-043-rebrand-treecraft-and-root-rename\.md$/,
   /^docs\/phases\/phase-R1-rebrand-root-rename\.md$/,
+  /^docs\/phases\/phase-R2-/,
   /^docs\/phases\/R1-impact-matrix\.md$/,
   /^docs\/reports\/phase-R1-report\.md$/,
   /^docs\/open-questions\.md$/,

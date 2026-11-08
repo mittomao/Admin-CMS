@@ -186,6 +186,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentItemId = null;
   let currentMatrixData = null;
 
+  const getCsrfToken = () =>
+    document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+    '<%= typeof csrfToken !== "undefined" ? csrfToken : "" %>';
+
   const inputTarget = document.getElementById('inputTargetItem');
   const btnLoad = document.getElementById('btnLoadItemAcl');
   const labelPath = document.getElementById('labelItemPath');
@@ -450,7 +454,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (const [r, rule] of Object.entries(row.rights)) {
           if (rule && rule.isExplicit && rule.entryId) {
-            await fetch(`/api/security/entries/${rule.entryId}`, { method: 'DELETE' });
+            await fetch(`/api/security/entries/${rule.entryId}`, {
+              method: 'DELETE',
+              headers: {
+                'X-CSRF-Token': getCsrfToken(),
+              },
+            });
           }
         }
         await loadMatrix();
@@ -464,7 +473,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch(`/api/security/items/${currentItemId}/acl`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfToken(),
+        },
         body: JSON.stringify({
           principalType: principal.type,
           principalId: principal.id,
@@ -507,7 +519,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!confirm('Bạn có chắc chắn muốn xoá toàn bộ quyền đặt trực tiếp trên mục này để trở về trạng thái kế thừa từ thư mục cha?')) return;
 
     try {
-      const res = await fetch(`/api/security/items/${currentItemId}/acl/reset`, { method: 'POST' });
+      const res = await fetch(`/api/security/items/${currentItemId}/acl/reset`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': getCsrfToken(),
+        },
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Lỗi khôi phục kế thừa');
       await loadMatrix();

@@ -46,6 +46,7 @@ const securityController = {
         roles,
         domains: domains.length > 0 ? domains : [{ name: branding.DEFAULT_DOMAIN, displayName: branding.PROJECT_NAME }],
         query: req.query,
+        csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : ''),
       });
     } catch (err) {
       logger.error(`[SecurityController] renderUsers error: ${err.message}`);
@@ -181,6 +182,7 @@ const securityController = {
         roles,
         domains: domains.length > 0 ? domains : [{ name: branding.DEFAULT_DOMAIN, displayName: branding.PROJECT_NAME }],
         query: req.query,
+        csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : ''),
       });
     } catch (err) {
       logger.error(`[SecurityController] renderRoles error: ${err.message}`);
@@ -381,6 +383,7 @@ const securityController = {
         user: req.user,
         users,
         roles,
+        csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : ''),
       });
     } catch (err) {
       logger.error(`[SecurityController] renderAccessViewer error: ${err.message}`);
@@ -420,6 +423,7 @@ const securityController = {
         roles,
         initialPath,
         initialId,
+        csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : ''),
       });
     } catch (err) {
       logger.error(`[SecurityController] renderSecurityEditor error: ${err.message}`);

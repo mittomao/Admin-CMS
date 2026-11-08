@@ -18,4 +18,5 @@ Tài liệu này lưu trữ danh mục các tệp tin và vị trí được ph�
 | 8 | `docs/open-questions.md` | Tài liệu lưu trữ lịch sử các câu hỏi mở và phương án lựa chọn về domain/database. |
 | 9 | `tests/brandingAudit.test.js` | Chứa assertion kiểm thử bảo vệ thương hiệu (`expect(value).not.toContain('sitecore')`). |
 | 10 | `docs/reports/phase-R2-*` & `docs/reports/R2-*` | Các báo cáo kiểm kê số liệu trước/sau của chính Giai đoạn R2. |
+| 11 | `docs/phases/phase-R2-*` | Kế hoạch và checklist thực thi dọn dẹp của Giai đoạn R2. |
 
