@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const tokens = require('./src/styles/tokens/sitecore-tokens');
+const tokens = require('./src/styles/tokens/theme-tokens');
 
 module.exports = {
   content: [

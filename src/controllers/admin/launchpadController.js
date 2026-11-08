@@ -1,6 +1,7 @@
 const LaunchpadApp = require('../../models/LaunchpadApp');
 require('../../models/Role');
 const logger = require('../../utils/logger');
+const branding = require('../../config/branding');
 
 // Icon fallback mapping helper to ensure 100% Tabler icon font usage
 const mapToTablerIcon = (icon) => {
@@ -234,7 +235,7 @@ const getLaunchpad = async (req, res) => {
 
     res.render('admin/launchpad/index', {
       layout: 'layouts/shell',
-      title: 'Sitecore Launchpad',
+      title: `${branding.PROJECT_NAME} Launchpad`,
       activeApp: 'launchpad',
       topbarTheme: 'navy',
       groupedApps,

@@ -1,7 +1,10 @@
 'use strict';
 
-const ROOT_MEDIA_PATH = '/sitecore/media library';
-const DEFAULT_CLOUDINARY_ROOT = 'AdminCMS';
+const branding = require('../config/branding');
+
+const ROOT_MEDIA_PATH = branding.PATHS.MEDIA;
+const LEGACY_ROOT_MEDIA_PATH = '/root/media library';
+const DEFAULT_CLOUDINARY_ROOT = branding.CLOUDINARY_DEFAULT_ROOT || 'AdminCMS';
 
 /**
  * Chuẩn hóa tên Item an toàn (không dấu, kebab-case, loại bỏ ký tự đặc biệt và đuôi mở rộng)
@@ -50,7 +53,7 @@ function sanitizeFolderPath(folderPath) {
 /**
  * Chuyển đổi từ Item Path trên CMS sang Cloudinary public_id và asset_folder
  * @param {Object} params
- * @param {string} params.itemPath - Ví dụ '/sitecore/media library/Banners/Hero/summer-sale'
+ * @param {string} params.itemPath - Ví dụ '/root/media library/Banners/Hero/summer-sale'
  * @param {boolean} [params.isRaw=false] - True nếu là tệp raw (PDF, Zip...) cần đuôi trong public_id
  * @param {string} [params.ext=''] - Đuôi mở rộng nếu isRaw=true
  * @param {string} [params.rootFolder='AdminCMS'] - Thư mục gốc trên Cloudinary
@@ -61,10 +64,12 @@ function itemPathToCloudinary({ itemPath, isRaw = false, ext = '', rootFolder = 
     throw new Error('itemPath is required and must be a string.');
   }
 
-  // Chuẩn hóa đường dẫn tương đối dưới /sitecore/media library
+  // Chuẩn hóa đường dẫn tương đối dưới /root/media library (chuẩn hóa đường dẫn media)
   let relativePath = itemPath.trim();
-  if (relativePath.toLowerCase().startsWith(ROOT_MEDIA_PATH)) {
+  if (relativePath.toLowerCase().startsWith(ROOT_MEDIA_PATH.toLowerCase())) {
     relativePath = relativePath.slice(ROOT_MEDIA_PATH.length);
+  } else if (relativePath.toLowerCase().startsWith(LEGACY_ROOT_MEDIA_PATH)) {
+    relativePath = relativePath.slice(LEGACY_ROOT_MEDIA_PATH.length);
   }
   relativePath = relativePath.replace(/^\/+|\/+$/g, '');
 

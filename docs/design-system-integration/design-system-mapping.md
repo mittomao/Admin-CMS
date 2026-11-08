@@ -1,5 +1,5 @@
 # Ánh Xạ Hệ Thống Thiết Kế (Design System Mapping)
-**Dự Án: Sitecore-like Hierarchical XM CMS (Node.js + Express + EJS + MongoDB)**
+**Dự Án: Treecraft Hierarchical XM CMS (Node.js + Express + EJS + MongoDB)**
 
 ---
 
@@ -8,7 +8,7 @@
 ### 1.1. Công Nghệ & Khung Ứng Dụng Hiện Tại
 - **Backend & View Engine:** Node.js (v20+) + Express.js + EJS Server-Side Rendering (kết hợp `express-ejs-layouts`).
 - **Giao diện hiện tại (GĐ 0 - GĐ 1):**
-  - Đang dùng bộ CSS thủ công (`variables.css`, `base.css`, `layout.css`, `components.css`) mô phỏng Sitecore truyền thống.
+  - Đang dùng bộ CSS thủ công (`variables.css`, `base.css`, `layout.css`, `components.css`) mô phỏng truyền thống.
   - Biểu tượng đang dùng Emoji thô sơ (`📑`, `🖼️`, `👥`, `⚙️`, `📥`...).
   - Chưa có hệ thống Design Tokens nhất quán cho chế độ Sáng / Tối (Dark / Light mode).
   - Chưa có cơ chế client validation, toast feedback, và modal xác nhận accessible.
@@ -95,13 +95,13 @@ Toàn bộ icon dạng emoji hoặc thiếu thống nhất trong project sẽ đ
   - Giới hạn độ rộng tối đa 1320px thanh thoát trên màn hình lớn.
   - Bổ sung Toast Container toàn cục: `#adminToastContainer` (`z-index: 1090`).
   - Bổ sung Modal xác nhận xóa toàn cục: `#adminConfirmModal` (`modal modal-blur fade`).
-  - Duy trì thanh Taskbar cố định dưới đáy màn hình của Sitecore (`.sc-taskbar`), nhưng chuẩn hóa màu sắc và hiệu ứng bo viền hòa quyện với theme Tabler.
+  - Duy trì thanh Taskbar cố định dưới đáy màn hình của Treecraft (`.sc-taskbar`), nhưng chuẩn hóa màu sắc và hiệu ứng bo viền hòa quyện với theme Tabler.
 
 ### 3.2. Topbar Header (`src/views/partials/topbar.ejs`)
 - Cấu trúc: `header.navbar.navbar-expand-lg.d-print-none.border-bottom.sticky-top.bg-body.shadow-sm`.
 - Cụm trái:
-  - Brand Logo Sitecore S (`width: 32px; height: 32px; border-radius: 6px; background: var(--sc-red)`).
-  - Tên CMS: `Sitecore XM CMS` (`fw-bold fs-2`).
+  - Brand Logo Treecraft Logo (`width: 32px; height: 32px; border-radius: 6px; background: var(--sc-red)`).
+  - Tên CMS: `Treecraft CMS` (`fw-bold fs-2`).
   - Nút trực tiếp về Launchpad: icon `ti-layout-grid`.
   - **App Switcher Dropdown (Waffle Menu 9 Chấm)**: icon `ti-apps`, dropdown dạng thẻ `dropdown-menu-card` phân 3 nhóm ứng dụng (Content Editing, Access Management, Control Panel).
   - Breadcrumb hiển thị tên trang hiện tại.
@@ -116,11 +116,11 @@ Toàn bộ icon dạng emoji hoặc thiếu thống nhất trong project sẽ đ
   - **Tầng 2 (Application Tile Card):** Grid `col-6 col-md-4 col-xl-3` chứa thẻ `.app-tile-card.card.card-link.card-link-pop`. Icon đại diện đặt trong `.avatar.avatar-md.rounded-3` với màu nền Light Tint (`-lt`), hover nổi bật nhẹ nhàng `translateY(-2px)`.
 
 ### 3.4. Content Editor Layout (`src/views/content-editor/index.ejs`)
-- Nâng cấp Ribbon Tabs thành dạng thẻ Tabler chuẩn với viền nhấn màu đỏ Sitecore.
+- Nâng cấp Ribbon Tabs thành dạng thẻ Tabler chuẩn với viền nhấn màu đỏ Treecraft accent.
 - Các nút Ribbon: Chuẩn hóa thành `btn-sm` kết hợp icon Tabler sắc nét.
 - 3-Pane Workspace (Tree + Form Workspace): Bọc trong `card shadow-sm border-0`, khung Tree có ô tìm kiếm `.input-icon`, form soạn thảo sử dụng các Section Card cấp 2 (`card bg-light border-0 mb-3`) và các trường nhập liệu chuẩn `.input-icon` kèm validation feedback.
 
 ### 3.5. Login Page (`src/views/admin/auth/login.ejs`)
 - Kế thừa `layouts/auth.ejs` với nền gradient tối Tabler Slate (`#0f172a`).
-- Thẻ đăng nhập trung tâm bo góc 12px (`rounded-4`), đổ bóng sâu `shadow-lg`, input sử dụng `.input-icon` với icon `ti-user` và `ti-key`, nút đăng nhập đỏ Sitecore (`btn-danger` hoặc `btn-primary` đỏ).
+- Thẻ đăng nhập trung tâm bo góc 12px (`rounded-4`), đổ bóng sâu `shadow-lg`, input sử dụng `.input-icon` với icon `ti-user` và `ti-key`, nút đăng nhập đỏ Treecraft accent (`btn-danger` hoặc `btn-primary` đỏ).
 

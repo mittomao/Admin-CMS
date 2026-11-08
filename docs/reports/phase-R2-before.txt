@@ -1,0 +1,27 @@
+=== THỐNG KÊ TRƯỚC GIAI ĐOẠN R2 (PHASE R2 BEFORE METRICS) ===
+Thời điểm tạo: 2026-11-08T13:32:04.266Z
+Tổng số lần xuất hiện từ khóa 'sitecore' (không phân biệt hoa thường): 932
+
+--- PHÂN BỐ THEO KHU VỰC ---
+- Documentation            : 405 lần
+- Public Assets & JS       : 38 lần
+- Code                     : 118 lần
+- Config & Infra           : 20 lần
+- Scripts & Migration      : 135 lần
+- Styles & Tokens          : 3 lần
+- Views (EJS)              : 7 lần
+- Tests                    : 206 lần
+
+--- KIỂM TRA TÊN FILE & THƯ MỤC CHỨA "sitecore" ---
+- docs/decisions/DEC-006-vanilla-css-sitecore-theme.md
+- src/styles/tokens/sitecore-tokens.js
+
+--- KIỂM TRA CƠ SỞ DỮ LIỆU (MONGODB ATLAS) ---
+- Master items with path ^/sitecore: 0
+- Web items with path ^/sitecore: 0
+- Root item name: "root" (Master & Web)
+- Templates with path ^/sitecore: 0
+- Templates field source with sitecore: 0
+- Domains collection: 1 domain ("treecraft")
+- Users with domain "sitecore": 0 (admin, author domain = "treecraft")
+- Users with email @sitecore.local: 2 (admin@sitecore.local, author@sitecore.local)

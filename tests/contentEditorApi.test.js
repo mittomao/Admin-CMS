@@ -2,6 +2,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../src/app');
+const branding = require('../src/config/branding');
 const User = require('../src/models/User');
 const Role = require('../src/models/Role');
 const Template = require('../src/models/Template');
@@ -44,7 +45,7 @@ describe('Content Editor API & SSR Endpoints', () => {
     const passwordHash = await User.hashPassword('admin123');
     await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       passwordHash,
       fullName: 'System Admin',
       roles: [adminRole._id],
@@ -83,12 +84,12 @@ describe('Content Editor API & SSR Endpoints', () => {
 
     // 3. Items
     rootItem = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
+      name: branding.ROOT_NAME,
+      displayName: branding.ROOT_NAME,
       templateId: folderTemplate._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore',
+      path: branding.ROOT_PATH,
       sortOrder: 10,
     });
 
@@ -98,7 +99,7 @@ describe('Content Editor API & SSR Endpoints', () => {
       templateId: pageTemplate._id,
       parentId: rootItem._id,
       ancestors: [rootItem._id],
-      path: '/sitecore/home',
+      path: `${branding.ROOT_PATH}/home`,
       sortOrder: 100,
       fields: {
         title: 'Home Page',
@@ -137,7 +138,7 @@ describe('Content Editor API & SSR Endpoints', () => {
       .get(`/admin/content-editor/item/${rootItem._id}/folder-view`)
       .expect(200);
 
-    expect(res.text).toContain('Sitecore');
+    expect(res.text).toContain(branding.ROOT_NAME);
     expect(res.text).toContain('Home');
   });
 
@@ -145,7 +146,7 @@ describe('Content Editor API & SSR Endpoints', () => {
     const res = await agent.get('/api/items/root/children').expect(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBe(1);
-    expect(res.body[0].title).toBe('Sitecore');
+    expect(res.body[0].title).toBe(branding.ROOT_NAME);
     expect(res.body[0].lazy).toBe(true);
   });
 
@@ -176,7 +177,7 @@ describe('Content Editor API & SSR Endpoints', () => {
 
     expect(res.body.success).toBe(true);
     expect(res.body.data.name).toBe('contact');
-    expect(res.body.data.path).toBe('/sitecore/home/contact');
+    expect(res.body.data.path).toBe(`${branding.ROOT_PATH}/home/contact`);
     expect(res.body.node.title).toBe('Contact Us');
   });
 
@@ -209,7 +210,7 @@ describe('Content Editor API & SSR Endpoints', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.name).toBe('new-home');
     expect(res.body.data.displayName).toBe('New Home Display');
-    expect(res.body.data.path).toBe('/sitecore/new-home');
+    expect(res.body.data.path).toBe(`${branding.ROOT_PATH}/new-home`);
   });
 
   test('POST /api/items/:id/sort reorders items', async () => {
@@ -220,7 +221,7 @@ describe('Content Editor API & SSR Endpoints', () => {
       templateId: folderTemplate._id,
       parentId: rootItem._id,
       ancestors: [rootItem._id],
-      path: '/sitecore/media',
+      path: `${branding.ROOT_PATH}/media`,
       sortOrder: 200,
     });
 
@@ -238,5 +239,39 @@ describe('Content Editor API & SSR Endpoints', () => {
 
     const deleted = await Item.findById(homeItem._id);
     expect(deleted.deleted).toBe(true);
+  });
+
+  test('GET /api/items/resolve-path resolves item by path and supports trailing slash', async () => {
+    const res = await agent
+      .get(`/api/items/resolve-path?path=${encodeURIComponent(`${branding.ROOT_PATH}/home`)}`)
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body._id).toBe(homeItem._id.toString());
+    expect(res.body.data.path).toBe(`${branding.ROOT_PATH}/home`);
+
+    // Trailing slash test
+    const resTrailing = await agent
+      .get(`/api/items/resolve-path?path=${encodeURIComponent(`${branding.ROOT_PATH}/home/`)}`)
+      .expect(200);
+    expect(resTrailing.body.success).toBe(true);
+    expect(resTrailing.body._id).toBe(homeItem._id.toString());
+  });
+
+  test('GET /api/items?path= resolves item by path alias', async () => {
+    const res = await agent
+      .get(`/api/items?path=${encodeURIComponent(`${branding.ROOT_PATH}/home`)}`)
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body._id).toBe(homeItem._id.toString());
+  });
+
+  test('GET /api/items/resolve-path returns 404 for unknown path', async () => {
+    const res = await agent
+      .get('/api/items/resolve-path?path=/non-existent-path')
+      .expect(404);
+
+    expect(res.body.success).toBe(false);
   });
 });

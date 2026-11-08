@@ -45,7 +45,7 @@ Xây dựng phân hệ hiển thị trang web công khai (Public Site Renderer) 
      - `GET /` render Home (thay thế redirect admin cũ). Catch-all `GET /*` chuyển tới Site Renderer.
      - Static assets `public/site/` (`/site/...`). CSP riêng cho public website.
   2. **Bộ phân giải URL (Site Resolver):**
-     - Ánh xạ URL path sang item trong `items_web` bắt đầu từ Start Item `/sitecore/content/Home` (DEC-034).
+     - Ánh xạ URL path sang item trong `items_web` bắt đầu từ Start Item `/root/content/Home` (DEC-034).
      - Hỗ trợ đa ngôn ngữ: `vi` mặc định (không tiền tố), `/en/...` cho tiếng Anh.
      - Chỉ item có template Page / Presentation hợp lệ mới là trang; item khác (component, media...) trả 404.
      - Page chưa publish, đã unpublish, hoặc cha chưa publish: 404.
@@ -82,7 +82,7 @@ Xây dựng phân hệ hiển thị trang web công khai (Public Site Renderer) 
   - Chuyển `GET /` từ redirect admin sang gọi Site Renderer.
 - [x] **Task 10.2:** Bộ Phân giải URL (`src/services/siteResolver.js`):
   - Chuẩn hóa URL, tách language prefix (`vi` mặc định, `/en/...`).
-  - Ánh xạ đường dẫn sang item trong `items_web` từ Start Item `/sitecore/content/Home`.
+  - Ánh xạ đường dẫn sang item trong `items_web` từ Start Item `/root/content/Home`.
   - Kiểm tra ràng buộc hợp lệ: chỉ Page item có presentation hợp lệ mới render; chưa publish/cha chưa publish trả 404.
 - [x] **Task 10.3:** Trình Kết xuất Lõi (`src/services/siteRenderer.js`):
   - Phân giải bố cục qua `webItemService.getFinalPresentation` và các trường qua `webItemService.resolveFields`.

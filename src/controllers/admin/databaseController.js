@@ -3,6 +3,7 @@ const PublishedItem = require('../../models/PublishedItem');
 const itemService = require('../../services/itemService');
 const aclService = require('../../services/aclService');
 const logger = require('../../utils/logger');
+const branding = require('../../config/branding');
 const { ForbiddenError } = require('../../utils/errors');
 
 function escapeRegex(text) {
@@ -10,10 +11,10 @@ function escapeRegex(text) {
 }
 
 const BRANCHES = [
-  { path: '/sitecore/content', name: 'Content' },
-  { path: '/sitecore/layout', name: 'Layout' },
-  { path: '/sitecore/templates', name: 'Templates' },
-  { path: '/sitecore/media library', name: 'Media Library' },
+  { path: branding.PATHS.CONTENT, name: 'Content' },
+  { path: branding.PATHS.LAYOUT, name: 'Layout' },
+  { path: branding.PATHS.TEMPLATES, name: 'Templates' },
+  { path: branding.PATHS.MEDIA, name: 'Media Library' },
 ];
 
 const databaseController = {
@@ -28,7 +29,7 @@ const databaseController = {
       }
 
       res.render('admin/databases/index', {
-        title: 'Databases Manager & Reconciliation - Sitecore XM',
+        title: `Databases Manager & Reconciliation - ${branding.PROJECT_NAME}`,
         currentPath: '/admin/databases',
         activeApp: 'databases',
         branches: BRANCHES,

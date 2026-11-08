@@ -2,7 +2,7 @@
 > Ngày: 2026-11-03 | GĐ liên quan: GĐ 2 | Trạng thái: Đang áp dụng
 
 ## Bối cảnh
-Cây nội dung của Sitecore có thể chứa hàng chục ngàn item. Việc tải toàn bộ cây một lần sẽ gây nghẽn trình duyệt; ngoài ra cần hỗ trợ kéo thả di chuyển node.
+Cây nội dung của Treecraft có thể chứa hàng chục ngàn item. Việc tải toàn bộ cây một lần sẽ gây nghẽn trình duyệt; ngoài ra cần hỗ trợ kéo thả di chuyển node.
 
 ## Quyết định
 Sử dụng thư viện **Fancytree** kết hợp với extension HTML5 native Drag & Drop (`dnd5`). Nạp dữ liệu cây con theo cơ chế lazy loading qua endpoint `/api/items/:id/children`.

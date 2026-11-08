@@ -19,7 +19,7 @@ describe('GĐ 5: richTextHelper Unit Tests (Sanitization & Reference Resolution)
       name: 'banner.png',
       displayName: 'Banner',
       isFolder: false,
-      path: '/sitecore/media library/banner.png',
+      path: '/root/media library/banner.png',
       fileDetails: {
         storagePath: '2026/11/banner.png',
         mimeType: 'image/png',
@@ -37,7 +37,7 @@ describe('GĐ 5: richTextHelper Unit Tests (Sanitization & Reference Resolution)
       name: 'about-us',
       displayName: 'About Us',
       templateId: template._id,
-      path: '/sitecore/content/home/about-us'
+      path: '/root/content/home/about-us'
     });
   });
 

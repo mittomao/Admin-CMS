@@ -30,7 +30,7 @@ async function runMigration() {
 
   const shouldConnect = mongoose.connection.readyState === 0;
   if (shouldConnect) {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/sitecore_cms';
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/treecraft_cms';
     console.log(`Connecting to MongoDB at: ${mongoUri}...`);
     await mongoose.connect(mongoUri);
     console.log('Connected successfully.\n');
@@ -90,15 +90,15 @@ async function runMigration() {
       }
     }
 
-    // 2. Kiểm tra node /sitecore/content và Insert Options
-    console.log('\n--- BƯỚC 2: Kiểm tra Insert Options cho node /sitecore/content ---');
-    const contentNode = await Item.findOne({ path: '/sitecore/content', deleted: false });
+    // 2. Kiểm tra node /root/content và Insert Options
+    console.log('\n--- BƯỚC 2: Kiểm tra Insert Options cho node /root/content ---');
+    const contentNode = await Item.findOne({ path: '/root/content', deleted: false });
     if (!contentNode) {
-      console.log('  -> Không tìm thấy node /sitecore/content.');
+      console.log('  -> Không tìm thấy node /root/content.');
     } else {
-      console.log(`Tìm thấy node /sitecore/content: ID = ${contentNode._id}`);
+      console.log(`Tìm thấy node /root/content: ID = ${contentNode._id}`);
       const insertOptions = await templateService.getInsertOptions(contentNode._id);
-      console.log(`Danh sách Insert Options cho /sitecore/content (${insertOptions.length} templates):`);
+      console.log(`Danh sách Insert Options cho /root/content (${insertOptions.length} templates):`);
       insertOptions.forEach((opt) => {
         console.log(`  - [${opt.name}] (path: ${opt.path || 'N/A'}) - ${opt.displayName || opt.name}`);
       });
@@ -111,7 +111,7 @@ async function runMigration() {
       if (invalidOptions.length > 0) {
         console.warn(`  [CẢNH BÁO] Phát hiện ${invalidOptions.length} template không hợp lệ (Feature/System) trong Insert Options của /content!`);
       } else {
-        console.log('  -> TẤT CẢ Insert Options của /sitecore/content đều hợp lệ (thuộc Project/Pages hoặc Common).');
+        console.log('  -> TẤT CẢ Insert Options của /root/content đều hợp lệ (thuộc Project/Pages hoặc Common).');
       }
     }
 

@@ -39,7 +39,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       name: 'Folder',
       displayName: 'Folder',
       isSystem: false,
-      path: '/sitecore/templates/Common/Folder',
+      path: '/root/templates/Common/Folder',
       sections: [],
       insertOptions: [],
     });
@@ -48,7 +48,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       name: 'SystemSetting',
       displayName: 'System Setting',
       isSystem: true,
-      path: '/sitecore/templates/System/SystemSetting',
+      path: '/root/templates/System/SystemSetting',
       sections: [],
     });
 
@@ -56,7 +56,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       name: 'HeroBanner',
       displayName: 'Hero Banner',
       isSystem: false,
-      path: '/sitecore/templates/Feature/Components/HeroBanner',
+      path: '/root/templates/Feature/Components/HeroBanner',
       sections: [],
     });
 
@@ -64,7 +64,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       name: 'Home',
       displayName: 'Home Page Template',
       isSystem: false,
-      path: '/sitecore/templates/Project/Pages/Home',
+      path: '/root/templates/Project/Pages/Home',
       sections: [],
       insertOptions: [],
     });
@@ -73,7 +73,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       name: 'AboutUs',
       displayName: 'About Us Page Template',
       isSystem: false,
-      path: '/sitecore/templates/Project/Pages/AboutUs',
+      path: '/root/templates/Project/Pages/AboutUs',
       sections: [],
       insertOptions: [],
     });
@@ -85,14 +85,14 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       templateId: folderTpl._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore/content',
+      path: '/root/content',
       sortOrder: 100,
       createdBy: adminUserId,
       languages: [{ code: 'vi', versions: [{ version: 1, createdBy: adminUserId }] }],
     });
   });
 
-  describe('1. Insert options resolution on /sitecore/content', () => {
+  describe('1. Insert options resolution on /root/content', () => {
     it('should list Project/Pages templates and Common templates (Folder) and exclude Feature/Components and System', async () => {
       const options = await templateService.getInsertOptions(contentNode._id);
       expect(options).toHaveLength(3);
@@ -105,12 +105,12 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
     });
 
     it('should dynamically include new templates added in nested subfolders of Project/Pages', async () => {
-      // Create nested template: /sitecore/templates/Project/Pages/Blog/Article
+      // Create nested template: /root/templates/Project/Pages/Blog/Article
       await Template.create({
         name: 'Article',
         displayName: 'Article Page Template',
         isSystem: false,
-        path: '/sitecore/templates/Project/Pages/Blog/Article',
+        path: '/root/templates/Project/Pages/Blog/Article',
         sections: [],
       });
 
@@ -128,7 +128,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
         name: 'ContentFolder',
         displayName: 'Content Folder',
         isSystem: false,
-        path: '/sitecore/templates/Common/ContentFolder',
+        path: '/root/templates/Common/ContentFolder',
         sections: [],
       });
 
@@ -144,8 +144,8 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
 
       await Template.deleteMany({
         $or: [
-          { path: { $regex: '^/sitecore/templates/Project/Pages', $options: 'i' } },
-          { path: { $regex: '^/sitecore/templates/Common', $options: 'i' } },
+          { path: { $regex: '^/root/templates/Project/Pages', $options: 'i' } },
+          { path: { $regex: '^/root/templates/Common', $options: 'i' } },
         ],
       });
 
@@ -154,7 +154,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
     });
   });
 
-  describe('2. Insert options resolution for child items under /sitecore/content', () => {
+  describe('2. Insert options resolution for child items under /root/content', () => {
     it('should fall back to Project/Pages + Common templates if child item has empty insertOptions', async () => {
       const homeItem = await Item.create({
         name: 'home',
@@ -162,7 +162,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
         templateId: homeTpl._id,
         parentId: contentNode._id,
         ancestors: [contentNode._id],
-        path: '/sitecore/content/home',
+        path: '/root/content/home',
         sortOrder: 10,
         createdBy: adminUserId,
         languages: [{ code: 'vi', versions: [{ version: 1, createdBy: adminUserId }] }],
@@ -188,7 +188,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
         templateId: homeTpl._id,
         parentId: contentNode._id,
         ancestors: [contentNode._id],
-        path: '/sitecore/content/home',
+        path: '/root/content/home',
         sortOrder: 10,
         createdBy: adminUserId,
         languages: [{ code: 'vi', versions: [{ version: 1, createdBy: adminUserId }] }],
@@ -200,19 +200,19 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
     });
   });
 
-  describe('3. Validation during item creation under /sitecore/content', () => {
+  describe('3. Validation during item creation under /root/content', () => {
     it('should allow creating page item under /content with a Project/Pages template', async () => {
       const newItem = await itemService.createFromTemplate(contentNode._id, homeTpl._id, 'landing-page', 'Landing Page', adminUserId);
       expect(newItem).toBeDefined();
       expect(newItem.name).toBe('landing-page');
-      expect(newItem.path).toBe('/sitecore/content/landing-page');
+      expect(newItem.path).toBe('/root/content/landing-page');
     });
 
     it('should allow creating folder item under /content with Common Folder template', async () => {
       const newFolder = await itemService.createFromTemplate(contentNode._id, folderTpl._id, 'news', 'News Section', adminUserId);
       expect(newFolder).toBeDefined();
       expect(newFolder.name).toBe('news');
-      expect(newFolder.path).toBe('/sitecore/content/news');
+      expect(newFolder.path).toBe('/root/content/news');
     });
 
     it('should reject creating item under /content with a Feature/Components template', async () => {
@@ -237,7 +237,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
         templateId: folderTpl._id,
         parentId: null,
         ancestors: [],
-        path: '/sitecore/templates/Common',
+        path: '/root/templates/Common',
         sortOrder: 10,
         createdBy: adminUserId,
       });
@@ -248,7 +248,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
         templateId: folderTpl._id,
         parentId: null,
         ancestors: [],
-        path: '/sitecore/templates/Project',
+        path: '/root/templates/Project',
         sortOrder: 20,
         createdBy: adminUserId,
       });
@@ -257,7 +257,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
         name: 'CustomTpl',
         displayName: 'Custom Template',
         isSystem: false,
-        path: '/sitecore/templates/Common/CustomTpl',
+        path: '/root/templates/Common/CustomTpl',
         sections: [],
       });
 
@@ -268,7 +268,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
         templateId: folderTpl._id,
         parentId: commonFolderItem._id,
         ancestors: [commonFolderItem._id],
-        path: '/sitecore/templates/Common/CustomTpl',
+        path: '/root/templates/Common/CustomTpl',
         sortOrder: 10,
         createdBy: adminUserId,
       });
@@ -277,7 +277,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       await itemService.moveTo(customItem._id, projectFolderItem._id, adminUserId);
 
       const updatedTpl = await Template.findById(customTpl._id);
-      expect(updatedTpl.path).toBe('/sitecore/templates/Project/CustomTpl');
+      expect(updatedTpl.path).toBe('/root/templates/Project/CustomTpl');
     });
   });
 
@@ -291,13 +291,13 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       folderTpl.insertOptions = [folderTpl._id, pageTpl._id];
       await folderTpl.save();
 
-      // Create item for folderTpl in /sitecore/templates/Common/Folder
+      // Create item for folderTpl in /root/templates/Common/Folder
       await Item.create({
         _id: folderTpl._id,
         name: 'Folder',
         displayName: 'Folder',
         templateId: systemTpl._id,
-        path: '/sitecore/templates/Common/Folder',
+        path: '/root/templates/Common/Folder',
         parentId: contentNode._id,
         ancestors: [contentNode._id],
         createdBy: adminUserId,
@@ -307,7 +307,7 @@ describe('Content Insert Options & Project/Pages + Common Templates', () => {
       await runMigration();
       const updatedFolder = await Template.findById(folderTpl._id);
       expect(updatedFolder.insertOptions.map((id) => id.toString())).not.toContain(pageTpl._id.toString());
-      expect(updatedFolder.path).toBe('/sitecore/templates/Common/Folder');
+      expect(updatedFolder.path).toBe('/root/templates/Common/Folder');
       expect(updatedFolder.isSystem).toBe(false);
 
       // Second run (idempotent)

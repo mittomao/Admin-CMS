@@ -7,12 +7,12 @@
 ---
 
 ## 1. Bối cảnh
-Trước đây (DEC-030), nhánh `/sitecore/layout` được thiết kế có 4 nhánh con: `Layouts`, `Renderings`, `Devices`, và `Placeholder Settings`. Cấu hình Device (`Default`, `Mobile`) và Placeholder Settings (`column-{*}`) được vay mượn từ Sitecore cũ nhằm hỗ trợ React JSS, gây cồng kềnh và dư thừa trong kiến trúc EJS SSR.
+Trước đây (DEC-030), nhánh `/root/layout` được thiết kế có 4 nhánh con: `Layouts`, `Renderings`, `Devices`, và `Placeholder Settings`. Cấu hình Device (`Default`, `Mobile`) và Placeholder Settings (`column-{*}`) được vay mượn từ hệ thống cũ nhằm hỗ trợ React JSS, gây cồng kềnh và dư thừa trong kiến trúc EJS SSR.
 
 ## 2. Quyết định
-Chuẩn hóa nhánh `/sitecore/layout` thành **đúng 3 thư mục con bất biến**:
+Chuẩn hóa nhánh `/root/layout` thành **đúng 3 thư mục con bất biến**:
 ```text
-/sitecore/layout/
+/root/layout/
 ├── Layouts/              # Chứa các item Layout
 │   └── HomeLayout        # viewPath: "layouts/HomeLayout.ejs"
 ├── Placeholders/         # Chứa các item Placeholder giữ chỗ
@@ -34,7 +34,7 @@ Chuẩn hóa nhánh `/sitecore/layout` thành **đúng 3 thư mục con bất bi
 3. **Cơ chế lồng nhiều cấp:**
    - Các thư mục con bên trong `Layouts`, `Placeholders`, `Renderings` được phép lồng nhiều cấp để phân nhóm theo domain hoặc tính năng (ví dụ `Renderings/Feature/...`, `Renderings/Foundation/...`).
 4. **Bảo vệ Node Hệ thống:**
-   - Ba node `/sitecore/layout/Layouts`, `/sitecore/layout/Placeholders`, `/sitecore/layout/Renderings` là node hệ thống bất biến: cấm đổi tên, di chuyển hoặc xóa bỏ.
+   - Ba node `/root/layout/Layouts`, `/root/layout/Placeholders`, `/root/layout/Renderings` là node hệ thống bất biến: cấm đổi tên, di chuyển hoặc xóa bỏ.
 5. **Tham chiếu theo ID:**
    - Mọi liên kết giữa Item, Layout, Placeholder, Rendering đều lưu bằng **ObjectId**, không lưu theo đường dẫn chuỗi (path) để tránh đứt gãy liên kết khi đổi tên hoặc di chuyển folder.
 

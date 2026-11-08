@@ -156,7 +156,7 @@ describe('templateService - Template Engine & Inheritance', () => {
       ],
     });
     const authorFieldId = base.sections[0].fields[0]._id.toString();
-    base.standardValues = { [authorFieldId]: 'Default Sitecore Author' };
+    base.standardValues = { [authorFieldId]: 'Default Treecraft Author' };
     await base.save();
 
     const child = await Template.create({
@@ -174,7 +174,7 @@ describe('templateService - Template Engine & Inheritance', () => {
     await child.save();
 
     const stdValues = await templateService.resolveStandardValues(child._id);
-    expect(stdValues[authorFieldId]).toBe('Default Sitecore Author');
+    expect(stdValues[authorFieldId]).toBe('Default Treecraft Author');
     expect(stdValues[copyFieldId]).toBe('2026 CMS Corp');
   });
 
@@ -193,7 +193,7 @@ describe('templateService - Template Engine & Inheritance', () => {
     await Item.create({
       name: 'sample-article',
       templateId: tpl._id,
-      path: '/sitecore/sample-article',
+      path: '/root/sample-article',
     });
 
     await expect(templateService.delete(tpl._id)).rejects.toThrow(/content item\(s\) are using this template/);
@@ -222,7 +222,7 @@ describe('templateService - Template Engine & Inheritance', () => {
     await Item.create({
       name: 'annual-event',
       templateId: tpl._id,
-      path: '/sitecore/annual-event',
+      path: '/root/annual-event',
     });
 
     // Incompatible transition: Date -> Checkbox
@@ -259,7 +259,7 @@ describe('templateService - Template Engine & Inheritance', () => {
       name: 'HeroBanner',
       displayName: 'Hero Banner',
       templateId: renderingTpl._id,
-      path: '/sitecore/layout/Renderings/Feature/HeroBanner',
+      path: '/root/layout/Renderings/Feature/HeroBanner',
       sharedFields: {
         viewPath: 'site/components/HeroBanner.ejs',
         componentTemplate: heroCompTpl._id.toString(),

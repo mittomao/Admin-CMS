@@ -1,7 +1,7 @@
 {
-  "name": "admin-cms",
+  "name": "treecraft",
   "version": "1.0.0",
-  "description": "Sitecore-like Hierarchical XM Content Management System",
+  "description": "Treecraft - Hierarchical XM Content Management System",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -15,6 +15,7 @@
     "lint:fix": "eslint src/ tests/ --fix",
     "format": "prettier --write \"src/**/*.{js,json,ejs}\" \"public/**/*.{css,js}\"",
     "test": "jest --detectOpenHandles --forceExit",
+    "check:branding": "node src/scripts/check-branding.js",
     "seed": "node src/scripts/seed-initial-data.js",
     "seed:presentation": "node src/scripts/seed-presentation-data.js",
     "seed:sample": "node src/scripts/seed-sample-site.js",
@@ -24,7 +25,6 @@
   },
   "keywords": [
     "cms",
-    "sitecore",
     "express",
     "ejs",
     "mongodb",

@@ -23,7 +23,7 @@
   display: block !important;
 }
 
-/* Sitecore Interactive System States */
+/* Treecraft Interactive System States */
 .form-control, .form-select {
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out !important;
 }
@@ -305,7 +305,7 @@
   cursor: grabbing;
 }
 
-/* Sitecore Section Bar & Quick Info Component (DEC-037 / GĐ 6.3) */
+/* Treecraft Section Bar & Quick Info Component (DEC-037 / GĐ 6.3) */
 .sc-section-bar {
   display: flex !important;
   align-items: center !important;

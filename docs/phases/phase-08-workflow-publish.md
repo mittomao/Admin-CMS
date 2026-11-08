@@ -32,14 +32,14 @@ updated: 2026-11-07
 
 ## Mục tiêu
 1. **Tách biệt Master và Web:** Xây dựng collection `items_web` lưu trữ phiên bản đã publish của các item (giữ nguyên `_id`), phục vụ Public Site Renderer (GĐ 10) thông qua `webItemService`.
-2. **Workflow Engine ("Mọi thứ là Item"):** Tạo template hệ thống `Workflow`, `Workflow State`, `Workflow Command`, `Workflow Action` dưới `/sitecore/system/Workflows`. Trạng thái gắn theo từng `version` của từng `lang`.
+2. **Workflow Engine ("Mọi thứ là Item"):** Tạo template hệ thống `Workflow`, `Workflow State`, `Workflow Command`, `Workflow Action` dưới `/root/system/Workflows`. Trạng thái gắn theo từng `version` của từng `lang`.
 3. **Ứng dụng Workbox (`/admin/workbox`):** Xem và duyệt các item đang chờ duyệt, hỗ trợ duyệt/từ chối đơn lẻ và hàng loạt (bulk).
 4. **Publishing Engine Đa chế độ:** Hỗ trợ Item, Smart, Republish, Site publish kèm đồng bộ related items, cảnh báo liên kết/datasource chưa publish, in-process job queue, in-process scheduler (`validFrom/validTo`) và event bus nội bộ.
 
 ## Phạm vi
 - **Làm:**
   1. Tách Master và Web thành 2 collection (`items` và `items_web`), cung cấp `webItemService` (read-only từ Web).
-  2. Workflow Engine: System templates và items trong `/sitecore/system/Workflows`. Workflow mặc định: `Sample Workflow` (`Draft` -> `Submit` -> `Awaiting Approval` -> `Approve` / `Reject` -> `Approved` có `autoPublish`).
+  2. Workflow Engine: System templates và items trong `/root/system/Workflows`. Workflow mặc định: `Sample Workflow` (`Draft` -> `Submit` -> `Awaiting Approval` -> `Approve` / `Reject` -> `Approved` có `autoPublish`).
   3. Gán workflow qua Standard Values / Template (kế thừa động) hoặc override ở item; version mới về `initial` state; sửa item đã final chuyển về `initial` state (Web giữ nguyên bản cũ).
   4. Lịch sử duyệt `workflow_histories`.
   5. Ứng dụng Workbox (`GET /admin/workbox`) lọc qua `workboxService.filterVisible(items, user)`, hỗ trợ thao tác hàng loạt có báo cáo kết quả từng item.
@@ -72,7 +72,7 @@ updated: 2026-11-07
   - Đọc từ collection `items_web`: `getById`, `getByPath`, `getChildren`, `resolveFields`, `getFinalPresentation`.
   - Đảm bảo read-only, chỉ ghi qua Publish Engine.
 - [x] **Task 8.4:** Xây dựng `workflowService.js` & Test:
-  - Khởi tạo seed system templates và `Sample Workflow` trong `/sitecore/system/Workflows`.
+  - Khởi tạo seed system templates và `Sample Workflow` trong `/root/system/Workflows`.
   - `getState(item, lang, version)`
   - `getCommands(item, lang, version, user)`
   - `execute(itemId, lang, version, commandId, comment, user, expectedUpdatedAt)`

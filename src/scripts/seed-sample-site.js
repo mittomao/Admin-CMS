@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { connectDB } = require('../config/database');
+const branding = require('../config/branding');
 const Template = require('../models/Template');
 const Item = require('../models/Item');
 const PublishedItem = require('../models/PublishedItem');
@@ -10,26 +11,26 @@ async function seedSampleSite() {
   await connectDB();
 
   // 1. Ensure Root Nodes
-  let sitecoreRoot = await Item.findOne({ path: '/sitecore' });
-  if (!sitecoreRoot) {
-    sitecoreRoot = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
-      path: '/sitecore',
+  let rootNode = await Item.findOne({ path: branding.PATHS.ROOT });
+  if (!rootNode) {
+    rootNode = await Item.create({
+      name: branding.ROOT_NAME,
+      displayName: branding.ROOT_NAME,
+      path: branding.PATHS.ROOT,
       sortOrder: 0,
       isSystem: true,
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
     });
   }
 
-  let contentRoot = await Item.findOne({ path: '/sitecore/content' });
+  let contentRoot = await Item.findOne({ path: branding.PATHS.CONTENT });
   if (!contentRoot) {
     contentRoot = await Item.create({
       name: 'content',
       displayName: 'Content',
-      parentId: sitecoreRoot._id,
-      ancestors: [sitecoreRoot._id],
-      path: '/sitecore/content',
+      parentId: rootNode._id,
+      ancestors: [rootNode._id],
+      path: branding.PATHS.CONTENT,
       sortOrder: 100,
       isSystem: true,
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
@@ -37,14 +38,14 @@ async function seedSampleSite() {
   }
 
   // 2. Ensure Layout & Renderings exist
-  let homeLayout = await Item.findOne({ path: '/sitecore/layout/Layouts/HomeLayout' });
+  let homeLayout = await Item.findOne({ path: { $in: [`${branding.PATHS.LAYOUTS}/HomeLayout`] } });
   if (!homeLayout) {
     console.log('[Seed Sample] Chưa tìm thấy HomeLayout, vui lòng chạy npm run seed:presentation trước!');
     // Look up or create minimal layout item
     homeLayout = await Item.create({
       name: 'HomeLayout',
       displayName: 'Home Layout',
-      path: '/sitecore/layout/Layouts/HomeLayout',
+      path: `${branding.PATHS.LAYOUTS}/HomeLayout`,
       fields: new Map([['viewPath', 'layouts/HomeLayout.ejs']]),
       sharedFields: new Map([['viewPath', 'layouts/HomeLayout.ejs']]),
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
@@ -55,12 +56,12 @@ async function seedSampleSite() {
     await homeLayout.save();
   }
 
-  let heroBannerRendering = await Item.findOne({ path: '/sitecore/layout/Renderings/HeroBanner' });
+  let heroBannerRendering = await Item.findOne({ path: { $in: [`${branding.PATHS.RENDERINGS}/HeroBanner`] } });
   if (!heroBannerRendering) {
     heroBannerRendering = await Item.create({
       name: 'HeroBanner',
       displayName: 'Hero Banner',
-      path: '/sitecore/layout/Renderings/HeroBanner',
+      path: `${branding.PATHS.RENDERINGS}/HeroBanner`,
       fields: new Map([['viewPath', 'components/HeroBanner.ejs']]),
       sharedFields: new Map([['viewPath', 'components/HeroBanner.ejs']]),
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
@@ -70,12 +71,12 @@ async function seedSampleSite() {
     await heroBannerRendering.save();
   }
 
-  let introRendering = await Item.findOne({ path: '/sitecore/layout/Renderings/Introduction' });
+  let introRendering = await Item.findOne({ path: { $in: [`${branding.PATHS.RENDERINGS}/Introduction`] } });
   if (!introRendering) {
     introRendering = await Item.create({
       name: 'Introduction',
       displayName: 'Introduction',
-      path: '/sitecore/layout/Renderings/Introduction',
+      path: `${branding.PATHS.RENDERINGS}/Introduction`,
       fields: new Map([['viewPath', 'components/Introduction.ejs']]),
       sharedFields: new Map([['viewPath', 'components/Introduction.ejs']]),
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
@@ -85,12 +86,12 @@ async function seedSampleSite() {
     await introRendering.save();
   }
 
-  let imageTextRendering = await Item.findOne({ path: '/sitecore/layout/Renderings/ImageText' });
+  let imageTextRendering = await Item.findOne({ path: { $in: [`${branding.PATHS.RENDERINGS}/ImageText`] } });
   if (!imageTextRendering) {
     imageTextRendering = await Item.create({
       name: 'ImageText',
       displayName: 'Image Text',
-      path: '/sitecore/layout/Renderings/ImageText',
+      path: `${branding.PATHS.RENDERINGS}/ImageText`,
       fields: new Map([['viewPath', 'components/ImageText.ejs']]),
       sharedFields: new Map([['viewPath', 'components/ImageText.ejs']]),
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
@@ -106,7 +107,7 @@ async function seedSampleSite() {
     homePageTemplate = await Template.create({
       name: 'Home Page',
       displayName: 'Home Page Template',
-      path: '/sitecore/templates/Project/Pages/Home',
+      path: `${branding.PATHS.TEMPLATES}/Project/Pages/Home`,
       icon: 'ti ti-home',
       sections: [
         {
@@ -160,7 +161,7 @@ async function seedSampleSite() {
     standardPageTemplate = await Template.create({
       name: 'Standard Page',
       displayName: 'Standard Page Template',
-      path: '/sitecore/templates/Project/Pages/Standard Page',
+      path: `${branding.PATHS.TEMPLATES}/Project/Pages/Standard Page`,
       icon: 'ti ti-file-text',
       sections: [
         {
@@ -204,24 +205,24 @@ async function seedSampleSite() {
     });
   }
 
-  // 4. Create or Update Home Item (/sitecore/content/Home)
-  let homeItem = await Item.findOne({ path: '/sitecore/content/Home' });
+  // 4. Create or Update Home Item
+  let homeItem = await Item.findOne({ path: branding.PATHS.HOME });
   const homeFieldsVi = new Map([
-    ['PageTitle', 'Trang Chủ | Sitecore Experience Platform'],
+    ['PageTitle', 'Trang Chủ | Treecraft Experience Platform'],
     ['HeroTitle', 'Trải Nghiệm Quản Trị Nội Dung Đỉnh Cao'],
     ['HeroDescription', '<p>Hệ thống Monolithic CMS kết xuất <strong>100% Server-Side EJS</strong> cực nhanh, an toàn và tối ưu hóa SEO vượt trội.</p>'],
-    ['IntroHeading', 'Chào Mừng Đến Với Hệ Thống Sitecore XM Monolith'],
-    ['IntroBody', '<p>Sitecore Experience Management tách biệt hoàn hảo giữa không gian soạn thảo biên tập viên (Master Store) và hạ tầng phân phối công khai siêu tốc (Web Store). Mọi trang web được dựng từ các thành phần linh hoạt, phân cấp và có khả năng mở rộng không giới hạn.</p>'],
-    ['MetaDescription', 'Trang chủ website chính thức chạy trên Sitecore XM CMS Node.js Monolith kết xuất SSR EJS.'],
+    ['IntroHeading', 'Chào Mừng Đến Với Hệ Thống Treecraft Monolith'],
+    ['IntroBody', '<p>Treecraft tách biệt hoàn hảo giữa không gian soạn thảo biên tập viên (Master Store) và hạ tầng phân phối công khai siêu tốc (Web Store). Mọi trang web được dựng từ các thành phần linh hoạt, phân cấp và có khả năng mở rộng không giới hạn.</p>'],
+    ['MetaDescription', 'Trang chủ website chính thức chạy trên Treecraft CMS Node.js Monolith kết xuất SSR EJS.'],
   ]);
 
   const homeFieldsEn = new Map([
-    ['PageTitle', 'Home | Sitecore Experience Platform'],
+    ['PageTitle', 'Home | Treecraft Experience Platform'],
     ['HeroTitle', 'Ultimate Enterprise Content Management'],
     ['HeroDescription', '<p>High-performance Monolithic CMS rendered <strong>100% Server-Side with EJS</strong>, secure, and SEO optimized.</p>'],
-    ['IntroHeading', 'Welcome to Sitecore XM Monolith Architecture'],
-    ['IntroBody', '<p>Sitecore Experience Management decouples authoring environments (Master Store) from blazing-fast delivery environments (Web Store). Pages are composed of flexible, reusable rendering components.</p>'],
-    ['MetaDescription', 'Official homepage running on Sitecore XM Monolithic CMS.'],
+    ['IntroHeading', 'Welcome to Treecraft Monolith Architecture'],
+    ['IntroBody', '<p>Treecraft decouples authoring environments (Master Store) from blazing-fast delivery environments (Web Store). Pages are composed of flexible, reusable rendering components.</p>'],
+    ['MetaDescription', 'Official homepage running on Treecraft Monolithic CMS.'],
   ]);
 
   const homePresentation = {
@@ -248,8 +249,8 @@ async function seedSampleSite() {
       displayName: 'Trang Chủ',
       templateId: homePageTemplate._id,
       parentId: contentRoot._id,
-      ancestors: [sitecoreRoot._id, contentRoot._id],
-      path: '/sitecore/content/Home',
+      ancestors: [rootNode._id, contentRoot._id],
+      path: branding.PATHS.HOME,
       sortOrder: 100,
       presentation: {
         shared: homePresentation,
@@ -259,7 +260,7 @@ async function seedSampleSite() {
         { code: 'en', version: 1, fields: homeFieldsEn },
       ],
     });
-    console.log('[Seed Sample] Đã tạo item /sitecore/content/Home');
+    console.log(`[Seed Sample] Đã tạo item ${branding.PATHS.HOME}`);
   } else {
     homeItem.presentation = { shared: homePresentation };
     homeItem.templateId = homePageTemplate._id;
@@ -268,32 +269,37 @@ async function seedSampleSite() {
       { code: 'en', version: 1, fields: homeFieldsEn },
     ];
     await homeItem.save();
-    console.log('[Seed Sample] Đã cập nhật item /sitecore/content/Home');
+    console.log(`[Seed Sample] Đã cập nhật item ${homeItem.path}`);
   }
 
-  // 5. Create or Update About Us Item (/sitecore/content/About us)
+  // 5. Create or Update About Us Item
   let aboutItem = await Item.findOne({
-    $or: [{ path: '/sitecore/content/About us' }, { path: '/sitecore/content/about-us' }],
+    $or: [
+      { path: `${branding.PATHS.CONTENT}/About us` },
+      { path: `${branding.PATHS.CONTENT}/about-us` },
+      { path: '/About us' },
+      { path: '/about-us' },
+    ],
   });
 
   const aboutFieldsVi = new Map([
-    ['PageTitle', 'Về Chúng Tôi | Giới Thiệu Sitecore XM'],
+    ['PageTitle', 'Về Chúng Tôi | Giới Thiệu Treecraft'],
     ['Title', 'Về Chúng Tôi'],
     ['IntroHeading', 'Sứ Mệnh Xây Dựng Nền Tảng CMS Hiện Đại'],
-    ['IntroBody', '<p>Chúng tôi phát triển hệ thống quản trị nội dung linh hoạt, chuẩn phân cấp Sitecore và hoàn toàn tự chủ trong hệ sinh thái Node.js.</p>'],
+    ['IntroBody', '<p>Chúng tôi phát triển hệ thống quản trị nội dung linh hoạt, chuẩn phân cấp Treecraft và hoàn toàn tự chủ trong hệ sinh thái Node.js.</p>'],
     ['Body', '<p>Nền tảng giúp doanh nghiệp kết xuất trang web với tốc độ cao, độ trễ tối thiểu, hỗ trợ đa ngôn ngữ và tối ưu hóa SEO tối đa. Nhờ cơ chế EJS Server-Side Rendering và Publish Engine tách Master/Web Store, website công khai luôn đảm bảo tính sẵn sàng cao và an toàn tuyệt đối trước các truy vấn cơ sở dữ liệu nội bộ.</p>'],
     ['Image', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80'],
-    ['MetaDescription', 'Tìm hiểu về đội ngũ phát triển và sứ mệnh của giải pháp Sitecore XM Monolith CMS.'],
+    ['MetaDescription', 'Tìm hiểu về đội ngũ phát triển và sứ mệnh của giải pháp Treecraft Monolith CMS.'],
   ]);
 
   const aboutFieldsEn = new Map([
-    ['PageTitle', 'About Us | Sitecore XM Introduction'],
+    ['PageTitle', 'About Us | Treecraft Introduction'],
     ['Title', 'About Us'],
     ['IntroHeading', 'Building Next-Gen CMS Platform'],
     ['IntroBody', '<p>We build flexible, hierarchical, enterprise-ready content management systems in pure Node.js.</p>'],
     ['Body', '<p>Our platform enables rapid page delivery, minimal TTFB, seamless localization, and optimal search engine indexing. By separating Master and Web stores, the public website is lightning-fast and fully isolated from internal administrative operations.</p>'],
     ['Image', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80'],
-    ['MetaDescription', 'Learn about our development team and mission behind Sitecore XM Monolith CMS.'],
+    ['MetaDescription', 'Learn about our development team and mission behind Treecraft Monolith CMS.'],
   ]);
 
   const aboutPresentation = {
@@ -321,8 +327,8 @@ async function seedSampleSite() {
       displayName: 'Về chúng tôi',
       templateId: standardPageTemplate._id,
       parentId: contentRoot._id,
-      ancestors: [sitecoreRoot._id, contentRoot._id],
-      path: '/sitecore/content/About us',
+      ancestors: [rootNode._id, contentRoot._id],
+      path: `${branding.PATHS.CONTENT}/About us`,
       sortOrder: 200,
       presentation: {
         shared: aboutPresentation,
@@ -332,7 +338,7 @@ async function seedSampleSite() {
         { code: 'en', version: 1, fields: aboutFieldsEn },
       ],
     });
-    console.log('[Seed Sample] Đã tạo item /sitecore/content/About us');
+    console.log(`[Seed Sample] Đã tạo item ${branding.PATHS.CONTENT}/About us`);
   } else {
     aboutItem.presentation = { shared: aboutPresentation };
     aboutItem.templateId = standardPageTemplate._id;
@@ -341,14 +347,14 @@ async function seedSampleSite() {
       { code: 'en', version: 1, fields: aboutFieldsEn },
     ];
     await aboutItem.save();
-    console.log('[Seed Sample] Đã cập nhật item /sitecore/content/About us');
+    console.log(`[Seed Sample] Đã cập nhật item ${aboutItem.path}`);
   }
 
   // 6. Direct Publish to Web Store (PublishedItem)
   console.log('[Seed Sample] Đang xuất bản (Publish) toàn bộ Layouts, Renderings và Pages sang Web Store...');
 
   const itemsToPublish = [
-    sitecoreRoot,
+    rootNode,
     contentRoot,
     homeLayout,
     heroBannerRendering,
@@ -357,6 +363,52 @@ async function seedSampleSite() {
     homeItem,
     aboutItem,
   ];
+
+  for (const it of itemsToPublish) {
+    const rawItem = await Item.findById(it._id).lean();
+    if (!rawItem) continue;
+
+    const pubLanguages = (rawItem.languages || []).map((l) => ({
+      code: l.code,
+      publishedVersion: l.version || 1,
+      fields: l.fields instanceof Map ? Object.fromEntries(l.fields) : (l.fields || {}),
+      unversionedFields: l.unversionedFields instanceof Map ? Object.fromEntries(l.unversionedFields) : (l.unversionedFields || {}),
+      finalLayout: l.finalLayout || {},
+    }));
+
+    // If item has no languages yet (e.g. system folder), give default
+    if (!pubLanguages.length) {
+      pubLanguages.push({
+        code: 'vi',
+        publishedVersion: 1,
+        fields: {},
+        unversionedFields: {},
+        finalLayout: {},
+      });
+    }
+
+    await PublishedItem.findOneAndUpdate(
+      { _id: rawItem._id },
+      {
+        _id: rawItem._id,
+        name: rawItem.name,
+        displayName: rawItem.displayName || rawItem.name,
+        parentId: rawItem.parentId || null,
+        templateId: rawItem.templateId || null,
+        path: rawItem.path,
+        sortOrder: rawItem.sortOrder || 100,
+        isSystem: Boolean(rawItem.isSystem),
+        isDeleted: false,
+        fields: rawItem.fields instanceof Map ? Object.fromEntries(rawItem.fields) : (rawItem.fields || {}),
+        sharedFields: rawItem.sharedFields instanceof Map ? Object.fromEntries(rawItem.sharedFields) : (rawItem.sharedFields || {}),
+        presentation: rawItem.presentation || {},
+        languages: pubLanguages,
+        publishedAt: new Date(),
+        publishedBy: 'system\\admin',
+      },
+      { upsert: true, new: true }
+    );
+  }
 
   for (const it of itemsToPublish) {
     const rawItem = await Item.findById(it._id).lean();

@@ -1,6 +1,7 @@
 const templateService = require('../../services/templateService');
 const itemService = require('../../services/itemService');
 const logger = require('../../utils/logger');
+const branding = require('../../config/branding');
 
 const templateManagerController = {
   /**
@@ -44,7 +45,7 @@ const templateManagerController = {
       if (requestedId) {
         return res.redirect(`/admin/content-editor/${requestedId}`);
       }
-      return res.redirect('/admin/content-editor?path=/sitecore/templates');
+      return res.redirect(`/admin/content-editor?path=${encodeURIComponent(branding.PATHS.TEMPLATES)}`);
     } catch (error) {
       logger.error(`Error loading Template Manager: ${error.message}`);
       next(error);

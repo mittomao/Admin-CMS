@@ -1,7 +1,7 @@
 # AGENTS.md — HƯỚNG DẪN DÀNH CHO AI AGENT
 
 ## 1. DỰ ÁN TRONG 5 DÒNG
-Hệ thống CMS quản trị nội dung phân cấp (Hierarchical Tree) theo triết lý **Sitecore Experience Management (XM)**: "Mọi thứ là Item" và tách biệt Master/Web. 
+Hệ thống **Treecraft** — CMS quản trị nội dung phân cấp (Hierarchical Tree) theo triết lý "Mọi thứ là Item" và tách biệt Master/Web với root node chuẩn hoá `/root`. 
 Backend và Website công khai chạy chung trong một ứng dụng monolithic **Node.js (v20+ LTS) + Express.js + EJS SSR (100% Server-Side Rendering) + MongoDB (Mongoose)** trên cổng 4000. 
 Giao diện quản trị desktop-like (Launchpad, Content Editor 3 vùng, Ribbon, Fancytree, SortableJS, TinyMCE) tại `/admin`; Website công khai kết xuất HTML phía server tại `/`.
 Quản lý bố cục Presentation (Layout, Rendering, Placeholders) và render trực tiếp thông qua các file view EJS trong repo.
@@ -14,8 +14,8 @@ Quản lý bố cục Presentation (Layout, Rendering, Placeholders) và render 
 5. **Kỷ luật checklist:** Hoàn thành task nào tick ngay `[x]` vào checklist của file phase tương ứng; hoàn thành giai đoạn phải kiểm tra DoD, cập nhật trạng thái `Hoàn thành` và báo cáo rồi dừng lại chờ duyệt.
 
 ## 3. TRẠNG THÁI HIỆN TẠI
-- **Nguồn sự thật duy nhất (Single Source of Truth):** Xem bảng tiến độ chi tiết và sơ đồ phụ thuộc 13 giai đoạn (GĐ 0 → GĐ 12) tại [docs/phases/README.md](docs/phases/README.md).
-- **Tóm tắt nhanh:** GĐ 0 (Bootstrap), GĐ 1 (Auth & Launchpad), GĐ 2 (Content Editor MVP), GĐ 3 (Template Manager), GĐ 4 (Version & Ngôn ngữ), GĐ 5 (Media Library), GĐ 6 (Presentation EJS), GĐ 6.2 (Rendering Component Template & Effective Fields) đã **Hoàn thành**. GĐ 7 đến GĐ 12 ở trạng thái **Chưa bắt đầu**.
+- **Nguồn sự thật duy nhất (Single Source of Truth):** Xem bảng tiến độ chi tiết và sơ đồ phụ thuộc 13 giai đoạn (GĐ 0 → GĐ 12, kèm GĐ R1, R2) tại [docs/phases/README.md](docs/phases/README.md).
+- **Tóm tắt nhanh:** GĐ 0 (Bootstrap), GĐ 1 (Auth & Launchpad), GĐ 2 (Content Editor MVP), GĐ 3 (Template Manager), GĐ 4 (Version & Ngôn ngữ), GĐ 5 (Media Library), GĐ 6 (Presentation EJS), GĐ 6.2 (Rendering Component Template & Effective Fields), GĐ 7 (ACL & Access Management), GĐ 8 (Workflow, Publish, Audit Trail), GĐ 10 (Chuyển đổi Database & Diff Master/Web), **GĐ R1 (Rebrand Treecraft & Root Rename)** và **GĐ R2 (Hoàn tất dọn sạch dấu vết)** đã **Hoàn thành**. GĐ 9 (Recycle Bin & Audit Log), GĐ 11, GĐ 12 ở trạng thái **Chưa bắt đầu**.
 
 ## 4. QUY TRÌNH ĐỌC TÀI LIỆU CHO MỖI PHIÊN (BẮT BUỘC)
 1. **Bước 1 (Khởi động phiên):** Luôn đọc tuần tự: `AGENTS.md` → [docs/rules/00-workflow.md](docs/rules/00-workflow.md) → [docs/phases/README.md](docs/phases/README.md).
@@ -25,6 +25,7 @@ Quản lý bố cục Presentation (Layout, Rendering, Placeholders) và render 
 ## 5. BẢNG TÌM NHANH (CHEAT-SHEET)
 | Muốn biết về | Đọc file |
 | :--- | :--- |
+| Cấu hình thương hiệu Treecraft, root `/root`, hằng số PATHS | `src/config/branding.js`, [docs/decisions/DEC-043-rebrand-treecraft-and-root-rename.md](docs/decisions/DEC-043-rebrand-treecraft-and-root-rename.md) |
 | Quy trình APPROVE, cách tick task, định dạng báo cáo | [docs/rules/00-workflow.md](docs/rules/00-workflow.md) |
 | Cấu trúc thư mục, quy ước đặt tên, phân tầng, AppError, logging | [docs/rules/03-conventions.md](docs/rules/03-conventions.md) |
 | Định tuyến Admin (/admin) vs Public Site Renderer (/) | [docs/rules/04-routing.md](docs/rules/04-routing.md) |
@@ -32,8 +33,8 @@ Quản lý bố cục Presentation (Layout, Rendering, Placeholders) và render 
 | Mô hình Item (Master/Web), Materialized Path, trường động | [docs/data-model/items-and-tree.md](docs/data-model/items-and-tree.md) |
 | Kế thừa Template, Dynamic Standard Values, Insert Options | [docs/data-model/templates.md](docs/data-model/templates.md) |
 | Cấu hình Presentation EJS, cây 3 nhánh, viewPath, Standard Presentation | [docs/data-model/presentation.md](docs/data-model/presentation.md) |
-| Kế hoạch chi tiết của từng giai đoạn (GĐ 0 → 12) | `docs/phases/phase-XX-*.md` |
-| Các quyết định kiến trúc đã chốt (DEC-001 → DEC-035) | [docs/decisions/README.md](docs/decisions/README.md) |
+| Kế hoạch chi tiết của từng giai đoạn (GĐ 0 → 12, R1) | `docs/phases/phase-XX-*.md` |
+| Các quyết định kiến trúc đã chốt (DEC-001 → DEC-043) | [docs/decisions/README.md](docs/decisions/README.md) |
 | Các câu hỏi kỹ thuật còn mở kèm đề xuất mặc định | [docs/open-questions.md](docs/open-questions.md) |
 | Bản sao lưu gốc ban đầu (chỉ để tra cứu lịch sử) | [docs/archive/AGENTS.original.md](docs/archive/AGENTS.original.md) |
 

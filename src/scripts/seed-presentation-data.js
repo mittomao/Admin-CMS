@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Template = require('../models/Template');
 const Item = require('../models/Item');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 
 let isDryRunMode = false;
 
@@ -78,7 +79,7 @@ async function ensureItem(data) {
     item = await Item.findOne({
       name: data.name,
       templateId: data.templateId,
-      path: { $regex: new RegExp('^/sitecore/layout', 'i') },
+      path: { $regex: new RegExp(`^(${branding.PATHS.LAYOUT})`, 'i') },
       deleted: false,
     });
   }
@@ -157,9 +158,9 @@ async function seedPresentationData(options = {}) {
   logger.info(`=== BẮT ĐẦU SEED HỆ THỐNG PRESENTATION EJS SSR (GĐ 6)${dryRun ? ' [DRY-RUN]' : ''} ===`);
 
   // 1. Root items & Folder template
-  const sitecoreRoot = await Item.findOne({ path: '/sitecore' });
-  if (!sitecoreRoot) {
-    throw new Error('Chưa tìm thấy /sitecore root item. Vui lòng chạy seed ban đầu trước.');
+  const rootNode = await Item.findOne({ path: branding.PATHS.ROOT });
+  if (!rootNode) {
+    throw new Error(`Chưa tìm thấy ${branding.PATHS.ROOT} root item. Vui lòng chạy seed ban đầu trước.`);
   }
 
   const folderTemplate = await Template.findOne({ name: 'Folder' });
@@ -284,7 +285,7 @@ async function seedPresentationData(options = {}) {
             type: 'Single-Line Text',
             required: true,
             sortOrder: 20,
-            source: '/sitecore/templates/Feature/Components',
+            source: branding.PATHS.FEATURE_COMPONENTS,
             helpText: 'ID của template định nghĩa fields của component dưới Feature/Components',
           },
           {
@@ -319,14 +320,14 @@ async function seedPresentationData(options = {}) {
     await renderingFolderTemplate.save();
   }
 
-  // 3. Khởi tạo /sitecore/layout Root và Dọn dẹp cấu trúc cũ
+  // 3. Khởi tạo Layout Root và Dọn dẹp cấu trúc cũ
   const layoutRoot = await ensureItem({
     name: 'layout',
     displayName: 'Layout',
     templateId: folderTemplate._id,
-    parentId: sitecoreRoot._id,
-    ancestors: [sitecoreRoot._id],
-    path: '/sitecore/layout',
+    parentId: rootNode._id,
+    ancestors: [rootNode._id],
+    path: branding.PATHS.LAYOUT,
     sortOrder: 300,
     fields: {},
   });
@@ -334,7 +335,7 @@ async function seedPresentationData(options = {}) {
   if (!dryRun) {
     // Dọn dẹp các node cũ Devices và Placeholder Settings nếu có
     await Item.deleteMany({
-      path: { $regex: new RegExp('^/sitecore/layout/(Devices|Placeholder Settings)($|/)', 'i') },
+      path: { $regex: new RegExp(`^(${branding.PATHS.LAYOUT})/(Devices|Placeholder Settings)($|/)`, 'i') },
     });
     // Xóa template Device và Placeholder Settings cũ nếu còn
     await Template.deleteMany({ name: { $in: ['Device', 'Placeholder Settings'] } });
@@ -347,8 +348,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Layouts',
     templateId: layoutFolderTemplate._id,
     parentId: layoutRoot._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id],
-    path: '/sitecore/layout/Layouts',
+    ancestors: [rootNode._id, layoutRoot._id],
+    path: branding.PATHS.LAYOUTS,
     sortOrder: 100,
     fields: {},
   });
@@ -358,8 +359,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Placeholders',
     templateId: placeholderFolderTemplate._id,
     parentId: layoutRoot._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id],
-    path: '/sitecore/layout/Placeholders',
+    ancestors: [rootNode._id, layoutRoot._id],
+    path: branding.PATHS.PLACEHOLDERS,
     sortOrder: 200,
     fields: {},
   });
@@ -369,15 +370,15 @@ async function seedPresentationData(options = {}) {
     displayName: 'Renderings',
     templateId: renderingFolderTemplate._id,
     parentId: layoutRoot._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id],
-    path: '/sitecore/layout/Renderings',
+    ancestors: [rootNode._id, layoutRoot._id],
+    path: branding.PATHS.RENDERINGS,
     sortOrder: 300,
     fields: {},
   });
 
   // Dọn dẹp các legacy items cũ từ thời kỳ Headless React (nếu có)
   const legacyItems = await Item.find({
-    path: { $in: ['/sitecore/layout/Layouts/MainLayout', '/sitecore/layout/Renderings/Feature'] },
+    path: { $in: ['/Layouts/MainLayout', '/Renderings/Feature'] },
   });
   for (const legacy of legacyItems) {
     // Xóa item và các con nếu có
@@ -393,8 +394,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Home Layout',
     templateId: layoutTemplate._id,
     parentId: layoutsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, layoutsFolder._id],
-    path: '/sitecore/layout/Layouts/HomeLayout',
+    ancestors: [rootNode._id, layoutRoot._id, layoutsFolder._id],
+    path: `${branding.PATHS.LAYOUTS}/HomeLayout`,
     sortOrder: 100,
     fields: {
       viewPath: 'site/layouts/HomeLayout.ejs',
@@ -410,8 +411,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Hero Banner',
     templateId: renderingTemplate._id,
     parentId: renderingsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
-    path: '/sitecore/layout/Renderings/HeroBanner',
+    ancestors: [rootNode._id, layoutRoot._id, renderingsFolder._id],
+    path: `${branding.PATHS.RENDERINGS}/HeroBanner`,
     sortOrder: 100,
     fields: {
       viewPath: 'site/components/HeroBanner.ejs',
@@ -428,8 +429,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Introduction',
     templateId: renderingTemplate._id,
     parentId: renderingsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
-    path: '/sitecore/layout/Renderings/Introduction',
+    ancestors: [rootNode._id, layoutRoot._id, renderingsFolder._id],
+    path: `${branding.PATHS.RENDERINGS}/Introduction`,
     sortOrder: 200,
     fields: {
       viewPath: 'site/components/Introduction.ejs',
@@ -446,8 +447,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Image Text',
     templateId: renderingTemplate._id,
     parentId: renderingsFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, renderingsFolder._id],
-    path: '/sitecore/layout/Renderings/ImageText',
+    ancestors: [rootNode._id, layoutRoot._id, renderingsFolder._id],
+    path: `${branding.PATHS.RENDERINGS}/ImageText`,
     sortOrder: 300,
     fields: {
       viewPath: 'site/components/ImageText.ejs',
@@ -465,8 +466,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Header',
     templateId: placeholderTemplate._id,
     parentId: placeholdersFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, placeholdersFolder._id],
-    path: '/sitecore/layout/Placeholders/header',
+    ancestors: [rootNode._id, layoutRoot._id, placeholdersFolder._id],
+    path: `${branding.PATHS.PLACEHOLDERS}/header`,
     sortOrder: 100,
     fields: {
       placeholderKey: 'header',
@@ -489,8 +490,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Main Content',
     templateId: placeholderTemplate._id,
     parentId: placeholdersFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, placeholdersFolder._id],
-    path: '/sitecore/layout/Placeholders/maincontent',
+    ancestors: [rootNode._id, layoutRoot._id, placeholdersFolder._id],
+    path: `${branding.PATHS.PLACEHOLDERS}/maincontent`,
     sortOrder: 200,
     fields: {
       placeholderKey: 'maincontent',
@@ -509,8 +510,8 @@ async function seedPresentationData(options = {}) {
     displayName: 'Footer',
     templateId: placeholderTemplate._id,
     parentId: placeholdersFolder._id,
-    ancestors: [sitecoreRoot._id, layoutRoot._id, placeholdersFolder._id],
-    path: '/sitecore/layout/Placeholders/footer',
+    ancestors: [rootNode._id, layoutRoot._id, placeholdersFolder._id],
+    path: `${branding.PATHS.PLACEHOLDERS}/footer`,
     sortOrder: 300,
     fields: {
       placeholderKey: 'footer',
@@ -530,7 +531,7 @@ async function seedPresentationData(options = {}) {
     displayName: 'Hero Banner Component',
     icon: 'ti ti-ad-2',
     isSystem: false,
-    path: '/sitecore/templates/Feature/Components/HeroBanner',
+    path: `${branding.PATHS.FEATURE_COMPONENTS}/HeroBanner`,
     description: 'Template dữ liệu cho component HeroBanner',
     sections: [
       {
@@ -550,7 +551,7 @@ async function seedPresentationData(options = {}) {
     displayName: 'Introduction Component',
     icon: 'ti ti-file-description',
     isSystem: false,
-    path: '/sitecore/templates/Feature/Components/Introduction',
+    path: `${branding.PATHS.FEATURE_COMPONENTS}/Introduction`,
     description: 'Template dữ liệu cho component Introduction',
     sections: [
       {
@@ -569,7 +570,7 @@ async function seedPresentationData(options = {}) {
     displayName: 'Image & Text Component',
     icon: 'ti ti-photo',
     isSystem: false,
-    path: '/sitecore/templates/Feature/Components/ImageText',
+    path: `${branding.PATHS.FEATURE_COMPONENTS}/ImageText`,
     description: 'Template dữ liệu cho component ImageText',
     sections: [
       {
@@ -613,7 +614,7 @@ async function seedPresentationData(options = {}) {
     displayName: 'Home Page Template',
     icon: 'ti ti-home',
     isSystem: false,
-    path: '/sitecore/templates/Project/Pages/Home',
+    path: `${branding.PATHS.PROJECT_PAGES}/Home`,
     description: 'Page Template cho Trang Chủ',
     baseTemplates: [],
     sections: [],
@@ -659,7 +660,7 @@ async function seedPresentationData(options = {}) {
     displayName: 'About Us Page Template',
     icon: 'ti ti-info-circle',
     isSystem: false,
-    path: '/sitecore/templates/Project/Pages/AboutUs',
+    path: `${branding.PATHS.PROJECT_PAGES}/AboutUs`,
     description: 'Page Template cho Trang Giới Thiệu',
     baseTemplates: [],
     sections: [],
@@ -691,26 +692,26 @@ async function seedPresentationData(options = {}) {
   });
 
   // 8. Seed Content Items mẫu: Home và About-Us
-  const contentRoot = await Item.findOne({ path: '/sitecore/content' });
+  const contentRoot = await Item.findOne({ path: branding.PATHS.CONTENT });
   if (contentRoot) {
     await ensureItem({
       name: 'Home',
       displayName: 'Home',
       templateId: homePageTemplate._id,
       parentId: contentRoot._id,
-      ancestors: [sitecoreRoot._id, contentRoot._id],
-      path: '/sitecore/content/Home',
+      ancestors: [rootNode._id, contentRoot._id],
+      path: branding.PATHS.HOME,
       sortOrder: 100,
       fields: {
-        HeroTitle: 'Trang Chủ Antigravity CMS',
+        HeroTitle: `Trang Chủ ${branding.PROJECT_NAME} CMS`,
         HeroDescription: '<p>Hệ thống CMS quản trị nội dung phân cấp kiến trúc Server-Side EJS SSR.</p>',
         IntroHeading: 'Giới thiệu giải pháp',
-        IntroBody: '<p>CMS kết hợp sức mạnh giữa mô hình Sitecore XM và hiệu năng vượt trội của Express EJS.</p>',
+        IntroBody: `<p>CMS kết hợp sức mạnh giữa mô hình phân cấp và hiệu năng vượt trội của Express EJS.</p>`,
         Title: 'Kiến trúc linh hoạt',
         Body: '<p>Quản lý Layout, Placeholders và Renderings trực quan với kéo thả SortableJS.</p>',
       },
       sharedFields: {
-        HeroTitle: 'Trang Chủ Antigravity CMS',
+        HeroTitle: `Trang Chủ ${branding.PROJECT_NAME} CMS`,
       },
     });
 
@@ -719,8 +720,8 @@ async function seedPresentationData(options = {}) {
       displayName: 'About Us',
       templateId: aboutUsPageTemplate._id,
       parentId: contentRoot._id,
-      ancestors: [sitecoreRoot._id, contentRoot._id],
-      path: '/sitecore/content/About-Us',
+      ancestors: [rootNode._id, contentRoot._id],
+      path: `${branding.PATHS.CONTENT}/About-Us`,
       sortOrder: 200,
       fields: {
         IntroHeading: 'Về chúng tôi',
@@ -734,7 +735,7 @@ async function seedPresentationData(options = {}) {
     });
   }
 
-  // Đồng bộ toàn bộ Template vào Cây Nội Dung (/sitecore/templates)
+  // Đồng bộ toàn bộ Template vào Cây Nội Dung (/root/templates)
   const { migrateTemplatesToContentTree } = require('./migrate-templates-to-content-tree');
   await migrateTemplatesToContentTree();
 

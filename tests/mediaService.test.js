@@ -113,7 +113,7 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
   it('1. should create or return the root media library folder', async () => {
     const root = await mediaService.getOrCreateRootFolder(adminUser._id);
     expect(root).toBeDefined();
-    expect(root.path).toBe('/sitecore/media library');
+    expect(root.path).toBe('/root/media library');
     expect(root.isFolder).toBe(true);
 
     const sameRoot = await mediaService.getOrCreateRootFolder(adminUser._id);
@@ -131,7 +131,7 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
 
     expect(folder).toBeDefined();
     expect(folder.name).toBe('banners');
-    expect(folder.path).toBe('/sitecore/media library/banners');
+    expect(folder.path).toBe('/root/media library/banners');
     expect(folder.ancestors).toHaveLength(1);
     expect(folder.ancestors[0].toString()).toBe(root._id.toString());
 
@@ -312,7 +312,7 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
     // Move Folder B into Folder A
     const movedB = await mediaService.moveMedia(folderB._id, folderA._id, adminUser._id);
     expect(movedB.parentId.toString()).toBe(folderA._id.toString());
-    expect(movedB.path).toBe('/sitecore/media library/folder-a/folder-b');
+    expect(movedB.path).toBe('/root/media library/folder-a/folder-b');
 
     // Cycle detection: Cannot move Folder A into its child Folder B
     await expect(mediaService.moveMedia(folderA._id, folderB._id, adminUser._id)).rejects.toThrow(
@@ -382,7 +382,7 @@ describe('GĐ 5: mediaService Unit & Integration Tests', () => {
 
     await Item.create({
       name: 'home-page',
-      path: '/sitecore/content/home-page',
+      path: '/root/content/home-page',
       templateId: new mongoose.Types.ObjectId(),
       fields: {
         heroImage: mediaId.toString(),

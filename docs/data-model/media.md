@@ -6,9 +6,9 @@
 ---
 
 ## 1. Triết lý Cốt lõi: "Mọi Media Đều Là Item"
-- Xóa bỏ hoàn toàn collection riêng biệt `media`. Toàn bộ tài nguyên số (ảnh, file tài liệu, thư mục) được quản lý dưới dạng các **Item** chính danh trong collection `items_master` (và xuất bản sang `items_web` ở GĐ 8) bên dưới nhánh `/sitecore/media library`.
+- Xóa bỏ hoàn toàn collection riêng biệt `media`. Toàn bộ tài nguyên số (ảnh, file tài liệu, thư mục) được quản lý dưới dạng các **Item** chính danh trong collection `items_master` (và xuất bản sang `items_web` ở GĐ 8) bên dưới nhánh `/root/media library`.
 - Tên kỹ thuật của Item (`name`): **Không kèm đuôi mở rộng file** (ví dụ `hero-banner` thay vì `hero-banner.jpg`). Đuôi mở rộng được lưu trữ ở trường `extension` và `format`.
-- Quản lý phân cấp bằng System Templates tại `/sitecore/templates/System`:
+- Quản lý phân cấp bằng System Templates tại `/root/templates/System`:
   - `Media Folder`: Thư mục tổ chức media (icon `folder`).
   - `Image`: Tài nguyên hình ảnh (icon `photo`).
   - `File`: Tài nguyên tài liệu/tệp chung (icon `file`).
@@ -25,11 +25,11 @@
   templateId: ObjectId("64a1b2c3d4e5f67890123901"),  // ID của System Template 'Image'
   parentId: ObjectId("64a1b2c3d4e5f67890123700"),    // ID của Media Folder cha ('banners')
   ancestors: [
-    ObjectId("64a1b2c3d4e5f67890123000"),            // /sitecore
-    ObjectId("64a1b2c3d4e5f67890123300"),            // /sitecore/media library
-    ObjectId("64a1b2c3d4e5f67890123700")             // /sitecore/media library/banners
+    ObjectId("64a1b2c3d4e5f67890123000"),            // /root
+    ObjectId("64a1b2c3d4e5f67890123300"),            // /root/media library
+    ObjectId("64a1b2c3d4e5f67890123700")             // /root/media library/banners
   ],
-  path: "/sitecore/media library/banners/hero-banner",
+  path: "/root/media library/banners/hero-banner",
   sortOrder: 100,
 
   // 1. Trường Dùng Chung (Shared Fields) - Lưu trữ thông số kỹ thuật tệp nhị phân Cloudinary
@@ -99,10 +99,10 @@
 
 | Đường dẫn CMS Item | Đường dẫn Cloudinary (`asset_folder`) | `public_id` Cloudinary |
 | :--- | :--- | :--- |
-| `/sitecore/media library` (Root) | `AdminCMS` | - |
-| `/sitecore/media library/Banners` (Folder) | `AdminCMS/Banners` | - |
-| `/sitecore/media library/Banners/hero-banner` (Image) | `AdminCMS/Banners` | `AdminCMS/Banners/hero-banner` |
-| `/sitecore/media library/Docs/report` (PDF File) | `AdminCMS/Docs` | `AdminCMS/Docs/report.pdf` (raw kèm ext) |
+| `/root/media library` (Root) | `AdminCMS` | - |
+| `/root/media library/Banners` (Folder) | `AdminCMS/Banners` | - |
+| `/root/media library/Banners/hero-banner` (Image) | `AdminCMS/Banners` | `AdminCMS/Banners/hero-banner` |
+| `/root/media library/Docs/report` (PDF File) | `AdminCMS/Docs` | `AdminCMS/Docs/report.pdf` (raw kèm ext) |
 
 ---
 

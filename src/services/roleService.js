@@ -4,6 +4,7 @@ const User = require('../models/User');
 const AccessControl = require('../models/AccessControl');
 const eventBus = require('../utils/eventBus');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 const { ValidationError, NotFoundError, ForbiddenError, ConflictError } = require('../utils/errors');
 
 class RoleService {
@@ -117,14 +118,14 @@ class RoleService {
    * @returns {Promise<object>}
    */
   async createRole(data) {
-    const { name, domain = 'sitecore', description = '', memberOf = [] } = data;
+    const { name, domain = branding.DEFAULT_DOMAIN, description = '', memberOf = [] } = data;
 
     if (!name || !name.trim()) {
       throw new ValidationError('Tên vai trò (Role Name) là bắt buộc');
     }
 
     const cleanName = name.trim();
-    const cleanDomain = (domain || 'sitecore').trim().toLowerCase();
+    const cleanDomain = (domain || branding.DEFAULT_DOMAIN).trim().toLowerCase();
 
     // Check duplicate
     const existing = await Role.findOne({ name: cleanName });

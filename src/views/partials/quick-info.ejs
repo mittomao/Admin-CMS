@@ -20,7 +20,7 @@
   const itemOwnerText = itemOwner.displayText || '[unknown]';
 %>
 <div class="sc-quick-info mb-4 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs" id="scQuickInfoSection">
-  <!-- Section Bar Header (Sitecore Style with CSS & Test Compliant) -->
+  <!-- Section Bar Header (Treecraft Style) -->
   <div class="sc-section-bar" id="scQuickInfoToggle" role="button" tabindex="0" title="Click to collapse / expand" style="display: flex; align-items: center; justify-content: space-between; user-select: none; cursor: pointer; background-color: #334155; color: #ffffff; border-left: 4px solid #e03131; padding: 8px 16px; border-radius: 8px 8px 0 0; transition: background-color 0.15s ease;">
     <div class="sc-section-title" style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #ffffff; margin: 0;">
       <i class="ti ti-info-circle text-rose-400 text-base" style="color: #fb7185; font-size: 15px;"></i>
@@ -69,7 +69,7 @@
       <div class="sc-quick-info-value font-mono flex items-center flex-wrap gap-1.5 text-slate-800 dark:text-slate-200">
         <% if (templateRawId) { %>
           <a href="/admin/content-editor/<%= templateRawId %>" class="sc-quick-info-link text-blue-600 dark:text-blue-400 hover:underline font-medium" data-template-id="<%= templateRawId %>" title="Navigate to template">
-            <%= templatePath || '/sitecore/templates/System/Template' %>
+            <%= templatePath || '/root/templates/System/Template' %>
           </a>
           <span class="text-slate-400 text-[11px]">- <%= templateId %></span>
         <% } else { %>

@@ -16,12 +16,12 @@ describe('GĐ 10: SiteResolver Unit Tests', () => {
     const dummyTplId = new mongoose.Types.ObjectId();
 
     // Seed minimal Web Store (items_web)
-    const sitecoreNode = await PublishedItem.create({
+    const rootNode = await PublishedItem.create({
       _id: new mongoose.Types.ObjectId(),
-      name: 'sitecore',
-      displayName: 'Sitecore',
+      name: 'root',
+      displayName: 'root',
       templateId: dummyTplId,
-      path: '/sitecore',
+      path: '/root',
       isSystem: true,
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -31,8 +31,8 @@ describe('GĐ 10: SiteResolver Unit Tests', () => {
       name: 'content',
       displayName: 'Content',
       templateId: dummyTplId,
-      parentId: sitecoreNode._id,
-      path: '/sitecore/content',
+      parentId: rootNode._id,
+      path: '/root/content',
       isSystem: true,
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -43,7 +43,7 @@ describe('GĐ 10: SiteResolver Unit Tests', () => {
       displayName: 'Trang Chủ',
       templateId: dummyTplId,
       parentId: contentNode._id,
-      path: '/sitecore/content/Home',
+      path: '/root/content/Home',
       languages: [
         { code: 'vi', publishedVersion: 1 },
         { code: 'en', publishedVersion: 2 },
@@ -56,7 +56,7 @@ describe('GĐ 10: SiteResolver Unit Tests', () => {
       displayName: 'Về chúng tôi',
       templateId: dummyTplId,
       parentId: contentNode._id,
-      path: '/sitecore/content/About us',
+      path: '/root/content/About us',
       languages: [
         { code: 'vi', publishedVersion: 1 },
         { code: 'en', publishedVersion: 1 },
@@ -69,7 +69,7 @@ describe('GĐ 10: SiteResolver Unit Tests', () => {
       displayName: 'Đội ngũ',
       templateId: dummyTplId,
       parentId: aboutItem._id,
-      path: '/sitecore/content/About us/Team',
+      path: '/root/content/About us/Team',
       languages: [
         { code: 'vi', publishedVersion: 1 },
       ],
@@ -80,8 +80,8 @@ describe('GĐ 10: SiteResolver Unit Tests', () => {
       name: 'banner',
       displayName: 'Banner Media',
       templateId: dummyTplId,
-      parentId: sitecoreNode._id,
-      path: '/sitecore/media library/banner',
+      parentId: rootNode._id,
+      path: '/root/media library/banner',
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
   });
@@ -91,35 +91,35 @@ describe('GĐ 10: SiteResolver Unit Tests', () => {
     if (mongoServer) await mongoServer.stop();
   });
 
-  it('should resolve root "/" to Start Item (/sitecore/content/Home) with default language vi', async () => {
+  it('should resolve root "/" to Start Item (/root/content/Home) with default language vi', async () => {
     const res = await siteResolver.resolve('/');
     expect(res).toHaveProperty('item');
-    expect(res.item.path).toBe('/sitecore/content/Home');
+    expect(res.item.path).toBe('/root/content/Home');
     expect(res.lang).toBe('vi');
   });
 
   it('should resolve language prefix "/en" and "/en/" to Home item with lang en', async () => {
     const res = await siteResolver.resolve('/en');
-    expect(res.item.path).toBe('/sitecore/content/Home');
+    expect(res.item.path).toBe('/root/content/Home');
     expect(res.lang).toBe('en');
     expect(res.publishedVersion).toBe(2);
   });
 
-  it('should resolve kebab-case segment "/about-us" to "/sitecore/content/About us"', async () => {
+  it('should resolve kebab-case segment "/about-us" to "/root/content/About us"', async () => {
     const res = await siteResolver.resolve('/about-us');
-    expect(res.item.path).toBe('/sitecore/content/About us');
+    expect(res.item.path).toBe('/root/content/About us');
     expect(res.lang).toBe('vi');
   });
 
   it('should resolve nested multi-level path "/about-us/team"', async () => {
     const res = await siteResolver.resolve('/about-us/team');
-    expect(res.item.path).toBe('/sitecore/content/About us/Team');
+    expect(res.item.path).toBe('/root/content/About us/Team');
     expect(res.lang).toBe('vi');
   });
 
   it('should resolve English path with prefix "/en/about-us"', async () => {
     const res = await siteResolver.resolve('/en/about-us');
-    expect(res.item.path).toBe('/sitecore/content/About us');
+    expect(res.item.path).toBe('/root/content/About us');
     expect(res.lang).toBe('en');
   });
 
@@ -139,7 +139,7 @@ describe('GĐ 10: SiteResolver Unit Tests', () => {
   });
 
   it('should throw NotFoundError for Media Library paths (not public pages)', async () => {
-    await expect(siteResolver.resolve('/sitecore/media library/banner')).rejects.toThrow(NotFoundError);
+    await expect(siteResolver.resolve('/root/media library/banner')).rejects.toThrow(NotFoundError);
   });
 
   it('should reject Directory Traversal sequences with AppError', async () => {

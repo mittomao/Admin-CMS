@@ -2,6 +2,7 @@
 
 const Template = require('../models/Template');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 
 let cachedTemplates = null;
 
@@ -26,7 +27,7 @@ async function ensureMediaTemplates() {
       icon: 'ti ti-folder',
       isSystem: true,
       description: 'System folder item to organize media assets',
-      path: '/sitecore/templates/System/Media Folder',
+      path: `${branding.PATHS.SYSTEM_TEMPLATES}/Media Folder`,
       sections: [
         {
           name: 'Folder Info',
@@ -41,7 +42,7 @@ async function ensureMediaTemplates() {
       icon: 'ti ti-photo',
       isSystem: true,
       description: 'System template for image media item hosted on Cloudinary',
-      path: '/sitecore/templates/System/Image',
+      path: `${branding.PATHS.SYSTEM_TEMPLATES}/Image`,
       sections: [
         {
           name: 'Image Info',
@@ -76,7 +77,7 @@ async function ensureMediaTemplates() {
       icon: 'ti ti-file',
       isSystem: true,
       description: 'System template for binary document or raw file hosted on Cloudinary',
-      path: '/sitecore/templates/System/File',
+      path: `${branding.PATHS.SYSTEM_TEMPLATES}/File`,
       sections: [
         {
           name: 'File Info',

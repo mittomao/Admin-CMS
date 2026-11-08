@@ -30,7 +30,7 @@ describe('GĐ 6: Presentation API & Endpoints (Server-Side EJS)', () => {
     const passwordHash = await User.hashPassword('admin123');
     await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       fullName: 'System Administrator',
       passwordHash,
       roles: [adminRole._id],
@@ -49,12 +49,12 @@ describe('GĐ 6: Presentation API & Endpoints (Server-Side EJS)', () => {
     });
 
     await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
+      name: 'root',
+      displayName: 'root',
       templateId: folderTpl._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore',
+      path: '/root',
     });
 
     seedResult = await seedPresentationData();
@@ -83,7 +83,7 @@ describe('GĐ 6: Presentation API & Endpoints (Server-Side EJS)', () => {
       name: 'product-page',
       displayName: 'Product Page',
       templateId: testTemplate._id,
-      path: '/sitecore/product-page',
+      path: '/root/product-page',
       languages: [
         {
           code: 'vi',

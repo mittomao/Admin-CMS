@@ -60,7 +60,7 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
     // Create Layout item in master
     layoutItem = await Item.create({
       name: 'Main Layout',
-      path: '/sitecore/layout/layouts/main-layout',
+      path: '/root/layout/layouts/main-layout',
       templateId: standardTemplate._id,
       fields: new Map([['viewPath', 'layouts/main.ejs']]),
     });
@@ -68,7 +68,7 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
     // Create Rendering item in master
     renderingItem = await Item.create({
       name: 'Hero Component',
-      path: '/sitecore/layout/renderings/hero-component',
+      path: '/root/layout/renderings/hero-component',
       templateId: standardTemplate._id,
       fields: new Map([['viewPath', 'components/hero.ejs']]),
     });
@@ -76,15 +76,15 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
     // Create Datasource item in master
     datasourceItem = await Item.create({
       name: 'Hero Content Data',
-      path: '/sitecore/content/data/hero-data',
+      path: '/root/content/data/hero-data',
       templateId: standardTemplate._id,
-      fields: new Map([['headline', 'Welcome to Sitecore!']]),
+      fields: new Map([['headline', 'Welcome to Treecraft!']]),
     });
 
     // Create Page item with presentation pointing to layout, rendering & datasource
     pageItem = await Item.create({
       name: 'Home',
-      path: '/sitecore/content/home',
+      path: '/root/content/home',
       templateId: pageTemplate._id,
       languages: [
         {
@@ -138,7 +138,7 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
     expect(webDoc).not.toBeNull();
     expect(webDoc._id.toString()).toBe(pageItem._id.toString());
     expect(webDoc.name).toBe('Home');
-    expect(webDoc.path).toBe('/sitecore/content/home');
+    expect(webDoc.path).toBe('/root/content/home');
 
     // Also layout and rendering should be in items_web because includeRelated = true
     const webLayout = await PublishedItem.findById(layoutItem._id);
@@ -202,7 +202,7 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
     expect(byId.name).toBe('Home');
 
     // 2. getByPath
-    const byPath = await webItemService.getByPath('/sitecore/content/home');
+    const byPath = await webItemService.getByPath('/root/content/home');
     expect(byPath).not.toBeNull();
     expect(byPath._id.toString()).toBe(pageItem._id.toString());
 

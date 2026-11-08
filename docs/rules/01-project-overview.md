@@ -1,18 +1,18 @@
 # Tổng quan Dự án & Phạm vi Hệ thống
 > File: `docs/rules/01-project-overview.md`  
-> Mô tả: Mục tiêu cốt lõi, triết lý Sitecore XM, phân định Master vs Web, phạm vi In-Scope / Out-of-Scope và kiến trúc Server-Side EJS.
+> Mô tả: Mục tiêu cốt lõi, triết lý Treecraft, phân định Master vs Web, phạm vi In-Scope / Out-of-Scope và kiến trúc Server-Side EJS.
 
 ---
 
 ## 1. Mục tiêu Dự án
-Xây dựng một hệ thống CMS (Content Management System) quản trị nội dung dạng cây phân cấp (Hierarchical Content Tree) chuyên nghiệp, kế thừa các triết lý cốt lõi của **Sitecore Experience Management (XM)**:
+Xây dựng một hệ thống CMS (Content Management System) quản trị nội dung dạng cây phân cấp (Hierarchical Content Tree) chuyên nghiệp, kế thừa các triết lý cốt lõi của **Treecraft Experience Management (XM)**:
 
 1. **Triết lý "Mọi thứ là Item" (Everything is an Item):**
-   - Không chỉ bài viết/trang web, mà cả Template (schema định nghĩa cấu trúc), Media Library (tài sản số), Workflow (quy trình duyệt), Presentation (Layout, Rendering, Placeholder dưới nhánh `/sitecore/layout`), và System Configuration đều được lưu trữ và quản lý dưới dạng các node (Item) trong cây nội dung.
+   - Không chỉ bài viết/trang web, mà cả Template (schema định nghĩa cấu trúc), Media Library (tài sản số), Workflow (quy trình duyệt), Presentation (Layout, Rendering, Placeholder dưới nhánh `/root/layout`), và System Configuration đều được lưu trữ và quản lý dưới dạng các node (Item) trong cây nội dung.
 2. **Tách biệt Môi trường Biên tập và Phân phối (Master vs. Web):**
    - **Master Database/Collection (`items_master`):** Lưu trữ toàn bộ các phiên bản dự thảo (Drafts), lịch sử phiên bản (Version History), các cấu hình Presentation (Shared & Final Layouts), các trạng thái workflow chưa duyệt.
    - **Web Database/Collection (`items_web`):** Chỉ chứa phiên bản đã được xuất bản (Published & Active) cùng cấu hình Presentation hoàn chỉnh đã resolved sẵn sàng phục vụ cho Site Renderer công khai với hiệu năng cao và độ trễ thấp nhất.
-3. **Giao diện quản trị phong cách Sitecore:**
+3. **Giao diện quản trị theo chuẩn Treecraft:**
    - **Launchpad (Dashboard):** Màn hình ứng dụng dạng ô lưới (Tiles) phân nhóm chuyên môn (Marketing, Content Editing, Control Panel, Access Management...), phân quyền hiển thị theo Role người dùng.
    - **Content Editor:** Giao diện 3 phân vùng tiêu chuẩn: Ribbon tabs điều hướng trên cùng (Home, Navigate, Review, Publish, Versions, Configure, Presentation...), Cây nội dung (Content Tree) lazy-loading bên trái kèm ô tìm kiếm nhanh, Vùng soạn thảo form theo Section/Field ở giữa, và Taskbar chuyển nhanh ứng dụng dưới đáy màn hình.
 
@@ -37,7 +37,7 @@ Xây dựng một hệ thống CMS (Content Management System) quản trị nộ
 - **Đa ngôn ngữ & Đa phiên bản:** Item Versioning, so sánh (diff) và khôi phục (rollback), phân định các trường Shared, Unversioned, và Versioned.
 - **Thư viện tài nguyên số (Media Library):** Quản lý thư mục, upload ảnh/file, resize thumbnail tự động qua Sharp, Media Picker modal tích hợp form và presentation.
 - **Kiến trúc Presentation EJS:**
-  - Nhánh `/sitecore/layout` có đúng 3 thư mục con: `Layouts`, `Placeholders`, `Renderings`.
+  - Nhánh `/root/layout` có đúng 3 thư mục con: `Layouts`, `Placeholders`, `Renderings`.
   - Quản lý tệp giao diện qua thuộc tính `viewPath` (trỏ tới `src/views/site/`).
   - Placeholder là Item trực tiếp (`placeholderKey`, `allowedRenderings[]`).
   - Standard Presentation trên Page Template; kế thừa Component Template làm Base Template.
@@ -53,7 +53,7 @@ Xây dựng một hệ thống CMS (Content Management System) quản trị nộ
 ## 4. Ngoài Phạm vi Dự án (Out-of-Scope)
 - **React, Next.js, Headless SPA Frontend:** Không hỗ trợ React hoặc các framework frontend bên ngoài; website công khai render hoàn toàn bằng server-side EJS.
 - **Layout Service JSON RESTful & External API Key:** Không phát triển API JSON cung cấp layout cho bên ngoài; không cần cấu hình CORS cho client độc lập.
-- **xDB, CDP, Real-time Personalization:** Không xây dựng hệ thống thu thập hành vi phức tạp của Sitecore XP; tập trung 100% vào năng lực lõi Sitecore XM (Experience Management).
+- **xDB, CDP, Real-time Personalization:** Không xây dựng hệ thống thu thập hành vi phức tạp; tập trung 100% vào năng lực lõi Treecraft (Experience Management).
 - **WYSIWYG Experience Editor in-line:** Giai đoạn MVP không làm tính năng soạn thảo trực tiếp trên trang live frontend trong Admin.
 - **Multi-tenant / Multi-site:** Tập trung tối ưu cấu trúc Single-tenant / Multi-tree root trước.
 

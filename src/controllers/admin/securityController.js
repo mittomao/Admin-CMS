@@ -7,6 +7,7 @@ const Role = require('../../models/Role');
 const Domain = require('../../models/Domain');
 const Item = require('../../models/Item');
 const logger = require('../../utils/logger');
+const branding = require('../../config/branding');
 const { ACTIONS } = require('../../config/permissions');
 
 const securityController = {
@@ -43,7 +44,7 @@ const securityController = {
         users: usersData.users,
         pagination: usersData,
         roles,
-        domains: domains.length > 0 ? domains : [{ name: 'sitecore', displayName: 'Sitecore' }],
+        domains: domains.length > 0 ? domains : [{ name: branding.DEFAULT_DOMAIN, displayName: branding.PROJECT_NAME }],
         query: req.query,
       });
     } catch (err) {
@@ -178,7 +179,7 @@ const securityController = {
         activeApp: 'roles',
         user: req.user,
         roles,
-        domains: domains.length > 0 ? domains : [{ name: 'sitecore', displayName: 'Sitecore' }],
+        domains: domains.length > 0 ? domains : [{ name: branding.DEFAULT_DOMAIN, displayName: branding.PROJECT_NAME }],
         query: req.query,
       });
     } catch (err) {
@@ -374,7 +375,7 @@ const securityController = {
       ]);
 
       res.render('admin/security/access-viewer', {
-        title: 'Access Viewer - Sitecore XM Security',
+        title: `Access Viewer - ${branding.PROJECT_NAME} Security`,
         layout: 'layouts/shell',
         activeApp: 'access-viewer',
         user: req.user,
@@ -407,11 +408,11 @@ const securityController = {
         Role.find({}).select('_id name domain description').sort({ name: 1 }).lean(),
       ]);
 
-      const initialPath = req.query.path || '/sitecore/content/home';
+      const initialPath = req.query.path || branding.PATHS.HOME;
       const initialId = req.query.id || null;
 
       res.render('admin/security/security-editor', {
-        title: 'Security Editor - Sitecore XM Security',
+        title: `Security Editor - ${branding.PROJECT_NAME} Security`,
         layout: 'layouts/shell',
         activeApp: 'security-editor',
         user: req.user,

@@ -28,7 +28,7 @@
 // Collection: roles
 {
   _id: ObjectId("64a1b2c3d4e5f67890123602"),
-  name: "Sitecore Client Authoring",
+  name: "Treecraft Client Authoring",
   description: "Cho phép soạn thảo nội dung cơ bản nhưng không có quyền cấu hình hệ thống",
   isSystem: true,                      // Role hệ thống không được xóa
   createdAt: ISODate("2026-11-03T00:00:00.000Z")
@@ -43,7 +43,7 @@ Mỗi bản ghi đại diện cho một quy tắc phân quyền cụ thể trên
 ```javascript
 {
   _id: ObjectId("64a1b2c3d4e5f67890123701"),
-  itemId: ObjectId("64a1b2c3d4e5f67890123400"), // Áp dụng cho Item cụ thể (/sitecore/content/home)
+  itemId: ObjectId("64a1b2c3d4e5f67890123400"), // Áp dụng cho Item cụ thể (/root/content/home)
   identityType: "role",                // "user" hoặc "role"
   identityId: ObjectId("64a1b2c3d4e5f67890123602"), // ID của User hoặc Role tương ứng
   

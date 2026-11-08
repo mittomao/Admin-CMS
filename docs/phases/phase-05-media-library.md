@@ -25,11 +25,11 @@ updated: 2026-11-03
 - [`docs/decisions/DEC-028-media-richtext-reference.md`](../decisions/DEC-028-media-richtext-reference.md)
 
 ## Mục tiêu
-Xây dựng ứng dụng Media Library quản lý tài nguyên số (hình ảnh, tài liệu) dạng cây thư mục Sitecore, hỗ trợ upload nhiều tệp tin, nén ảnh client bằng Canvas, tự động tạo ảnh thu nhỏ (thumbnail) bằng Sharp, cung cấp cửa sổ Media Picker tích hợp liền mạch vào các field kiểu Image trong Content Editor, và tích hợp Rich Text Editor (TinyMCE 6) hỗ trợ chèn ảnh, liên kết nội bộ, tự động upload khi paste/kéo thả, làm sạch mã độc tại server và sẵn sàng cho Headless Layout Service.
+Xây dựng ứng dụng Media Library quản lý tài nguyên số (hình ảnh, tài liệu) dạng cây thư mục Treecraft, hỗ trợ upload nhiều tệp tin, nén ảnh client bằng Canvas, tự động tạo ảnh thu nhỏ (thumbnail) bằng Sharp, cung cấp cửa sổ Media Picker tích hợp liền mạch vào các field kiểu Image trong Content Editor, và tích hợp Rich Text Editor (TinyMCE 6) hỗ trợ chèn ảnh, liên kết nội bộ, tự động upload khi paste/kéo thả, làm sạch mã độc tại server và sẵn sàng cho Headless Layout Service.
 
 ## Phạm vi
 - **Làm:**
-  - Cây thư mục Media (phân cấp dưới `/sitecore/media library` theo Materialized Path); các System Template (`Media Folder`, `Image`, `File`).
+  - Cây thư mục Media (phân cấp dưới `/root/media library` theo Materialized Path); các System Template (`Media Folder`, `Image`, `File`).
   - Lớp trừu tượng `StorageProvider` (`LocalStorageProvider` lưu tại `storage/uploads/YYYY/MM/`, sẵn sàng cắm Cloudinary/S3 qua env).
   - Upload file đơn và đa tệp sử dụng Multer; nén ảnh client qua Canvas HTML5 (`compressImageClient`); thanh tiến độ XHR thời gian thực.
   - Tự động xử lý resize và thumbnail bằng `sharp`; tự xoay theo EXIF; xóa GPS metadata.
@@ -100,7 +100,7 @@ Xây dựng ứng dụng Media Library quản lý tài nguyên số (hình ảnh
 
 ### Nhóm 5: Migration, Seed & Kiểm Thử Toàn Diện
 - [x] **Task 5.12:** Seed Data & Migration Script:
-  - Seed các System Template (`Media Folder`, `Image`, `File`) và thư mục gốc `/sitecore/media library/`.
+  - Seed các System Template (`Media Folder`, `Image`, `File`) và thư mục gốc `/root/media library/`.
   - Seed một số ảnh mẫu và thư mục mẫu.
   - Viết script migration an toàn, idempotent chuyển đổi dữ liệu URL cũ sang định dạng mới.
 - [x] **Task 5.13:** Kiểm thử Tự động & Hồi quy:

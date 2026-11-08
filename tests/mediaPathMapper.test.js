@@ -38,7 +38,7 @@ describe('GĐ 5.1: mediaPathMapper Unit Tests', () => {
   describe('3. itemPathToCloudinary', () => {
     test('maps item path to Cloudinary public_id and asset_folder without extension for images', () => {
       const res = itemPathToCloudinary({
-        itemPath: '/sitecore/media library/Banners/Hero/summer-sale',
+        itemPath: '/root/media library/Banners/Hero/summer-sale',
         isRaw: false,
         ext: 'jpg'
       });
@@ -46,12 +46,25 @@ describe('GĐ 5.1: mediaPathMapper Unit Tests', () => {
       expect(res.assetFolder).toBe('AdminCMS/banners/hero');
       expect(res.publicId).toBe('AdminCMS/banners/hero/summer-sale');
       expect(res.itemName).toBe('summer-sale');
-      expect(res.itemPath).toBe('/sitecore/media library/banners/hero/summer-sale');
+      expect(res.itemPath).toBe('/root/media library/banners/hero/summer-sale');
+    });
+
+    test('supports legacy /root/media library path in itemPathToCloudinary', () => {
+      const res = itemPathToCloudinary({
+        itemPath: '/root/media library/Banners/Hero/summer-sale',
+        isRaw: false,
+        ext: 'jpg'
+      });
+
+      expect(res.assetFolder).toBe('AdminCMS/banners/hero');
+      expect(res.publicId).toBe('AdminCMS/banners/hero/summer-sale');
+      expect(res.itemName).toBe('summer-sale');
+      expect(res.itemPath).toBe('/root/media library/banners/hero/summer-sale');
     });
 
     test('maps item path directly under root media library', () => {
       const res = itemPathToCloudinary({
-        itemPath: '/sitecore/media library/logo-main',
+        itemPath: '/root/media library/logo-main',
         isRaw: false,
         ext: 'png'
       });
@@ -59,12 +72,12 @@ describe('GĐ 5.1: mediaPathMapper Unit Tests', () => {
       expect(res.assetFolder).toBe('AdminCMS');
       expect(res.publicId).toBe('AdminCMS/logo-main');
       expect(res.itemName).toBe('logo-main');
-      expect(res.itemPath).toBe('/sitecore/media library/logo-main');
+      expect(res.itemPath).toBe('/root/media library/logo-main');
     });
 
     test('appends extension to public_id when isRaw is true for documents', () => {
       const res = itemPathToCloudinary({
-        itemPath: '/sitecore/media library/Documents/Financial/q4-report',
+        itemPath: '/root/media library/Documents/Financial/q4-report',
         isRaw: true,
         ext: 'pdf'
       });
@@ -76,7 +89,7 @@ describe('GĐ 5.1: mediaPathMapper Unit Tests', () => {
 
     test('respects custom rootFolder parameter', () => {
       const res = itemPathToCloudinary({
-        itemPath: '/sitecore/media library/Home/hero',
+        itemPath: '/root/media library/Home/hero',
         rootFolder: 'CustomRoot'
       });
 
@@ -93,8 +106,8 @@ describe('GĐ 5.1: mediaPathMapper Unit Tests', () => {
         resourceType: 'image'
       });
 
-      expect(res.itemPath).toBe('/sitecore/media library/banners/hero/summer-sale');
-      expect(res.parentPath).toBe('/sitecore/media library/banners/hero');
+      expect(res.itemPath).toBe('/root/media library/banners/hero/summer-sale');
+      expect(res.parentPath).toBe('/root/media library/banners/hero');
       expect(res.itemName).toBe('summer-sale');
       expect(res.extension).toBe('jpg');
     });
@@ -107,8 +120,8 @@ describe('GĐ 5.1: mediaPathMapper Unit Tests', () => {
         resourceType: 'image'
       });
 
-      expect(res.itemPath).toBe('/sitecore/media library/test/events/dsc00738_master');
-      expect(res.parentPath).toBe('/sitecore/media library/test/events');
+      expect(res.itemPath).toBe('/root/media library/test/events/dsc00738_master');
+      expect(res.parentPath).toBe('/root/media library/test/events');
       expect(res.itemName).toBe('dsc00738_master');
       expect(res.extension).toBe('webp');
     });
@@ -119,7 +132,7 @@ describe('GĐ 5.1: mediaPathMapper Unit Tests', () => {
         resourceType: 'raw'
       });
 
-      expect(res.itemPath).toBe('/sitecore/media library/docs/annual_report');
+      expect(res.itemPath).toBe('/root/media library/docs/annual_report');
       expect(res.itemName).toBe('annual_report');
       expect(res.extension).toBe('pdf');
     });

@@ -2,7 +2,7 @@
 > Ngày: 2026-11-03 | GĐ liên quan: GĐ 0 | Trạng thái: Đang áp dụng
 
 ## Bối cảnh
-Màn hình quản trị Sitecore có cấu trúc shell phức tạp (header, taskbar, floating windows), trong khi màn hình Login/Auth lại có bố cục tối giản (minimal).
+Màn hình quản trị Treecraft có cấu trúc shell phức tạp (header, taskbar, floating windows), trong khi màn hình Login/Auth lại có bố cục tối giản (minimal).
 
 ## Quyết định
 Sử dụng package `express-ejs-layouts` để quản lý các master layout tách biệt: `main.ejs` (shell chung) và `minimal.ejs` (màn hình login đơn giản).

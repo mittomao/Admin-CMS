@@ -13,13 +13,13 @@
 
 Đã hoàn thành tái cấu trúc và hiện thực hóa phân hệ **Presentation** quản lý bố cục và giao diện website theo kiến trúc **100% Server-Side EJS SSR** (chạy chung trong ứng dụng Express, không SPA/React, không Headless Layout Service JSON REST API):
 
-1. **Tái cấu trúc Cây Presentation `/sitecore/layout/` với đúng 3 nhánh (DEC-032):**
+1. **Tái cấu trúc Cây Presentation `/root/layout/` với đúng 3 nhánh (DEC-032):**
    - Loại bỏ hoàn toàn các nhánh cũ `Devices` và `Placeholder Settings`.
    - Cây hệ thống chỉ có đúng 3 nhánh con cốt lõi:
-     - `/sitecore/layout/Layouts`: Chứa layout items (`HomeLayout`...).
-     - `/sitecore/layout/Placeholders`: Chứa placeholder items (`header`, `maincontent`, `footer`...).
-     - `/sitecore/layout/Renderings`: Chứa rendering items (`HeroBanner`, `Introduction`, `ImageText`...).
-   - Khóa bảo vệ các node hệ thống: cấm xoá, đổi tên, di chuyển đối với `/sitecore/layout` và 3 nhánh con.
+     - `/root/layout/Layouts`: Chứa layout items (`HomeLayout`...).
+     - `/root/layout/Placeholders`: Chứa placeholder items (`header`, `maincontent`, `footer`...).
+     - `/root/layout/Renderings`: Chứa rendering items (`HeroBanner`, `Introduction`, `ImageText`...).
+   - Khóa bảo vệ các node hệ thống: cấm xoá, đổi tên, di chuyển đối với `/root/layout` và 3 nhánh con.
    - Insert Options nghiêm ngặt theo template folder tương ứng.
 
 2. **Quản trị bố cục bằng thuộc tính `viewPath` & Cơ chế Bảo mật (DEC-033):**
@@ -31,8 +31,8 @@
      - Kiểm tra file tồn tại trên ổ đĩa vật lý khi lưu trong Content Editor; cảnh báo nếu file view chưa được tạo.
 
 3. **Standard Presentation & Kế thừa Component Template (DEC-035):**
-   - Định nghĩa Component Templates dưới `/sitecore/templates/Feature/Components/` (`HeroBanner`, `Introduction`, `ImageText`).
-   - Định nghĩa Page Templates dưới `/sitecore/templates/Project/Pages/` (`Home`, `AboutUs`).
+   - Định nghĩa Component Templates dưới `/root/templates/Feature/Components/` (`HeroBanner`, `Introduction`, `ImageText`).
+   - Định nghĩa Page Templates dưới `/root/templates/Project/Pages/` (`Home`, `AboutUs`).
    - Page Templates kế thừa trực tiếp các Component Templates qua mảng `baseTemplates`, giúp Page Item sở hữu trực tiếp các trường dữ liệu của component (`BackgroundImage`, `HeroTitle`, `IntroHeading`...).
    - Cấu hình **Standard Presentation** trên Page Template: gắn `layoutId` và danh sách renderings theo placeholder.
 
@@ -132,14 +132,14 @@ Kết quả kiểm tra mã nguồn bằng ESLint (`npm run lint`):
 
 | Tiêu chí DoD | Kết quả đối soát | Trạng thái |
 | :--- | :--- | :---: |
-| Mở Content Editor, chọn node `/sitecore/content/Home`. Tab `Presentation` trên Ribbon sáng và có thể tương tác. | Đã kích hoạt trong `src/config/ribbon.js` và xử lý click trong `content-editor.js`. | **ĐẠT** |
+| Mở Content Editor, chọn node `/root/content/Home`. Tab `Presentation` trên Ribbon sáng và có thể tương tác. | Đã kích hoạt trong `src/config/ribbon.js` và xử lý click trong `content-editor.js`. | **ĐẠT** |
 | Bấm nút "Presentation Details" -> Mở modal hiển thị Layout đang gán (`HomeLayout`), và các Rendering mặc định được kế thừa từ Standard Presentation của Template. | Modal `details-modal.ejs` render trực tiếp layout `HomeLayout` và renderings (`HeroBanner`, `Introduction`, `ImageText`) trong placeholder `maincontent`. | **ĐẠT** |
 | Nhập `viewPath` sai hoặc cố tình chứa `../` -> Hệ thống báo lỗi từ chối lưu. | `validateViewPath` chặn path traversal, ép đuôi `.ejs` và kiểm tra whitelist `site/`. Test suite kiểm tra chi tiết. | **ĐẠT** |
 | Thêm Rendering vào placeholder: Modal chỉ hiển thị các rendering hợp lệ theo cấu hình `allowedRenderings` của Placeholder item đó. | API `/api/presentation/renderings/allowed` và `select-rendering-modal.ejs` lọc chính xác danh sách component. | **ĐẠT** |
 | Kéo thả sắp xếp đổi vị trí giữa các rendering trong placeholder -> Thứ tự `sortOrder` thay đổi mượt mà. | SortableJS khởi tạo trên từng `.rendering-dropzone` cập nhật `sortOrder` tự động. | **ĐẠT** |
 | Bấm Lưu Presentation -> Cấu hình lưu thành công vào MongoDB dưới dạng Final Layout override. | Endpoint `POST /admin/content-editor/item/:id/presentation` lưu vào `presentation.final` theo language/version. | **ĐẠT** |
 | Bấm "Reset to Standard Presentation" -> Cấu hình override bị xoá, presentation quay về trạng thái mặc định kế thừa từ Template. | Endpoint `POST /admin/content-editor/item/:id/presentation/reset` xoá override thành công. | **ĐẠT** |
-| Nhánh cây `/sitecore/layout` hiển thị đúng 3 folder chính (`Layouts`, `Placeholders`, `Renderings`). Các node cốt lõi không thể đổi tên, di chuyển hoặc xoá. | Script seed tạo 3 nhánh, chặn xoá/rename node bảo vệ (`isProtectedSystemPath`). | **ĐẠT** |
+| Nhánh cây `/root/layout` hiển thị đúng 3 folder chính (`Layouts`, `Placeholders`, `Renderings`). Các node cốt lõi không thể đổi tên, di chuyển hoặc xoá. | Script seed tạo 3 nhánh, chặn xoá/rename node bảo vệ (`isProtectedSystemPath`). | **ĐẠT** |
 | Bộ Unit & Integration Tests đạt 100% PASS, lint 0 errors. | 14/14 suites, 129/129 tests PASS, ESLint 0 errors, 0 warnings. | **ĐẠT** |
 
 ---

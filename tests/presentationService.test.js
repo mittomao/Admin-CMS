@@ -40,12 +40,12 @@ describe('GĐ 6: presentationService Unit Tests (Server-Side EJS Presentation)',
     });
 
     await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
+      name: 'root',
+      displayName: 'root',
       templateId: folderTpl._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore',
+      path: '/root',
     });
 
     // Run presentation seeds
@@ -97,7 +97,7 @@ describe('GĐ 6: presentationService Unit Tests (Server-Side EJS Presentation)',
       name: 'test-article',
       displayName: 'Test Article',
       templateId: testTemplate._id,
-      path: '/sitecore/test-article',
+      path: '/root/test-article',
       languages: [
         {
           code: 'vi',

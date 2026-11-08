@@ -78,26 +78,26 @@ describe('Item Icons & Registry System', () => {
     });
 
     test('identifies structural folder paths', () => {
-      expect(isFolderItem({ path: '/sitecore/templates' }, null)).toBe(true);
-      expect(isFolderItem({ path: '/sitecore/templates/Feature' }, null)).toBe(true);
-      expect(isFolderItem({ path: '/sitecore/layout/Layouts' }, null)).toBe(true);
-      expect(isFolderItem({ path: '/sitecore/layout/Renderings' }, null)).toBe(true);
-      expect(isFolderItem({ path: '/sitecore/layout/Placeholders' }, null)).toBe(true);
+      expect(isFolderItem({ path: '/root/templates' }, null)).toBe(true);
+      expect(isFolderItem({ path: '/root/templates/Feature' }, null)).toBe(true);
+      expect(isFolderItem({ path: '/root/layout/Layouts' }, null)).toBe(true);
+      expect(isFolderItem({ path: '/root/layout/Renderings' }, null)).toBe(true);
+      expect(isFolderItem({ path: '/root/layout/Placeholders' }, null)).toBe(true);
     });
 
-    test('/sitecore/content is NOT a regular folder (it is content-root)', () => {
-      expect(isFolderItem({ path: '/sitecore/content' }, null)).toBe(false);
+    test('/root/content is NOT a regular folder (it is content-root)', () => {
+      expect(isFolderItem({ path: '/root/content' }, null)).toBe(false);
     });
   });
 
   describe('3. Icon Resolution Rules (Priority Order)', () => {
-    test('node /sitecore/content resolves to content-root', () => {
-      const item = { path: '/sitecore/content', name: 'content' };
+    test('node /root/content resolves to content-root', () => {
+      const item = { path: '/root/content', name: 'content' };
       expect(resolveItemIcon(item)).toBe('content-root');
     });
 
     test('all folder variants resolve to folder (or folder-open if expanded)', () => {
-      const folderItem = { path: '/sitecore/templates/Project', name: 'Project' };
+      const folderItem = { path: '/root/templates/Project', name: 'Project' };
       const folderTemplate = { name: 'Template Folder' };
 
       expect(resolveItemIcon(folderItem, folderTemplate)).toBe('folder');
@@ -105,48 +105,48 @@ describe('Item Icons & Registry System', () => {
     });
 
     test('Layout item resolves to layout', () => {
-      const item = { path: '/sitecore/layout/Layouts/HomeLayout', name: 'HomeLayout' };
+      const item = { path: '/root/layout/Layouts/HomeLayout', name: 'HomeLayout' };
       const template = { name: 'Layout' };
       expect(resolveItemIcon(item, template)).toBe('layout');
     });
 
     test('Placeholder item resolves to placeholder', () => {
-      const item = { path: '/sitecore/layout/Placeholders/maincontent', name: 'maincontent' };
+      const item = { path: '/root/layout/Placeholders/maincontent', name: 'maincontent' };
       const template = { name: 'Placeholder' };
       expect(resolveItemIcon(item, template)).toBe('placeholder');
     });
 
     test('Rendering item resolves to rendering', () => {
-      const item = { path: '/sitecore/layout/Renderings/HeroBanner', name: 'HeroBanner' };
+      const item = { path: '/root/layout/Renderings/HeroBanner', name: 'HeroBanner' };
       const template = { name: 'Rendering' };
       expect(resolveItemIcon(item, template)).toBe('rendering');
     });
 
     test('Template item resolves to template', () => {
-      const item = { path: '/sitecore/templates/Feature/Components/HeroBanner', name: 'HeroBanner' };
+      const item = { path: '/root/templates/Feature/Components/HeroBanner', name: 'HeroBanner' };
       const template = { name: 'Template' };
       expect(resolveItemIcon(item, template)).toBe('template');
     });
 
     test('Standard Template resolves to template', () => {
-      const item = { path: '/sitecore/templates/System/Standard Template', name: 'Standard Template' };
+      const item = { path: '/root/templates/System/Standard Template', name: 'Standard Template' };
       const template = { name: 'Standard Template' };
       expect(resolveItemIcon(item, template)).toBe('template');
     });
 
-    test('Page item under /sitecore/content resolves to page', () => {
-      const item = { path: '/sitecore/content/Home', name: 'Home' };
+    test('Page item under /root/content resolves to page', () => {
+      const item = { path: '/root/content/Home', name: 'Home' };
       const template = { name: 'Page' };
       expect(resolveItemIcon(item, template)).toBe('page');
     });
 
     test('Custom user icon is respected when valid', () => {
-      const customItem = { path: '/sitecore/content/Special', icon: 'ti ti-star' };
+      const customItem = { path: '/root/content/Special', icon: 'ti ti-star' };
       expect(resolveItemIcon(customItem)).toBe('ti ti-star');
     });
 
     test('Invalid or unknown icon falls back to correct type default', () => {
-      const itemWithBadIcon = { path: '/sitecore/layout/Layouts/Custom', icon: 'invalid-icon-xyz' };
+      const itemWithBadIcon = { path: '/root/layout/Layouts/Custom', icon: 'invalid-icon-xyz' };
       const template = { name: 'Layout' };
       expect(resolveItemIcon(itemWithBadIcon, template)).toBe('layout');
     });
@@ -185,7 +185,7 @@ describe('Item Icons & Registry System', () => {
         _id: dummyId,
         name: 'Feature',
         displayName: 'Feature',
-        path: '/sitecore/templates/Feature',
+        path: '/root/templates/Feature',
       };
       const folderNode = treeHelper.toFancytreeNode(folderItem, true, { name: 'Template Folder' });
       expect(folderNode.folder).toBe(true);
@@ -197,7 +197,7 @@ describe('Item Icons & Registry System', () => {
         _id: dummyId,
         name: 'content',
         displayName: 'Content',
-        path: '/sitecore/content',
+        path: '/root/content',
       };
       const rootNode = treeHelper.toFancytreeNode(rootItem, true, null);
       expect(rootNode.folder).toBe(false);
@@ -209,7 +209,7 @@ describe('Item Icons & Registry System', () => {
         _id: dummyId,
         name: 'HeroBanner',
         displayName: 'Hero Banner',
-        path: '/sitecore/layout/Renderings/HeroBanner',
+        path: '/root/layout/Renderings/HeroBanner',
       };
       const renderingNode = treeHelper.toFancytreeNode(renderingItem, false, { name: 'Rendering' });
       expect(renderingNode.folder).toBe(false);

@@ -14,7 +14,7 @@
 Phân hệ Giai đoạn 6.2 giải quyết triệt để sự phụ thuộc ghép cặp (tight coupling) giữa Page Template và Component Template:
 
 1. **Rendering gắn trực tiếp `componentTemplate`:**
-   - Template hệ thống `Rendering` bổ sung trường bắt buộc `componentTemplate` (ObjectId tham chiếu tới Template trong `/sitecore/templates/Feature/Components/`).
+   - Template hệ thống `Rendering` bổ sung trường bắt buộc `componentTemplate` (ObjectId tham chiếu tới Template trong `/root/templates/Feature/Components/`).
    - Validate server chặt chẽ: kiểm tra template tồn tại, đúng nhánh thư mục, không phải Folder, không phải System Template.
 
 2. **Page Template độc lập (Standalone Page Templates):**
@@ -111,10 +111,10 @@ npm run lint
    npm run dev
    ```
 2. **Kiểm tra gắn Component Template trên Rendering:**
-   - Truy cập Content Editor $\rightarrow$ `/sitecore/layout/Renderings/HeroBanner`.
-   - Xác nhận trường `componentTemplate` đang trỏ tới Template `HeroBanner` dưới `/sitecore/templates/Feature/Components/`.
+   - Truy cập Content Editor $\rightarrow$ `/root/layout/Renderings/HeroBanner`.
+   - Xác nhận trường `componentTemplate` đang trỏ tới Template `HeroBanner` dưới `/root/templates/Feature/Components/`.
 3. **Kiểm tra form Content Editor của Page Item:**
-   - Mở Item `/sitecore/content/Home`.
+   - Mở Item `/root/content/Home`.
    - Các trường của HeroBanner được gom nhóm riêng vào section **HeroBanner** kèm badge màu tím `từ rendering HeroBanner`.
    - Nhập giá trị cho `HeroTitle` và nhấn **Save**.
 4. **Kiểm tra bảo toàn dữ liệu khi gỡ và thêm lại rendering:**

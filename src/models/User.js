@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const branding = require('../config/branding');
 require('./Role');
 
 const userSchema = new mongoose.Schema(
@@ -35,7 +36,7 @@ const userSchema = new mongoose.Schema(
     domain: {
       type: String,
       trim: true,
-      default: 'sitecore',
+      default: branding.DEFAULT_DOMAIN,
     },
     isAdmin: {
       type: Boolean,

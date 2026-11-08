@@ -1,6 +1,6 @@
 /**
  * Data-driven Ribbon Configuration for Content Editor
- * Supports Sitecore tabs & groups hierarchy.
+ * Supports Treecraft tabs & groups hierarchy.
  */
 const ribbonConfig = {
   activeTab: 'home',

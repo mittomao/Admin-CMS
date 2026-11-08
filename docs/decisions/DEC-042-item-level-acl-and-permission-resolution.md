@@ -7,7 +7,7 @@
 ---
 
 ## 1. Bối cảnh
-Trước GĐ 7, việc phân quyền trong CMS được trừu tượng hóa qua hàm `canPerform(user, item, action)` nhưng bên trong vẫn sử dụng bảng ánh xạ cứng tạm thời theo Role (theo DEC-039). Để đạt chuẩn bảo mật phân cấp của Sitecore XM ("Mọi thứ là Item"), hệ thống cần chuyển sang mô hình phân quyền chi tiết tới từng Item (Item-Level Access Control List - ACL) với cơ chế thừa kế theo cây, hỗ trợ gán quyền cho cả User và Role, ghi đè Deny/Allow, và công cụ trực quan hóa Access Viewer.
+Trước GĐ 7, việc phân quyền trong CMS được trừu tượng hóa qua hàm `canPerform(user, item, action)` nhưng bên trong vẫn sử dụng bảng ánh xạ cứng tạm thời theo Role (theo DEC-039). Để đạt chuẩn bảo mật phân cấp của Treecraft ("Mọi thứ là Item"), hệ thống cần chuyển sang mô hình phân quyền chi tiết tới từng Item (Item-Level Access Control List - ACL) với cơ chế thừa kế theo cây, hỗ trợ gán quyền cho cả User và Role, ghi đè Deny/Allow, và công cụ trực quan hóa Access Viewer.
 
 ---
 
@@ -52,10 +52,10 @@ Toàn bộ ánh xạ được định nghĩa tập trung tại file hằng số 
 | `workflow:execute` | Thực thi các lệnh workflow (Submit, Approve, Reject...) | `workflow:execute:<command>` |
 
 *Lưu ý về các thao tác hệ thống không gắn với item đơn lẻ:*
-- `publish:manage`: Yêu cầu quyền `publish` trên root item `/sitecore/content` và/hoặc role `Administrator`.
+- `publish:manage`: Yêu cầu quyền `publish` trên root item `/root/content` và/hoặc role `Administrator`.
 - `workbox:read`: Kiểm tra user có quyền `read` và `workflow:execute` trên ít nhất một item trong danh sách chờ.
 - `workbox:bulk`: Kiểm tra quyền `workflow:execute` trên từng item được chọn.
-- `database:web:read` & `database:compare`: Phân quyền qua role cấu hình hệ thống (`Administrator`, `Approver`) hoặc ACL trên `/sitecore`.
+- `database:web:read` & `database:compare`: Phân quyền qua role cấu hình hệ thống (`Administrator`, `Approver`) hoặc ACL trên `/root`.
 
 ### 2.3. Quy tắc Đánh giá Quyền Hiệu dụng (Effective Permissions Resolution)
 Khi gọi `canPerform(user, item, action)`:
@@ -90,7 +90,7 @@ Khi gọi `canPerform(user, item, action)`:
   - Không cho phép vô hiệu hóa hoặc xóa người dùng `admin` hệ thống hoặc xóa Role `Administrator`.
 
 ### 2.5. Tổ tiên "Chỉ điều hướng" (`navigationOnly`) cho Cây Phân cấp
-- Khi người dùng chỉ được cấp quyền đọc ở một nhánh sâu (ví dụ `/sitecore/content/home/articles/post-1`), cây Fancytree vẫn cần hiển thị các node tổ tiên (`sitecore`, `content`, `home`, `articles`) để user duyệt xuống.
+- Khi người dùng chỉ được cấp quyền đọc ở một nhánh sâu (ví dụ `/root/content/home/articles/post-1`), cây Fancytree vẫn cần hiển thị các node tổ tiên (`root`, `content`, `home`, `articles`) để user duyệt xuống.
 - Các node tổ tiên này sẽ được gắn cờ `navigationOnly: true`:
   - Cho phép click mở rộng (expand) trên cây.
   - Form soạn thảo bị khóa hoàn toàn, không lộ giá trị trường (`fields: {}`).
@@ -107,6 +107,6 @@ Khi gọi `canPerform(user, item, action)`:
 ## 3. Hệ quả & Quy trình Chuyển đổi
 1. **Migration khởi tạo (`migrate-phase-07-default-acl.js`):**
    - Đọc các role hiện có (`Administrator`, `Author`, `Editor`, `Approver`).
-   - Tạo các entry ACL mặc định trên các node gốc `/sitecore`, `/sitecore/content`, `/sitecore/media library`, `/sitecore/layout`, `/sitecore/templates`, `/sitecore/system` để sau migration, toàn bộ hành vi phân quyền của GĐ 8 / 8.1 giữ nguyên không bị phá vỡ.
+   - Tạo các entry ACL mặc định trên các node gốc `/root`, `/root/content`, `/root/media library`, `/root/layout`, `/root/templates`, `/root/system` để sau migration, toàn bộ hành vi phân quyền của GĐ 8 / 8.1 giữ nguyên không bị phá vỡ.
 2. **Giữ nguyên chữ ký `canPerform(user, item, action)`:** Tất cả các controller hiện tại không cần thay đổi cách gọi.
 

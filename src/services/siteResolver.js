@@ -2,10 +2,11 @@ const mongoose = require('mongoose');
 const PublishedItem = require('../models/PublishedItem');
 const { NotFoundError, AppError } = require('../utils/errors');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 
 class SiteResolver {
   constructor() {
-    this.startItemPath = process.env.SITE_START_ITEM || '/sitecore/content/Home';
+    this.startItemPath = process.env.SITE_START_ITEM || branding.PATHS.START_ITEM;
     this.defaultLanguage = 'vi';
     this.supportedLanguages = ['vi', 'en'];
   }
@@ -69,19 +70,28 @@ class SiteResolver {
 
     if (cleanPath === '/') {
       candidatePaths = [this.startItemPath];
+      if (this.startItemPath !== '/root/content/Home') {
+        candidatePaths.push('/root/content/Home');
+      }
     } else {
       // Create segment search path (e.g. ['about-us', 'team'])
       const joinedSegments = segments.join('/');
-      // Also try replacing hyphens with spaces for Sitecore Item names: 'about-us' -> 'about us'
+      // Also try replacing hyphens with spaces for CMS Item names: 'about-us' -> 'about us'
       const spacedSegments = segments.map((s) => s.replace(/-/g, ' ')).join('/');
 
+      const contentRoot = branding.PATHS.CONTENT;
       candidatePaths = [
-        // Sibling under /sitecore/content (Standard Sitecore content tree)
-        `/sitecore/content/${joinedSegments}`,
-        `/sitecore/content/${spacedSegments}`,
-        // Child under /sitecore/content/Home
+        // Sibling under /root/content
+        `${contentRoot}/${joinedSegments}`,
+        `${contentRoot}/${spacedSegments}`,
+        // Child under Start Item (e.g. /root/content/Home)
         `${this.startItemPath}/${joinedSegments}`,
         `${this.startItemPath}/${spacedSegments}`,
+        // Backward compatibility fallback for /root/content
+        `/root/content/${joinedSegments}`,
+        `/root/content/${spacedSegments}`,
+        `/root/content/Home/${joinedSegments}`,
+        `/root/content/Home/${spacedSegments}`,
       ];
     }
 
@@ -97,7 +107,7 @@ class SiteResolver {
       if (item) break;
     }
 
-    // Fallback: Segment-by-segment hierarchical tree traversal starting from /sitecore/content
+    // Fallback: Segment-by-segment hierarchical tree traversal starting from /root/content or /root/content
     if (!item && cleanPath !== '/') {
       item = await this.resolveHierarchically(segments);
     }
@@ -111,9 +121,14 @@ class SiteResolver {
     // 6.1. Exclude System/Template/Media items from being rendered as pages
     const lowerPath = item.path.toLowerCase();
     if (
-      lowerPath.startsWith('/sitecore/media library') ||
-      lowerPath.startsWith('/sitecore/templates') ||
-      lowerPath.startsWith('/sitecore/system')
+      lowerPath.startsWith(branding.PATHS.MEDIA.toLowerCase()) ||
+      lowerPath.startsWith(branding.PATHS.TEMPLATES.toLowerCase()) ||
+      lowerPath.startsWith(branding.PATHS.SYSTEM.toLowerCase()) ||
+      lowerPath.startsWith(branding.PATHS.LAYOUT.toLowerCase()) ||
+      lowerPath.startsWith('/root/media library') ||
+      lowerPath.startsWith('/root/templates') ||
+      lowerPath.startsWith('/root/system') ||
+      lowerPath.startsWith('/root/layout')
     ) {
       throw new NotFoundError(`Path is not a public page: ${rawUrl}`);
     }
@@ -145,15 +160,16 @@ class SiteResolver {
   async resolveHierarchically(segments) {
     if (!segments || segments.length === 0) return null;
 
-    // Start node: Content root (/sitecore/content) or Start Item (/sitecore/content/Home)
+    // Start node: Content root (/root/content) or Start Item (/root/content/Home)
     let currentParent = await PublishedItem.findOne({
       path: { $regex: new RegExp(`^${this.startItemPath.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') },
       isDeleted: { $ne: true },
     }).lean();
 
     if (!currentParent) {
+      const contentRootEscaped = branding.PATHS.CONTENT.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
       currentParent = await PublishedItem.findOne({
-        path: { $regex: /^\/sitecore\/content$/i },
+        path: { $regex: new RegExp(`^(${contentRootEscaped}|/root/content)$`, 'i') },
         isDeleted: { $ne: true },
       }).lean();
     }
@@ -183,7 +199,7 @@ class SiteResolver {
   }
 
   /**
-   * Verify all ancestors up to /sitecore/content are published in Web Store
+   * Verify all ancestors up to /root/content are published in Web Store
    * @param {object} item 
    */
   async verifyPublishedAncestors(item) {
@@ -198,8 +214,8 @@ class SiteResolver {
         throw new NotFoundError(`An ancestor of the item is not published or unavailable`);
       }
 
-      // Stop once we reach /sitecore/content or root
-      if (parent.path === '/sitecore/content' || parent.path === '/sitecore' || !parent.parentId) {
+      // Stop once we reach /root/content or root
+      if (parent.path === '/root/content' || parent.path === '/root' || !parent.parentId) {
         break;
       }
 

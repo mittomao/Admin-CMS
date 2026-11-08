@@ -8,6 +8,7 @@ const templateService = require('./templateService');
 const versionService = require('./versionService');
 const webItemService = require('./webItemService');
 const { resolveItemIcon, getIconUrl } = require('../config/icons');
+const branding = require('../config/branding');
 
 class ConflictError extends Error {
   constructor(message) {
@@ -27,19 +28,35 @@ class ValidationError extends Error {
 }
 
 const PROTECTED_SYSTEM_PATHS = new Set([
-  '/sitecore',
-  '/sitecore/content',
-  '/sitecore/media library',
-  '/sitecore/system',
-  '/sitecore/templates',
-  '/sitecore/templates/system/sample component',
-  '/sitecore/templates/system/standard template',
-  '/sitecore/layout',
-  '/sitecore/layout/layouts',
-  '/sitecore/layout/placeholders',
-  '/sitecore/layout/renderings',
-  '/sitecore/layout/devices',
-  '/sitecore/layout/placeholder settings',
+  // Standard root paths (branding)
+  branding.PATHS.ROOT.toLowerCase(),
+  branding.PATHS.CONTENT.toLowerCase(),
+  branding.PATHS.MEDIA.toLowerCase(),
+  branding.PATHS.SYSTEM.toLowerCase(),
+  branding.PATHS.TEMPLATES.toLowerCase(),
+  `${branding.PATHS.TEMPLATES}/system/sample component`.toLowerCase(),
+  `${branding.PATHS.TEMPLATES}/system/standard template`.toLowerCase(),
+  branding.PATHS.LAYOUT.toLowerCase(),
+  branding.PATHS.LAYOUTS.toLowerCase(),
+  branding.PATHS.PLACEHOLDERS.toLowerCase(),
+  branding.PATHS.RENDERINGS.toLowerCase(),
+  branding.PATHS.DEVICES.toLowerCase(),
+  branding.PATHS.PLACEHOLDER_SETTINGS.toLowerCase(),
+
+  // Legacy paths (backward compatibility)
+  '/root',
+  '/root/content',
+  '/root/media library',
+  '/root/system',
+  '/root/templates',
+  '/root/templates/system/sample component',
+  '/root/templates/system/standard template',
+  '/root/layout',
+  '/root/layout/layouts',
+  '/root/layout/placeholders',
+  '/root/layout/renderings',
+  '/root/layout/devices',
+  '/root/layout/placeholder settings',
 ]);
 
 function isProtectedSystemPath(path) {
@@ -53,7 +70,7 @@ const itemService = {
   isProtectedSystemPath,
 
   /**
-   * Permission check gateway (Sitecore XM Item-Level ACL according to DEC-042 & Phase 7)
+   * Permission check gateway (Treecraft Item-Level ACL according to DEC-042 & Phase 7)
    * Keeps exact function signature: canPerform(user, item, action)
    * Handles synchronous resolution for global/admin actions, and async resolution for item ACL.
    */
@@ -95,12 +112,16 @@ const itemService = {
   },
 
   /**
-   * Get the root item of the CMS tree (/sitecore)
+   * Get the root item of the CMS tree (/root or legacy /treecraft)
    */
   async getRoot(db = 'master') {
     const cleanDb = this.validateDb(db);
     const Repo = this.getItemRepository(cleanDb);
-    let root = await Repo.findOne({ path: '/sitecore', isDeleted: { $ne: true }, deleted: { $ne: true } })
+    let root = await Repo.findOne({
+      path: { $in: [branding.PATHS.ROOT, '/root'] },
+      isDeleted: { $ne: true },
+      deleted: { $ne: true },
+    })
       .populate('templateId')
       .lean();
 
@@ -304,7 +325,7 @@ const itemService = {
   },
 
   /**
-   * Get Sitecore Quick Info metadata for an item (DEC-037 / DEC-041)
+   * Get Treecraft Quick Info metadata for an item (DEC-037 / DEC-041)
    */
   async getQuickInfo(itemOrId, db = 'master') {
     if (!itemOrId) return null;
@@ -323,7 +344,7 @@ const itemService = {
           _id: tpl._id,
           name: tpl.name,
           displayName: tpl.displayName,
-          path: tpl.path || `/sitecore/templates/${tpl.name}`,
+          path: tpl.path || `${branding.PATHS.TEMPLATES}/${tpl.name}`,
           templateId: null,
           createdBy: tpl.createdBy,
           createdFrom: tpl.createdFrom || null,
@@ -375,13 +396,13 @@ const itemService = {
       path: item.path,
       database: cleanDb,
       publishedAt: item.publishedAt || null,
-      publishedBy: publishedByUser ? `${publishedByUser.domain || 'sitecore'}\\${publishedByUser.username}` : (item.publishedBy ? item.publishedBy.toString() : null),
+      publishedBy: publishedByUser ? `${publishedByUser.domain || branding.DEFAULT_DOMAIN}\\${publishedByUser.username}` : (item.publishedBy ? item.publishedBy.toString() : null),
       sourceVersion: item.sourceVersion || 1,
       template: {
         rawId: templateIdToQuery ? templateIdToQuery.toString() : null,
         id: templateIdStr ? `{${templateIdStr}}` : '',
         name: templateName,
-        path: templatePath || '/sitecore/templates/System/Template',
+        path: templatePath || `${branding.PATHS.TEMPLATES}/System/Template`,
         fullText: templatePath ? `${templatePath} - {${templateIdStr}}` : (templateIdStr ? `{${templateIdStr}}` : '[unknown]'),
       },
       createdFrom: {
@@ -394,8 +415,8 @@ const itemService = {
       itemOwner: {
         rawId: ownerUser ? ownerUser._id.toString() : null,
         username: ownerUser ? ownerUser.username : null,
-        domain: (ownerUser && ownerUser.domain) || 'sitecore',
-        displayText: ownerUser ? `${ownerUser.domain || 'sitecore'}\\${ownerUser.username}` : '[unknown]',
+        domain: (ownerUser && ownerUser.domain) || branding.DEFAULT_DOMAIN,
+        displayText: ownerUser ? `${ownerUser.domain || branding.DEFAULT_DOMAIN}\\${ownerUser.username}` : '[unknown]',
         isUnknown: !ownerUser,
       },
     };
@@ -438,20 +459,40 @@ const itemService = {
     const cleanDb = this.validateDb(db);
     const Repo = this.getItemRepository(cleanDb);
     let targetPath = rawPath.trim();
-
-    // Normalize path aliases for templates
-    if (targetPath === '/template' || targetPath === '/templates' || targetPath === '/sitecore/template') {
-      targetPath = '/sitecore/templates';
-    } else if (targetPath.toLowerCase().startsWith('/template/')) {
-      targetPath = '/sitecore/templates/' + targetPath.slice('/template/'.length);
-    } else if (targetPath.toLowerCase().startsWith('/templates/')) {
-      targetPath = '/sitecore/templates/' + targetPath.slice('/templates/'.length);
-    } else if (targetPath.toLowerCase().startsWith('/sitecore/template/')) {
-      targetPath = '/sitecore/templates/' + targetPath.slice('/sitecore/template/'.length);
+    if (targetPath.length > 1 && targetPath.endsWith('/')) {
+      targetPath = targetPath.replace(/\/+$/, '');
+    }
+    if (targetPath === '/') {
+      targetPath = branding.PATHS.ROOT;
     }
 
+    // Normalize path aliases for templates
+    if (targetPath === '/template' || targetPath === '/templates' || targetPath === '/root/template' || targetPath === '/root/template') {
+      targetPath = branding.PATHS.TEMPLATES;
+    } else if (targetPath.toLowerCase().startsWith('/template/')) {
+      targetPath = branding.PATHS.TEMPLATES + '/' + targetPath.slice('/template/'.length);
+    } else if (targetPath.toLowerCase().startsWith('/templates/')) {
+      targetPath = branding.PATHS.TEMPLATES + '/' + targetPath.slice('/templates/'.length);
+    } else if (targetPath.toLowerCase().startsWith('/root/template/')) {
+      targetPath = branding.PATHS.TEMPLATES + '/' + targetPath.slice('/root/template/'.length);
+    } else if (targetPath.toLowerCase().startsWith('/root/template/')) {
+      targetPath = branding.PATHS.TEMPLATES + '/' + targetPath.slice('/root/template/'.length);
+    }
+
+    // Try finding exact targetPath first, with fallback to equivalent root/treecraft prefix
+    let alternativePath = null;
+    if (targetPath.toLowerCase().startsWith('/root')) {
+      alternativePath = branding.PATHS.ROOT + targetPath.slice('/root'.length);
+    } else if (targetPath.toLowerCase().startsWith('/root')) {
+      alternativePath = '/root' + targetPath.slice('/root'.length);
+    }
+
+    const pathQuery = alternativePath
+      ? { $in: [new RegExp(`^${targetPath}$`, 'i'), new RegExp(`^${alternativePath}$`, 'i')] }
+      : new RegExp(`^${targetPath}$`, 'i');
+
     return Repo.findOne({
-      path: new RegExp(`^${targetPath}$`, 'i'),
+      path: pathQuery,
       isDeleted: { $ne: true },
       deleted: { $ne: true },
     })
@@ -558,11 +599,17 @@ const itemService = {
 
     // Explicit constraint: only Folder and Sample Component allowed under Feature/Components and Project/Pages
     const parentLowerPath = (parent.path || '').toLowerCase().trim();
+    const featPath = branding.PATHS.FEATURE_COMPONENTS.toLowerCase();
+    const projPath = branding.PATHS.PROJECT_PAGES.toLowerCase();
     const isComponentOrPageBranch =
-      parentLowerPath === '/sitecore/templates/feature/components' ||
-      parentLowerPath.startsWith('/sitecore/templates/feature/components/') ||
-      parentLowerPath === '/sitecore/templates/project/pages' ||
-      parentLowerPath.startsWith('/sitecore/templates/project/pages/');
+      parentLowerPath === featPath ||
+      parentLowerPath.startsWith(featPath + '/') ||
+      parentLowerPath === projPath ||
+      parentLowerPath.startsWith(projPath + '/') ||
+      parentLowerPath === '/root/templates/feature/components' ||
+      parentLowerPath.startsWith('/root/templates/feature/components/') ||
+      parentLowerPath === '/root/templates/project/pages' ||
+      parentLowerPath.startsWith('/root/templates/project/pages/');
 
     if (isComponentOrPageBranch) {
       if (!['Template Folder', 'Standard Template', 'Sample Component'].includes(template.name)) {
@@ -581,10 +628,13 @@ const itemService = {
       }
     }
 
-    // Explicit constraint: only templates in Project/Pages and Common are allowed under /sitecore/content
+    // Explicit constraint: only templates in Project/Pages and Common are allowed under /root/content or /root/content
+    const contentPath = branding.PATHS.CONTENT.toLowerCase();
     const isContentBranch = parent.path && (
-      parent.path.toLowerCase() === '/sitecore/content' ||
-      parent.path.toLowerCase().startsWith('/sitecore/content/')
+      parent.path.toLowerCase() === contentPath ||
+      parent.path.toLowerCase().startsWith(contentPath + '/') ||
+      parent.path.toLowerCase() === '/root/content' ||
+      parent.path.toLowerCase().startsWith('/root/content/')
     );
     if (isContentBranch) {
       const tplPath = (template.path || '').toLowerCase();
@@ -814,8 +864,12 @@ const itemService = {
     }
 
     // Special validation for Layout and Rendering items: viewPath must be valid
-    const isLayoutItem = item.path?.toLowerCase().startsWith('/sitecore/layout/layouts') || resolvedTemplate.name === 'Layout';
-    const isRenderingItem = item.path?.toLowerCase().startsWith('/sitecore/layout/renderings') || resolvedTemplate.name === 'Rendering';
+    const isLayoutItem = item.path?.toLowerCase().startsWith(branding.PATHS.LAYOUTS.toLowerCase()) ||
+                         item.path?.toLowerCase().startsWith('/root/layout/layouts') ||
+                         resolvedTemplate.name === 'Layout';
+    const isRenderingItem = item.path?.toLowerCase().startsWith(branding.PATHS.RENDERINGS.toLowerCase()) ||
+                            item.path?.toLowerCase().startsWith('/root/layout/renderings') ||
+                            resolvedTemplate.name === 'Rendering';
 
     if (isLayoutItem || isRenderingItem) {
       let viewPathVal = rawFields['viewPath'];

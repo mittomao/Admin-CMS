@@ -71,7 +71,7 @@ Tài liệu này xác lập nền tảng triết lý, giá trị cốt lõi và 
 
 Hệ thống hỗ trợ 2 mô hình bố cục điều hướng linh hoạt:
 
-1. **Mô Hình Sitecore Experience Launchpad (Unified Topbar + Launchpad Grid)**:
+1. **Mô Hình Treecraft Experience Launchpad (Unified Topbar + Launchpad Grid)**:
    - Thanh Topbar cố định trên cùng (`navbar-expand-lg sticky-top border-bottom`).
    - Tích hợp menu thả dạng lưới 9 chấm (Waffle / App Switcher) để truy cập nhanh các module.
    - Trang chủ Dashboard đóng vai trò trung tâm chỉ huy (Launchpad) với các Tile thẻ ứng dụng phân nhóm rõ ràng (Content, Media & Community, System & Admin).

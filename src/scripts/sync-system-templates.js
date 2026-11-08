@@ -13,6 +13,7 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const Template = require('../models/Template');
 const Item = require('../models/Item');
+const branding = require('../config/branding');
 
 const isDryRun = process.argv.includes('--dry-run');
 
@@ -95,7 +96,7 @@ async function syncSystemTemplates() {
             type: 'Single-Line Text',
             required: true,
             sortOrder: 20,
-            source: '/sitecore/templates/Feature/Components',
+            source: `${branding.PATHS.TEMPLATES}/Feature/Components`,
             helpText: 'Template định nghĩa fields của component dưới Feature/Components',
           },
           {
@@ -148,7 +149,7 @@ async function syncSystemTemplates() {
   ];
 
   for (const rConf of renderingItemsConfig) {
-    const item = await Item.findOne({ name: rConf.name, path: { $regex: '^/sitecore/layout/Renderings' } });
+    const item = await Item.findOne({ name: rConf.name, path: { $regex: '^/Renderings' } });
     if (item) {
       let changed = false;
       if (item.fields instanceof Map) {
@@ -203,7 +204,7 @@ async function syncSystemTemplates() {
   }
 
   // 5. Đồng bộ Layout Item "HomeLayout"
-  const homeLayoutItem = await Item.findOne({ name: 'HomeLayout', path: { $regex: '^/sitecore/layout/Layouts' } });
+  const homeLayoutItem = await Item.findOne({ name: 'HomeLayout', path: { $regex: '^/Layouts' } });
   if (homeLayoutItem) {
     let changed = false;
     const viewPath = 'site/layouts/HomeLayout.ejs';
@@ -230,8 +231,8 @@ async function syncSystemTemplates() {
 
   // 6. Dọn dẹp legacy items cũ thời kỳ React
   const legacyPaths = [
-    '/sitecore/layout/Layouts/MainLayout',
-    '/sitecore/layout/Renderings/Feature',
+    '/Layouts/MainLayout',
+    '/Renderings/Feature',
   ];
 
   for (const lPath of legacyPaths) {

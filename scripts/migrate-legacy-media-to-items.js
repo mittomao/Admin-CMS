@@ -19,7 +19,7 @@ async function migrate() {
   console.log(` Mode: ${dryRun ? 'DRY-RUN (Simulated)' : rollback ? 'ROLLBACK' : 'LIVE MIGRATION'}`);
   console.log('====================================================\n');
 
-  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/sitecore_cms';
+  const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/treecraft_cms';
   await mongoose.connect(mongoUri);
   logger.info('Connected to MongoDB.');
 
@@ -29,9 +29,9 @@ async function migrate() {
   const fileTpl = templates[MEDIA_TEMPLATES.FILE];
 
   if (rollback) {
-    console.log('Rolling back: Deleting items created under /sitecore/media library from legacy media...');
+    console.log('Rolling back: Deleting items created under /root/media library from legacy media...');
     const result = await Item.deleteMany({
-      path: { $regex: '^/sitecore/media library/' },
+      path: { $regex: '^/root/media library/' },
       'sharedFields.migratedFromMedia': true
     });
     console.log(`Rollback completed: Removed ${result.deletedCount} migrated items.`);
@@ -50,8 +50,8 @@ async function migrate() {
   for (const record of legacyRecords) {
     try {
       // Bỏ qua root node nếu đã có
-      if (record.path === '/sitecore/media library') {
-        let existingRoot = await Item.findOne({ path: '/sitecore/media library', deleted: false });
+      if (record.path === '/root/media library') {
+        let existingRoot = await Item.findOne({ path: '/root/media library', deleted: false });
         if (existingRoot && existingRoot.templateId.toString() !== folderTpl._id.toString()) {
           if (!dryRun) {
             existingRoot.templateId = folderTpl._id;
@@ -88,7 +88,7 @@ async function migrate() {
         const parentItem = await Item.findById(parentId);
         if (!parentItem) {
           // Fallback về root media library
-          const rootItem = await Item.findOne({ path: '/sitecore/media library' });
+          const rootItem = await Item.findOne({ path: '/root/media library' });
           parentId = rootItem ? rootItem._id : null;
         }
       }

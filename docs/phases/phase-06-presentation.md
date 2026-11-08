@@ -31,7 +31,7 @@ updated: 2026-11-04
 
 ## Mục tiêu
 Xây dựng phân hệ Presentation quản lý bố cục và giao diện website theo kiến trúc 100% Server-Side EJS:
-- Tổ chức quản trị cây `/sitecore/layout` với đúng 3 nhánh (`Layouts`, `Placeholders`, `Renderings`).
+- Tổ chức quản trị cây `/root/layout` với đúng 3 nhánh (`Layouts`, `Placeholders`, `Renderings`).
 - Quản lý layout và component thông qua thuộc tính `viewPath` trỏ trực tiếp đến các file EJS trong thư mục `src/views/site/`.
 - Hỗ trợ Standard Presentation trên Page Template và cơ chế kế thừa Component Templates làm base templates.
 - Giao diện biên tập Presentation Details trực quan (kéo thả sắp xếp SortableJS, chọn rendering theo placeholder).
@@ -44,8 +44,8 @@ Xây dựng phân hệ Presentation quản lý bố cục và giao diện websit
      - `Placeholder`: chứa fields `placeholderKey` (ví dụ `header`, `maincontent`, `footer`), `allowedRenderings[]` (danh sách ID rendering được phép chèn, để trống = cho phép tất cả).
      - `Rendering`: chứa fields `viewPath` (đường dẫn tương đối trong `src/views/site/components/`), `componentTemplate` (ID của template chứa các trường nội dung tương ứng dưới `Feature/Components`), `parametersTemplate` (tuỳ chọn), `icon`.
      - Thư mục nhóm: `Layout Folder`, `Placeholder Folder`, `Rendering Folder`.
-  2. **Tái cấu trúc Cây Presentation (`/sitecore/layout/`):**
-     - Đúng 3 nhánh con cốt lõi: `/sitecore/layout/Layouts`, `/sitecore/layout/Placeholders`, `/sitecore/layout/Renderings`.
+  2. **Tái cấu trúc Cây Presentation (`/root/layout/`):**
+     - Đúng 3 nhánh con cốt lõi: `/root/layout/Layouts`, `/root/layout/Placeholders`, `/root/layout/Renderings`.
      - Loại bỏ hoàn toàn node `Devices` và `Placeholder Settings`.
      - Thiết lập Insert Options nghiêm ngặt và cơ chế bảo vệ node hệ thống (khóa rename, move, delete).
   3. **Seed Data Ban đầu:**
@@ -53,7 +53,7 @@ Xây dựng phân hệ Presentation quản lý bố cục và giao diện websit
      - Placeholders: `header`, `maincontent`, `footer`.
      - Renderings: `HeroBanner` (`site/components/HeroBanner.ejs`), `Introduction` (`site/components/Introduction.ejs`), `ImageText` (`site/components/ImageText.ejs`).
      - Component Templates: `HeroBanner` (fields: `BackgroundImage`, `HeroTitle`, `HeroDescription`), `Introduction` (fields: `IntroHeading`, `IntroBody`), `ImageText` (fields: `Image`, `Title`, `Body`, `Alignment`).
-     - Page Templates: `Home` và `About us` dưới `/sitecore/templates/Project/Pages/`, kế thừa các Component Template trên qua `base_templates` và cấu hình Standard Presentation sẵn có.
+     - Page Templates: `Home` và `About us` dưới `/root/templates/Project/Pages/`, kế thừa các Component Template trên qua `base_templates` và cấu hình Standard Presentation sẵn có.
      - Các file EJS mẫu tương ứng trong repo (`src/views/site/layouts/HomeLayout.ejs`, `src/views/site/components/*.ejs`).
   4. **Kiểm tra an toàn `viewPath`:**
      - Whitelist thư mục gốc `src/views/site/`.
@@ -75,8 +75,8 @@ Xây dựng phân hệ Presentation quản lý bố cục và giao diện websit
 
 ## Checklist Task
 - [x] **Task 6.1:** Khởi tạo System Templates cho Presentation (`Layout`, `Placeholder`, `Rendering`, `Layout Folder`, `Placeholder Folder`, `Rendering Folder`) với thuộc tính `viewPath`, `placeholderKey`, `allowedRenderings`, `componentTemplate`.
-- [x] **Task 6.2:** Xây dựng script seed cây `/sitecore/layout/` với đúng 3 nhánh (`Layouts`, `Placeholders`, `Renderings`), loại bỏ Devices và Placeholder Settings cũ nếu có.
-- [x] **Task 6.3:** Khởi tạo Component Templates mẫu dưới `/sitecore/templates/Feature/Components/` (`HeroBanner`, `Introduction`, `ImageText`) và Page Templates mẫu dưới `/sitecore/templates/Project/Pages/` (`Home`, `About us`) với kế thừa `base_templates` và Standard Presentation.
+- [x] **Task 6.2:** Xây dựng script seed cây `/root/layout/` với đúng 3 nhánh (`Layouts`, `Placeholders`, `Renderings`), loại bỏ Devices và Placeholder Settings cũ nếu có.
+- [x] **Task 6.3:** Khởi tạo Component Templates mẫu dưới `/root/templates/Feature/Components/` (`HeroBanner`, `Introduction`, `ImageText`) và Page Templates mẫu dưới `/root/templates/Project/Pages/` (`Home`, `About us`) với kế thừa `base_templates` và Standard Presentation.
 - [x] **Task 6.4:** Tạo các file view mẫu EJS trong thư mục `src/views/site/layouts/HomeLayout.ejs` và `src/views/site/components/{HeroBanner,Introduction,ImageText}.ejs`.
 - [x] **Task 6.5:** Xây dựng cơ chế xác thực an toàn `viewPath` (`validateViewPath`) chặn path traversal, ép đuôi `.ejs` và kiểm tra sự tồn tại của file.
 - [x] **Task 6.6:** Cập nhật Mongoose Model `Item` và `Template` cấu trúc presentation mới (loại bỏ device key), hỗ trợ `layoutId` và danh sách `renderings` (`{ uid, renderingId, placeholderKey, sortOrder, datasourceId, parameters }`).
@@ -120,17 +120,17 @@ Xây dựng phân hệ Presentation quản lý bố cục và giao diện websit
 ## Thay đổi Database
 - Collection `templates`: lưu `presentation` (Standard Presentation) với cấu trúc `layoutId` và mảng `renderings`.
 - Collection `items_master`: lưu `presentation.shared` và `presentation.final` (theo language & version) với cấu trúc `layoutId` và mảng `renderings`.
-- Cây `/sitecore/layout/`: có 3 nhánh chính `Layouts`, `Placeholders`, `Renderings`.
+- Cây `/root/layout/`: có 3 nhánh chính `Layouts`, `Placeholders`, `Renderings`.
 
 ## Definition of Done & Cách kiểm thử
-- [x] Mở Content Editor, chọn node `/sitecore/content/Home`. Tab `Presentation` trên Ribbon sáng và có thể tương tác.
+- [x] Mở Content Editor, chọn node `/root/content/Home`. Tab `Presentation` trên Ribbon sáng và có thể tương tác.
 - [x] Bấm nút "Presentation Details" -> Mở modal hiển thị Layout đang gán (`HomeLayout`), và các Rendering mặc định được kế thừa từ Standard Presentation của Template (`HeroBanner`, `Introduction`, `ImageText` trong placeholder `maincontent`).
 - [x] Nhập `viewPath` sai hoặc cố tình chứa `../` -> Hệ thống báo lỗi từ chối lưu.
 - [x] Thêm Rendering vào placeholder: Modal chỉ hiển thị các rendering hợp lệ theo cấu hình `allowedRenderings` của Placeholder item đó.
 - [x] Kéo thả sắp xếp đổi vị trí giữa các rendering trong placeholder -> Thứ tự `sortOrder` thay đổi mượt mà.
 - [x] Bấm Lưu Presentation -> Cấu hình lưu thành công vào MongoDB dưới dạng Final Layout override.
 - [x] Bấm "Reset to Standard Presentation" -> Cấu hình override bị xoá, presentation quay về trạng thái mặc định kế thừa từ Template.
-- [x] Nhánh cây `/sitecore/layout` hiển thị đúng 3 folder chính (`Layouts`, `Placeholders`, `Renderings`). Các node cốt lõi không thể đổi tên, di chuyển hoặc xoá.
+- [x] Nhánh cây `/root/layout` hiển thị đúng 3 folder chính (`Layouts`, `Placeholders`, `Renderings`). Các node cốt lõi không thể đổi tên, di chuyển hoặc xoá.
 - [x] Bộ Unit & Integration Tests đạt 100% PASS, lint 0 errors.
 
 ## Rủi ro & Giảm thiểu

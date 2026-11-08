@@ -1,6 +1,6 @@
 /**
  * ItemPicker - Modal Browser & Selector for Items (Datasource, Layouts, Renderings)
- * Reusable component for Sitecore XM Admin CMS
+ * Reusable component for Treecraft Admin CMS
  */
 window.ItemPicker = (function () {
   let modalInstance = null;

@@ -10,7 +10,7 @@ updated: 2026-11-03
 ---
 
 # GĐ 1 - Nền tảng Xác thực & Dashboard Launchpad
-> Xây dựng User/Role model, phiên làm việc MongoDB, màn hình Login Sitecore và Launchpad chia nhóm ứng dụng theo role.
+> Xây dựng User/Role model, phiên làm việc MongoDB, màn hình Login Treecraft và Launchpad chia nhóm ứng dụng theo role.
 
 ## Tài liệu cần đọc trước khi làm
 - [`docs/rules/00-workflow.md`](../rules/00-workflow.md)
@@ -24,7 +24,7 @@ updated: 2026-11-03
 Xây dựng hệ thống đăng nhập, đăng xuất, lưu trữ phiên làm việc an toàn với MongoDB Store, và màn hình điều khiển Launchpad hiển thị các ô ứng dụng (Tiles) theo phân quyền của người dùng.
 
 ## Phạm vi
-- **Làm:** Model `User`, `Role`, `LaunchpadApp`; mã hóa mật khẩu với `bcryptjs`; phiên làm việc `express-session` lưu trong MongoStore; middleware bảo vệ route `authMiddleware`; màn hình đăng nhập phong cách Sitecore; màn hình Launchpad phân nhóm các ứng dụng (Content Editing, Marketing, Media, Security, Control Panel); script tạo tài khoản `admin` mặc định (Seed data).
+- **Làm:** Model `User`, `Role`, `LaunchpadApp`; mã hóa mật khẩu với `bcryptjs`; phiên làm việc `express-session` lưu trong MongoStore; middleware bảo vệ route `authMiddleware`; màn hình đăng nhập theo chuẩn Treecraft; màn hình Launchpad phân nhóm các ứng dụng (Content Editing, Marketing, Media, Security, Control Panel); script tạo tài khoản `admin` mặc định (Seed data).
 - **Không làm:** Chưa làm phân quyền chi tiết từng nút trong cây (ACL theo Item để sang GĐ 7).
 
 ## Checklist Task
@@ -33,7 +33,7 @@ Xây dựng hệ thống đăng nhập, đăng xuất, lưu trữ phiên làm vi
 - [x] **Task 1.3:** Cấu hình session `src/config/session.js` sử dụng `express-session` và `connect-mongo`.
 - [x] **Task 1.4:** Xây dựng `authService.js` xử lý logic xác thực đăng nhập, so sánh mật khẩu băm, và cập nhật `lastLogin`.
 - [x] **Task 1.5:** Xây dựng `authController.js` và routes `src/routes/admin/authRoutes.js` (`GET /admin/login`, `POST /admin/login`, `POST /admin/logout`).
-- [x] **Task 1.6:** Thiết kế giao diện EJS đăng nhập `src/views/admin/auth/login.ejs` (logo Sitecore, form nhập username/password, thông báo lỗi).
+- [x] **Task 1.6:** Thiết kế giao diện EJS đăng nhập `src/views/admin/auth/login.ejs` (logo Treecraft, form nhập username/password, thông báo lỗi).
 - [x] **Task 1.7:** Xây dựng `authMiddleware.js` bảo vệ toàn bộ các route tiền tố `/admin/*` (chuyển hướng về `/admin/login` nếu chưa đăng nhập).
 - [x] **Task 1.8:** Xây dựng `launchpadController.js` và route `src/routes/admin/launchpadRoutes.js` (`GET /admin/launchpad`).
 - [x] **Task 1.9:** Thiết kế giao diện Launchpad `src/views/admin/launchpad/index.ejs` hiển thị danh sách ứng dụng chia nhóm (Content Editing, Media, Control Panel) dựa trên role của user hiện tại.
@@ -57,7 +57,7 @@ Xây dựng hệ thống đăng nhập, đăng xuất, lưu trữ phiên làm vi
 
 ## Thay đổi Database
 - Collections: `users`, `roles`, `launchpad_apps`, `sessions`.
-- Dữ liệu ban đầu: Tài khoản admin, các role hệ thống, danh mục 6-8 apps chuẩn Sitecore.
+- Dữ liệu ban đầu: Tài khoản admin, các role hệ thống, danh mục 6-8 apps chuẩn Treecraft.
 
 ## Definition of Done & Cách kiểm thử
 - Chạy `node src/scripts/seed-initial-data.js` tạo thành công user admin.

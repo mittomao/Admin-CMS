@@ -4,7 +4,7 @@
     <div class="row g-2 align-items-center">
       <div class="col">
         <div class="page-pretitle text-uppercase font-semibold text-slate-400">
-          Sitecore XM Architecture &bull; GĐ 7
+          Treecraft Architecture &bull; GĐ 7
         </div>
         <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
           <i class="ti ti-lock-access text-purple-600"></i>
@@ -66,7 +66,7 @@
             2. Mục nội dung cần kiểm tra (Item Path hoặc ID)
           </label>
           <div class="input-group">
-            <input type="text" class="form-control form-control-sm text-xs" id="inputTargetItem" placeholder="Nhập ID hoặc đường dẫn, ví dụ: /sitecore/content/home" value="/sitecore/content/home">
+            <input type="text" class="form-control form-control-sm text-xs" id="inputTargetItem" placeholder="Nhập ID hoặc đường dẫn, ví dụ: /root/content/home" value="/root/content/home">
             <button class="btn btn-sm btn-outline-secondary text-xs" type="button" id="btnBrowseItem">
               <i class="ti ti-search"></i>
             </button>
@@ -85,13 +85,13 @@
       <!-- Quick Item Badges -->
       <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 d-flex flex-wrap align-items-center gap-2">
         <span class="text-[11px] font-semibold text-slate-400 text-uppercase">Mục gợi ý nhanh:</span>
-        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore">/sitecore</button>
-        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/content">/sitecore/content</button>
-        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/content/home">/sitecore/content/home</button>
-        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/layout">/sitecore/layout</button>
-        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/templates">/sitecore/templates</button>
-        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/media library">/sitecore/media library</button>
-        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/system">/sitecore/system</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/root">/root</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/root/content">/root/content</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/root/content/home">/root/content/home</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/root/layout">/root/layout</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/root/templates">/root/templates</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/root/media library">/root/media library</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/root/system">/root/system</button>
       </div>
     </div>
   </div>
@@ -132,7 +132,7 @@
 
     <!-- Rule Reference Footer -->
     <div class="card-footer bg-slate-50/50 dark:bg-slate-900 p-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 space-y-1">
-      <div class="font-semibold text-slate-700 dark:text-slate-300">Thứ tự ưu tiên phân giải quyền (Sitecore XM &bull; DEC-042):</div>
+      <div class="font-semibold text-slate-700 dark:text-slate-300">Thứ tự ưu tiên phân giải quyền (Treecraft ACL &bull; DEC-042):</div>
       <div class="d-flex flex-wrap gap-x-4 gap-y-1">
         <span>1. <strong>Gần hơn thắng xa hơn:</strong> Quyền trực tiếp trên Item thắng quyền kế thừa từ mục cha.</span>
         <span>2. <strong>User thắng Role:</strong> Tại cùng một mức cây, quy tắc đặt riêng cho User thắng quy tắc của Role.</span>
@@ -200,12 +200,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // 1. Resolve Item ID if path was given
       let itemId = target;
       if (target.startsWith('/')) {
-        const itemRes = await fetch(`/api/items?path=${encodeURIComponent(target)}`);
+        const itemRes = await fetch(`/api/items/resolve-path?path=${encodeURIComponent(target)}`);
         const itemJson = await itemRes.json();
-        if (!itemJson || !itemJson._id) {
-          throw new Error(`Không tìm thấy Item tại đường dẫn "${target}"`);
+        const resolvedId = itemJson._id || (itemJson.data && itemJson.data._id);
+        if (!resolvedId) {
+          throw new Error(itemJson.message || `Không tìm thấy Item tại đường dẫn "${target}"`);
         }
-        itemId = itemJson._id;
+        itemId = resolvedId;
       }
 
       // 2. Fetch Access Explanation

@@ -1,13 +1,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><%= (fields && (fields.PageTitle || fields.HeroTitle || fields.Title)) || (item && (item.displayName || item.name)) || 'Sitecore XM Website' %></title>
+<title><%= (fields && (fields.PageTitle || fields.HeroTitle || fields.Title)) || (item && (item.displayName || item.name)) || 'Treecraft Website' %></title>
 <% if (fields && fields.MetaDescription) { %>
   <meta name="description" content="<%= fields.MetaDescription %>">
 <% } %>
-<link rel="canonical" href="<%= site.host ? 'http://' + site.host + (item && item.path ? item.path.replace(/^\/sitecore\/content\/Home/i, '') || '/' : '/') : '/' %>">
+<link rel="canonical" href="<%= site.host ? 'http://' + site.host + (item && item.path ? item.path.replace(/^\/root\/content\/Home/i, '') || '/' : '/') : '/' %>">
 
 <!-- Open Graph SEO -->
-<meta property="og:title" content="<%= (fields && (fields.PageTitle || fields.HeroTitle || fields.Title)) || (item && (item.displayName || item.name)) || 'Sitecore XM Website' %>">
+<meta property="og:title" content="<%= (fields && (fields.PageTitle || fields.HeroTitle || fields.Title)) || (item && (item.displayName || item.name)) || 'Treecraft Website' %>">
 <% if (fields && fields.MetaDescription) { %>
   <meta property="og:description" content="<%= fields.MetaDescription %>">
 <% } %>

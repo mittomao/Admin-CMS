@@ -47,7 +47,7 @@ describe('Template Manager API & SSR Endpoints', () => {
     const passwordHash = await User.hashPassword('admin123');
     await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       passwordHash,
       fullName: 'System Admin',
       roles: [adminRole._id],
@@ -104,12 +104,12 @@ describe('Template Manager API & SSR Endpoints', () => {
 
     // 5. Items
     rootItem = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
+      name: 'root',
+      displayName: 'root',
       templateId: systemTemplate._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore',
+      path: '/root',
       sortOrder: 10,
     });
 
@@ -119,7 +119,7 @@ describe('Template Manager API & SSR Endpoints', () => {
       templateId: articleTemplate._id,
       parentId: rootItem._id,
       ancestors: [rootItem._id],
-      path: '/sitecore/first-article',
+      path: '/root/first-article',
       sortOrder: 100,
       fields: {
         title: 'Custom Title Override',
@@ -139,7 +139,7 @@ describe('Template Manager API & SSR Endpoints', () => {
   // ==========================================
   test('GET /admin/template-manager redirects 302 to Content Editor templates node', async () => {
     const res = await agent.get('/admin/template-manager').expect(302);
-    expect(res.headers.location).toContain('/admin/content-editor?path=/sitecore/templates');
+    expect(decodeURIComponent(res.headers.location)).toContain('/admin/content-editor?path=/root/templates');
   });
 
   test('GET /admin/template-manager/:id redirects 302 to Content Editor with template item', async () => {

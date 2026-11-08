@@ -88,8 +88,8 @@ async function runMigration() {
       const currentIcon = item.icon || '';
       let targetIcon = null;
 
-      // Special case: /sitecore/content
-      if (item.path === '/sitecore/content') {
+      // Special case: /root/content
+      if (item.path === '/root/content') {
         targetIcon = 'content-root';
       } else if (isFolderItem(item, item.templateId)) {
         targetIcon = 'folder';

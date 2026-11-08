@@ -10,6 +10,7 @@ const { resolveRichText } = require('../utils/richTextHelper');
 const { AppError, NotFoundError } = require('../utils/errors');
 const logger = require('../utils/logger');
 const env = require('../config/env');
+const branding = require('../config/branding');
 
 const VIEWS_SITE_DIR = path.resolve(__dirname, '../views/site');
 
@@ -118,7 +119,7 @@ class SiteRenderer {
 
     const pageFields = resolvedFieldsData.fields || {};
 
-    // 3. Resolve Navigation Items (Child pages of Home or /sitecore/content)
+    // 3. Resolve Navigation Items (Child pages of Home or /root/content)
     const navItems = await this.resolveNavItems(isPreview);
 
     // 4. View Helpers
@@ -145,8 +146,8 @@ class SiteRenderer {
       },
       navItems: () => navItems,
       site: {
-        name: 'Sitecore XM Website',
-        startItem: '/sitecore/content/Home',
+        name: branding.PROJECT_NAME,
+        startItem: branding.PATHS.START_ITEM,
         host: options.req?.headers?.host || 'localhost:4000',
       },
       lang: code,
@@ -237,10 +238,10 @@ class SiteRenderer {
     // 8. Inject Preview Banner for Admin Preview Mode
     if (isPreview) {
       const bannerHtml = `
-        <div id="sitecorePreviewBanner" style="position: sticky; top: 0; z-index: 999999; background: #0f172a; color: #f8fafc; padding: 10px 16px; border-bottom: 3px solid #ef4444; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <div id="treecraftPreviewBanner" style="position: sticky; top: 0; z-index: 999999; background: #0f172a; color: #f8fafc; padding: 10px 16px; border-bottom: 3px solid #ef4444; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="background: #ef4444; color: #fff; font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">Preview</span>
-            <strong>Sitecore XM Preview Mode</strong>
+            <strong>${branding.PROJECT_NAME} Preview Mode</strong>
             <span style="background: #334155; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #cbd5e1;">Master Store</span>
             <span style="color: #94a3b8; font-size: 11px;">${item.path} [${code.toUpperCase()}]</span>
           </div>
@@ -300,9 +301,9 @@ class SiteRenderer {
     try {
       let homeNode = null;
       if (isPreview) {
-        homeNode = await itemService.getByPath('/sitecore/content/Home');
+        homeNode = (await itemService.getByPath(branding.PATHS.HOME)) || (await itemService.getByPath('/root/content/Home'));
       } else {
-        homeNode = await webItemService.getByPath('/sitecore/content/Home');
+        homeNode = (await webItemService.getByPath(branding.PATHS.HOME)) || (await webItemService.getByPath('/root/content/Home'));
       }
 
       if (!homeNode) return [];

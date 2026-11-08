@@ -8,7 +8,7 @@
 - **Trạng thái:** Bị thay thế một phần (Partially Superseded by DEC-031)
 
 ## 1. Bối cảnh
-Theo yêu cầu chuyển đổi kiến trúc sang Headless CMS hỗ trợ React frontend theo chuẩn Sitecore JSS, hệ thống cần bổ sung năng lực quản trị Layout, Rendering, Placeholder Settings và Layout Service. Cần xác định vị trí của giai đoạn này trong lộ trình phát triển sao cho hợp lý và tối ưu nhất về mặt phụ thuộc kỹ thuật.
+Theo yêu cầu chuyển đổi kiến trúc sang Headless CMS hỗ trợ React frontend theo chuẩn Treecraft JSS, hệ thống cần bổ sung năng lực quản trị Layout, Rendering, Placeholder Settings và Layout Service. Cần xác định vị trí của giai đoạn này trong lộ trình phát triển sao cho hợp lý và tối ưu nhất về mặt phụ thuộc kỹ thuật.
 
 ## 2. Quyết định
 - Đặt Giai đoạn Presentation là **Giai đoạn 6 (GĐ 6)**, ngay sau Media Library (GĐ 5) và trước Bảo mật nâng cao (GĐ 7).

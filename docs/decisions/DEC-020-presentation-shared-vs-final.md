@@ -8,7 +8,7 @@
 - **Trạng thái:** Bị thay thế (Superseded by DEC-031, DEC-032)
 
 ## 1. Bối cảnh
-Trong Sitecore, trang web thường có các component dùng chung cho mọi ngôn ngữ và mọi phiên bản (ví dụ Header, Footer, cấu trúc Grid layout), nhưng cũng có những component hoặc thứ tự component chỉ dành riêng cho một ngôn ngữ cụ thể (ví dụ banner quảng cáo tiếng Việt khác banner tiếng Anh) hoặc chỉ áp dụng cho một version đang dự thảo (Draft version). Cần một kiến trúc lưu trữ tách bạch hai nhu cầu này.
+Trong Treecraft, trang web thường có các component dùng chung cho mọi ngôn ngữ và mọi phiên bản (ví dụ Header, Footer, cấu trúc Grid layout), nhưng cũng có những component hoặc thứ tự component chỉ dành riêng cho một ngôn ngữ cụ thể (ví dụ banner quảng cáo tiếng Việt khác banner tiếng Anh) hoặc chỉ áp dụng cho một version đang dự thảo (Draft version). Cần một kiến trúc lưu trữ tách bạch hai nhu cầu này.
 
 ## 2. Quyết định
 Phân chia cấu trúc Presentation của Item thành hai tầng:

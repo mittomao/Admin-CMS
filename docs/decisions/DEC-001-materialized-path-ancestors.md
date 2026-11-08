@@ -9,7 +9,7 @@ Kết hợp 3 trường trên mỗi Item: `parentId` (ObjectId), `path` (String 
 
 ## Lý do
 - `parentId` cho phép lazy loading con trực tiếp với index $O(\log N)$.
-- `path` cho phép query cả nhánh cây bằng regex prefix (`^/sitecore/content/home`).
+- `path` cho phép query cả nhánh cây bằng regex prefix (`^/root/content/home`).
 - `ancestors` cho phép query toàn bộ tổ tiên bằng `$in` trong 1 query duy nhất, không cần đệ quy.
 
 ## Hệ quả

@@ -37,6 +37,8 @@ router.use((req, res, next) => {
 });
 
 // Read operations
+router.get('/resolve-path', contentEditorController.resolvePath);
+router.get('/', contentEditorController.resolvePath);
 router.get('/search', contentEditorController.searchItems);
 router.get('/publish-status-batch', async (req, res, next) => {
   try {

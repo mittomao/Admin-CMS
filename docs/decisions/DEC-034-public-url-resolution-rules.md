@@ -23,16 +23,16 @@ Khi chuyển đổi từ Headless CMS (Next.js/React gọi REST API JSON) sang k
 - Các item chưa publish hoặc đang ở trạng thái draft/workflow chưa được duyệt sẽ không tồn tại hoặc không ở trạng thái khả dụng trong `items_web`, hệ thống sẽ trả về mã lỗi HTTP `404 Not Found`.
 
 ### 2.2. Điểm bắt đầu (Start Item) và Trang chủ (`/`)
-- Mặc định, cây nội dung được tổ chức tại `/sitecore/content`.
-- Node **`Home`** (`/sitecore/content/Home`) được quy định là **Start Item** của trang web mặc định.
+- Mặc định, cây nội dung được tổ chức tại `/root/content`.
+- Node **`Home`** (`/root/content/Home`) được quy định là **Start Item** của trang web mặc định.
 - Khi người dùng gửi request tới root `/` (hoặc `/vi`), URL resolver tự động phân giải thành item `Home`.
 
 ### 2.3. Quy tắc ánh xạ URL Segment sang Item Path
 1. **Dùng Item Name làm URL Segment:**
    - Mỗi segment trên URL path tương ứng với một cấp con phân cấp trong cây nội dung bắt đầu từ `Home`.
    - Ví dụ:
-     - `/` $\rightarrow$ `/sitecore/content/Home`
-     - `/about-us` $\rightarrow$ Item con của `Home` có name khớp với `about-us` (hoặc item tại `/sitecore/content/Home/About-Us` / `/sitecore/content/About-Us` tùy cấu hình site root).
+     - `/` $\rightarrow$ `/root/content/Home`
+     - `/about-us` $\rightarrow$ Item con của `Home` có name khớp với `about-us` (hoặc item tại `/root/content/Home/About-Us` / `/root/content/About-Us` tùy cấu hình site root).
      - `/about-us/team` $\rightarrow$ Item con `Team` nằm dưới item `About-Us`.
 2. **Không phân biệt hoa thường (Case-insensitive) & Chuẩn hóa:**
    - URL segment được chuẩn hóa: `lowercase`, loại bỏ dấu tiếng Việt (kebab-case) nếu cần so khớp slug hoặc so khớp trực tiếp item name không phân biệt hoa thường (`{ $regex: new RegExp('^' + segment + '$', 'i') }`).
@@ -54,7 +54,7 @@ Khi chuyển đổi từ Headless CMS (Next.js/React gọi REST API JSON) sang k
 2. Tách segments: ['about-us', 'team']
        │
        ▼
-3. Khởi tạo parent = Start Item ('/sitecore/content/Home')
+3. Khởi tạo parent = Start Item ('/root/content/Home')
        │
        ▼
 4. Lặp qua từng segment:
@@ -74,7 +74,7 @@ Khi chuyển đổi từ Headless CMS (Next.js/React gọi REST API JSON) sang k
 
 ## 4. Ưu và nhược điểm
 ### Ưu điểm
-- Rõ ràng, tự nhiên, bám sát mô hình phân cấp Sitecore Content Tree.
+- Rõ ràng, tự nhiên, bám sát mô hình phân cấp Treecraft Content Tree.
 - Không cần quản lý bảng ánh xạ routing riêng phức tạp, không sợ lệch slug khi di chuyển cây thư mục.
 - Tự động hỗ trợ URL lồng nhau không giới hạn cấp độ (`/parent/child/grandchild`).
 

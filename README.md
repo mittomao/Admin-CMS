@@ -1,6 +1,6 @@
-# Sitecore XM-like CMS (Node.js + Express + EJS + MongoDB)
+# Treecraft CMS (Node.js + Express + EJS + MongoDB)
 
-Hệ thống Quản trị Nội dung Phân cấp theo Phong cách Sitecore XM (Experience Management).
+Hệ thống Quản trị Nội dung Phân cấp Treecraft CMS (Mô hình Item phân cấp).
 
 ## 1. Yêu cầu môi trường
 - **Node.js**: v20+ LTS (khuyên dùng Node 20 hoặc cao hơn)
@@ -18,7 +18,7 @@ Tạo file `.env` từ `.env.example`:
 ```bash
 cp .env.example .env
 ```
-Điều chỉnh cấu hình nếu cần (mặc định chạy tại port `3000` và MongoDB `mongodb://localhost:27017/sitecore_cms_master`).
+Điều chỉnh cấu hình nếu cần (mặc định chạy tại port `3000` và MongoDB `mongodb://localhost:27017/treecraft_cms_master`).
 
 ### Bước 3: Chạy ứng dụng
 

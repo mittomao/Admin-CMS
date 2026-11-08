@@ -12,11 +12,11 @@ Trong kiến trúc Server-Side EJS, cấu trúc Presentation được tinh gọn
 presentation: {
   // 1. Shared Layout: Dùng chung cho mọi ngôn ngữ và mọi phiên bản của Item
   shared: {
-    layoutId: ObjectId("64a1b2c3d4e5f67890123910"), // Tham chiếu item Layout trong /sitecore/layout/Layouts
+    layoutId: ObjectId("64a1b2c3d4e5f67890123910"), // Tham chiếu item Layout trong /root/layout/Layouts
     renderings: [
       {
         uid: "b8a5d448-6a3f-4e09-9154-1b12b5f63d33", // UUID v4 bất biến cho mỗi rendering instance
-        renderingId: ObjectId("64a1b2c3d4e5f67890123920"), // Tham chiếu item Rendering trong /sitecore/layout/Renderings
+        renderingId: ObjectId("64a1b2c3d4e5f67890123920"), // Tham chiếu item Rendering trong /root/layout/Renderings
         placeholder: "maincontent",  // Khóa placeholder (header, maincontent, footer...)
         sortOrder: 100,              // Thứ tự render tuần tự trong placeholder
         datasourceId: null,          // Tùy chọn: ID item nguồn dữ liệu (nếu null, component đọc field trực tiếp từ chính page item)
@@ -53,7 +53,7 @@ presentation: {
 ---
 
 ## 2. Standard Presentation trên `Template`
-Được định nghĩa trong Schema `Template` (tại `src/models/Template.js`) dành cho các **Page Template** tại nhánh `/sitecore/templates/Project/Pages/`:
+Được định nghĩa trong Schema `Template` (tại `src/models/Template.js`) dành cho các **Page Template** tại nhánh `/root/templates/Project/Pages/`:
 
 ```javascript
 presentation: {
@@ -80,9 +80,9 @@ presentation: {
 ```
 
 ### Mối quan hệ Rendering $\leftrightarrow$ Component Template & Cơ chế Suy ra Trường (DEC-036):
-- Mỗi **Component Template** (nằm tại `/sitecore/templates/Feature/Components/`, ví dụ `HeroBanner`, `Introduction`) định nghĩa các trường nội dung riêng của component đó.
-- Mỗi **Rendering Item** (nằm tại `/sitecore/layout/Renderings/`) gắn trực tiếp với một Component Template thông qua thuộc tính **`componentTemplate`**.
-- Mỗi **Page Template** (nằm tại `/sitecore/templates/Project/Pages/`, ví dụ `Home`, `About us`):
+- Mỗi **Component Template** (nằm tại `/root/templates/Feature/Components/`, ví dụ `HeroBanner`, `Introduction`) định nghĩa các trường nội dung riêng của component đó.
+- Mỗi **Rendering Item** (nằm tại `/root/layout/Renderings/`) gắn trực tiếp với một Component Template thông qua thuộc tính **`componentTemplate`**.
+- Mỗi **Page Template** (nằm tại `/root/templates/Project/Pages/`, ví dụ `Home`, `About us`):
   1. Cấu hình **Standard Presentation**: Chọn layout (`HomeLayout`) và các rendering (`HeroBanner`, `Introduction`, `ImageText`) gắn vào các placeholder (`maincontent`).
   2. **Không** cấu hình Base Templates trỏ tới Component Templates. Page Template hoàn toàn độc lập với các component.
   3. Khi biên tập viên tạo một trang mới hoặc mở trang trên Content Editor, hàm `templateService.resolveEffectiveTemplate` tự động suy ra danh sách trường của tất cả component xuất hiện trong Presentation và nhóm thành các Section riêng biệt (`HeroBanner`, `Introduction`...) trên form.
@@ -90,11 +90,11 @@ presentation: {
 
 ---
 
-## 3. Cấu trúc Cây `/sitecore/layout/` (Đúng 3 Thư mục con)
-Nhánh `/sitecore/layout/` được chuẩn hóa thành **đúng 3 thư mục con bất biến**:
+## 3. Cấu trúc Cây `/root/layout/` (Đúng 3 Thư mục con)
+Nhánh `/root/layout/` được chuẩn hóa thành **đúng 3 thư mục con bất biến**:
 
 ```text
-/sitecore/layout/
+/root/layout/
 ├── Layouts/              # Chứa các item Layout
 │   └── HomeLayout        # viewPath: "layouts/HomeLayout.ejs"
 ├── Placeholders/         # Chứa các item Placeholder giữ chỗ
@@ -115,7 +115,7 @@ Nhánh `/sitecore/layout/` được chuẩn hóa thành **đúng 3 thư mục co
 ---
 
 ## 4. Các Template Hệ thống cho Presentation (System Templates)
-Được định nghĩa tại nhánh cây `/sitecore/templates/System/Layout/`:
+Được định nghĩa tại nhánh cây `/root/templates/System/Layout/`:
 
 1. **Template `Layout`:**
    - Trường `name`, `displayName`.
@@ -128,10 +128,10 @@ Nhánh `/sitecore/layout/` được chuẩn hóa thành **đúng 3 thư mục co
 3. **Template `Rendering`:**
    - Trường `name`, `displayName`, `icon`.
    - Trường **`viewPath`** (Single-Line Text, bắt buộc): Đường dẫn tương đối tới file EJS tính từ `src/views/site/` (ví dụ `components/HeroBanner.ejs`).
-   - Trường **`componentTemplate`** (ObjectId, bắt buộc): Trỏ tới Template chứa các trường nội dung tương ứng của component tại `/sitecore/templates/Feature/Components` (sử dụng ItemPicker hoặc select picker lọc theo gốc).
+   - Trường **`componentTemplate`** (ObjectId, bắt buộc): Trỏ tới Template chứa các trường nội dung tương ứng của component tại `/root/templates/Feature/Components` (sử dụng ItemPicker hoặc select picker lọc theo gốc).
    - Trường `parametersTemplate` (ObjectId, tùy chọn): Trỏ tới Template định nghĩa tham số giao diện (ví dụ màu nền, căn lề).
 4. **Template `Layout Folder` & `Rendering Folder` & `Placeholder Folder`:**
-   - Dùng để tổ chức cây thư mục con phân cấp dưới `/sitecore/layout/`.
+   - Dùng để tổ chức cây thư mục con phân cấp dưới `/root/layout/`.
 
 ---
 
@@ -200,7 +200,7 @@ Mỗi file component EJS (ví dụ `src/views/site/components/HeroBanner.ejs`) n
 
 ## 6. Quy tắc Toàn vẹn & Bảo mật `viewPath`
 1. **Định danh Rendering Instance bằng UUID v4:** Mọi rendering instance bắt buộc mang một `uid` chuẩn **UUID v4** duy nhất, không đổi khi sắp xếp hay di chuyển giữa các placeholder.
-2. **Bảo vệ Node Hệ thống:** Ba node `/sitecore/layout/Layouts`, `/sitecore/layout/Placeholders`, `/sitecore/layout/Renderings` là node hệ thống bất biến, cấm xóa, đổi tên hoặc di chuyển.
+2. **Bảo vệ Node Hệ thống:** Ba node `/root/layout/Layouts`, `/root/layout/Placeholders`, `/root/layout/Renderings` là node hệ thống bất biến, cấm xóa, đổi tên hoặc di chuyển.
 3. **Bảo mật `viewPath` (DEC-033):**
    - Chỉ chấp nhận đường dẫn tương đối nằm bên trong thư mục `src/views/site/`.
    - Chặn tuyệt đối ký tự `..` và bắt buộc có đuôi mở rộng `.ejs`.

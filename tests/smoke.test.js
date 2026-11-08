@@ -16,10 +16,10 @@ describe('Smoke Tests', () => {
     expect(res.headers['content-type']).toContain('text/html');
   });
 
-  it('GET /admin/login should return 200 with Sitecore Login page', async () => {
+  it('GET /admin/login should return 200 with Treecraft Login page', async () => {
     const res = await request(app).get('/admin/login');
     expect(res.status).toBe(200);
-    expect(res.text).toContain('Sitecore Experience Management');
+    expect(res.text).toContain('Treecraft Content Management');
     expect(res.text).toContain('User name');
   });
 

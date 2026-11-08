@@ -6,6 +6,7 @@ const PublishedItem = require('../../models/PublishedItem');
 const { NotFoundError } = require('../../utils/errors');
 const logger = require('../../utils/logger');
 const env = require('../../config/env');
+const branding = require('../../config/branding');
 
 const VIEWS_SITE_DIR = path.resolve(__dirname, '../../views/site');
 
@@ -147,8 +148,9 @@ class SiteController {
       const baseUrl = `${protocol}://${host}`;
 
       // Query all published pages from Web Store
+      const contentPattern = new RegExp(`^(${branding.PATHS.CONTENT}|/root/content)`, 'i');
       const publishedPages = await PublishedItem.find({
-        path: { $regex: /^\/sitecore\/content/i },
+        path: { $regex: contentPattern },
         isDeleted: { $ne: true },
       }).lean();
 
@@ -157,7 +159,11 @@ class SiteController {
       ];
 
       for (const item of publishedPages) {
-        if (item.path === '/sitecore/content/Home' || item.path === '/sitecore/content') continue;
+        const pLower = (item.path || '').toLowerCase();
+        if (pLower === branding.PATHS.HOME.toLowerCase() ||
+            pLower === branding.PATHS.CONTENT.toLowerCase() ||
+            pLower === '/root/content/home' ||
+            pLower === '/root/content') continue;
         const slug = item.name.toLowerCase().replace(/\s+/g, '-');
         const lastMod = item.publishedAt ? new Date(item.publishedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
 

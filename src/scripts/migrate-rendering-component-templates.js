@@ -30,7 +30,7 @@ async function runMigration() {
 
   const shouldConnect = mongoose.connection.readyState === 0;
   if (shouldConnect) {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/sitecore_cms';
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/treecraft_cms';
     console.log(`Connecting to MongoDB at: ${mongoUri}...`);
     await mongoose.connect(mongoUri);
     console.log('Connected successfully.\n');
@@ -42,7 +42,7 @@ async function runMigration() {
     const compTemplates = await Template.find({
       isSystem: false,
       $or: [
-        { path: { $regex: '^/sitecore/templates/Feature/Components', $options: 'i' } },
+        { path: { $regex: '^/root/templates/Feature/Components', $options: 'i' } },
         { name: { $in: ['HeroBanner', 'Introduction', 'ImageText'] } },
       ],
     }).lean();
@@ -62,7 +62,7 @@ async function runMigration() {
     const renderingQuery = {
       deleted: false,
       $or: [
-        { path: { $regex: '^/sitecore/layout/renderings', $options: 'i' } },
+        { path: { $regex: '^/root/layout/renderings', $options: 'i' } },
         ...(renderingTemplate ? [{ templateId: renderingTemplate._id }] : []),
       ],
     };
@@ -132,7 +132,7 @@ async function runMigration() {
     const pageTemplates = await Template.find({
       isSystem: false,
       $or: [
-        { path: { $regex: '^/sitecore/templates/Project/Pages', $options: 'i' } },
+        { path: { $regex: '^/root/templates/Project/Pages', $options: 'i' } },
         { name: { $in: ['Home', 'AboutUs', 'About us', 'About-Us'] } },
       ],
     });
@@ -161,7 +161,7 @@ async function runMigration() {
     console.log('\n--- BƯỚC 4: Kiểm tra Toàn vẹn Dữ liệu Items ---');
     const sampleItems = await Item.find({
       deleted: false,
-      path: { $in: ['/sitecore/content/home', '/sitecore/content/about-us'] },
+      path: { $in: ['/root/content/home', '/root/content/about-us'] },
     });
 
     for (const item of sampleItems) {

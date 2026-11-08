@@ -1,6 +1,6 @@
 /**
  * Database Migration Script:
- * Seed and ensure system template 'Standard Template' at /sitecore/templates/System/Standard Template.
+ * Seed and ensure system template 'Standard Template' at /root/templates/System/Standard Template.
  * Automatically migrates existing 'Sample Component' if present.
  *
  * Usage:
@@ -30,7 +30,7 @@ async function runMigration() {
 
   const shouldConnect = mongoose.connection.readyState === 0;
   if (shouldConnect) {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/sitecore_cms';
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/treecraft_cms';
     console.log(`Connecting to MongoDB at: ${mongoUri}...`);
     await mongoose.connect(mongoUri);
     console.log('Connected successfully.\n');
@@ -42,7 +42,7 @@ async function runMigration() {
     let standardTpl = await Template.findOne({
       $or: [{ name: 'Standard Template' }, { name: 'Sample Component' }],
     });
-    const expectedPath = '/sitecore/templates/System/Standard Template';
+    const expectedPath = '/root/templates/System/Standard Template';
 
     if (!standardTpl) {
       console.log('  -> Chưa có template [Standard Template]. Tiến hành tạo mới...');
@@ -96,11 +96,11 @@ async function runMigration() {
 
     // 2. Check or create Item node in Content Tree
     console.log('\n--- BƯỚC 2: Kiểm tra / Đồng bộ Item [Standard Template] trong Cây Nội Dung ---');
-    const systemFolder = await Item.findOne({ path: '/sitecore/templates/System', deleted: false });
+    const systemFolder = await Item.findOne({ path: '/root/templates/System', deleted: false });
     const templateDefTpl = await Template.findOne({ name: 'Template' });
 
     if (!systemFolder) {
-      console.log('  [CẢNH BÁO] Không tìm thấy node thư mục /sitecore/templates/System.');
+      console.log('  [CẢNH BÁO] Không tìm thấy node thư mục /root/templates/System.');
     } else {
       let standardItem = await Item.findById(standardTpl._id);
       if (!standardItem) {

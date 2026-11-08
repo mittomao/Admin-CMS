@@ -7,7 +7,7 @@
 ---
 
 ## 1. Tổng quan Giai đoạn
-- **Mục tiêu:** Xây dựng Media Library dạng cây phân cấp (Materialized Path `/sitecore/media library`), hỗ trợ tải lên đa tệp an toàn (quét Magic Bytes nhị phân, khử độc XML SVG), tự động nén ảnh client trước khi truyền mạng và sinh thumbnail WebP bằng thư viện Sharp; cung cấp giao diện Standalone Page (`/admin/media-library`) cùng Media Picker Modal tương tác hai chiều; tích hợp hoàn chỉnh trường `Image` và trình soạn thảo `Rich Text` (TinyMCE 6 Community Edition via CDN).
+- **Mục tiêu:** Xây dựng Media Library dạng cây phân cấp (Materialized Path `/root/media library`), hỗ trợ tải lên đa tệp an toàn (quét Magic Bytes nhị phân, khử độc XML SVG), tự động nén ảnh client trước khi truyền mạng và sinh thumbnail WebP bằng thư viện Sharp; cung cấp giao diện Standalone Page (`/admin/media-library`) cùng Media Picker Modal tương tác hai chiều; tích hợp hoàn chỉnh trường `Image` và trình soạn thảo `Rich Text` (TinyMCE 6 Community Edition via CDN).
 - **Tài liệu tham chiếu:** Đã phân tích đối chiếu toàn bộ 9 tài liệu từ `/docs/modules/media-editor/`, ban hành quyết định kiến trúc [`DEC-028`](../decisions/DEC-028-media-richtext-reference.md) và bảng ánh xạ [`phase-05-reference-mapping.md`](../phases/phase-05-reference-mapping.md).
 - **Phạm vi hoàn thành:**
   - Cài đặt 2 thư viện đã phê duyệt: `multer@^1.4.5-lts.1` và `sharp@^0.33.5`.
@@ -39,7 +39,7 @@
 - [x] **2.3. Model, Index & Seed Data:**
   - [x] Tạo `src/models/Media.js` (name, displayName, isFolder, parentId, ancestors, path, fileDetails, checksum, dimensions, altText Map đa ngôn ngữ, isDeleted).
   - [x] Thiết lập chỉ mục hiệu năng cao (path unique, parentId, ancestors, checksum, text search).
-  - [x] Cập nhật `src/scripts/seed-initial-data.js` seed node gốc `/sitecore/media library`, các thư mục mẫu `banners`, `editor-uploads` và link Launchpad `/admin/media-library`.
+  - [x] Cập nhật `src/scripts/seed-initial-data.js` seed node gốc `/root/media library`, các thư mục mẫu `banners`, `editor-uploads` và link Launchpad `/admin/media-library`.
 - [x] **2.4. Bảo mật & Xác thực Tệp tin (Security & Sniffer):**
   - [x] Xây dựng `src/utils/fileSniffer.js` nhận diện Magic Bytes (JPEG, PNG, GIF, WebP, PDF) và text XML SVG.
   - [x] Xây dựng `src/middlewares/uploadMiddleware.js` (Multer memory storage 10MB, quét Magic Bytes, khử độc thẻ script trong SVG bằng `sanitize-html`).
@@ -122,7 +122,7 @@ $ npm run lint
 1. **[`DEC-028: Áp dụng và Điều chỉnh Tài liệu Tham chiếu Media Library & Rich Text Editor`](../decisions/DEC-028-media-richtext-reference.md):**
    - **Lưu trữ Cục bộ có Trừu tượng hóa:** Thay vì chỉ hỗ trợ Cloudinary như project tham chiếu, hệ thống xây dựng interface `StorageProvider` với cài đặt mặc định `LocalStorageProvider` và thư viện xử lý ảnh hàng đầu `sharp`, sẵn sàng cắm Cloudinary/S3 qua biến môi trường mà không cần sửa code nghiệp vụ.
    - **Bảo mật Tệp nghiêm ngặt:** Bổ sung cơ chế Magic Bytes nhị phân cho 5 định dạng phổ biến và SVG Sanitizer cho ảnh vector.
-   - **Mô hình Dữ liệu MongoDB Độc lập:** Thay vì phụ thuộc vào Search API của nhà cung cấp bên ngoài để lấy danh sách tệp/thư mục, hệ thống quản lý trọn vẹn cây thư mục và metadata trong MongoDB Collection `media` với Materialized Path `/sitecore/media library`.
+   - **Mô hình Dữ liệu MongoDB Độc lập:** Thay vì phụ thuộc vào Search API của nhà cung cấp bên ngoài để lấy danh sách tệp/thư mục, hệ thống quản lý trọn vẹn cây thư mục và metadata trong MongoDB Collection `media` với Materialized Path `/root/media library`.
    - **Liên kết Bền vững trong Rich Text:** Sử dụng thuộc tính `data-media-id` và `data-item-id` trong thẻ `<img>` và `<a>`, hỗ trợ hàm `resolveRichText` giải quyết URL thời gian thực, ngăn ngừa triệt để lỗi gãy liên kết (broken links) khi item hoặc file media được đổi tên hoặc di chuyển thư mục.
 
 ---

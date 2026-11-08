@@ -472,7 +472,7 @@ export class MediaBrowser {
 
     for (const f of this.folderTree) {
       this.folderMap.set(f._id, { ...f, children: [] });
-      if (!f.parentId || f.path === '/sitecore/media library') {
+      if (!f.parentId || f.path === '/root/media library' || f.path === '/root/media library') {
         rootNode = this.folderMap.get(f._id);
       }
     }
@@ -494,7 +494,7 @@ export class MediaBrowser {
 
     let rootNode = null;
     for (const [, node] of this.folderMap) {
-      if (!node.parentId || node.path === '/sitecore/media library') {
+      if (!node.parentId || node.path === '/root/media library' || node.path === '/root/media library') {
         rootNode = node;
         break;
       }
@@ -563,7 +563,7 @@ export class MediaBrowser {
   }
 
   renderFolderNode(node, depth = 0) {
-    const isRoot = !node.parentId || node.path === '/sitecore/media library';
+    const isRoot = !node.parentId || node.path === '/root/media library' || node.path === '/root/media library';
     const folderId = isRoot ? '' : node._id;
     const isActive = (this.currentFolderId || '') === folderId;
     const hasChildren = node.children && node.children.length > 0;
@@ -649,7 +649,7 @@ export class MediaBrowser {
     let html = '';
     crumbs.forEach((crumb, index) => {
       const isLast = index === crumbs.length - 1;
-      const isRoot = !crumb.parentId || crumb.path === '/sitecore/media library';
+      const isRoot = !crumb.parentId || crumb.path === '/root/media library' || crumb.path === '/root/media library';
       const cId = isRoot ? '' : (crumb._id || '');
       const label = isRoot ? 'Media Library' : (crumb.displayName || crumb.name);
 

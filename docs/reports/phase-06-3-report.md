@@ -21,13 +21,13 @@ Toàn bộ yêu cầu của giai đoạn 6.3 đã được hiện thực hóa đ
    - Thêm các biến `--color-section-bar: #474747`, `--color-section-accent: #d93829`, `--color-section-body-bg: #f4f4f4` vào `public/css/variables.css`.
    - Định nghĩa component `.sc-section-bar` (thanh xám đậm, vạch đỏ trái, chevron toggle) và `.sc-quick-info` trong `public/css/components.css`.
 3. **Partial EJS dùng chung:**
-   - Tạo `src/views/partials/quick-info.ejs` hiển thị đúng 6 dòng theo thứ tự chuẩn Sitecore:
+   - Tạo `src/views/partials/quick-info.ejs` hiển thị đúng 6 dòng theo thứ tự chuẩn Treecraft:
      - **Item ID:** `{GUID-VIẾT-HOA}` (cho MongoDB ObjectId: `{_ID_UPPERCASE}`) kèm nút copy.
      - **Item name:** Tên item an toàn escape HTML.
      - **Item path:** Materialized path kèm nút copy.
      - **Template:** Đường dẫn template kèm liên kết mở template trên Content Tree và `{TEMPLATE_ID}`.
      - **Created from:** Item nguồn kèm `{ID}` hoặc `[unknown]`.
-     - **Item owner:** `domain\username` (mặc định `sitecore\username`) hoặc `[unknown]`.
+     - **Item owner:** `domain\username` (mặc định `treecraft\username`) hoặc `[unknown]`.
    - Cơ chế thu gọn/mở rộng lưu trạng thái vào `localStorage` có bọc `try/catch`.
 4. **Phủ kín các chế độ Form trong Content Editor:**
    - Tích hợp vào `src/views/content-editor/item-form.ejs` (Content, Media, Layout, Placeholder, Rendering, System).

@@ -49,22 +49,22 @@ async function runMigration() {
     }
 
     // 1. Ensure Default Domain
-    console.log('\n1. Ensuring default "sitecore" domain...');
-    let defaultDomain = await Domain.findOne({ name: 'sitecore' });
+    console.log('\n1. Ensuring default "treecraft" domain...');
+    let defaultDomain = await Domain.findOne({ name: 'treecraft' });
     if (!defaultDomain) {
       if (!isDryRun) {
         defaultDomain = await Domain.create({
-          name: 'sitecore',
-          displayName: 'Sitecore Local Domain',
+          name: 'treecraft',
+          displayName: 'Treecraft Local Domain',
           description: 'Default authentication and authorization domain',
           isDefault: true,
         });
-        console.log(' Created default domain "sitecore".');
+        console.log(' Created default domain "treecraft".');
       } else {
-        console.log(' [DRY-RUN] Would create default domain "sitecore".');
+        console.log(' [DRY-RUN] Would create default domain "treecraft".');
       }
     } else {
-      console.log(' Default domain "sitecore" already exists.');
+      console.log(' Default domain "treecraft" already exists.');
     }
 
     // 2. Fetch or seed necessary roles
@@ -77,14 +77,14 @@ async function runMigration() {
       if (!roleDoc && !isDryRun) {
         roleDoc = await Role.create({
           name: rName,
-          domain: 'sitecore',
+          domain: 'treecraft',
           description: `System role for ${rName}`,
           isSystem: rName === 'Administrator',
           memberOf: [],
         });
         console.log(` Created missing role: ${rName}`);
       } else if (roleDoc && !roleDoc.domain && !isDryRun) {
-        roleDoc.domain = 'sitecore';
+        roleDoc.domain = 'treecraft';
         await roleDoc.save();
       }
       if (roleDoc) {
@@ -98,7 +98,7 @@ async function runMigration() {
     for (const u of users) {
       let changed = false;
       if (!u.domain) {
-        u.domain = 'sitecore';
+        u.domain = 'treecraft';
         changed = true;
       }
       const hasAdminRole = u.roles && u.roles.some((r) => r.name === 'Administrator');
@@ -118,15 +118,15 @@ async function runMigration() {
 
     // 4. Fetch Core Root Items
     console.log('\n4. Locating core system items for default ACLs...');
-    const rootSitecore = await Item.findOne({ path: '/sitecore', deleted: { $ne: true } });
-    const rootContent = await Item.findOne({ path: '/sitecore/content', deleted: { $ne: true } });
-    const rootLayout = await Item.findOne({ path: '/sitecore/layout', deleted: { $ne: true } });
-    const rootMedia = await Item.findOne({ path: '/sitecore/media library', deleted: { $ne: true } });
-    const rootTemplates = await Item.findOne({ path: '/sitecore/templates', deleted: { $ne: true } });
-    const rootSystem = await Item.findOne({ path: '/sitecore/system', deleted: { $ne: true } });
+    const rootTreecraft = await Item.findOne({ path: '/root', deleted: { $ne: true } });
+    const rootContent = await Item.findOne({ path: '/root/content', deleted: { $ne: true } });
+    const rootLayout = await Item.findOne({ path: '/root/layout', deleted: { $ne: true } });
+    const rootMedia = await Item.findOne({ path: '/root/media library', deleted: { $ne: true } });
+    const rootTemplates = await Item.findOne({ path: '/root/templates', deleted: { $ne: true } });
+    const rootSystem = await Item.findOne({ path: '/root/system', deleted: { $ne: true } });
 
-    if (!rootSitecore) {
-      console.warn(' [WARN] Root item "/sitecore" not found! Default ACLs will be skipped.');
+    if (!rootTreecraft) {
+      console.warn(' [WARN] Root item "/root" not found! Default ACLs will be skipped.');
       return;
     }
 
@@ -147,7 +147,7 @@ async function runMigration() {
       });
     };
 
-    // A. Root /sitecore rules (inherited by entire tree)
+    // A. Root /root rules (inherited by entire tree)
     // - Administrator has all rights
     const allRights = [
       RIGHTS.READ,
@@ -164,39 +164,39 @@ async function runMigration() {
       'workflow:execute:Reject',
     ];
     for (const r of allRights) {
-      addRule(rootSitecore, 'Administrator', r, 'allow', 'both');
+      addRule(rootTreecraft, 'Administrator', r, 'allow', 'both');
     }
 
     // - Author: can read, write, create, rename content; read presentation; submit workflow
-    addRule(rootSitecore, 'Author', RIGHTS.READ, 'allow', 'both');
-    addRule(rootSitecore, 'Author', RIGHTS.WRITE, 'allow', 'both');
-    addRule(rootSitecore, 'Author', RIGHTS.CREATE, 'allow', 'both');
-    addRule(rootSitecore, 'Author', RIGHTS.RENAME, 'allow', 'both');
-    addRule(rootSitecore, 'Author', RIGHTS.PRESENTATION_READ, 'allow', 'both');
-    addRule(rootSitecore, 'Author', 'workflow:execute:Submit', 'allow', 'both');
+    addRule(rootTreecraft, 'Author', RIGHTS.READ, 'allow', 'both');
+    addRule(rootTreecraft, 'Author', RIGHTS.WRITE, 'allow', 'both');
+    addRule(rootTreecraft, 'Author', RIGHTS.CREATE, 'allow', 'both');
+    addRule(rootTreecraft, 'Author', RIGHTS.RENAME, 'allow', 'both');
+    addRule(rootTreecraft, 'Author', RIGHTS.PRESENTATION_READ, 'allow', 'both');
+    addRule(rootTreecraft, 'Author', 'workflow:execute:Submit', 'allow', 'both');
 
     // - Editor: author rights + delete
-    addRule(rootSitecore, 'Editor', RIGHTS.READ, 'allow', 'both');
-    addRule(rootSitecore, 'Editor', RIGHTS.WRITE, 'allow', 'both');
-    addRule(rootSitecore, 'Editor', RIGHTS.CREATE, 'allow', 'both');
-    addRule(rootSitecore, 'Editor', RIGHTS.RENAME, 'allow', 'both');
-    addRule(rootSitecore, 'Editor', RIGHTS.DELETE, 'allow', 'both');
-    addRule(rootSitecore, 'Editor', RIGHTS.PRESENTATION_READ, 'allow', 'both');
-    addRule(rootSitecore, 'Editor', 'workflow:execute:Submit', 'allow', 'both');
+    addRule(rootTreecraft, 'Editor', RIGHTS.READ, 'allow', 'both');
+    addRule(rootTreecraft, 'Editor', RIGHTS.WRITE, 'allow', 'both');
+    addRule(rootTreecraft, 'Editor', RIGHTS.CREATE, 'allow', 'both');
+    addRule(rootTreecraft, 'Editor', RIGHTS.RENAME, 'allow', 'both');
+    addRule(rootTreecraft, 'Editor', RIGHTS.DELETE, 'allow', 'both');
+    addRule(rootTreecraft, 'Editor', RIGHTS.PRESENTATION_READ, 'allow', 'both');
+    addRule(rootTreecraft, 'Editor', 'workflow:execute:Submit', 'allow', 'both');
 
     // - Approver: editor rights + publish + approve + reject
-    addRule(rootSitecore, 'Approver', RIGHTS.READ, 'allow', 'both');
-    addRule(rootSitecore, 'Approver', RIGHTS.WRITE, 'allow', 'both');
-    addRule(rootSitecore, 'Approver', RIGHTS.CREATE, 'allow', 'both');
-    addRule(rootSitecore, 'Approver', RIGHTS.RENAME, 'allow', 'both');
-    addRule(rootSitecore, 'Approver', RIGHTS.DELETE, 'allow', 'both');
-    addRule(rootSitecore, 'Approver', RIGHTS.PUBLISH, 'allow', 'both');
-    addRule(rootSitecore, 'Approver', RIGHTS.PRESENTATION_READ, 'allow', 'both');
-    addRule(rootSitecore, 'Approver', 'workflow:execute:Submit', 'allow', 'both');
-    addRule(rootSitecore, 'Approver', 'workflow:execute:Approve', 'allow', 'both');
-    addRule(rootSitecore, 'Approver', 'workflow:execute:Reject', 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', RIGHTS.READ, 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', RIGHTS.WRITE, 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', RIGHTS.CREATE, 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', RIGHTS.RENAME, 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', RIGHTS.DELETE, 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', RIGHTS.PUBLISH, 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', RIGHTS.PRESENTATION_READ, 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', 'workflow:execute:Submit', 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', 'workflow:execute:Approve', 'allow', 'both');
+    addRule(rootTreecraft, 'Approver', 'workflow:execute:Reject', 'allow', 'both');
 
-    // B. Protection Overrides on /sitecore/layout (only Admin/Dev can write)
+    // B. Protection Overrides on /root/layout (only Admin/Dev can write)
     if (rootLayout) {
       addRule(rootLayout, 'Author', RIGHTS.WRITE, 'deny', 'both');
       addRule(rootLayout, 'Author', RIGHTS.PRESENTATION_WRITE, 'deny', 'both');
@@ -210,7 +210,7 @@ async function runMigration() {
       }
     }
 
-    // C. Protection Overrides on /sitecore/templates
+    // C. Protection Overrides on /root/templates
     if (rootTemplates) {
       addRule(rootTemplates, 'Author', RIGHTS.WRITE, 'deny', 'both');
       addRule(rootTemplates, 'Author', RIGHTS.DELETE, 'deny', 'both');
@@ -220,7 +220,7 @@ async function runMigration() {
       addRule(rootTemplates, 'Approver', RIGHTS.DELETE, 'deny', 'both');
     }
 
-    // D. Protection Overrides on /sitecore/system
+    // D. Protection Overrides on /root/system
     if (rootSystem) {
       addRule(rootSystem, 'Author', RIGHTS.WRITE, 'deny', 'both');
       addRule(rootSystem, 'Author', RIGHTS.DELETE, 'deny', 'both');

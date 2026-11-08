@@ -5,7 +5,7 @@
 - **Trạng thái:** Đã chốt (Accepted)
 
 ## 1. Bối cảnh
-Với mô hình Sitecore XM, một trường dữ liệu có thể là:
+Với mô hình Treecraft, một trường dữ liệu có thể là:
 - Dùng chung cho mọi ngôn ngữ và version (`shared: true`).
 - Dùng chung cho mọi version của 1 ngôn ngữ (`unversioned: true`).
 - Riêng biệt cho từng version (`versioned: true`).

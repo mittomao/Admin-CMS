@@ -1,4 +1,4 @@
-# TÀI LIỆU HỆ THỐNG QUẢN TRỊ NỘI DUNG (SITECORE-LIKE XM CMS)
+# TÀI LIỆU HỆ THỐNG QUẢN TRỊ NỘI DUNG TREECRAFT CMS
 
 Tài liệu dự án được cấu trúc thành các module chuyên biệt dưới thư mục `docs/`. Mỗi file tập trung vào một chủ đề duy nhất để tối ưu ngữ cảnh đọc cho cả con người và AI Agent.
 
@@ -8,7 +8,7 @@ Tài liệu dự án được cấu trúc thành các module chuyên biệt dư�
 Quy định các tiêu chuẩn bắt buộc áp dụng xuyên suốt toàn bộ các giai đoạn phát triển:
 
 - [00-workflow.md](rules/00-workflow.md): Quy trình phê duyệt `APPROVE GĐ <số>`, kỷ luật code, cách tick checklist, Definition of Done và báo cáo nghiệm thu.
-- [01-project-overview.md](rules/01-project-overview.md): Mục tiêu dự án, triết lý Sitecore XM ("Mọi thứ là Item", tách Master vs Web), kiến trúc Monolithic EJS Server-Side Rendering trên cổng 4000.
+- [01-project-overview.md](rules/01-project-overview.md): Mục tiêu dự án, triết lý Treecraft ("Mọi thứ là Item", tách Master vs Web), kiến trúc Monolithic EJS Server-Side Rendering trên cổng 4000.
 - [02-tech-stack.md](rules/02-tech-stack.md): Danh mục công nghệ (Node.js, Express, EJS SSR 100%, MongoDB, Fancytree, SortableJS, TinyMCE, Winston...) và lý do lựa chọn.
 - [03-conventions.md](rules/03-conventions.md): Cấu trúc thư mục dự án, quy ước đặt tên file/model/route, phân tầng Routes-Controllers-Services-Models, xử lý lỗi AppError và logging.
 - [04-routing.md](rules/04-routing.md): Quy ước 3 nhóm route: Full Page EJS Admin, Partial HTML EJS cho Content Editor workspace và Public Site Renderer EJS (`/`, `/:slug`).
@@ -21,7 +21,7 @@ Quy định các tiêu chuẩn bắt buộc áp dụng xuyên suốt toàn bộ 
 Đặc tả chi tiết cấu trúc bảng (Collections), schema Mongoose, quan hệ và indexes:
 
 - [README.md](data-model/README.md): Sơ đồ quan hệ thực thể tổng quan (ERD), chiến lược phân cấp Materialized Path + Ancestors Array và bảng tra cứu collection.
-- [items-and-tree.md](data-model/items-and-tree.md): Cấu trúc Item Master/Web, quản lý fields động, phân nhánh cây `/sitecore/layout/` 3 nhánh và compound indexes.
+- [items-and-tree.md](data-model/items-and-tree.md): Cấu trúc Item Master/Web, quản lý fields động, phân nhánh cây `/root/layout/` 3 nhánh và compound indexes.
 - [templates.md](data-model/templates.md): Cấu trúc Template, Section, Field, 9 Field Types, kế thừa Component Templates cho Page Templates, dynamic Standard Values và Insert Options.
 - [users-roles-acl.md](data-model/users-roles-acl.md): Cấu trúc User, Role, AccessControl phân quyền theo Item và thuật toán đánh giá quyền ưu tiên (Explicit > Inherited, Deny > Allow).
 - [versions-languages.md](data-model/versions-languages.md): Mô hình quản lý đa ngôn ngữ, unversionedFields, version history và thuật toán phân giải 3 cấp độ trường.

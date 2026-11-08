@@ -92,7 +92,7 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
     const passwordHash = await User.hashPassword('admin123');
     await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       fullName: 'System Administrator',
       passwordHash,
       roles: [adminRole._id],
@@ -102,7 +102,7 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
     const authorHash = await User.hashPassword('author123');
     await User.create({
       username: 'author',
-      email: 'author@sitecore.local',
+      email: 'author@treecraft.local',
       fullName: 'Content Author',
       passwordHash: authorHash,
       roles: [authorRole._id],
@@ -193,7 +193,7 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
 
     expect(createRes.status).toBe(201);
     expect(createRes.body.success).toBe(true);
-    expect(createRes.body.folder.path).toBe('/sitecore/media library/campaign-2026');
+    expect(createRes.body.folder.path).toBe('/root/media library/campaign-2026');
 
     const listRes = await adminAgent.get('/api/media/folders');
     expect(listRes.status).toBe(200);
@@ -274,7 +274,7 @@ describe('GĐ 5: Media Library & File Serving API Endpoints', () => {
       name: 'cloud-banner.jpg',
       displayName: 'Cloud Banner',
       isFolder: false,
-      path: '/sitecore/media library/cloud-banner.jpg',
+      path: '/root/media library/cloud-banner.jpg',
       fileDetails: {
         originalName: 'cloud-banner.jpg',
         storagePath: 'https://res.cloudinary.com/v41qu0lg/image/upload/v1234/AdminCMS/cloud-banner.jpg',

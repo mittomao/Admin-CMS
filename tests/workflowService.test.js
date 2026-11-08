@@ -75,7 +75,7 @@ describe('workflowService - Workflow Engine', () => {
     // 4. Create an Item
     testItem = await Item.create({
       name: 'Test Article',
-      path: '/sitecore/content/test-article',
+      path: '/root/content/test-article',
       templateId: pageTemplate._id,
       languages: [
         {

@@ -57,14 +57,14 @@ describe('itemService - Content Editor Business Logic', () => {
     pageTemplate.insertOptions = [pageTemplate._id];
     await pageTemplate.save();
 
-    // Seed tree: /sitecore -> /sitecore/content -> /sitecore/content/home
+    // Seed tree: /root -> /root/content -> /root/content/home
     rootItem = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
+      name: 'root',
+      displayName: 'root',
       templateId: folderTemplate._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore',
+      path: '/root',
       sortOrder: 10,
     });
 
@@ -74,7 +74,7 @@ describe('itemService - Content Editor Business Logic', () => {
       templateId: folderTemplate._id,
       parentId: rootItem._id,
       ancestors: [rootItem._id],
-      path: '/sitecore/content',
+      path: '/root/content',
       sortOrder: 100,
     });
 
@@ -84,7 +84,7 @@ describe('itemService - Content Editor Business Logic', () => {
       templateId: pageTemplate._id,
       parentId: contentItem._id,
       ancestors: [rootItem._id, contentItem._id],
-      path: '/sitecore/content/home',
+      path: '/root/content/home',
       sortOrder: 100,
       fields: {
         title: 'Home Page',
@@ -104,7 +104,7 @@ describe('itemService - Content Editor Business Logic', () => {
     expect(newItem).toBeDefined();
     expect(newItem.name).toBe('about-us');
     expect(newItem.displayName).toBe('About Us');
-    expect(newItem.path).toBe('/sitecore/content/home/about-us');
+    expect(newItem.path).toBe('/root/content/home/about-us');
     expect(newItem.ancestors.map((a) => a.toString())).toEqual([
       rootItem._id.toString(),
       contentItem._id.toString(),
@@ -168,15 +168,15 @@ describe('itemService - Content Editor Business Logic', () => {
       'sub-page',
       'Sub Page'
     );
-    expect(subItem.path).toBe('/sitecore/content/home/sub-page');
+    expect(subItem.path).toBe('/root/content/home/sub-page');
 
     // Rename home -> homepage
     const renamedHome = await itemService.rename(homeItem._id, 'homepage', 'Home Page New');
-    expect(renamedHome.path).toBe('/sitecore/content/homepage');
+    expect(renamedHome.path).toBe('/root/content/homepage');
 
     // Check descendant path updated
     const updatedSub = await itemService.getById(subItem._id);
-    expect(updatedSub.path).toBe('/sitecore/content/homepage/sub-page');
+    expect(updatedSub.path).toBe('/root/content/homepage/sub-page');
   });
 
   test('duplicate creates copy with unique name and copies subitems', async () => {
@@ -184,7 +184,7 @@ describe('itemService - Content Editor Business Logic', () => {
 
     const copy1 = await itemService.duplicate(homeItem._id);
     expect(copy1.name).toBe('copy-of-home');
-    expect(copy1.path).toBe('/sitecore/content/copy-of-home');
+    expect(copy1.path).toBe('/root/content/copy-of-home');
 
     // Duplicate again should give copy-2-of-home
     const copy2 = await itemService.duplicate(homeItem._id);
@@ -194,7 +194,7 @@ describe('itemService - Content Editor Business Logic', () => {
     const copyChildren = await itemService.getChildren(copy1._id);
     expect(copyChildren.length).toBe(1);
     expect(copyChildren[0].name).toBe('sub-one');
-    expect(copyChildren[0].path).toBe('/sitecore/content/copy-of-home/sub-one');
+    expect(copyChildren[0].path).toBe('/root/content/copy-of-home/sub-one');
   });
 
   test('moveTo blocks cycle (moving item into its own descendant)', async () => {
@@ -215,7 +215,7 @@ describe('itemService - Content Editor Business Logic', () => {
     );
 
     const movedHome = await itemService.moveTo(homeItem._id, folder2._id);
-    expect(movedHome.path).toBe('/sitecore/folder-two/home');
+    expect(movedHome.path).toBe('/root/folder-two/home');
     expect(movedHome.parentId.toString()).toBe(folder2._id.toString());
     expect(movedHome.ancestors.map((a) => a.toString())).toEqual([
       rootItem._id.toString(),

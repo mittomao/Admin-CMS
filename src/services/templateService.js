@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Template = require('../models/Template');
 const Item = require('../models/Item');
+const branding = require('../config/branding');
 
 class ConflictError extends Error {
   constructor(message) {
@@ -271,10 +272,10 @@ const templateService = {
     // Special insert options for specific system nodes by path
     if (item && item.path) {
       const p = item.path.toLowerCase().trim();
-      if (p === '/sitecore/layout/devices') {
+      if (p === branding.PATHS.DEVICES.toLowerCase() || p === '/root/layout/devices') {
         return Template.find({ name: 'Device' }).select('name displayName icon description').lean();
       }
-      if (p === '/sitecore/layout/placeholder settings') {
+      if (p === branding.PATHS.PLACEHOLDER_SETTINGS.toLowerCase() || p === '/root/layout/placeholder settings') {
         return Template.find({ name: 'Placeholder Settings' }).select('name displayName icon description').lean();
       }
     }
@@ -299,11 +300,17 @@ const templateService = {
     // Special rule for Feature/Components and Project/Pages branches (and nested folders)
     if (item && item.path) {
       const p = item.path.toLowerCase().trim();
+      const featureComponentsLower = branding.PATHS.FEATURE_COMPONENTS.toLowerCase();
+      const projectPagesLower = branding.PATHS.PROJECT_PAGES.toLowerCase();
       const isComponentOrPageFolder =
-        p === '/sitecore/templates/feature/components' ||
-        p.startsWith('/sitecore/templates/feature/components/') ||
-        p === '/sitecore/templates/project/pages' ||
-        p.startsWith('/sitecore/templates/project/pages/');
+        p === featureComponentsLower ||
+        p.startsWith(`${featureComponentsLower}/`) ||
+        p === projectPagesLower ||
+        p.startsWith(`${projectPagesLower}/`) ||
+        p === '/root/templates/feature/components' ||
+        p.startsWith('/root/templates/feature/components/') ||
+        p === '/root/templates/project/pages' ||
+        p.startsWith('/root/templates/project/pages/');
 
       if (isComponentOrPageFolder) {
         const templateFolder = await Template.findOne({ name: 'Template Folder' })
@@ -332,18 +339,21 @@ const templateService = {
       }
     }
 
-    // Check if target is /sitecore/content or a page under /sitecore/content
+    // Check if target is content root or a page under content root
+    const contentLower = branding.PATHS.CONTENT.toLowerCase();
     const isContentBranch = item && item.path && (
-      item.path.toLowerCase() === '/sitecore/content' ||
-      item.path.toLowerCase().startsWith('/sitecore/content/')
+      item.path.toLowerCase() === contentLower ||
+      item.path.toLowerCase().startsWith(`${contentLower}/`) ||
+      item.path.toLowerCase() === '/root/content' ||
+      item.path.toLowerCase().startsWith('/root/content/')
     );
 
     const isPageTemplate = resolved.path && resolved.path.toLowerCase().includes('/project/pages');
     const isCommonTemplate = (resolved.name === 'Folder') || (resolved.path && resolved.path.toLowerCase().includes('/templates/common'));
 
     if (isContentBranch || isPageTemplate || isCommonTemplate) {
-      // 1. Root /sitecore/content always allows inserting page templates from Project/Pages and common templates from Common
-      if (item && item.path && item.path.toLowerCase() === '/sitecore/content') {
+      // 1. Root content branch always allows inserting page templates from Project/Pages and common templates from Common
+      if (item && item.path && (item.path.toLowerCase() === contentLower || item.path.toLowerCase() === '/root/content')) {
         return this.getContentInsertTemplates();
       }
 
@@ -379,13 +389,13 @@ const templateService = {
   },
 
   /**
-   * Get all templates allowed for content creation under /sitecore/content:
-   * - Page Templates located under /sitecore/templates/Project/Pages (recursive)
-   * - Common Templates located under /sitecore/templates/Common (recursive, e.g. Folder)
+   * Get all templates allowed for content creation under content root:
+   * - Page Templates located under Project/Pages (recursive)
+   * - Common Templates located under Common (recursive, e.g. Folder)
    * Excludes structural template folders and System templates.
    */
   async getContentInsertTemplates() {
-    const allowedPathRegex = '^/sitecore/templates/(project/pages|common)';
+    const allowedPathRegex = `^(${branding.PATHS.TEMPLATES}|/root/templates)/(project/pages|common)`;
 
     // 1. Search Template documents by path
     const templatesByPath = await Template.find({
@@ -396,7 +406,7 @@ const templateService = {
       .select('name displayName icon description path isSystem')
       .lean();
 
-    // 2. Search via Item tree under /sitecore/templates/(project/pages|common)
+    // 2. Search via Item tree under /root/templates/(project/pages|common)
     const treeItems = await Item.find({
       path: { $regex: allowedPathRegex, $options: 'i' },
       deleted: false,
@@ -455,7 +465,7 @@ const templateService = {
   },
 
   /**
-   * Get all page templates located under /sitecore/templates/Project/Pages (recursive)
+   * Get all page templates located under /root/templates/Project/Pages (recursive)
    * Excludes folders and system templates
    */
   async getPageTemplates() {
@@ -1045,21 +1055,25 @@ const templateService = {
       throw new ValidationError('Không được phép chọn Template hệ thống làm componentTemplate.');
     }
 
-    // Check path if set, must belong to /sitecore/templates/Feature/Components (case insensitive)
-    if (tpl.path && !tpl.path.toLowerCase().startsWith('/sitecore/templates/feature/components')) {
-      throw new ValidationError('Component Template phải nằm dưới thư mục /sitecore/templates/Feature/Components.');
+    // Check path if set, must belong to Feature/Components (case insensitive)
+    const featureComponentsLower = branding.PATHS.FEATURE_COMPONENTS.toLowerCase();
+    if (tpl.path &&
+        !tpl.path.toLowerCase().startsWith(featureComponentsLower) &&
+        !tpl.path.toLowerCase().startsWith('/root/templates/feature/components')) {
+      throw new ValidationError(`Component Template phải nằm dưới thư mục ${branding.PATHS.FEATURE_COMPONENTS}.`);
     }
 
     return tpl;
   },
 
   /**
-   * List all valid component templates under /sitecore/templates/Feature/Components
+   * List all valid component templates under Feature/Components
    */
   async getComponentTemplates() {
+    const featureComponentsPath = branding.PATHS.FEATURE_COMPONENTS;
     const templates = await Template.find({
       $or: [
-        { path: { $regex: '^/sitecore/templates/Feature/Components', $options: 'i' } },
+        { path: { $regex: `^(${featureComponentsPath}|/root/templates/Feature/Components)`, $options: 'i' } },
         { name: { $in: ['HeroBanner', 'Introduction', 'ImageText'] } },
       ],
       isSystem: { $ne: true },

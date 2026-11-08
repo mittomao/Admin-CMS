@@ -117,17 +117,27 @@
 
     const itemPath = (item && item.path) || '';
     const itemName = (item && (item.displayName || item.name)) || '';
-    if (
-      itemPath === '/sitecore/templates' ||
-      itemPath === '/sitecore/templates/Feature' ||
-      itemPath === '/sitecore/templates/Project' ||
-      itemPath === '/sitecore/templates/System' ||
-      itemPath === '/sitecore/templates/Common' ||
-      itemPath === '/sitecore/layout' ||
-      itemPath === '/sitecore/layout/Layouts' ||
-      itemPath === '/sitecore/layout/Placeholders' ||
-      itemPath === '/sitecore/layout/Renderings'
-    ) {
+    const folderPaths = [
+      '/root/templates',
+      '/root/templates/Feature',
+      '/root/templates/Project',
+      '/root/templates/System',
+      '/root/templates/Common',
+      '/root/layout',
+      '/root/layout/Layouts',
+      '/root/layout/Placeholders',
+      '/root/layout/Renderings',
+      '/root/templates',
+      '/root/templates/Feature',
+      '/root/templates/Project',
+      '/root/templates/System',
+      '/root/templates/Common',
+      '/root/layout',
+      '/root/layout/Layouts',
+      '/root/layout/Placeholders',
+      '/root/layout/Renderings',
+    ];
+    if (folderPaths.includes(itemPath)) {
       return true;
     }
 
@@ -142,7 +152,7 @@
     const itemPath = (item && item.path ? item.path.toLowerCase() : '');
     const tplName = template && template.name ? template.name.trim() : '';
 
-    if (itemPath === '/sitecore/content') {
+    if (itemPath === '/root/content' || itemPath === '/root/content') {
       return 'content-root';
     }
 
@@ -167,26 +177,27 @@
       }
     }
 
-    if (tplName === 'Layout' || itemPath.startsWith('/sitecore/layout/layouts')) {
+    if (tplName === 'Layout' || itemPath.startsWith('/root/layout/layouts') || itemPath.startsWith('/root/layout/layouts')) {
       return 'layout';
     }
-    if (tplName === 'Placeholder' || itemPath.startsWith('/sitecore/layout/placeholders')) {
+    if (tplName === 'Placeholder' || itemPath.startsWith('/root/layout/placeholders') || itemPath.startsWith('/root/layout/placeholders')) {
       return 'placeholder';
     }
-    if (tplName === 'Rendering' || itemPath.startsWith('/sitecore/layout/renderings')) {
+    if (tplName === 'Rendering' || itemPath.startsWith('/root/layout/renderings') || itemPath.startsWith('/root/layout/renderings')) {
       return 'rendering';
     }
     if (
       tplName === 'Template' ||
       tplName === 'Standard Template' ||
-      itemPath.startsWith('/sitecore/templates')
+      itemPath.startsWith('/root/templates') ||
+      itemPath.startsWith('/root/templates')
     ) {
       return 'template';
     }
-    if (itemPath.startsWith('/sitecore/media library')) {
+    if (itemPath.startsWith('/root/media library') || itemPath.startsWith('/root/media library')) {
       return 'media';
     }
-    if (itemPath.startsWith('/sitecore/content')) {
+    if (itemPath.startsWith('/root/content') || itemPath.startsWith('/root/content')) {
       return 'page';
     }
 

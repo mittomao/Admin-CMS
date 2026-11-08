@@ -36,7 +36,7 @@ Xây dựng hạt nhân Content Editor: hiển thị Cây nội dung lazy-loadin
 ## Checklist Task
 - [x] **Task 2.1:** Xây dựng Mongoose Model `Item` (`src/models/Item.js`) với các trường: `name`, `displayName`, `templateId`, `parentId`, `ancestors`, `path`, `sortOrder`, `fields`, `deleted`, `createdBy`, `updatedBy`.
 - [x] **Task 2.2:** Xây dựng Mongoose Model `Template` (`src/models/Template.js`) cơ bản phục vụ cho việc tạo item (sections, fields, field types, insertOptions).
-- [x] **Task 2.3:** Tạo hạt giống dữ liệu ban đầu cho cây Sitecore: Node Root (`/sitecore`), các node nhánh chuẩn (`/sitecore/content`, `/sitecore/media library`, `/sitecore/templates`, `/sitecore/system`), và node trang chủ mẫu (`/sitecore/content/home`).
+- [x] **Task 2.3:** Tạo hạt giống dữ liệu ban đầu cho cây Treecraft: Node Root (`/root`), các node nhánh chuẩn (`/root/content`, `/root/media library`, `/root/templates`, `/root/system`), và node trang chủ mẫu (`/root/content/home`).
 - [x] **Task 2.4:** Xây dựng `itemService.js` với các phương thức nghiệp vụ: `getChildren(parentId)`, `getItemById(id)`, `getItemByPath(path)`, `createItem(data)`, `updateItemFields(id, fields)`, `deleteItem(id)`, `renameItem(id, newName)`, `moveItem(id, newParentId)`, `duplicateItem(id)`, `sort(id, direction)`, `search(keyword)`.
 - [x] **Task 2.5:** Xây dựng `treeHelper.js` chuyển đổi danh sách Item từ MongoDB sang định dạng JSON chuẩn của Fancytree (`{ title, key, folder, lazy, icon, data }`).
 - [x] **Task 2.6:** Xây dựng các route và controller Content Editor:
@@ -88,11 +88,11 @@ Xây dựng hạt nhân Content Editor: hiển thị Cây nội dung lazy-loadin
 
 ## Thay đổi Database
 - Collection `items_master` với các index `{ parentId: 1, sortOrder: 1 }`, `{ path: 1 }`.
-- Khởi tạo cây mẫu Sitecore chuẩn.
+- Khởi tạo cây mẫu Treecraft chuẩn.
 
 ## Definition of Done & Cách kiểm thử
-- Mở Content Editor, cây nội dung hiển thị node gốc `/sitecore`.
-- Bấm mở rộng node `/sitecore/content` -> Lazy load hiển thị node `home`.
+- Mở Content Editor, cây nội dung hiển thị node gốc `/root`.
+- Bấm mở rộng node `/root/content` -> Lazy load hiển thị node `home`.
 - Click vào `home` -> Form soạn thảo hiển thị tức thì bên phải với các trường: Title, Body (Rich Text).
 - Sửa nội dung Title và Body, bấm nút "Save" trên Ribbon -> Dữ liệu được lưu vào MongoDB và hiển thị thông báo "Item saved successfully".
 - Thử các tính năng trên Ribbon Home:

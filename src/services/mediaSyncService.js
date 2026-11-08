@@ -5,6 +5,7 @@ const { ensureMediaTemplates, MEDIA_TEMPLATES } = require('./mediaTemplateServic
 const { getStorageProvider } = require('./storage');
 const mediaPathMapper = require('../utils/mediaPathMapper');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 const cloudinary = require('cloudinary').v2;
 
 class MediaSyncService {
@@ -35,16 +36,16 @@ class MediaSyncService {
     const imageTpl = templates[MEDIA_TEMPLATES.IMAGE];
     const fileTpl = templates[MEDIA_TEMPLATES.FILE];
 
-    // 1. Đảm bảo thư mục gốc /sitecore/media library tồn tại
-    let rootItem = await Item.findOne({ path: '/sitecore/media library', deleted: false });
+    // 1. Đảm bảo thư mục gốc /root/media library tồn tại
+    let rootItem = await Item.findOne({ path: { $in: [branding.PATHS.MEDIA, '/root/media library'] }, deleted: false });
     if (!rootItem) {
       if (!dryRun) {
-        let sitecoreRoot = await Item.findOne({ path: '/sitecore', deleted: false });
-        if (!sitecoreRoot) {
-          sitecoreRoot = await Item.create({
-            name: 'sitecore',
-            displayName: 'Sitecore',
-            path: '/sitecore',
+        let rootNode = await Item.findOne({ path: { $in: [branding.PATHS.ROOT, '/root'] }, deleted: false });
+        if (!rootNode) {
+          rootNode = await Item.create({
+            name: branding.ROOT_NAME,
+            displayName: branding.ROOT_NAME,
+            path: branding.PATHS.ROOT,
             templateId: mediaFolderTpl._id,
             ancestors: [],
             fields: {},
@@ -54,10 +55,10 @@ class MediaSyncService {
         rootItem = await Item.create({
           name: 'media library',
           displayName: 'Media Library',
-          path: '/sitecore/media library',
+          path: branding.PATHS.MEDIA,
           templateId: mediaFolderTpl._id,
-          parentId: sitecoreRoot._id,
-          ancestors: [sitecoreRoot._id],
+          parentId: rootNode._id,
+          ancestors: [rootNode._id],
           fields: {},
           sharedFields: {}
         });
@@ -152,14 +153,14 @@ class MediaSyncService {
 
         // Đảm bảo các folder cha trong CMS tồn tại
         const folderSegments = mapped.itemPath
-          .replace('/sitecore/media library', '')
+          .replace('/root/media library', '')
           .split('/')
           .filter(Boolean);
         folderSegments.pop(); // Bỏ phần tên item cuối cùng
 
         let currentParent = rootItem;
         if (!dryRun && rootItem) {
-          let currentPath = '/sitecore/media library';
+          let currentPath = '/root/media library';
           for (const seg of folderSegments) {
             currentPath = `${currentPath}/${seg}`;
             let folderItem = await Item.findOne({ path: currentPath, deleted: false });
@@ -273,7 +274,7 @@ class MediaSyncService {
     // 4. Kiểm tra các asset trên CMS bị mất file trên Cloudinary
     try {
       const existingMediaItems = await Item.find({
-        path: { $regex: '^/sitecore/media library/' },
+        path: { $regex: '^/root/media library/' },
         templateId: { $in: [imageTpl._id, fileTpl._id] },
         deleted: false
       }).lean();
@@ -334,16 +335,16 @@ class MediaSyncService {
       itemsProcessed: []
     };
 
-    // 1. Quét tất cả folder thuộc /sitecore/media library để đảm bảo tồn tại trên Cloudinary
+    // 1. Quét tất cả folder thuộc /root/media library để đảm bảo tồn tại trên Cloudinary
     try {
       const folderItems = await Item.find({
-        path: { $regex: '^/sitecore/media library' },
+        path: { $regex: '^/root/media library' },
         templateId: mediaFolderTpl._id,
         deleted: false
       }).lean();
 
       for (const f of folderItems) {
-        if (f.path === '/sitecore/media library') continue;
+        if (f.path === '/root/media library') continue;
         const { assetFolder } = mediaPathMapper.itemPathToCloudinary({ itemPath: f.path, rootFolder });
         if (assetFolder && !dryRun) {
           try {
@@ -365,7 +366,7 @@ class MediaSyncService {
     // 2. Quét tất cả media items (Image, File) để kiểm chứng tài nguyên trên Cloudinary
     try {
       const mediaItems = await Item.find({
-        path: { $regex: '^/sitecore/media library/' },
+        path: { $regex: '^/root/media library/' },
         templateId: { $in: [imageTpl._id, fileTpl._id] },
         deleted: false
       }).lean();

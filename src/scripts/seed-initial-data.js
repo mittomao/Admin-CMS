@@ -7,6 +7,7 @@ const LaunchpadApp = require('../models/LaunchpadApp');
 const Template = require('../models/Template');
 const Item = require('../models/Item');
 const Language = require('../models/Language');
+const branding = require('../config/branding');
 
 const getMaskedUri = (uri) => (uri ? uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@') : '');
 
@@ -61,7 +62,7 @@ const seedData = async () => {
       const passwordHash = await User.hashPassword('admin123');
       adminUser = await User.create({
         username: adminUsername,
-        email: 'admin@sitecore.local',
+        email: 'admin@treecraft.local',
         passwordHash,
         fullName: 'System Administrator',
         avatar: '/img/default-avatar.png',
@@ -80,7 +81,7 @@ const seedData = async () => {
       const passwordHash = await User.hashPassword('author123');
       authorUser = await User.create({
         username: authorUsername,
-        email: 'author@sitecore.local',
+        email: 'author@treecraft.local',
         passwordHash,
         fullName: 'Content Author',
         avatar: '/img/default-avatar.png',
@@ -198,7 +199,7 @@ const seedData = async () => {
         icon: 'ti ti-layout-grid',
         iconBg: 'red',
         group: 'Control Panel & Maintenance',
-        url: '/admin/content-editor?path=/sitecore/templates',
+        url: `/admin/content-editor?path=${encodeURIComponent(branding.PATHS.TEMPLATES)}`,
         sortOrder: 10,
         allowedRoles: [rolesMap['Administrator']],
       },
@@ -305,7 +306,7 @@ const seedData = async () => {
         icon: 'template',
         isSystem: true,
         description: 'Mẫu component trống để khởi tạo component hoặc page template mới',
-        path: '/sitecore/templates/System/Standard Template',
+        path: `${branding.PATHS.SYSTEM_TEMPLATES}/Standard Template`,
         sections: [],
       },
       {
@@ -427,7 +428,7 @@ const seedData = async () => {
         icon: 'ti ti-folder',
         isSystem: true,
         description: 'System folder item to organize media assets',
-        path: '/sitecore/templates/System/Media Folder',
+        path: `${branding.PATHS.SYSTEM_TEMPLATES}/Media Folder`,
         sections: [
           {
             name: 'Folder Info',
@@ -442,7 +443,7 @@ const seedData = async () => {
         icon: 'ti ti-photo',
         isSystem: true,
         description: 'System template for image media item hosted on Cloudinary',
-        path: '/sitecore/templates/System/Image',
+        path: `${branding.PATHS.SYSTEM_TEMPLATES}/Image`,
         sections: [
           {
             name: 'Image Info',
@@ -477,7 +478,7 @@ const seedData = async () => {
         icon: 'ti ti-file',
         isSystem: true,
         description: 'System template for binary document or raw file hosted on Cloudinary',
-        path: '/sitecore/templates/System/File',
+        path: `${branding.PATHS.SYSTEM_TEMPLATES}/File`,
         sections: [
           {
             name: 'File Info',
@@ -530,7 +531,7 @@ const seedData = async () => {
     if (basePageTpl && basePageTpl.sections[0] && basePageTpl.sections[0].fields[0]) {
       metaTitleFieldId = basePageTpl.sections[0].fields[0]._id.toString();
       basePageTpl.standardValues = {
-        [metaTitleFieldId]: 'Default Sitecore XM Page',
+        [metaTitleFieldId]: 'Default Treecraft Page',
       };
       await basePageTpl.save();
     }
@@ -549,17 +550,17 @@ const seedData = async () => {
       insertOptions: [templatesMap['Media Folder'], templatesMap['Image'], templatesMap['File']],
     });
 
-    // 6. Seed Sitecore Content Tree Root & Core Nodes
-    // Root: /sitecore
-    let sitecoreRoot = await Item.findOne({ path: '/sitecore', deleted: false });
-    if (!sitecoreRoot) {
-      sitecoreRoot = await Item.create({
-        name: 'sitecore',
-        displayName: 'Sitecore',
+    // 6. Seed Tree Root & Core Nodes
+    // Root: /root
+    let rootNode = await Item.findOne({ path: branding.PATHS.ROOT, deleted: false });
+    if (!rootNode) {
+      rootNode = await Item.create({
+        name: branding.ROOT_NAME,
+        displayName: branding.ROOT_NAME,
         templateId: templatesMap['Folder'],
         parentId: null,
         ancestors: [],
-        path: '/sitecore',
+        path: branding.PATHS.ROOT,
         sortOrder: 10,
         fields: {},
         sharedFields: {},
@@ -583,11 +584,11 @@ const seedData = async () => {
         },
         createdBy: adminUser._id,
       });
-      logger.info('Created Root node: /sitecore');
+      logger.info(`Created Root node: ${branding.PATHS.ROOT}`);
     }
 
-    // First-level branches under /sitecore:
-    // /sitecore/content, /sitecore/layout, /sitecore/media library, /sitecore/templates, /sitecore/system
+    // First-level branches under root:
+    // /root/content, /root/layout, /root/media library, /root/templates, /root/system
     const branches = [
       { name: 'content', displayName: 'Content', sortOrder: 100 },
       { name: 'layout', displayName: 'Layout', sortOrder: 200 },
@@ -598,7 +599,7 @@ const seedData = async () => {
 
     const branchesMap = {};
     for (const b of branches) {
-      const bPath = `/sitecore/${b.name}`;
+      const bPath = `${branding.PATHS.ROOT}/${b.name}`;
       const targetTemplateId = b.name === 'media library' ? templatesMap['Media Folder'] : templatesMap['Folder'];
       let branchItem = await Item.findOne({ path: bPath, deleted: false });
       if (!branchItem) {
@@ -606,8 +607,8 @@ const seedData = async () => {
           name: b.name,
           displayName: b.displayName,
           templateId: targetTemplateId,
-          parentId: sitecoreRoot._id,
-          ancestors: [sitecoreRoot._id],
+          parentId: rootNode._id,
+          ancestors: [rootNode._id],
           path: bPath,
           sortOrder: b.sortOrder,
           fields: {},
@@ -637,8 +638,8 @@ const seedData = async () => {
       branchesMap[b.name] = branchItem._id;
     }
 
-    // Node /sitecore/content/home
-    const homePath = '/sitecore/content/home';
+    // Node /root/content/home
+    const homePath = branding.PATHS.HOME;
     let homeItem = await Item.findOne({ path: homePath, deleted: false });
     if (!homeItem) {
       homeItem = await Item.create({
@@ -646,12 +647,12 @@ const seedData = async () => {
         displayName: 'Home',
         templateId: templatesMap['Page'],
         parentId: branchesMap['content'],
-        ancestors: [sitecoreRoot._id, branchesMap['content']],
+        ancestors: [rootNode._id, branchesMap['content']],
         path: homePath,
         sortOrder: 100,
         fields: {
-          title: 'Welcome to Sitecore CMS',
-          summary: 'A modern Sitecore-like CMS experience with hierarchical tree management.',
+          title: `Welcome to ${branding.PROJECT_NAME} CMS`,
+          summary: `A modern ${branding.PROJECT_NAME} CMS experience with hierarchical tree management.`,
           body: '<p>Welcome to your new CMS! You can edit items, create child nodes, and navigate the content tree.</p>',
           isFeatured: true,
           publishDate: new Date().toISOString().split('T')[0],
@@ -665,8 +666,8 @@ const seedData = async () => {
               {
                 version: 1,
                 fields: {
-                  title: 'Chào mừng bạn đến với Sitecore CMS',
-                  summary: 'Trải nghiệm quản trị nội dung phân cấp tương tự Sitecore XM.',
+                  title: 'Chào mừng bạn đến với Treecraft CMS',
+                  summary: 'Trải nghiệm quản trị nội dung phân cấp Treecraft.',
                   body: '<p>Chào mừng bạn đến với hệ thống CMS mới! Bạn có thể chỉnh sửa các item, tạo các node con và điều hướng cây nội dung.</p>',
                   isFeatured: true,
                   publishDate: new Date().toISOString().split('T')[0],
@@ -683,8 +684,8 @@ const seedData = async () => {
               {
                 version: 1,
                 fields: {
-                  title: 'Welcome to Sitecore CMS',
-                  summary: 'A modern Sitecore-like CMS experience with hierarchical tree management.',
+                  title: 'Welcome to Treecraft CMS',
+                  summary: 'A modern Treecraft CMS experience with hierarchical tree management.',
                   body: '<p>Welcome to your new CMS! You can edit items, create child nodes, and navigate the content tree.</p>',
                   isFeatured: true,
                   publishDate: new Date().toISOString().split('T')[0],
@@ -705,14 +706,14 @@ const seedData = async () => {
     }
 
     // 8. Seed Media Library Folders as Items (GĐ 5.1: Mọi Media là Item)
-    const mediaLibraryBranch = await Item.findOne({ path: '/sitecore/media library', deleted: false });
+    const mediaLibraryBranch = await Item.findOne({ path: branding.PATHS.MEDIA, deleted: false });
     if (mediaLibraryBranch) {
       if (mediaLibraryBranch.templateId.toString() !== templatesMap['Media Folder'].toString()) {
         mediaLibraryBranch.templateId = templatesMap['Media Folder'];
         await mediaLibraryBranch.save();
       }
 
-      const sampleBannersPath = '/sitecore/media library/banners';
+      const sampleBannersPath = `${branding.PATHS.MEDIA}/banners`;
       let bannersFolder = await Item.findOne({ path: sampleBannersPath, deleted: false });
       if (!bannersFolder) {
         bannersFolder = await Item.create({
@@ -730,7 +731,7 @@ const seedData = async () => {
         logger.info('Created Media Library subfolder Item: Banners');
       }
 
-      const editorUploadsPath = '/sitecore/media library/editor-uploads';
+      const editorUploadsPath = `${branding.PATHS.MEDIA}/editor-uploads`;
       let editorUploadsFolder = await Item.findOne({ path: editorUploadsPath, deleted: false });
       if (!editorUploadsFolder) {
         editorUploadsFolder = await Item.create({

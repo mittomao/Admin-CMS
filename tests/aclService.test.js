@@ -9,7 +9,7 @@ const aclService = require('../src/services/aclService');
 const roleService = require('../src/services/roleService');
 const { RIGHTS, ACTIONS } = require('../src/config/permissions');
 
-describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () => {
+describe('AclService & Permission Resolution (Treecraft ACL &bull; DEC-042)', () => {
   let mongoServer;
   let adminRole, editorRole, authorRole, subEditorRole;
   let adminUser, editorUser, authorUser;
@@ -36,24 +36,24 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
 
     dummyTemplate = await Template.create({
       name: 'Sample Template',
-      path: '/sitecore/templates/sample',
+      path: '/root/templates/sample',
       sections: [],
     });
 
     // 1. Roles
-    adminRole = await Role.create({ name: 'Administrator', domain: 'sitecore', isSystem: true });
-    editorRole = await Role.create({ name: 'Editor', domain: 'sitecore', isSystem: true });
-    authorRole = await Role.create({ name: 'Author', domain: 'sitecore', isSystem: true });
+    adminRole = await Role.create({ name: 'Administrator', domain: 'treecraft', isSystem: true });
+    editorRole = await Role.create({ name: 'Editor', domain: 'treecraft', isSystem: true });
+    authorRole = await Role.create({ name: 'Author', domain: 'treecraft', isSystem: true });
     subEditorRole = await Role.create({
       name: 'SubEditor',
-      domain: 'sitecore',
+      domain: 'treecraft',
       memberOf: [editorRole._id],
     });
 
     // 2. Users
     adminUser = await User.create({
       username: 'admin',
-      email: 'admin@sitecore.test',
+      email: 'admin@treecraft.test',
       passwordHash: 'hash',
       fullName: 'System Administrator',
       roles: [adminRole._id],
@@ -63,7 +63,7 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
 
     editorUser = await User.create({
       username: 'editor_jane',
-      email: 'jane@sitecore.test',
+      email: 'jane@treecraft.test',
       passwordHash: 'hash',
       fullName: 'Jane Editor',
       roles: [editorRole._id],
@@ -73,7 +73,7 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
 
     authorUser = await User.create({
       username: 'author_bob',
-      email: 'bob@sitecore.test',
+      email: 'bob@treecraft.test',
       passwordHash: 'hash',
       fullName: 'Bob Author',
       roles: [authorRole._id],
@@ -83,9 +83,9 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
 
     // 3. Tree Hierarchy: root -> content -> home -> article
     rootNode = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
-      path: '/sitecore',
+      name: 'root',
+      displayName: 'root',
+      path: '/root',
       templateId: dummyTemplate._id,
       parentId: null,
       ancestors: [],
@@ -94,7 +94,7 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
     contentNode = await Item.create({
       name: 'content',
       displayName: 'Content',
-      path: '/sitecore/content',
+      path: '/root/content',
       templateId: dummyTemplate._id,
       parentId: rootNode._id,
       ancestors: [rootNode._id],
@@ -103,7 +103,7 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
     homeNode = await Item.create({
       name: 'home',
       displayName: 'Home',
-      path: '/sitecore/content/home',
+      path: '/root/content/home',
       templateId: dummyTemplate._id,
       parentId: contentNode._id,
       ancestors: [rootNode._id, contentNode._id],
@@ -112,7 +112,7 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
     articleNode = await Item.create({
       name: 'news-1',
       displayName: 'Latest News',
-      path: '/sitecore/content/home/news-1',
+      path: '/root/content/home/news-1',
       templateId: dummyTemplate._id,
       parentId: homeNode._id,
       ancestors: [rootNode._id, contentNode._id, homeNode._id],
@@ -133,7 +133,7 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
   });
 
   test('3. Distance / Level rule: Explicit rule on child item wins over inherited rule from parent', async () => {
-    // Parent (/sitecore/content/home) has DENY write for Editor role (scope: both)
+    // Parent (/root/content/home) has DENY write for Editor role (scope: both)
     await AccessControl.create({
       itemId: homeNode._id,
       principalType: 'role',
@@ -143,7 +143,7 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
       inheritance: 'both',
     });
 
-    // Child (/sitecore/content/home/news-1) has explicit ALLOW write for Editor role
+    // Child (/root/content/home/news-1) has explicit ALLOW write for Editor role
     await AccessControl.create({
       itemId: articleNode._id,
       principalType: 'role',
@@ -253,7 +253,7 @@ describe('AclService & Permission Resolution (Sitecore XM &bull; DEC-042)', () =
   test('7. Role Inheritance (memberOf): nested roles transitively inherit permissions', async () => {
     const subEditorUser = await User.create({
       username: 'sub_editor',
-      email: 'sub@sitecore.test',
+      email: 'sub@treecraft.test',
       passwordHash: 'hash',
       fullName: 'Sub Editor',
       roles: [subEditorRole._id], // SubEditor is memberOf Editor

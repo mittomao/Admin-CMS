@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Role = require('../models/Role');
 const eventBus = require('../utils/eventBus');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 const { ValidationError, NotFoundError, ForbiddenError, ConflictError } = require('../utils/errors');
 
 class UserService {
@@ -87,7 +88,7 @@ class UserService {
    * @returns {Promise<object>}
    */
   async createUser(data) {
-    const { username, email, fullName, displayName, domain = 'sitecore', password, roleIds = [] } = data;
+    const { username, email, fullName, displayName, domain = branding.DEFAULT_DOMAIN, password, roleIds = [] } = data;
 
     if (!username || !username.trim()) {
       throw new ValidationError('Tên đăng nhập (username) là bắt buộc');
@@ -133,7 +134,7 @@ class UserService {
       email: cleanEmail,
       fullName: (fullName || cleanUsername).trim(),
       displayName: (displayName || fullName || cleanUsername).trim(),
-      domain: (domain || 'sitecore').trim().toLowerCase(),
+      domain: (domain || branding.DEFAULT_DOMAIN).trim().toLowerCase(),
       passwordHash,
       roles: validRoleIds,
       isAdmin,

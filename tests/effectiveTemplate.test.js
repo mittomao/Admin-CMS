@@ -48,10 +48,10 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
 
     // 1. Root folder
     rootFolder = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore Root',
+      name: 'root',
+      displayName: 'Treecraft Root',
       templateId: folderTemplate._id,
-      path: '/sitecore',
+      path: '/root',
       ancestors: [],
       fields: {},
       sharedFields: {},
@@ -62,7 +62,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       displayName: 'Layouts',
       templateId: folderTemplate._id,
       parentId: rootFolder._id,
-      path: '/sitecore/layout/layouts',
+      path: '/root/layout/layouts',
       ancestors: [rootFolder._id],
       fields: {},
       sharedFields: {},
@@ -73,7 +73,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       displayName: 'Renderings',
       templateId: folderTemplate._id,
       parentId: rootFolder._id,
-      path: '/sitecore/layout/renderings',
+      path: '/root/layout/renderings',
       ancestors: [rootFolder._id],
       fields: {},
       sharedFields: {},
@@ -84,7 +84,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       displayName: 'Content',
       templateId: folderTemplate._id,
       parentId: rootFolder._id,
-      path: '/sitecore/content',
+      path: '/root/content',
       ancestors: [rootFolder._id],
       fields: {},
       sharedFields: {},
@@ -119,7 +119,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       displayName: 'Main Layout',
       templateId: layoutTemplate._id,
       parentId: layoutsFolder._id,
-      path: '/sitecore/layout/layouts/mainlayout',
+      path: '/root/layout/layouts/mainlayout',
       ancestors: [rootFolder._id, layoutsFolder._id],
       fields: { viewPath: 'site/layouts/HomeLayout.ejs' },
       sharedFields: { viewPath: 'site/layouts/HomeLayout.ejs' },
@@ -130,7 +130,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       name: 'HeroBanner',
       displayName: 'Hero Banner Component',
       isSystem: false,
-      path: '/sitecore/templates/Feature/Components/HeroBanner',
+      path: '/root/templates/Feature/Components/HeroBanner',
       sections: [
         {
           name: 'Hero Data',
@@ -151,7 +151,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       name: 'Introduction',
       displayName: 'Intro Component',
       isSystem: false,
-      path: '/sitecore/templates/Feature/Components/Introduction',
+      path: '/root/templates/Feature/Components/Introduction',
       sections: [
         {
           name: 'Intro Data',
@@ -169,7 +169,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       displayName: 'Hero Banner',
       templateId: renderingTemplate._id,
       parentId: renderingsFolder._id,
-      path: '/sitecore/layout/renderings/herobanner',
+      path: '/root/layout/renderings/herobanner',
       ancestors: [rootFolder._id, renderingsFolder._id],
       fields: {
         viewPath: 'site/components/HeroBanner.ejs',
@@ -186,7 +186,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       displayName: 'Introduction',
       templateId: renderingTemplate._id,
       parentId: renderingsFolder._id,
-      path: '/sitecore/layout/renderings/introduction',
+      path: '/root/layout/renderings/introduction',
       ancestors: [rootFolder._id, renderingsFolder._id],
       fields: {
         viewPath: 'site/components/Introduction.ejs',
@@ -203,7 +203,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       name: 'HomePage',
       displayName: 'Home Page Template',
       isSystem: false,
-      path: '/sitecore/templates/Project/Pages/HomePage',
+      path: '/root/templates/Project/Pages/HomePage',
       baseTemplates: [], // Standalone! No component templates inherited
       sections: [
         {
@@ -243,7 +243,7 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
       displayName: 'Trang Chủ',
       templateId: pageTpl._id,
       parentId: contentFolder._id,
-      path: '/sitecore/content/home',
+      path: '/root/content/home',
       ancestors: [rootFolder._id, contentFolder._id],
       fields: {},
       sharedFields: {},
@@ -290,14 +290,14 @@ describe('Phase 6.2: Effective Template Resolution & Component Template Binding'
         .rejects.toThrow('Không được phép chọn Template hệ thống');
     });
 
-    it('should reject template outside /sitecore/templates/Feature/Components if path is set', async () => {
+    it('should reject template outside Feature/Components if path is set', async () => {
       const wrongPathTpl = await Template.create({
         name: 'WrongPath',
-        path: '/sitecore/templates/Project/Pages/WrongPath',
+        path: '/root/templates/Project/Pages/WrongPath',
         isSystem: false,
       });
       await expect(templateService.validateComponentTemplateReference(wrongPathTpl._id))
-        .rejects.toThrow('/sitecore/templates/Feature/Components');
+        .rejects.toThrow('/root/templates/Feature/Components');
     });
 
     it('should accept valid component template under Feature/Components', async () => {

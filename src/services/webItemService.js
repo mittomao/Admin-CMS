@@ -2,6 +2,7 @@ const PublishedItem = require('../models/PublishedItem');
 const Template = require('../models/Template');
 const Item = require('../models/Item');
 const { AppError } = require('../utils/errors');
+const branding = require('../config/branding');
 
 /**
  * Helper to convert Map or Object to plain JS object
@@ -29,7 +30,7 @@ class WebItemService {
   }
 
   /**
-   * Get a published item by its materialized path (e.g. '/sitecore/content/home')
+   * Get a published item by its materialized path (e.g. '/root/content/home' or legacy '/root/content/home')
    * @param {string} path
    * @returns {Promise<PublishedItem|null>}
    */
@@ -37,10 +38,26 @@ class WebItemService {
     if (!path) return null;
     const cleanPath = path.trim().replace(/\/+$/, '') || '/';
     // Case-insensitive match or exact trimmed match
-    return PublishedItem.findOne({
+    let item = await PublishedItem.findOne({
       path: { $regex: new RegExp(`^${cleanPath}$`, 'i') },
       isDeleted: { $ne: true },
     }).lean();
+
+    if (!item) {
+      let altPath = null;
+      if (cleanPath.toLowerCase().startsWith('/root')) {
+        altPath = branding.PATHS.ROOT + cleanPath.slice('/root'.length);
+      } else if (cleanPath.toLowerCase().startsWith(branding.PATHS.ROOT.toLowerCase())) {
+        altPath = '/root' + cleanPath.slice(branding.PATHS.ROOT.length);
+      }
+      if (altPath) {
+        item = await PublishedItem.findOne({
+          path: { $regex: new RegExp(`^${altPath}$`, 'i') },
+          isDeleted: { $ne: true },
+        }).lean();
+      }
+    }
+    return item;
   }
 
   /**

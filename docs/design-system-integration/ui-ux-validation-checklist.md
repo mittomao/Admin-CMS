@@ -1,5 +1,5 @@
 # Bảng Kiểm Tra Nghiệm Thu UI/UX (UI/UX Validation Checklist)
-**Dự Án: Sitecore-like Hierarchical XM CMS (Node.js + Express + EJS + MongoDB)**
+**Dự Án: Treecraft Hierarchical XM CMS (Node.js + Express + EJS + MongoDB)**
 
 ---
 
@@ -16,7 +16,7 @@ Tài liệu này ghi nhận kết quả nghiệm thu toàn diện trong **Phase 
 - [x] **Bảng màu & Biến thể nhạt (Color Palette & Light Tints):**
   - [x] Các hành động chính dùng màu Primary (`#206bc4` / `#4f46e5`).
   - [x] Các trạng thái và badge sử dụng biến thể nhạt dịu mắt (`bg-green-lt`, `bg-warning-lt`, `bg-danger-lt`, `bg-purple-lt`, `bg-azure-lt`).
-  - [x] Màu đỏ thương hiệu Sitecore Red (`#eb1c24`) xuất hiện đúng vị trí: Logo icon chữ S, viền trên Taskbar chân trang, vạch chỉ báo Active của Ribbon Tab.
+  - [x] Màu đỏ thương hiệu Treecraft Red (`#eb1c24`) xuất hiện đúng vị trí: Logo icon chữ S, viền trên Taskbar chân trang, vạch chỉ báo Active của Ribbon Tab.
 - [x] **Bo góc & Đổ bóng (Border Radius & Shadows):**
   - [x] Nút bấm và ô nhập liệu bo góc `6px` (`rounded-2`).
   - [x] Thẻ chính (Card) và Tile ứng dụng bo góc `8px` (`rounded-3`).
@@ -39,8 +39,8 @@ Tài liệu này ghi nhận kết quả nghiệm thu toàn diện trong **Phase 
   - [x] Dải Breadcrumb hiển thị chính xác tên màn hình hiện tại.
   - [x] Ô tìm kiếm nhanh hiển thị ký hiệu phím tắt `<kbd>Ctrl K</kbd>`.
   - [x] Avatar người dùng hiển thị đúng ký tự đầu tên tài khoản, dropdown chứa nút Đăng xuất.
-- [x] **Thanh Taskbar Dưới Đáy (Sitecore Modernized):**
-  - [x] Cố định chắc chắn ở đáy màn hình (`fixed-bottom`, viền trên màu đỏ Sitecore).
+- [x] **Thanh Taskbar Dưới Đáy (Treecraft Modernized):**
+  - [x] Cố định chắc chắn ở đáy màn hình (`fixed-bottom`, viền trên màu đỏ Treecraft accent).
   - [x] Các nút ứng dụng (Launchpad, Content Editor, Media Library, Workbox) sử dụng icon Tabler sắc nét.
   - [x] Trạng thái Active hiển thị vạch sáng chỉ báo rõ ràng.
 - [x] **Launchpad Dashboard (Hệ Thống 2 Tầng Thẻ):**

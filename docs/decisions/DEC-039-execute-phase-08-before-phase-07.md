@@ -31,7 +31,7 @@ Mọi hành vi trong GĐ 8 đều đi qua `itemService.canPerform(user, item, ac
 | `workflow:execute:Approve` | Chạy lệnh Approve chuyển sang Approved | `Administrator`, `Approver` | Kiểm tra quyền Command theo Workflow State |
 | `workflow:execute:Reject` | Chạy lệnh Reject trả về Draft | `Administrator`, `Approver` | Kiểm tra quyền Command theo Workflow State |
 | `workflow:execute:*` | Thực thi lệnh workflow bất kỳ | `Administrator`, `Approver` | Gán động theo `Workflow Command` item |
-| `workflow:manage` | Sửa định nghĩa workflow, states, commands | `Administrator` | Quản trị cây `/sitecore/system/Workflows` |
+| `workflow:manage` | Sửa định nghĩa workflow, states, commands | `Administrator` | Quản trị cây `/root/system/Workflows` |
 | `workbox:read` | Truy cập ứng dụng Workbox và xem items chờ duyệt | `Administrator`, `Editor`, `Approver` | Workbox lọc item user có quyền xem/duyệt |
 | `workbox:bulk` | Chạy thao tác duyệt/từ chối hàng loạt trong Workbox | `Administrator`, `Approver` | Kiểm tra quyền trên từng item trong mảng |
 

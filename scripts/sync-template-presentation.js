@@ -7,7 +7,7 @@ async function syncAll() {
   await mongoose.connect(process.env.MONGO_URI);
 
   const templateItems = await Item.find({
-    path: { $regex: '^/sitecore/templates', $options: 'i' },
+    path: { $regex: '^/root/templates', $options: 'i' },
     deleted: false
   }).lean();
 

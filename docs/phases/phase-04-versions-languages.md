@@ -22,7 +22,7 @@ updated: 2026-11-03
 - [`docs/decisions/DEC-020-presentation-shared-vs-final.md`](../decisions/DEC-020-presentation-shared-vs-final.md)
 
 ## Mục tiêu
-Hoàn thiện cơ chế Đa ngôn ngữ (Multilingual) và Quản lý phiên bản (Item Versioning) chuẩn Sitecore: cho phép thêm phiên bản mới, chuyển đổi qua lại giữa các phiên bản/ngôn ngữ, so sánh khác biệt (Diff View) và khôi phục (Rollback); đồng thời thiết kế sẵn cấu trúc schema chừa chỗ cho Presentation (Shared Layout và Final Layout theo từng phiên bản/ngôn ngữ).
+Hoàn thiện cơ chế Đa ngôn ngữ (Multilingual) và Quản lý phiên bản (Item Versioning) chuẩn Treecraft: cho phép thêm phiên bản mới, chuyển đổi qua lại giữa các phiên bản/ngôn ngữ, so sánh khác biệt (Diff View) và khôi phục (Rollback); đồng thời thiết kế sẵn cấu trúc schema chừa chỗ cho Presentation (Shared Layout và Final Layout theo từng phiên bản/ngôn ngữ).
 
 ## Phạm vi
 - **Làm:** Cấu hình danh mục ngôn ngữ hỗ trợ hệ thống (en, vi-VN, ja...); Cấu trúc lưu trữ Versioned, Unversioned, và Shared fields; Xác nhận và áp dụng thực tế cờ `isShared` và `isUnversioned` đã định nghĩa trên Template từ GĐ 3; Bộ chọn ngôn ngữ và version trên Ribbon/Header của Content Editor; Tính năng "Add Version", "Remove Version"; Màn hình so sánh hai phiên bản (Diff View làm nổi bật thay đổi); Khôi phục phiên bản cũ; **Thiết kế schema chừa chỗ cho Presentation:** cấu trúc trường `Item.presentation.shared` (cấp item) và `Item.presentation.final` (theo từng `lang + version`), cơ chế sao chép `finalLayout` từ version nguồn khi tạo version mới hoặc nhân bản version.

@@ -31,7 +31,7 @@ describe('GĐ 4: Version & Language API & Partial HTML Endpoints', () => {
     const passwordHash = await User.hashPassword('admin123');
     await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       fullName: 'System Administrator',
       passwordHash,
       roles: [adminRole._id],
@@ -41,7 +41,7 @@ describe('GĐ 4: Version & Language API & Partial HTML Endpoints', () => {
     const authorHash = await User.hashPassword('author123');
     await User.create({
       username: 'author',
-      email: 'author@sitecore.local',
+      email: 'author@treecraft.local',
       fullName: 'Content Author',
       passwordHash: authorHash,
       roles: [authorRole._id],

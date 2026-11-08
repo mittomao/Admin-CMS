@@ -710,7 +710,7 @@ function initRibbonEvents() {
       if (!res.ok || !result.success) {
         alert(result.message || 'Cannot delete template.');
       } else {
-        window.location.href = '/admin/content-editor?path=/sitecore/templates';
+        window.location.href = '/admin/content-editor?path=/root/templates';
       }
     } catch (err) {
       alert(`Error: ${err.message}`);

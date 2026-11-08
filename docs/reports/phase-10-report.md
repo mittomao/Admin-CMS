@@ -19,10 +19,10 @@ Toàn bộ mục tiêu và yêu cầu khắt khe của Giai đoạn 10 đã đư
    - Không áp dụng middleware session, auth, CSRF của admin lên các request công khai.
    - Đường dẫn `/` nay kết xuất trang chủ Home công khai (thay thế chuyển hướng `/admin/login` ban đầu).
    - Thiết lập CSP độc lập cho public website qua `helmet`, cấp phép ảnh trực tiếp từ Cloudinary CDN (`res.cloudinary.com`).
-   - Kiểm tra chống va chạm tên: Item có tên `admin` dưới `/sitecore/content` không thể che khuất phân hệ `/admin`.
+   - Kiểm tra chống va chạm tên: Item có tên `admin` dưới `/root/content` không thể che khuất phân hệ `/admin`.
 
 2. **Bộ Phân giải URL (Site Resolver - `src/services/siteResolver.js`):**
-   - Ánh xạ đường dẫn URL sang Content Item trong kho dữ liệu `items_web` theo chuẩn Sitecore: Start Item `/sitecore/content/Home` ↔ `/`.
+   - Ánh xạ đường dẫn URL sang Content Item trong kho dữ liệu `items_web` theo chuẩn Treecraft: Start Item `/root/content/Home` ↔ `/`.
    - Hỗ trợ đa ngôn ngữ: `vi` là ngôn ngữ mặc định (không tiền tố), `/en/...` cho tiếng Anh.
    - Chặn đứng path traversal (`..`), chuẩn hóa đường dẫn, tự động chuyển hướng 301 khi có dấu gạch chéo `/` ở cuối.
    - Kiểm tra ràng buộc phân cấp: Chỉ xuất bản khi trang và tất cả tổ tiên đều đã xuất bản hợp lệ trên Web Store; nếu chưa xuất bản trả về 404.
@@ -56,7 +56,7 @@ Toàn bộ mục tiêu và yêu cầu khắt khe của Giai đoạn 10 đã đư
 7. **Chế độ Xem trước (Admin Preview Mode):**
    - Route `GET /admin/preview?id=...&lang=...` dùng chung `siteRenderer` nhưng đọc trực tiếp từ kho `Item` (Master).
    - Kiểm tra phân quyền an toàn qua `canPerform(user, item, 'item:read')`.
-   - Dải banner cố định trên cùng (`#sitecorePreviewBanner`) màu vàng Sitecore cảnh báo người dùng đang ở chế độ xem trước dữ liệu Master chưa xuất bản.
+   - Dải banner cố định trên cùng (`#treecraftPreviewBanner`) màu vàng cảnh báo cảnh báo người dùng đang ở chế độ xem trước dữ liệu Master chưa xuất bản.
    - Bổ sung nút "Xem trước (Preview)" và "Mở trang công khai (Public Site)" ngay trên Header Form Content Editor.
 
 8. **Sửa lỗi Giao diện (Media Library & Quick Info):**
@@ -81,7 +81,7 @@ Toàn bộ mục tiêu và yêu cầu khắt khe của Giai đoạn 10 đã đư
 | | `src/views/site/partials/{head,header,footer}.ejs` | Partials dùng chung cho site |
 | | `src/views/site/errors/{404,500}.ejs` | Giao diện lỗi công khai chuẩn |
 | | `src/views/content-editor/item-form.ejs` | Bổ sung Preview & Public Site action links |
-| | `src/views/partials/quick-info.ejs` | Sửa dứt điểm CSS & Layout header Sitecore style |
+| | `src/views/partials/quick-info.ejs` | Sửa dứt điểm CSS & Layout header Treecraft style |
 | | `src/views/admin/media/partials/media-browser-core.ejs` | Cố định kích thước Grid & Refresh button |
 | **Styles & Assets** | `src/styles/admin/main.css` | Enforce media grid, card, quick info styles |
 | | `public/js/admin/media-browser.js` | Cố định inline styles cho Media Cards & Thumbnails |

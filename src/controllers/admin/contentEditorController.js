@@ -9,7 +9,10 @@ const Template = require('../../models/Template');
 const treeHelper = require('../../utils/treeHelper');
 const ribbonConfig = require('../../config/ribbon');
 const logger = require('../../utils/logger');
+const branding = require('../../config/branding');
 const { ForbiddenError, NotFoundError } = require('../../utils/errors');
+
+const isLayoutItem = (p) => p && (p.toLowerCase().startsWith(branding.PATHS.LAYOUT.toLowerCase()) || p.toLowerCase().startsWith('/root/layout'));
 
 const contentEditorController = {
   /**
@@ -34,8 +37,10 @@ const contentEditorController = {
       }
 
       if (!selectedItem) {
-        // Fallback to /sitecore/content/home or root
-        selectedItem = (await itemService.getByPath('/sitecore/content/home', currentDb)) || (await itemService.getRoot(currentDb));
+        // Fallback to /root/content/home, /root/content/home or root
+        selectedItem = (await itemService.getByPath(branding.PATHS.HOME, currentDb)) ||
+                       (await itemService.getByPath('/root/content/home', currentDb)) ||
+                       (await itemService.getRoot(currentDb));
       }
 
       const lang = req.query.lang || 'vi';
@@ -522,6 +527,67 @@ const contentEditorController = {
   },
 
   /**
+   * GET /api/items/resolve-path?path=&db=
+   * GET /api/items?path=&db=
+   * Resolve an item by path or ID with security check
+   */
+  async resolvePath(req, res, next) {
+    try {
+      const rawPath = req.query.path;
+      const rawId = req.query.id;
+      const rawDb = req.query.db || 'master';
+      const currentDb = itemService.validateDb(rawDb);
+
+      if (currentDb === 'web') {
+        const canReadWeb = await itemService.canPerform(req.user, null, 'database:web:read');
+        if (!canReadWeb) {
+          return res.status(403).json({ success: false, message: 'Forbidden: Web database read not permitted' });
+        }
+      }
+
+      let item = null;
+      if (rawPath) {
+        item = await itemService.getByPath(rawPath, currentDb);
+      } else if (rawId) {
+        item = await itemService.getById(rawId, currentDb);
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Vui lòng cung cấp tham số "path" hoặc "id".',
+        });
+      }
+
+      if (!item) {
+        return res.status(404).json({
+          success: false,
+          message: `Không tìm thấy Item tại đường dẫn "${rawPath || rawId}"`,
+        });
+      }
+
+      if (req.user) {
+        const canRead = await itemService.canPerform(req.user, item, 'item:read');
+        if (!canRead) {
+          return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền đọc Item này (item:read).',
+          });
+        }
+      }
+
+      const itemObj = item.toObject ? item.toObject() : item;
+      return res.json({
+        success: true,
+        _id: item._id,
+        id: item._id,
+        data: itemObj,
+        ...itemObj,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
    * POST /api/items
    * Insert new item from template
    */
@@ -533,7 +599,7 @@ const contentEditorController = {
 
       const parent = await Item.findById(parentId).lean();
       if (parent) {
-        if (parent.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (isLayoutItem(parent.path)) {
           if (!(await itemService.canPerform(user, parent, 'presentation:write'))) {
             return res.status(403).json({
               success: false,
@@ -594,7 +660,7 @@ const contentEditorController = {
             message: 'Bạn không có quyền chỉnh sửa mục này (cần quyền write).',
           });
         }
-        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (isLayoutItem(targetItem.path)) {
           if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
             return res.status(403).json({
               success: false,
@@ -806,7 +872,7 @@ const contentEditorController = {
             message: 'Bạn không có quyền đổi tên item này (cần quyền rename).',
           });
         }
-        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (isLayoutItem(targetItem.path)) {
           if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
             return res.status(403).json({
               success: false,
@@ -850,7 +916,7 @@ const contentEditorController = {
             message: 'Bạn không có quyền nhân bản item này (cần quyền create).',
           });
         }
-        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (isLayoutItem(targetItem.path)) {
           if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
             return res.status(403).json({
               success: false,
@@ -929,7 +995,7 @@ const contentEditorController = {
             message: 'Bạn không có quyền di chuyển item này (cần quyền write).',
           });
         }
-        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (isLayoutItem(targetItem.path)) {
           if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
             return res.status(403).json({
               success: false,
@@ -996,7 +1062,7 @@ const contentEditorController = {
             message: 'Bạn không có quyền xoá item này (cần quyền delete).',
           });
         }
-        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+        if (isLayoutItem(targetItem.path)) {
           if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
             return res.status(403).json({
               success: false,
@@ -1071,7 +1137,7 @@ const contentEditorController = {
       } else if (itemPath) {
         item = await itemService.getByPath(itemPath);
       } else {
-        item = await itemService.getByPath('/sitecore/content/Home');
+        item = (await itemService.getByPath(branding.PATHS.HOME)) || (await itemService.getByPath('/root/content/Home'));
       }
 
       if (!item) {

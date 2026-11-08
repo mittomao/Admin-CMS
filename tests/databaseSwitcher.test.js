@@ -59,7 +59,7 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
     const passwordHash = await User.hashPassword('admin123');
     adminUser = await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       passwordHash,
       fullName: 'System Admin',
       roles: [adminRole._id],
@@ -70,7 +70,7 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
     // Editor User
     editorUser = await User.create({
       username: 'editor',
-      email: 'editor@sitecore.local',
+      email: 'editor@treecraft.local',
       passwordHash,
       fullName: 'Content Editor',
       roles: [editorRole._id],
@@ -100,11 +100,11 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
       ],
     });
 
-    // Master Tree: /sitecore -> /sitecore/content -> publishedPage & unpublishedPage
+    // Master Tree: /root -> /root/content -> publishedPage & unpublishedPage
     masterRoot = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
-      path: '/sitecore',
+      name: 'root',
+      displayName: 'root',
+      path: '/root',
       templateId: folderTemplate._id,
       parentId: null,
       ancestors: [],
@@ -115,7 +115,7 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
     const masterContent = await Item.create({
       name: 'content',
       displayName: 'Content',
-      path: '/sitecore/content',
+      path: '/root/content',
       templateId: folderTemplate._id,
       parentId: masterRoot._id,
       ancestors: [masterRoot._id],
@@ -126,7 +126,7 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
     publishedPage = await Item.create({
       name: 'published-page',
       displayName: 'Published Page',
-      path: '/sitecore/content/published-page',
+      path: '/root/content/published-page',
       templateId: pageTemplate._id,
       parentId: masterContent._id,
       ancestors: [masterRoot._id, masterContent._id],
@@ -148,7 +148,7 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
     unpublishedPage = await Item.create({
       name: 'draft-page',
       displayName: 'Draft Page',
-      path: '/sitecore/content/draft-page',
+      path: '/root/content/draft-page',
       templateId: pageTemplate._id,
       parentId: masterContent._id,
       ancestors: [masterRoot._id, masterContent._id],
@@ -166,7 +166,7 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
       deleted: false,
     });
 
-    // Web Tree (items_web): only /sitecore, /sitecore/content, publishedPage, and orphanPage
+    // Web Tree (items_web): only /root, /root/content, publishedPage, and orphanPage
     webRoot = await PublishedItem.create({
       _id: masterRoot._id,
       name: masterRoot.name,
@@ -212,7 +212,7 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
       _id: new mongoose.Types.ObjectId(),
       name: 'orphan-page',
       displayName: 'Orphan Page',
-      path: '/sitecore/content/orphan-page',
+      path: '/root/content/orphan-page',
       templateId: pageTemplate._id,
       parentId: masterContent._id,
       ancestors: [webRoot._id, masterContent._id],

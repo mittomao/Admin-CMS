@@ -23,7 +23,7 @@ async function main() {
   console.log('====================================================\n');
 
   try {
-    const mongoUri = env.MONGO_URI || process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/sitecore_cms';
+    const mongoUri = env.MONGO_URI || process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/treecraft_cms';
     await mongoose.connect(mongoUri);
     logger.info('Connected to MongoDB.');
 

@@ -2,6 +2,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../src/app');
+const branding = require('../src/config/branding');
 const User = require('../src/models/User');
 const Role = require('../src/models/Role');
 const Template = require('../src/models/Template');
@@ -28,7 +29,7 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
     const passwordHash = await User.hashPassword('pass123');
     adminUser = await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       fullName: 'System Administrator',
       passwordHash,
       roles: [adminRole._id],
@@ -36,7 +37,7 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
 
     await Language.create({ code: 'vi', name: 'Vietnamese', isDefault: true, active: true });
 
-    // Root /sitecore
+    // Root /root
     const rootFolderTpl = await Template.create({
       name: 'Folder',
       displayName: 'Folder',
@@ -46,12 +47,12 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
     });
 
     await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
+      name: branding.ROOT_NAME,
+      displayName: branding.ROOT_NAME,
       templateId: rootFolderTpl._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore',
+      path: branding.ROOT_PATH,
       sortOrder: 1,
       fields: {},
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
@@ -111,25 +112,25 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
   });
 
   // ==========================================
-  // 1. Path Resolution & Aliasing (/template -> /sitecore/templates)
+  // 1. Path Resolution & Aliasing (/template -> /root/templates)
   // ==========================================
   describe('1. Path Resolution & Aliases', () => {
-    it('should resolve /sitecore/templates node', async () => {
-      const node = await itemService.getByPath('/sitecore/templates');
+    it('should resolve /root/templates node', async () => {
+      const node = await itemService.getByPath(branding.PATHS.TEMPLATES);
       expect(node).toBeDefined();
       expect(node.name).toBe('templates');
     });
 
-    it('should resolve /template alias to /sitecore/templates', async () => {
+    it('should resolve /template alias to /root/templates', async () => {
       const node = await itemService.getByPath('/template');
       expect(node).toBeDefined();
-      expect(node.path).toBe('/sitecore/templates');
+      expect(node.path).toBe(branding.PATHS.TEMPLATES);
     });
 
-    it('should resolve /templates alias to /sitecore/templates', async () => {
+    it('should resolve /templates alias to /root/templates', async () => {
       const node = await itemService.getByPath('/templates');
       expect(node).toBeDefined();
-      expect(node.path).toBe('/sitecore/templates');
+      expect(node.path).toBe(branding.PATHS.TEMPLATES);
     });
 
     it('should resolve child template path via alias: /template/Feature/Components/HeroBanner', async () => {
@@ -144,8 +145,8 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
   // 2. Content Tree Hierarchy for Templates
   // ==========================================
   describe('2. Content Tree Hierarchy', () => {
-    it('should have standard folders under /sitecore/templates', async () => {
-      const rootNode = await itemService.getByPath('/sitecore/templates');
+    it('should have standard folders under /root/templates', async () => {
+      const rootNode = await itemService.getByPath(branding.PATHS.TEMPLATES);
       const children = await itemService.getChildren(rootNode._id);
       const names = children.map((c) => c.name);
 
@@ -154,17 +155,17 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
       expect(names).toContain('Project');
     });
 
-    it('should place HeroBanner under /sitecore/templates/Feature/Components', async () => {
+    it('should place HeroBanner under /root/templates/Feature/Components', async () => {
       const heroItem = await Item.findById(heroBannerTpl._id);
       expect(heroItem).toBeDefined();
-      expect(heroItem.path).toBe('/sitecore/templates/Feature/Components/HeroBanner');
+      expect(heroItem.path).toBe(`${branding.PATHS.TEMPLATES}/Feature/Components/HeroBanner`);
       expect(heroItem.displayName).toBe('Hero Banner');
     });
 
-    it('should place Home under /sitecore/templates/Project/Pages', async () => {
+    it('should place Home under /root/templates/Project/Pages', async () => {
       const homeItem = await Item.findById(homePageTpl._id);
       expect(homeItem).toBeDefined();
-      expect(homeItem.path).toBe('/sitecore/templates/Project/Pages/Home');
+      expect(homeItem.path).toBe(`${branding.PATHS.TEMPLATES}/Project/Pages/Home`);
     });
   });
 
@@ -195,14 +196,14 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
     });
 
     it('GET /admin/content-editor/item/:id/form partial returns normal item form for a regular content item', async () => {
-      // Create a regular content item under /sitecore/content
+      // Create a regular content item under /root/content
       const contentItem = await Item.create({
         name: 'test-article',
         displayName: 'Test Article',
         templateId: heroBannerTpl._id,
         parentId: null,
         ancestors: [],
-        path: '/sitecore/content/test-article',
+        path: `${branding.PATHS.CONTENT}/test-article`,
         fields: { Title: 'Sample Article Title' },
         languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
         deleted: false,
@@ -221,9 +222,9 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
   // 4. Standalone Template Manager Redirection
   // ==========================================
   describe('4. Standalone Template Manager Redirection', () => {
-    it('GET /admin/template-manager redirects to /admin/content-editor?path=/sitecore/templates', async () => {
+    it('GET /admin/template-manager redirects to /admin/content-editor?path=/root/templates', async () => {
       const res = await adminAgent.get('/admin/template-manager').expect(302);
-      expect(res.headers.location).toContain('/admin/content-editor?path=/sitecore/templates');
+      expect(res.headers.location).toContain(`/admin/content-editor?path=${encodeURIComponent(branding.PATHS.TEMPLATES)}`);
     });
 
     it('GET /admin/template-manager/:id redirects to /admin/content-editor/:id', async () => {
@@ -246,7 +247,7 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
       });
 
       const standardTpl = await Template.findOne({ name: 'Standard Template' });
-      const componentsFolder = await itemService.getByPath('/sitecore/templates/Feature/Components');
+      const componentsFolder = await itemService.getByPath(`${branding.PATHS.TEMPLATES}/Feature/Components`);
 
       const newItem = await itemService.createFromTemplate(
         componentsFolder._id,
@@ -257,14 +258,14 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
       );
 
       expect(newItem).toBeDefined();
-      expect(newItem.path).toBe('/sitecore/templates/Feature/Components/promocard');
+      expect(newItem.path).toBe(`${branding.PATHS.TEMPLATES}/Feature/Components/promocard`);
 
       // Verify corresponding Template document is created
       const newTpl = await Template.findById(newItem._id);
       expect(newTpl).toBeDefined();
       expect(newTpl.name).toBe('PromoCard');
       expect(newTpl.displayName).toBe('Promo Card Component');
-      expect(newTpl.path).toBe('/sitecore/templates/Feature/Components/PromoCard');
+      expect(newTpl.path).toBe(`${branding.PATHS.TEMPLATES}/Feature/Components/PromoCard`);
     });
 
     it('should prevent deleting template when in use', async () => {
@@ -275,7 +276,7 @@ describe('Refactor: Templates in Content Tree & Removal of Standalone Template M
         templateId: heroBannerTpl._id,
         parentId: null,
         ancestors: [],
-        path: '/sitecore/content/promo-1',
+        path: `${branding.PATHS.CONTENT}/promo-1`,
         fields: {},
         languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
         deleted: false,

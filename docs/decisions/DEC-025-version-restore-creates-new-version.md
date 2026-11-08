@@ -15,5 +15,5 @@ Tại `versionService.restoreVersion(itemId, langCode, versionNumber)`:
 
 ## 3. Hệ quả & Lưu ý kỹ thuật
 - **Bảo toàn lịch sử 100%:** Dữ liệu lịch sử luôn là bản ghi chỉ thêm (Append-only / Immutable History), biên tập viên có thể so sánh hoặc quay lại bất kỳ thời điểm nào mà không sợ mất dữ liệu.
-- **Tuân thủ chuẩn Sitecore XM:** Hành vi khôi phục này tương đồng hoàn toàn với cơ chế Versioning của Sitecore.
+- **Tuân thủ chuẩn Treecraft:** Hành vi khôi phục này tương đồng hoàn toàn với cơ chế Versioning của Treecraft.
 

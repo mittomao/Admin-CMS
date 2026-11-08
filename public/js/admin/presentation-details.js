@@ -418,7 +418,7 @@ window.PresentationDetails = (function () {
       grid.innerHTML = `
         <div class="col-12 text-center py-4 text-muted">
           <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-          <div>Đang tải danh sách components từ /sitecore/layout/Renderings/...</div>
+          <div>Đang tải danh sách components Renderings...</div>
         </div>
       `;
     }
@@ -432,7 +432,7 @@ window.PresentationDetails = (function () {
       const res = await fetch(`/api/presentation/renderings/allowed?placeholder=${encodeURIComponent(placeholder)}&includeAll=true`);
       const json = await res.json();
       if (!json.success || !Array.isArray(json.data)) {
-        grid.innerHTML = '<div class="alert alert-warning">Không tải được danh sách renderings từ /sitecore/layout/Renderings/.</div>';
+        grid.innerHTML = '<div class="alert alert-warning">Không tải được danh sách components Renderings.</div>';
         if (statsEl) statsEl.textContent = 'Lỗi tải dữ liệu';
         return;
       }

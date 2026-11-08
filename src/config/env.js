@@ -1,5 +1,6 @@
 const dotenv = require('dotenv');
 const path = require('path');
+const branding = require('./branding');
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
@@ -21,19 +22,19 @@ if (missingVars.length > 0) {
 const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT, 10) || 3000,
-  APP_NAME: process.env.APP_NAME || 'Sitecore XM CMS',
+  APP_NAME: process.env.APP_NAME || branding.PROJECT_TITLE,
   APP_URL: process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`,
   MONGO_URI: process.env.MONGO_URI,
   SESSION_SECRET: process.env.SESSION_SECRET || 'default_insecure_session_secret_2026',
-  SESSION_NAME: process.env.SESSION_NAME || 'cms_session_id',
+  SESSION_NAME: process.env.SESSION_NAME || branding.SESSION_COOKIE_NAME,
   SESSION_MAX_AGE: parseInt(process.env.SESSION_MAX_AGE, 10) || 86400000,
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
   STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || 'cloudinary',
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
-  CLOUDINARY_ROOT_FOLDER: process.env.CLOUDINARY_ROOT_FOLDER || process.env.CLOUDINARY_API_FOLDER || 'AdminCMS',
-  SITE_START_ITEM: process.env.SITE_START_ITEM || '/sitecore/content/Home',
+  CLOUDINARY_ROOT_FOLDER: process.env.CLOUDINARY_ROOT_FOLDER || process.env.CLOUDINARY_API_FOLDER || branding.CLOUDINARY_DEFAULT_ROOT,
+  SITE_START_ITEM: process.env.SITE_START_ITEM || branding.PATHS.START_ITEM,
   SITE_CACHE: process.env.SITE_CACHE !== 'false',
   SITE_CACHE_TTL: parseInt(process.env.SITE_CACHE_TTL || '300', 10),
   SITE_CACHE_MAX_ITEMS: parseInt(process.env.SITE_CACHE_MAX_ITEMS || '500', 10),

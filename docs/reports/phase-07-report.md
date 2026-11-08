@@ -12,7 +12,7 @@
 
 ### 1. Tóm tắt kết quả triển khai
 
-Giai đoạn 7 đã chuyển đổi thành công toàn bộ hệ thống phân quyền của CMS từ cơ chế kiểm tra vai trò thô sang **mô hình phân quyền chi tiết theo từng Item (Item-Level Access Control List - ACL) chuẩn kiến trúc Sitecore Experience Management (XM)**:
+Giai đoạn 7 đã chuyển đổi thành công toàn bộ hệ thống phân quyền của CMS từ cơ chế kiểm tra vai trò thô sang **mô hình phân quyền chi tiết theo từng Item (Item-Level Access Control List - ACL) chuẩn kiến trúc Treecraft Experience Management (XM)**:
 
 1. **Mô hình Quyền & Quyết định Kiến trúc DEC-042:**
    - Ban hành [`DEC-042`](../decisions/DEC-042-item-level-acl-and-permission-resolution.md) quy định chi tiết 5 nguyên tắc giải quyết xung đột quyền:
@@ -49,7 +49,7 @@ Giai đoạn 7 đã chuyển đổi thành công toàn bộ hệ thống phân q
 
 5. **Migration Dữ liệu & Tương thích ngược:**
    - Viết kịch bản migration `src/scripts/migrate-phase-07-default-acl.js` hỗ trợ `--dry-run`, `--rollback` và live migration.
-   - Đã khởi tạo Domain mặc định `sitecore` và seed 55 quy tắc ACL gốc trên các node `/sitecore`, `/sitecore/content`, `/sitecore/layout`, `/sitecore/templates`, `/sitecore/system` trên MongoDB Atlas, đảm bảo hành vi hiện tại không bị gián đoạn.
+   - Đã khởi tạo Domain mặc định `treecraft` và seed 55 quy tắc ACL gốc trên các node `/root`, `/root/content`, `/root/layout`, `/root/templates`, `/root/system` trên MongoDB Atlas, đảm bảo hành vi hiện tại không bị gián đoạn.
 
 6. **Chất lượng Mã nguồn & Kiểm thử:**
    - Viết bộ test suite mới `tests/aclService.test.js` bao phủ 100% các nguyên tắc phân giải của DEC-042 (12/12 test cases passed).
@@ -63,7 +63,7 @@ Giai đoạn 7 đã chuyển đổi thành công toàn bộ hệ thống phân q
 | STT | Tệp tin | Hành động | Mô tả |
 | :---: | :--- | :---: | :--- |
 | 1 | `docs/decisions/DEC-042-item-level-acl-and-permission-resolution.md` | **Tạo mới** | Quyết định kiến trúc về mô hình quyền và quy tắc phân giải ACL |
-| 2 | `src/models/Domain.js` | **Tạo mới** | Schema miền bảo mật (mặc định: `sitecore`) |
+| 2 | `src/models/Domain.js` | **Tạo mới** | Schema miền bảo mật (mặc định: `treecraft`) |
 | 3 | `src/models/AccessControl.js` | **Tạo mới** | Schema quy tắc phân quyền theo Item (Principal, Right, Access, Inheritance) |
 | 4 | `src/models/Role.js` | **Cập nhật** | Thêm trường `domain` và kế thừa vai trò `memberOf` |
 | 5 | `src/models/User.js` | **Cập nhật** | Thêm trường `domain`, `displayName`, `isAdmin`, `isDisabled` |

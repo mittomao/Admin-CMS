@@ -10,8 +10,9 @@ const mediaPathMapper = require('../utils/mediaPathMapper');
 const { sniffBuffer } = require('../utils/fileSniffer');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 
-const ROOT_MEDIA_PATH = '/sitecore/media library';
+const ROOT_MEDIA_PATH = branding.PATHS.MEDIA;
 
 class MediaService {
   constructor() {
@@ -138,18 +139,24 @@ class MediaService {
   }
 
   /**
-   * Khởi tạo hoặc lấy thư mục gốc /sitecore/media library dưới dạng Item
+   * Khởi tạo hoặc lấy thư mục gốc Media Library dưới dạng Item
    */
   async getOrCreateRootFolder(userId = null) {
     const templates = await ensureMediaTemplates();
     const folderTpl = templates[MEDIA_TEMPLATES.MEDIA_FOLDER];
 
-    let root = await Item.findOne({ path: ROOT_MEDIA_PATH, deleted: false });
+    let root = await Item.findOne({
+      path: { $in: [branding.PATHS.MEDIA, '/root/media library'] },
+      deleted: false,
+    });
     if (!root) {
-      // Đảm bảo node cha /sitecore tồn tại nếu có thể
-      let sitecore = await Item.findOne({ path: '/sitecore', deleted: false });
-      const parentId = sitecore ? sitecore._id : null;
-      const ancestors = sitecore ? [sitecore._id] : [];
+      // Đảm bảo node cha /root hoặc /treecraft tồn tại nếu có thể
+      let rootNode = await Item.findOne({
+        path: { $in: [branding.PATHS.ROOT, '/root'] },
+        deleted: false,
+      });
+      const parentId = rootNode ? rootNode._id : null;
+      const ancestors = rootNode ? [rootNode._id] : [];
 
       root = await Item.create({
         name: 'media library',
@@ -157,14 +164,14 @@ class MediaService {
         templateId: folderTpl._id,
         parentId,
         ancestors,
-        path: ROOT_MEDIA_PATH,
+        path: branding.PATHS.MEDIA,
         sortOrder: 300,
         fields: {},
         sharedFields: {},
         createdBy: userId,
         updatedBy: userId
       });
-      logger.info('Created root media library item node: /sitecore/media library');
+      logger.info(`Created root media library item node: ${branding.PATHS.MEDIA}`);
     }
 
     const formatted = this.formatMediaItem(root);

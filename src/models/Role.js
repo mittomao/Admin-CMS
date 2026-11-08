@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const branding = require('../config/branding');
 
 const roleSchema = new mongoose.Schema(
   {
@@ -11,7 +12,7 @@ const roleSchema = new mongoose.Schema(
     domain: {
       type: String,
       trim: true,
-      default: 'sitecore',
+      default: branding.DEFAULT_DOMAIN,
     },
     memberOf: [
       {

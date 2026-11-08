@@ -33,7 +33,7 @@ describe('GĐ 1 - Authentication & Launchpad Tests', () => {
     const adminPasswordHash = await User.hashPassword('admin123');
     await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       passwordHash: adminPasswordHash,
       fullName: 'System Administrator',
       roles: [adminRole._id],
@@ -44,7 +44,7 @@ describe('GĐ 1 - Authentication & Launchpad Tests', () => {
     const authorPasswordHash = await User.hashPassword('author123');
     await User.create({
       username: 'author',
-      email: 'author@sitecore.local',
+      email: 'author@treecraft.local',
       passwordHash: authorPasswordHash,
       fullName: 'Jane Author',
       roles: [authorRole._id],
@@ -86,7 +86,7 @@ describe('GĐ 1 - Authentication & Launchpad Tests', () => {
   it('GET /admin/login should return 200 with login form', async () => {
     const res = await request(app).get('/admin/login');
     expect(res.status).toBe(200);
-    expect(res.text).toContain('Sitecore Experience Management');
+    expect(res.text).toContain('Treecraft Content Management');
     expect(res.text).toContain('User name');
     expect(res.text).toContain('Password');
     expect(res.text).toContain('Log in');

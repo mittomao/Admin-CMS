@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const Item = require('../models/Item');
 const Template = require('../models/Template');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 
 const uuidv4 = () => randomUUID();
 
@@ -86,12 +87,13 @@ const presentationService = {
   },
 
   /**
-   * Get all active Layout items under /sitecore/layout/Layouts/
+   * Get all active Layout items under /root/layout/Layouts/
    */
   async getAllLayouts() {
     const layoutTemplate = await Template.findOne({ name: 'Layout' }).lean();
+    const layoutRegex = new RegExp(`^(${branding.PATHS.LAYOUTS}|/root/layout/Layouts)/[^/]+$`, 'i');
     const query = {
-      path: { $regex: new RegExp('^/sitecore/layout/Layouts/[^/]+$', 'i') },
+      path: { $regex: layoutRegex },
       deleted: false,
     };
     if (layoutTemplate) {
@@ -119,12 +121,13 @@ const presentationService = {
   },
 
   /**
-   * Get all active Placeholder items under /sitecore/layout/Placeholders/
+   * Get all active Placeholder items under /root/layout/Placeholders/
    */
   async getAllPlaceholders() {
     const placeholderTemplate = await Template.findOne({ name: 'Placeholder' }).lean();
+    const placeholderRegex = new RegExp(`^(${branding.PATHS.PLACEHOLDERS}|/root/layout/Placeholders)/[^/]+$`, 'i');
     const query = {
-      path: { $regex: new RegExp('^/sitecore/layout/Placeholders/[^/]+$', 'i') },
+      path: { $regex: placeholderRegex },
       deleted: false,
     };
     if (placeholderTemplate) {
@@ -162,10 +165,16 @@ const presentationService = {
    */
   getRenderingFolder(path) {
     if (!path) return 'Renderings';
-    const prefix = '/sitecore/layout/renderings/';
+    const primaryPrefix = `${branding.PATHS.RENDERINGS.toLowerCase()}/`;
+    const legacyPrefix = '/root/layout/renderings/';
     const lower = path.toLowerCase();
-    if (lower.startsWith(prefix)) {
-      const relative = path.substring(prefix.length);
+    let relative = '';
+    if (lower.startsWith(primaryPrefix)) {
+      relative = path.substring(primaryPrefix.length);
+    } else if (lower.startsWith(legacyPrefix)) {
+      relative = path.substring(legacyPrefix.length);
+    }
+    if (relative) {
       const segments = relative.split('/');
       if (segments.length > 1) {
         return segments[0];
@@ -175,12 +184,13 @@ const presentationService = {
   },
 
   /**
-   * Get all active Rendering items under /sitecore/layout/Renderings/
+   * Get all active Rendering items under /root/layout/Renderings/
    */
   async getAllRenderings() {
     const renderingTemplate = await Template.findOne({ name: 'Rendering' }).lean();
+    const renderingRegex = new RegExp(`^(${branding.PATHS.RENDERINGS}|/root/layout/Renderings)/.*`, 'i');
     const query = {
-      path: { $regex: new RegExp('^/sitecore/layout/Renderings/.*', 'i') },
+      path: { $regex: renderingRegex },
       deleted: false,
     };
     if (renderingTemplate) {
@@ -535,8 +545,9 @@ const presentationService = {
       if (!layoutItem) {
         throw new ValidationError(`Layout với ID ${layoutId} không tồn tại.`);
       }
-      if (!layoutItem.path.toLowerCase().startsWith('/sitecore/layout/layouts')) {
-        throw new ValidationError('Layout được chọn phải nằm trong nhánh /sitecore/layout/Layouts.');
+      const layoutsPathLower = branding.PATHS.LAYOUTS.toLowerCase();
+      if (!layoutItem.path.toLowerCase().startsWith(layoutsPathLower) && !layoutItem.path.toLowerCase().startsWith('/root/layout/layouts')) {
+        throw new ValidationError(`Layout được chọn phải nằm trong nhánh ${branding.PATHS.LAYOUTS}.`);
       }
       const tplName = layoutItem.templateId?.name || '';
       if (tplName !== 'Layout') {
@@ -553,8 +564,9 @@ const presentationService = {
         if (!renderingItem) {
           throw new ValidationError(`Rendering tại vị trí [${i}] với ID ${r.renderingId} không tồn tại.`);
         }
-        if (!renderingItem.path.toLowerCase().startsWith('/sitecore/layout/renderings')) {
-          throw new ValidationError(`Rendering ${renderingItem.name} phải nằm trong nhánh /sitecore/layout/Renderings.`);
+        const renderingsPathLower = branding.PATHS.RENDERINGS.toLowerCase();
+        if (!renderingItem.path.toLowerCase().startsWith(renderingsPathLower) && !renderingItem.path.toLowerCase().startsWith('/root/layout/renderings')) {
+          throw new ValidationError(`Rendering ${renderingItem.name} phải nằm trong nhánh ${branding.PATHS.RENDERINGS}.`);
         }
         const tplName = renderingItem.templateId?.name || '';
         if (tplName !== 'Rendering') {
@@ -648,10 +660,11 @@ const presentationService = {
     await item.save();
     logger.info(`[presentationService] Saved ${scope} presentation for item: ${item.path} (ID: ${item._id})`);
 
-    // Đồng bộ sang Template document nếu item là một Template (nằm dưới /sitecore/templates hoặc có Template trùng _id)
+    // Đồng bộ sang Template document nếu item là một Template (nằm dưới /root/templates hoặc có Template trùng _id)
     if (scope === 'shared') {
       try {
-        const isTemplatePath = item.path?.toLowerCase().startsWith('/sitecore/templates');
+        const templatesPathLower = branding.PATHS.TEMPLATES.toLowerCase();
+        const isTemplatePath = item.path && (item.path.toLowerCase().startsWith(templatesPathLower) || item.path.toLowerCase().startsWith('/root/templates'));
         const targetTemplate = await Template.findById(item._id);
         if (isTemplatePath || targetTemplate) {
           if (targetTemplate) {

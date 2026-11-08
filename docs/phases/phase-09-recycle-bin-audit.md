@@ -62,7 +62,7 @@ Collection `audit_logs` với các index `{ timestamp: -1 }`, `{ targetItemId: 1
 ## Definition of Done & Cách kiểm thử
 - Xóa thử một item bài viết trên Content Editor -> Item biến mất khỏi cây.
 - Mở ứng dụng Recycle Bin từ Launchpad -> Thấy bài viết vừa xóa xuất hiện trong danh sách với đầy đủ thông tin đường dẫn gốc.
-- Thử xoá một Rendering đang được sử dụng trong Home Page -> Hệ thống chặn xoá và hiển thị cảnh báo "Rendering đang được sử dụng bởi /sitecore/content/home".
+- Thử xoá một Rendering đang được sử dụng trong Home Page -> Hệ thống chặn xoá và hiển thị cảnh báo "Rendering đang được sử dụng bởi /root/content/home".
 - Thay đổi Presentation của một Item (thêm rendering, đổi vị trí) và lưu -> Mở Audit Log thấy xuất hiện dòng log `ITEM_PRESENTATION_UPDATE` ghi rõ chi tiết thay đổi rendering.
 - Bấm nút "Restore" bài viết trong Recycle Bin -> Item biến mất khỏi thùng rác và xuất hiện lại đúng vị trí trên cây Content Editor.
 

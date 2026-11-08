@@ -1,5 +1,5 @@
 # Kế Hoạch Triển Khai Thành Phần (Component Implementation Plan)
-**Dự Án: Sitecore-like Hierarchical XM CMS (Node.js + Express + EJS + MongoDB)**
+**Dự Án: Treecraft Hierarchical XM CMS (Node.js + Express + EJS + MongoDB)**
 
 ---
 
@@ -11,7 +11,7 @@ Hệ thống thành phần sẽ được đóng gói thông qua các **EJS Parti
 src/views/partials/
 ├── head.ejs                 # CDN Tabler Core, Tabler Icons, Inter Font, Theme Script
 ├── topbar.ejs               # Header chuẩn: Brand, Waffle App Switcher, Search, Theme Toggle, User
-├── taskbar.ejs              # Bottom Taskbar chuẩn Sitecore (hiện đại hóa bằng Tabler tokens)
+├── taskbar.ejs              # Bottom Taskbar chuẩn Treecraft (hiện đại hóa bằng Tabler tokens)
 ├── flash.ejs                # Thông báo server-side (Toast / Alert)
 ├── modals/
 │   ├── confirm-modal.ejs    # Modal xác nhận xóa toàn cục (#adminConfirmModal)
@@ -27,22 +27,22 @@ src/views/partials/
 - **Vị trí file:** `src/views/partials/topbar.ejs`.
 - **Mục đích:** Thanh điều hướng trung tâm cố định (`sticky-top`) cho mọi màn hình quản trị.
 - **Thành phần con:**
-  1. *Brand Logo:* Biểu tượng chữ S màu đỏ Sitecore (`#eb1c24`), tên hệ thống `Sitecore XM CMS`.
+  1. *Brand Logo:* Biểu tượng chữ S màu đỏ Treecraft accent (`#eb1c24`), tên hệ thống `Treecraft CMS`.
   2. *Waffle Menu Button:* Nút 9 chấm (`ti ti-apps`) mở menu thẻ `dropdown-menu-card` (bề ngang 340px) phân chia 3 nhóm chức năng:
      - Nhóm 1: Content Management (Content Editor, Experience Editor).
      - Nhóm 2: Media & Workflows (Media Library, Workbox).
      - Nhóm 3: Security & Control Panel (User Manager, Role Manager, Access Viewer, Control Panel, Recycle Bin, Audit Log).
-  3. *Breadcrumb Ngữ Cảnh:* Hiển thị màn hình hiện tại (ví dụ: `Launchpad` hoặc `Content Editor /sitecore/content/home`).
+  3. *Breadcrumb Ngữ Cảnh:* Hiển thị màn hình hiện tại (ví dụ: `Launchpad` hoặc `Content Editor /root/content/home`).
   4. *Global Quick Search:* Ô tìm kiếm nhanh với shortcut bàn phím `<kbd>Ctrl K</kbd>`.
   5. *Dark / Light Mode Toggle:* Nút chuyển đổi giao diện với 2 icon `ti-sun` và `ti-moon`.
   6. *User Profile Menu:* Avatar bo tròn, hiển thị họ tên, vai trò hiện tại và nút Đăng xuất.
 
 ### 2.2. Bottom Taskbar Chuẩn Hóa
 - **Vị trí file:** `src/views/partials/taskbar.ejs`.
-- **Mục đích:** Giữ trọn vẹn trải nghiệm Desktop App Sitecore ở chân màn hình nhưng nâng cấp độ sắc nét:
+- **Mục đích:** Giữ trọn vẹn trải nghiệm Desktop App Treecraft ở chân màn hình nhưng nâng cấp độ sắc nét:
   - Cố định ở đáy màn hình (`fixed-bottom`, chiều cao `38px`).
   - Nền sẫm màu tự động tương thích Dark/Light (`var(--tblr-dark)` hoặc `#1f2429`).
-  - Viền trên màu đỏ Sitecore (`border-top: 2px solid var(--sc-red)`).
+  - Viền trên màu đỏ Treecraft accent (`border-top: 2px solid var(--sc-red)`).
   - Các nút ứng dụng: icon vector Tabler (`ti ti-layout-grid`, `ti ti-article`, `ti ti-photo`, `ti ti-inbox`), có vạch sáng active indicator phía trên.
 
 ### 2.3. Khung Thẻ 2 Tầng (2-Tier Card Hierarchy)
@@ -113,5 +113,5 @@ src/views/partials/
 3. **`public/js/admin.js`:**
    - Entry point: Tự động khởi tạo Bootstrap Tooltips, Popovers, phím tắt `Ctrl + K`, và liên kết các module con.
 4. **`public/css/admin.css`:**
-   - Tệp CSS mở rộng chứa toàn bộ các quy chuẩn: Launchpad tiles, input-icon addon resilience, table truncate, modern pagination, modal status borders, và màu đỏ Sitecore accent.
+   - Tệp CSS mở rộng chứa toàn bộ các quy chuẩn: Launchpad tiles, input-icon addon resilience, table truncate, modern pagination, modal status borders, và màu đỏ Treecraft accent accent.
 

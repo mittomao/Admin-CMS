@@ -1,5 +1,5 @@
 # Danh Sách Tập Tin Cần Tạo & Chỉnh Sửa (Files to Create & Modify)
-**Dự Án: Sitecore-like Hierarchical XM CMS (Node.js + Express + EJS + MongoDB)**
+**Dự Án: Treecraft Hierarchical XM CMS (Node.js + Express + EJS + MongoDB)**
 
 ---
 
@@ -7,7 +7,7 @@
 
 | Đường Dẫn Tập Tin | Loại | Mục Đích & Nội Dung |
 | :--- | :--- | :--- |
-| `public/css/admin.css` | CSS | Tệp CSS mở rộng cốt lõi: Quy chuẩn Launchpad App Tile, input-icon addon resilience, datatable co giãn (`clamp`), thanh phân trang `admin-pagination`, vạch trạng thái modal (`modal-status`), và biến thể thương hiệu Sitecore Red. |
+| `public/css/admin.css` | CSS | Tệp CSS mở rộng cốt lõi: Quy chuẩn Launchpad App Tile, input-icon addon resilience, datatable co giãn (`clamp`), thanh phân trang `admin-pagination`, vạch trạng thái modal (`modal-status`), và biến thể thương hiệu Treecraft Red. |
 | `public/js/admin/theme-engine.js` | JS Module | Động cơ chuyển đổi Sáng / Tối (Dark / Light Theme), lưu `localStorage`, đồng bộ `prefers-color-scheme`, cập nhật icon `ti-sun` / `ti-moon`. |
 | `public/js/admin/form-validator.js` | JS Module | Động cơ kiểm tra form client-side, tự động scroll/focus vào ô lỗi đầu tiên, chặn duplicate submit, kích hoạt Toast qua URL search params, điều khiển `#adminConfirmModal`. |
 | `public/js/admin.js` | JS Entrypoint | Khởi tạo tổng thể: nạp theme engine, form validator, kích hoạt Bootstrap Tooltips, Popovers, xử lý phím tắt toàn cục `Ctrl + K`. |
@@ -24,10 +24,10 @@
 | **`src/views/partials/head.ejs`** | Bổ sung đoạn script inline chống FOUC (chớp màn hình theme), link Google Font Inter, Tabler Core CSS, Tabler Icons Webfont và `public/css/admin.css`. |
 | **`src/views/layouts/shell.ejs`** | Chuyển đổi khung vỏ sang cấu trúc chuẩn Tabler (`.page` &rarr; `.page-wrapper` &rarr; `.page-body` &rarr; `.container-xl`). Tích hợp `#adminToastContainer`, modal xác nhận toàn cục, và script `public/js/admin.js`. |
 | **`src/views/layouts/auth.ejs`** | Hiện đại hóa layout đăng nhập với font Inter, nền tối chuẩn Tabler Slate, và theme engine. |
-| **`src/views/partials/topbar.ejs`** | Xây dựng thanh Topbar chuẩn Tabler (`navbar sticky-top bg-body shadow-sm`): Brand Sitecore, Waffle Menu 9 chấm (`ti-apps`), Breadcrumb ngữ cảnh, ô tìm kiếm nhanh `Ctrl + K`, nút Dark/Light Toggle, và avatar dropdown. |
-| **`src/views/partials/taskbar.ejs`** | Hiện đại hóa thanh Taskbar Sitecore dưới đáy: thay thế emoji bằng icon vector Tabler, sử dụng biến màu CSS của Tabler, giữ nguyên vạch đỏ active indicator phía trên. |
+| **`src/views/partials/topbar.ejs`** | Xây dựng thanh Topbar chuẩn Tabler (`navbar sticky-top bg-body shadow-sm`): Brand Treecraft, Waffle Menu 9 chấm (`ti-apps`), Breadcrumb ngữ cảnh, ô tìm kiếm nhanh `Ctrl + K`, nút Dark/Light Toggle, và avatar dropdown. |
+| **`src/views/partials/taskbar.ejs`** | Hiện đại hóa thanh Taskbar Treecraft dưới đáy: thay thế emoji bằng icon vector Tabler, sử dụng biến màu CSS của Tabler, giữ nguyên vạch đỏ active indicator phía trên. |
 | **`src/views/admin/launchpad/index.ejs`** | Tái cấu trúc theo hệ thống 2 tầng thẻ chuẩn Tabler: Nhóm ứng dụng thành Card cấp 1 (`card shadow-sm border-0 mb-4`), lưới các tile ứng dụng cấp 2 (`.app-tile-card`) với avatar nền icon Light Tint (`-lt`). |
-| **`src/views/admin/auth/login.ejs`** | Nâng cấp form đăng nhập: Dùng thẻ bo góc 12px (`rounded-4`), đổ bóng `shadow-lg`, input bọc `.input-icon` với icon `ti-user` và `ti-lock`, nút submit đỏ Sitecore nổi bật. |
+| **`src/views/admin/auth/login.ejs`** | Nâng cấp form đăng nhập: Dùng thẻ bo góc 12px (`rounded-4`), đổ bóng `shadow-lg`, input bọc `.input-icon` với icon `ti-user` và `ti-lock`, nút submit đỏ Treecraft accent nổi bật. |
 | **`src/views/content-editor/index.ejs`** | Hòa quyện Ribbon Tabs và 3-pane layout với Tabler Tokens: Thay emoji bằng Tabler Icons, chuẩn hóa thanh search input-icon, form editor dùng Card cấp 2 xám nhạt (`bg-light`). |
 | **`src/views/errors/404.ejs` & `500.ejs`** | Chuẩn hóa giao diện lỗi theo mẫu **Empty State** của Tabler: icon `ti-alert-circle`, thông điệp rõ ràng, nút quay lại trang chủ dạng `btn-primary btn-sm`. |
 
@@ -53,7 +53,7 @@ Quy trình triển khai trong Phase 4 sẽ tuân thủ nghiêm ngặt theo 5 bư
        |---> Cập nhật src/views/partials/head.ejs (CDNs & Inter font)
        |---> Tạo src/views/partials/modals/confirm-modal.ejs & unsaved-modal.ejs
        |---> Cập nhật src/views/partials/topbar.ejs (Waffle 9 chấm, theme toggle)
-       |---> Cập nhật src/views/partials/taskbar.ejs (Modernized Sitecore taskbar)
+       |---> Cập nhật src/views/partials/taskbar.ejs (Modernized Treecraft taskbar)
        |---> Cập nhật src/views/layouts/shell.ejs & auth.ejs
        |
        v

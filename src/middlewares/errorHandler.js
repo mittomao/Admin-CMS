@@ -17,7 +17,7 @@ const notFoundHandler = (req, res, next) => {
     title: '404 - Item Not Found',
     currentPath: req.originalUrl,
     activeApp: null,
-    user: { fullName: 'Sitecore User', username: 'admin' },
+    user: { fullName: 'Treecraft User', username: 'admin' },
   });
 };
 
@@ -46,7 +46,7 @@ const errorHandler = (err, req, res, next) => {
     stack: env.isDev ? err.stack : null,
     currentPath: req.originalUrl,
     activeApp: null,
-    user: { fullName: 'Sitecore User', username: 'admin' },
+    user: { fullName: 'Treecraft User', username: 'admin' },
   });
 };
 

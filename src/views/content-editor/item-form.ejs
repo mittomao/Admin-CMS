@@ -266,7 +266,7 @@
                 <span class="d-none d-md-inline text-xs">Preview</span>
               </a>
 
-              <% const publicSlug=item.path==='/sitecore/content/Home' ? '' :
+              <% const publicSlug=(item.path==='/root/content/Home') ? '' :
                 item.name.toLowerCase().replace(/\s+/g, '-' ); const publicUrl='/' + publicSlug; %>
                 <a href="<%= publicUrl %>" target="_blank"
                   class="btn btn-sm btn-ghost-secondary border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition d-flex align-items-center gap-1.5 px-2.5 py-1"
@@ -461,7 +461,8 @@
                                           itemFields[field._id.toString()] : itemFields[field.name]); const
                                           fieldType=field.type; %>
                                           <% if (field.name==='componentTemplate' ||
-                                            field.source==='/sitecore/templates/Feature/Components' ) { %>
+                                            field.source==='/root/templates/Feature/Components' ||
+                                            field.source==='/root/templates/Feature/Components' ) { %>
                                             <div class="mb-3 field-container" data-field-name="<%= field.name %>"
                                               data-field-id="<%= field._id %>">
                                               <%- include('./fields/field-header', { field }) %>

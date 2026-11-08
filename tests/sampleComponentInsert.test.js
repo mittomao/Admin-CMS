@@ -43,7 +43,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       displayName: 'Template Folder',
       icon: 'ti ti-folder',
       isSystem: true,
-      path: '/sitecore/templates/System/Template Folder',
+      path: '/root/templates/System/Template Folder',
       sections: [],
     });
 
@@ -52,7 +52,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       displayName: 'Template',
       icon: 'ti ti-template',
       isSystem: true,
-      path: '/sitecore/templates/System/Template',
+      path: '/root/templates/System/Template',
       sections: [],
     });
 
@@ -62,7 +62,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       icon: 'ti ti-box',
       isSystem: true,
       description: 'Mẫu component trống để khởi tạo component hoặc page template mới',
-      path: '/sitecore/templates/System/Standard Template',
+      path: '/root/templates/System/Standard Template',
       sections: [],
     });
 
@@ -70,7 +70,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       name: 'HeroBanner',
       displayName: 'Hero Banner',
       isSystem: false,
-      path: '/sitecore/templates/Feature/Components/HeroBanner',
+      path: '/root/templates/Feature/Components/HeroBanner',
       sections: [],
     });
 
@@ -78,7 +78,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       name: 'Home',
       displayName: 'Home Page Template',
       isSystem: false,
-      path: '/sitecore/templates/Project/Pages/Home',
+      path: '/root/templates/Project/Pages/Home',
       sections: [],
     });
 
@@ -86,18 +86,18 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       name: 'Layout',
       displayName: 'Layout',
       isSystem: true,
-      path: '/sitecore/templates/System/Layout',
+      path: '/root/templates/System/Layout',
       sections: [],
     });
 
     // 2. Tree Folders
-    const sitecoreRoot = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
+    const rootNode = await Item.create({
+      name: 'root',
+      displayName: 'root',
       templateId: templateFolderTpl._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore',
+      path: '/root',
       sortOrder: 1,
       createdBy: adminUserId,
     });
@@ -106,9 +106,9 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       name: 'templates',
       displayName: 'Templates',
       templateId: templateFolderTpl._id,
-      parentId: sitecoreRoot._id,
-      ancestors: [sitecoreRoot._id],
-      path: '/sitecore/templates',
+      parentId: rootNode._id,
+      ancestors: [rootNode._id],
+      path: '/root/templates',
       sortOrder: 10,
       createdBy: adminUserId,
     });
@@ -118,8 +118,8 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       displayName: 'System',
       templateId: templateFolderTpl._id,
       parentId: templatesRoot._id,
-      ancestors: [sitecoreRoot._id, templatesRoot._id],
-      path: '/sitecore/templates/System',
+      ancestors: [rootNode._id, templatesRoot._id],
+      path: '/root/templates/System',
       sortOrder: 10,
       createdBy: adminUserId,
     });
@@ -132,7 +132,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       templateId: templateDefTpl._id,
       parentId: systemFolder._id,
       ancestors: [...systemFolder.ancestors, systemFolder._id],
-      path: '/sitecore/templates/System/Standard Template',
+      path: '/root/templates/System/Standard Template',
       sortOrder: 50,
       createdBy: adminUserId,
     });
@@ -142,8 +142,8 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       displayName: 'Feature',
       templateId: templateFolderTpl._id,
       parentId: templatesRoot._id,
-      ancestors: [sitecoreRoot._id, templatesRoot._id],
-      path: '/sitecore/templates/Feature',
+      ancestors: [rootNode._id, templatesRoot._id],
+      path: '/root/templates/Feature',
       sortOrder: 20,
       createdBy: adminUserId,
     });
@@ -154,7 +154,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       templateId: templateFolderTpl._id,
       parentId: featureFolder._id,
       ancestors: [...featureFolder.ancestors, featureFolder._id],
-      path: '/sitecore/templates/Feature/Components',
+      path: '/root/templates/Feature/Components',
       sortOrder: 10,
       createdBy: adminUserId,
     });
@@ -164,8 +164,8 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       displayName: 'Project',
       templateId: templateFolderTpl._id,
       parentId: templatesRoot._id,
-      ancestors: [sitecoreRoot._id, templatesRoot._id],
-      path: '/sitecore/templates/Project',
+      ancestors: [rootNode._id, templatesRoot._id],
+      path: '/root/templates/Project',
       sortOrder: 30,
       createdBy: adminUserId,
     });
@@ -176,7 +176,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       templateId: templateFolderTpl._id,
       parentId: projectFolder._id,
       ancestors: [...projectFolder.ancestors, projectFolder._id],
-      path: '/sitecore/templates/Project/Pages',
+      path: '/root/templates/Project/Pages',
       sortOrder: 10,
       createdBy: adminUserId,
     });
@@ -185,9 +185,9 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
       name: 'content',
       displayName: 'Content',
       templateId: templateFolderTpl._id,
-      parentId: sitecoreRoot._id,
-      ancestors: [sitecoreRoot._id],
-      path: '/sitecore/content',
+      parentId: rootNode._id,
+      ancestors: [rootNode._id],
+      path: '/root/content',
       sortOrder: 100,
       createdBy: adminUserId,
     });
@@ -266,7 +266,7 @@ describe('Feature/Components and Project/Pages Insert Options & Standard Templat
 
       expect(newCompItem).toBeDefined();
       expect(newCompItem.name).toBe('promocard');
-      expect(newCompItem.path).toBe('/sitecore/templates/Feature/Components/promocard');
+      expect(newCompItem.path).toBe('/root/templates/Feature/Components/promocard');
       expect((newCompItem.templateId._id || newCompItem.templateId).toString()).toBe(templateDefTpl._id.toString());
 
       // Verify Template document was created with empty sections

@@ -25,7 +25,7 @@ describe('GĐ 10: SiteRenderer Unit Tests', () => {
     await Template.create({
       _id: dummyTplId,
       name: 'PageTemplate',
-      path: '/sitecore/templates/Project/Pages/Home',
+      path: '/root/templates/Project/Pages/Home',
       sections: [],
     });
 
@@ -35,7 +35,7 @@ describe('GĐ 10: SiteRenderer Unit Tests', () => {
       name: 'HomeLayout',
       displayName: 'Home Layout',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Layouts/HomeLayout',
+      path: '/root/layout/Layouts/HomeLayout',
       sharedFields: { viewPath: 'layouts/HomeLayout.ejs' },
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -46,7 +46,7 @@ describe('GĐ 10: SiteRenderer Unit Tests', () => {
       name: 'HeroBanner',
       displayName: 'Hero Banner',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Renderings/HeroBanner',
+      path: '/root/layout/Renderings/HeroBanner',
       sharedFields: { viewPath: 'components/HeroBanner.ejs' },
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -56,7 +56,7 @@ describe('GĐ 10: SiteRenderer Unit Tests', () => {
       name: 'Introduction',
       displayName: 'Introduction',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Renderings/Introduction',
+      path: '/root/layout/Renderings/Introduction',
       sharedFields: { viewPath: 'components/Introduction.ejs' },
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -67,7 +67,7 @@ describe('GĐ 10: SiteRenderer Unit Tests', () => {
       name: 'Home',
       displayName: 'Trang Chủ',
       templateId: dummyTplId,
-      path: '/sitecore/content/Home',
+      path: '/root/content/Home',
       presentation: {
         shared: {
           layoutId: layoutItem._id,
@@ -107,7 +107,7 @@ describe('GĐ 10: SiteRenderer Unit Tests', () => {
       name: 'Home',
       displayName: 'Trang Chủ Master',
       templateId: dummyTplId,
-      path: '/sitecore/content/Home',
+      path: '/root/content/Home',
       presentation: {
         shared: {
           layoutId: layoutItem._id,
@@ -205,8 +205,8 @@ describe('GĐ 10: SiteRenderer Unit Tests', () => {
   describe('3. Admin Preview Mode', () => {
     it('should render page with Preview Banner and Master data', async () => {
       const result = await siteRenderer.render(testMasterPage, 'vi', { isPreview: true });
-      expect(result.html).toContain('id="sitecorePreviewBanner"');
-      expect(result.html).toContain('Sitecore XM Preview Mode');
+      expect(result.html).toContain('id="treecraftPreviewBanner"');
+      expect(result.html).toContain('Treecraft Preview Mode');
       expect(result.html).toContain('Master Store');
       expect(result.fromCache).toBe(false);
     });

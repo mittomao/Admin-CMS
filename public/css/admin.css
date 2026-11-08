@@ -3,7 +3,7 @@
    ========================================================================== */
 
 :root {
-  /* Sitecore Brand Color Accents */
+  /* Treecraft Brand Color Accents */
   --sc-red: #eb1c24;
   --sc-red-hover: #c9151c;
   --sc-red-active: #a80e14;
@@ -224,7 +224,7 @@ body {
 }
 
 /* ==========================================================================
-   8. SITECORE BOTTOM TASKBAR (MODERNIZED & ACCENTED)
+   8. TREECRAFT BOTTOM TASKBAR (MODERNIZED & ACCENTED)
    ========================================================================== */
 .sc-taskbar {
   position: fixed;

@@ -11,7 +11,7 @@ updated: 2026-11-04
 
 # GĐ 6.3 — Hiển Thị Section "Quick Info" Cho Mọi Item Trong Content Editor
 
-> Bổ sung section metadata "Quick Info" chuẩn Sitecore ở đầu form của mọi Item trong Content Editor (Content, Template, Template Folder, Layout, Placeholder, Rendering, Media Library, System). Hiển thị 6 thông tin cốt lõi (Item ID, Item name, Item path, Template kèm liên kết, Created from, Item owner), hỗ trợ thu gọn/mở rộng lưu theo `localStorage`, giao diện chuẩn Sitecore (thanh xám đậm, vạch đỏ, chevron).
+> Bổ sung section metadata "Quick Info" chuẩn Treecraft ở đầu form của mọi Item trong Content Editor (Content, Template, Template Folder, Layout, Placeholder, Rendering, Media Library, System). Hiển thị 6 thông tin cốt lõi (Item ID, Item name, Item path, Template kèm liên kết, Created from, Item owner), hỗ trợ thu gọn/mở rộng lưu theo `localStorage`, giao diện chuẩn Treecraft (thanh xám đậm, vạch đỏ, chevron).
 
 ## Tài liệu cần đọc trước khi làm
 - [`docs/rules/00-workflow.md`](../rules/00-workflow.md)
@@ -29,9 +29,9 @@ updated: 2026-11-04
 | **1** | **Item ID** | `{GUID-VIẾT-HOA}` trong ngoặc nhọn. Với MongoDB ObjectId: `{_ID_UPPERCASE}` (ví dụ: `{64A1B2C3D4E5F67890123456}`). Hỗ trợ chọn văn bản và nút copy nhanh. |
 | **2** | **Item name** | Tên item (`item.name`). Đã escape EJS an toàn. |
 | **3** | **Item path** | Đường dẫn đầy đủ của item theo materialized path (`item.path`). Hỗ trợ nút copy nhanh. |
-| **4** | **Template** | Đường dẫn đầy đủ của template kèm `{TEMPLATE_ID_UPPERCASE}`, ví dụ `/sitecore/templates/System/Templates/Template - {ID}`. Đường dẫn là thẻ liên kết (`<a>` / click handler) mở trực tiếp template đó trong cây nội dung. |
+| **4** | **Template** | Đường dẫn đầy đủ của template kèm `{TEMPLATE_ID_UPPERCASE}`, ví dụ `/root/templates/System/Templates/Template - {ID}`. Đường dẫn là thẻ liên kết (`<a>` / click handler) mở trực tiếp template đó trong cây nội dung. |
 | **5** | **Created from** | Tên/ID item nguồn nếu item được tạo bằng Duplicate hoặc Copy; nếu item gốc tạo mới bình thường hoặc item nguồn không tồn tại thì hiển thị `[unknown]`. |
-| **6** | **Item owner** | Người tạo theo định dạng `domain\username` (mặc định `sitecore\username`); nếu không có thông tin hoặc user đã bị xóa thì hiển thị `[unknown]`. |
+| **6** | **Item owner** | Người tạo theo định dạng `domain\username` (mặc định `treecraft\username`); nếu không có thông tin hoặc user đã bị xóa thì hiển thị `[unknown]`. |
 
 ---
 

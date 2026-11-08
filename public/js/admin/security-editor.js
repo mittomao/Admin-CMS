@@ -1,5 +1,5 @@
 /**
- * Client-Side Security Editor & Access Viewer Module (Sitecore XM &bull; Phase 7)
+ * Client-Side Security Editor & Access Viewer Module (Treecraft ACL &bull; Phase 7)
  */
 
 let cachedUsers = null;
@@ -285,7 +285,7 @@ export function initSecurityEditorModal() {
 
       const id = selectedOpt.value;
       const name = selectedOpt.getAttribute('data-name');
-      const domain = selectedOpt.getAttribute('data-domain') || 'sitecore';
+      const domain = selectedOpt.getAttribute('data-domain') || 'treecraft';
 
       // Check if already in matrix
       const existing = localMatrixData.matrix.find(

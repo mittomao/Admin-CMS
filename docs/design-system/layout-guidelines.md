@@ -1,6 +1,6 @@
 # Quy Chuẩn Bố Cục & Cấu Trúc Khung (Layout Guidelines)
 
-Tài liệu này đặc tả cấu trúc khung tổng thể của Admin CMS, chi tiết hóa hai kiến trúc điều hướng: **Sitecore Experience Launchpad** và **Collapsible Vertical Sidebar**, cùng các quy tắc dàn trang bằng hệ thống lưới (Grid System).
+Tài liệu này đặc tả cấu trúc khung tổng thể của Admin CMS, chi tiết hóa hai kiến trúc điều hướng: **Treecraft Experience Launchpad** và **Collapsible Vertical Sidebar**, cùng các quy tắc dàn trang bằng hệ thống lưới (Grid System).
 
 ---
 

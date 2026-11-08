@@ -5,7 +5,7 @@
 - **Trạng thái:** Đã chốt (Accepted)
 
 ## 1. Bối cảnh
-Template trong CMS phong cách Sitecore cho phép một Template kế thừa nhiều Template khác (`baseTemplates`), và bản thân các Base Template lại có thể kế thừa các template cha khác. Nếu xảy ra vòng lặp kế thừa (ví dụ A kế thừa B, B kế thừa C, C kế thừa A), thuật toán duyệt đệ quy sẽ bị tràn bộ nhớ stack (`Maximum call stack size exceeded`), làm sập ứng dụng. Ngoài ra cần quy tắc xử lý khi các template kế thừa có section hoặc field trùng tên.
+Template trong CMS theo chuẩn Treecraft cho phép một Template kế thừa nhiều Template khác (`baseTemplates`), và bản thân các Base Template lại có thể kế thừa các template cha khác. Nếu xảy ra vòng lặp kế thừa (ví dụ A kế thừa B, B kế thừa C, C kế thừa A), thuật toán duyệt đệ quy sẽ bị tràn bộ nhớ stack (`Maximum call stack size exceeded`), làm sập ứng dụng. Ngoài ra cần quy tắc xử lý khi các template kế thừa có section hoặc field trùng tên.
 
 ## 2. Quyết định
 Tại `templateService.resolveTemplate(templateId)`:

@@ -2,6 +2,8 @@
  * Icon Registry - Single Source of Truth for CMS item icons
  */
 
+const branding = require('./branding');
+
 const ICON_REGISTRY = {
   'folder': {
     key: 'folder',
@@ -132,18 +134,19 @@ function isFolderItem(item = null, template = null) {
   // Check item path or name
   const itemPath = (item && item.path) || '';
   const itemName = (item && (item.displayName || item.name)) || '';
-  if (
-    itemPath === '/sitecore/templates' ||
-    itemPath === '/sitecore/templates/Feature' ||
-    itemPath === '/sitecore/templates/Project' ||
-    itemPath === '/sitecore/templates/System' ||
-    itemPath === '/sitecore/templates/Common' ||
-    itemPath === '/sitecore/layout' ||
-    itemPath === '/sitecore/layout/Layouts' ||
-    itemPath === '/sitecore/layout/Placeholders' ||
-    itemPath === '/sitecore/layout/Renderings'
-  ) {
-    // Note: /sitecore/content is content-root, not regular folder
+  const folderPaths = [
+    branding.PATHS.TEMPLATES,
+    `${branding.PATHS.TEMPLATES}/Feature`,
+    `${branding.PATHS.TEMPLATES}/Project`,
+    `${branding.PATHS.TEMPLATES}/System`,
+    `${branding.PATHS.TEMPLATES}/Common`,
+    branding.PATHS.LAYOUT,
+    branding.PATHS.LAYOUTS,
+    branding.PATHS.PLACEHOLDERS,
+    branding.PATHS.RENDERINGS,
+  ];
+  if (folderPaths.includes(itemPath)) {
+    // Note: content root is content-root, not regular folder
     return true;
   }
 
@@ -166,7 +169,7 @@ function resolveItemIcon(item = null, template = null, options = {}) {
   const tplName = template && template.name ? template.name.trim() : '';
 
   // 1. Root /content is ALWAYS content-root
-  if (itemPath === '/sitecore/content') {
+  if (itemPath === branding.PATHS.CONTENT.toLowerCase()) {
     return 'content-root';
   }
 
@@ -195,26 +198,26 @@ function resolveItemIcon(item = null, template = null, options = {}) {
   }
 
   // 5. Default by item type / path
-  if (tplName === 'Layout' || itemPath.startsWith('/sitecore/layout/layouts')) {
+  if (tplName === 'Layout' || itemPath.startsWith(branding.PATHS.LAYOUTS.toLowerCase())) {
     return 'layout';
   }
-  if (tplName === 'Placeholder' || itemPath.startsWith('/sitecore/layout/placeholders')) {
+  if (tplName === 'Placeholder' || itemPath.startsWith(branding.PATHS.PLACEHOLDERS.toLowerCase())) {
     return 'placeholder';
   }
-  if (tplName === 'Rendering' || itemPath.startsWith('/sitecore/layout/renderings')) {
+  if (tplName === 'Rendering' || itemPath.startsWith(branding.PATHS.RENDERINGS.toLowerCase())) {
     return 'rendering';
   }
   if (
     tplName === 'Template' ||
     tplName === 'Standard Template' ||
-    itemPath.startsWith('/sitecore/templates')
+    itemPath.startsWith(branding.PATHS.TEMPLATES.toLowerCase())
   ) {
     return 'template';
   }
-  if (itemPath.startsWith('/sitecore/media library')) {
+  if (itemPath.startsWith(branding.PATHS.MEDIA.toLowerCase())) {
     return 'media';
   }
-  if (itemPath.startsWith('/sitecore/content')) {
+  if (itemPath.startsWith(branding.PATHS.CONTENT.toLowerCase())) {
     return 'page';
   }
 

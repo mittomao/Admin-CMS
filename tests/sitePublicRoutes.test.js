@@ -25,7 +25,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       name: 'HomeLayout',
       displayName: 'Home Layout',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Layouts/HomeLayout',
+      path: '/root/layout/Layouts/HomeLayout',
       sharedFields: { viewPath: 'layouts/HomeLayout.ejs' },
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -34,7 +34,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       name: 'HomeLayout',
       displayName: 'Home Layout',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Layouts/HomeLayout',
+      path: '/root/layout/Layouts/HomeLayout',
       fields: new Map([['viewPath', 'layouts/HomeLayout.ejs']]),
       sharedFields: new Map([['viewPath', 'layouts/HomeLayout.ejs']]),
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
@@ -45,7 +45,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       name: 'HeroBanner',
       displayName: 'Hero Banner',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Renderings/HeroBanner',
+      path: '/root/layout/Renderings/HeroBanner',
       sharedFields: { viewPath: 'components/HeroBanner.ejs' },
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -54,7 +54,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       name: 'HeroBanner',
       displayName: 'Hero Banner',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Renderings/HeroBanner',
+      path: '/root/layout/Renderings/HeroBanner',
       fields: new Map([['viewPath', 'components/HeroBanner.ejs']]),
       sharedFields: new Map([['viewPath', 'components/HeroBanner.ejs']]),
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
@@ -65,7 +65,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       name: 'Introduction',
       displayName: 'Introduction',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Renderings/Introduction',
+      path: '/root/layout/Renderings/Introduction',
       sharedFields: { viewPath: 'components/Introduction.ejs' },
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -74,18 +74,18 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       name: 'Introduction',
       displayName: 'Introduction',
       templateId: dummyTplId,
-      path: '/sitecore/layout/Renderings/Introduction',
+      path: '/root/layout/Renderings/Introduction',
       fields: new Map([['viewPath', 'components/Introduction.ejs']]),
       sharedFields: new Map([['viewPath', 'components/Introduction.ejs']]),
       languages: [{ code: 'vi', version: 1, fields: new Map() }],
     });
 
     // Seed Published Pages in Web
-    const sitecore = await PublishedItem.create({
+    const rootNode = await PublishedItem.create({
       _id: new mongoose.Types.ObjectId(),
-      name: 'sitecore',
+      name: 'root',
       templateId: dummyTplId,
-      path: '/sitecore',
+      path: '/root',
       isSystem: true,
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -94,8 +94,8 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       _id: new mongoose.Types.ObjectId(),
       name: 'content',
       templateId: dummyTplId,
-      parentId: sitecore._id,
-      path: '/sitecore/content',
+      parentId: rootNode._id,
+      path: '/root/content',
       isSystem: true,
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
@@ -106,7 +106,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       displayName: 'Trang Chủ',
       templateId: dummyTplId,
       parentId: content._id,
-      path: '/sitecore/content/Home',
+      path: '/root/content/Home',
       presentation: {
         shared: {
           layoutId: layout._id,
@@ -125,7 +125,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
           code: 'vi',
           publishedVersion: 1,
           fields: {
-            PageTitle: 'Trang Chủ Sitecore',
+            PageTitle: 'Trang Chủ Treecraft',
             HeroTitle: 'Trải Nghiệm Đỉnh Cao',
           },
         },
@@ -133,7 +133,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
           code: 'en',
           publishedVersion: 1,
           fields: {
-            PageTitle: 'Home Sitecore',
+            PageTitle: 'Home Treecraft',
             HeroTitle: 'Ultimate Experience',
           },
         },
@@ -146,7 +146,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       displayName: 'Về chúng tôi',
       templateId: dummyTplId,
       parentId: content._id,
-      path: '/sitecore/content/About us',
+      path: '/root/content/About us',
       presentation: {
         shared: {
           layoutId: layout._id,
@@ -177,7 +177,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       name: 'Home',
       displayName: 'Trang Chủ Master',
       templateId: dummyTplId,
-      path: '/sitecore/content/Home',
+      path: '/root/content/Home',
       presentation: {
         shared: {
           layoutId: layout._id,
@@ -218,7 +218,7 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
     await User.create({
       username: 'admin',
       fullName: 'System Administrator',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       passwordHash,
       roles: [adminRole._id],
       isActive: true,
@@ -307,8 +307,8 @@ describe('GĐ 10: Public Site HTTP Routes & Delivery Integration Tests', () => {
       .set('Cookie', adminCookie);
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('id="sitecorePreviewBanner"');
-    expect(res.text).toContain('Sitecore XM Preview Mode');
+    expect(res.text).toContain('id="treecraftPreviewBanner"');
+    expect(res.text).toContain('Treecraft Preview Mode');
     expect(res.text).toContain('Tiêu Đề Master Preview');
   });
 

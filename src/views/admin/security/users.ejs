@@ -4,7 +4,7 @@
     <div class="row g-2 align-items-center">
       <div class="col">
         <div class="page-pretitle text-uppercase font-semibold text-slate-400">
-          Sitecore XM Architecture &bull; GĐ 7
+          Treecraft Architecture &bull; GĐ 7
         </div>
         <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
           <i class="ti ti-users text-purple-600"></i>
@@ -124,7 +124,7 @@
                 </td>
                 <td class="text-slate-500"><%= u.email %></td>
                 <td>
-                  <span class="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-[10px]"><%= u.domain || 'sitecore' %></span>
+                  <span class="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-[10px]"><%= u.domain || 'treecraft' %></span>
                 </td>
                 <td>
                   <div class="d-flex flex-wrap gap-1" style="max-width: 240px;">
@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('editEmail').value = user.email;
       document.getElementById('editFullName').value = user.fullName || '';
       document.getElementById('editDisplayName').value = user.displayName || '';
-      document.getElementById('editDomain').value = user.domain || 'sitecore';
+      document.getElementById('editDomain').value = user.domain || 'treecraft';
 
       // Reset checkboxes
       document.querySelectorAll('.edit-role-checkbox').forEach(chk => { chk.checked = false; });

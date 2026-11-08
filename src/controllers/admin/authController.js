@@ -1,11 +1,12 @@
 const authService = require('../../services/authService');
 const env = require('../../config/env');
 const logger = require('../../utils/logger');
+const branding = require('../../config/branding');
 
 const getLogin = (req, res) => {
   res.render('admin/auth/login', {
     layout: 'layouts/auth',
-    title: 'Sitecore Login',
+    title: `${branding.PROJECT_NAME} Login`,
     returnUrl: req.query.returnUrl || '/admin/launchpad',
     error: null,
     username: '',
@@ -25,7 +26,7 @@ const postLogin = async (req, res) => {
         logger.error(`Session save error: ${err.message}`);
         return res.render('admin/auth/login', {
           layout: 'layouts/auth',
-          title: 'Sitecore Login',
+          title: `${branding.PROJECT_NAME} Login`,
           returnUrl: redirectTarget,
           error: 'An error occurred during session creation. Please try again.',
           username: username || '',
@@ -39,7 +40,7 @@ const postLogin = async (req, res) => {
     logger.warn(`Failed login attempt for [${username}]: ${error.message}`);
     return res.render('admin/auth/login', {
       layout: 'layouts/auth',
-      title: 'Sitecore Login',
+      title: `${branding.PROJECT_NAME} Login`,
       returnUrl: redirectTarget,
       error: error.message,
       username: username || '',

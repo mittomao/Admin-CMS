@@ -31,7 +31,7 @@ updated: 2026-11-04
 
 | Hạng mục | Hiện trạng (GĐ 6 ban đầu) | Yêu cầu Mới (GĐ 6.2) | Hành động Cụ thể | Mức độ Rủi ro & Giảm thiểu |
 | :--- | :--- | :--- | :--- | :--- |
-| **Thuộc tính Rendering Item** | Field `componentTemplate` là tùy chọn, kiểu chuỗi đơn giản trong template `Rendering`. | `componentTemplate` là **bắt buộc**, kiểu tham chiếu ID chọn từ `/sitecore/templates/Feature/Components`. | **Sửa:** Cập nhật schema/template `Rendering`; dùng `ItemPicker` hoặc select picker lọc đúng nhánh thư mục; validate server chặn template ngoài nhánh hoặc template hệ thống/folder. | **Thấp.** Có sẵn helper `ItemPicker` và validate server chặt chẽ. |
+| **Thuộc tính Rendering Item** | Field `componentTemplate` là tùy chọn, kiểu chuỗi đơn giản trong template `Rendering`. | `componentTemplate` là **bắt buộc**, kiểu tham chiếu ID chọn từ `/root/templates/Feature/Components`. | **Sửa:** Cập nhật schema/template `Rendering`; dùng `ItemPicker` hoặc select picker lọc đúng nhánh thư mục; validate server chặn template ngoài nhánh hoặc template hệ thống/folder. | **Thấp.** Có sẵn helper `ItemPicker` và validate server chặt chẽ. |
 | **Kế thừa Page Template** | Page Template (`Home`, `About us`) khai báo `baseTemplates` trỏ tới `HeroBanner`, `Introduction`, `ImageText`. | Page Template **không** kế thừa Component Template. Base templates chỉ dùng cho cấu trúc trang (`_BasePage`...). | **Sửa & Chuyển đổi:** Gỡ bỏ các component template ra khỏi `baseTemplates` của Page Template trong seed và DB qua migration. | **Trung bình.** Cần chứng minh không mất dữ liệu field cũ của Item nhờ lưu theo `fieldId`. |
 | **Phân giải Trường Item** | Gọi `templateService.resolveTemplate(item.templateId)` (chỉ đọc theo cây `baseTemplates`). | Gọi `templateService.resolveEffectiveTemplate(item, lang, version)` kết hợp template gốc + component templates từ Presentation thực tế. | **Tạo mới & Sửa:** Viết hàm `resolveEffectiveTemplate`, thay thế mọi điểm gọi `resolveTemplate` của Item trong `itemService`, `versionService`, SSR renderer. | **Trung bình.** Cần bộ nhớ đệm (Cache) và cơ chế Invalidation khi đổi presentation/template. |
 | **Giao diện Content Editor** | Các section hiển thị phẳng theo template gốc và base template, dễ xung đột nếu trùng tên trường. | Các trường của từng component gom thành **Section riêng biệt** theo tên component (`HeroBanner`...), kèm badge `từ rendering <Tên>`. | **Sửa:** Cập nhật `item-form.ejs` và logic build schema trong `itemService.getItemWithRenderSchema`. | **Thấp.** UI rõ ràng, trực quan hơn nhiều cho người dùng. |
@@ -50,12 +50,12 @@ Tạo script migration độc lập: `src/scripts/migrate-rendering-component-te
   - `node src/scripts/migrate-rendering-component-templates.js`: Thực hiện cập nhật thực tế (idempotent, chạy nhiều lần không lỗi).
   - `node src/scripts/migrate-rendering-component-templates.js --rollback`: Khôi phục lại trạng thái trước migration (dựa trên bản snapshot lưu trữ tạm).
 - **Các bước migration:**
-  1. Quét toàn bộ Rendering Item dưới `/sitecore/layout/Renderings/`:
-     - Nếu rendering chưa có `componentTemplate`: Tự động tìm Template tương ứng trong `/sitecore/templates/Feature/Components/` theo tên (ví dụ rendering `HeroBanner` $\leftrightarrow$ template `HeroBanner`).
+  1. Quét toàn bộ Rendering Item dưới `/root/layout/Renderings/`:
+     - Nếu rendering chưa có `componentTemplate`: Tự động tìm Template tương ứng trong `/root/templates/Feature/Components/` theo tên (ví dụ rendering `HeroBanner` $\leftrightarrow$ template `HeroBanner`).
      - Gán ID của component template vào trường `componentTemplate` của rendering.
      - Nếu rendering không khớp được template nào: In cảnh báo danh sách các rendering chưa được gán để quản trị viên tự cấu hình thủ công (tuyệt đối không đoán mò).
-  2. Quét toàn bộ Page Template dưới `/sitecore/templates/Project/Pages/`:
-     - Kiểm tra mảng `baseTemplates`. Nếu có chứa ID của template thuộc `/sitecore/templates/Feature/Components/`, loại bỏ các ID này khỏi mảng `baseTemplates`.
+  2. Quét toàn bộ Page Template dưới `/root/templates/Project/Pages/`:
+     - Kiểm tra mảng `baseTemplates`. Nếu có chứa ID của template thuộc `/root/templates/Feature/Components/`, loại bỏ các ID này khỏi mảng `baseTemplates`.
      - Giữ nguyên các base templates khác (như `_BasePage`, `_BaseSEO`).
   3. Kiểm tra tính toàn vẹn của Content Items (`items_master`):
      - Xác nhận các giá trị trường đã nhập trước đó (lưu theo `fieldId`) vẫn tồn tại nguyên vẹn trong DB.
@@ -66,7 +66,7 @@ Tạo script migration độc lập: `src/scripts/migrate-rendering-component-te
 ## 3. Checklist Task Chi Tiết
 
 - [x] **Task 6.2.1:** Cập nhật System Template `Rendering` và Mongoose Schema:
-  - Trường `componentTemplate` (ObjectId, bắt buộc), tham chiếu tới Template thuộc `/sitecore/templates/Feature/Components/`.
+  - Trường `componentTemplate` (ObjectId, bắt buộc), tham chiếu tới Template thuộc `/root/templates/Feature/Components/`.
   - Validate server khi lưu/sửa Rendering Item: `componentTemplate` tồn tại, nằm đúng nhánh thư mục, không phải Folder và không phải System Template.
 - [x] **Task 6.2.2:** Ràng buộc toàn vẹn xóa/di chuyển Component Template:
   - Xây dựng hàm `templateService.checkComponentTemplateUsage(templateId)`: kiểm tra danh sách Rendering đang tham chiếu.
@@ -104,7 +104,7 @@ Tạo script migration độc lập: `src/scripts/migrate-rendering-component-te
 
 ## 4. Definition of Done & Tiêu Chí Kiểm Thử (DoD)
 
-- [x] Form biên tập Rendering có trường chọn `componentTemplate`, chỉ cho phép chọn template nằm dưới `/sitecore/templates/Feature/Components/`.
+- [x] Form biên tập Rendering có trường chọn `componentTemplate`, chỉ cho phép chọn template nằm dưới `/root/templates/Feature/Components/`.
 - [x] Thêm Rendering vào Standard Presentation của Page Template hoạt động trực quan, không đòi hỏi và không hiển thị bước chọn base template cho component.
 - [x] Mở một Page Item trên Content Editor: các trường của component xuất hiện đầy đủ, tự động gom thành từng Section riêng theo tên component và có badge nguồn rõ ràng.
 - [x] Thử gỡ một Rendering khỏi Presentation của Item: các trường của component đó ẩn khỏi form, nhưng dữ liệu trong DB không bị xoá. Thêm lại Rendering đó vào Presentation: các trường và dữ liệu cũ tự động hiển thị lại nguyên vẹn.

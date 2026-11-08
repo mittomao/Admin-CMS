@@ -1,6 +1,6 @@
 /**
  * Content Editor Client Application
- * Sitecore XM-style Tree, Ribbon Controls, Form Validation & Optimistic Locking
+ * Treecraft Hierarchical Tree, Ribbon Controls, Form Validation & Optimistic Locking
  */
 
 import { MediaPicker } from './media-picker.js';
@@ -489,16 +489,26 @@ async function handleRibbonAction(action, triggerBtn = null) {
 }
 
 const PROTECTED_SYSTEM_PATHS = [
-  '/sitecore',
-  '/sitecore/content',
-  '/sitecore/media library',
-  '/sitecore/system',
-  '/sitecore/templates',
-  '/sitecore/layout',
-  '/sitecore/layout/layouts',
-  '/sitecore/layout/renderings',
-  '/sitecore/layout/devices',
-  '/sitecore/layout/placeholder settings',
+  '/root',
+  '/root/content',
+  '/root/media library',
+  '/root/system',
+  '/root/templates',
+  '/root/layout',
+  '/root/layout/layouts',
+  '/root/layout/renderings',
+  '/root/layout/devices',
+  '/root/layout/placeholder settings',
+  '/root',
+  '/root/content',
+  '/root/media library',
+  '/root/system',
+  '/root/templates',
+  '/root/layout',
+  '/root/layout/layouts',
+  '/root/layout/renderings',
+  '/root/layout/devices',
+  '/root/layout/placeholder settings',
 ];
 
 function updateRibbonContext(node) {
@@ -1284,7 +1294,8 @@ async function openInsertModal() {
 
     if (!result.success || !result.data || result.data.length === 0) {
       const activePath = (activeNode.data && activeNode.data.path ? activeNode.data.path : '').toLowerCase();
-      const isContentBranch = activePath === '/sitecore/content' || activePath.startsWith('/sitecore/content/');
+      const isContentBranch = activePath === '/root/content' || activePath.startsWith('/root/content/') ||
+                              activePath === '/root/content' || activePath.startsWith('/root/content/');
       const emptyMsg = isContentBranch
         ? 'Chưa có template trong Project/Pages hoặc Common.'
         : 'No templates available.';
@@ -1315,8 +1326,10 @@ async function openInsertModal() {
     function updateDefaultNameForTemplate(tpl) {
       if (!tpl) return;
       const activePath = (activeNode.data && activeNode.data.path ? activeNode.data.path : '').toLowerCase();
-      const isCompBranch = activePath === '/sitecore/templates/feature/components' || activePath.startsWith('/sitecore/templates/feature/components/');
-      const isPageBranch = activePath === '/sitecore/templates/project/pages' || activePath.startsWith('/sitecore/templates/project/pages/');
+      const isCompBranch = activePath === '/root/templates/feature/components' || activePath.startsWith('/root/templates/feature/components/') ||
+                           activePath === '/root/templates/feature/components' || activePath.startsWith('/root/templates/feature/components/');
+      const isPageBranch = activePath === '/root/templates/project/pages' || activePath.startsWith('/root/templates/project/pages/') ||
+                           activePath === '/root/templates/project/pages' || activePath.startsWith('/root/templates/project/pages/');
 
       if (tpl.name === 'Standard Template' || tpl.name === 'Sample Component') {
         const base = isCompBranch ? 'New Component' : (isPageBranch ? 'New Page Template' : 'New Template');

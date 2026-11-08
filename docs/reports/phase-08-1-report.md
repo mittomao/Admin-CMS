@@ -15,7 +15,7 @@
 Toàn bộ các yêu cầu của Giai đoạn 8.1 đã được hoàn thành 100%:
 
 1. **Bộ chuyển đổi Database (Database Switcher):**
-   - Content Editor tích hợp dropdown chuyển đổi `master | web` tại 3 vị trí chuẩn Sitecore:
+   - Content Editor tích hợp dropdown chuyển đổi `master | web` tại 3 vị trí chuẩn Treecraft:
      - Thanh công cụ Ribbon tab **VIEW** (nhóm *Database*: nút *Master DB*, *Web DB*).
      - Chân cây nội dung (Tree Footer Status Bar).
      - Thanh tác vụ dưới cùng (Taskbar) ở góc phải.
@@ -25,7 +25,7 @@ Toàn bộ các yêu cầu của Giai đoạn 8.1 đã được hoàn thành 100
 2. **Chế độ Web CHỈ ĐỌC Tuyệt đối (Strict Read-Only Mode):**
    - **Cây nội dung (Fancytree):** Lazy-load đọc trực tiếp từ collection `items_web`. Các item chưa xuất bản hoặc đang ở trạng thái Draft hoàn toàn không hiển thị trên cây Web. Vô hiệu hóa kéo thả di chuyển node (`dnd5.dragStart: () => false`).
    - **Form soạn thảo:** Dữ liệu hiển thị của phiên bản đã publish. Toàn bộ trường nhập liệu và các nút thao tác trường được khóa cứng thông qua cơ chế HTML5 `<fieldset disabled>`.
-   - **Dải banner cảnh báo:** Phía trên form hiển thị dải thông báo màu cam/vàng Sitecore nổi bật: *"Đang xem WEB database (chỉ đọc). Mọi chỉnh sửa bị khóa. Chỉ hiển thị phiên bản đã xuất bản."*
+   - **Dải banner cảnh báo:** Phía trên form hiển thị dải thông báo màu cam/vàng cảnh báo nổi bật: *"Đang xem WEB database (chỉ đọc). Mọi chỉnh sửa bị khóa. Chỉ hiển thị phiên bản đã xuất bản."*
    - **Khóa Ribbon Toolbar:** Vô hiệu hóa toàn bộ các nút ghi dữ liệu (`Save`, `Insert`, `Duplicate`, `Copy To`, `Move To`, `Delete`, `Rename`, `Sort`, `Workflow Command`, `Publish Item`, `Unpublish`, `Add Version`, `Add Language`, `Delete Version`, `Reset Presentation`).
    - **Liên kết điều hướng chéo:**
      - Nút *"Open in Master"* trên header form và banner Web giúp nhảy ngay sang item tương ứng trên Master.
@@ -42,13 +42,13 @@ Toàn bộ các yêu cầu của Giai đoạn 8.1 đã được hoàn thành 100
    - Tính năng bật/tắt hiển thị huy hiệu trên cây Fancytree trong Ribbon tab **VIEW** (`Publish Badges`), tối ưu hóa hiệu năng bằng API batching (`GET /api/items/publish-status-batch?ids=...`) với truy vấn `$in`, ngăn chặn triệt để vấn đề N+1 query.
 
 4. **Trang Quản lý & Đối soát Database (`/admin/databases`):**
-   - Giao diện Dashboard đối soát Master vs Web đạt chuẩn Sitecore desktop-like UI (hỗ trợ Dark / Light mode).
+   - Giao diện Dashboard đối soát Master vs Web đạt chuẩn Treecraft desktop-like UI (hỗ trợ Dark / Light mode).
    - Thẻ thống kê tổng quan: Tổng số item Master, tổng số item Web, tổng số lượng item chênh lệch.
    - Bảng tổng hợp theo 4 nhánh gốc hệ thống:
-     - `/sitecore/content`
-     - `/sitecore/layout`
-     - `/sitecore/templates`
-     - `/sitecore/media library`
+     - `/root/content`
+     - `/root/layout`
+     - `/root/templates`
+     - `/root/media library`
    - Bảng danh sách chi tiết các item khác biệt (Reconciliation Diff):
      - Lọc theo nhánh gốc (Branch Selector).
      - Tab lọc theo phân loại: *Tất cả*, *Chưa publish (Missing)*, *Có thay đổi (Changed)*, *Mồ côi (Orphan)*.

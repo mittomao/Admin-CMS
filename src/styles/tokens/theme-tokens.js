@@ -1,5 +1,5 @@
 /**
- * Sitecore Design Tokens
+ * Treecraft Design Tokens
  * Chuẩn hóa màu sắc, phông chữ, khoảng cách và đổ bóng cho CMS
  */
 

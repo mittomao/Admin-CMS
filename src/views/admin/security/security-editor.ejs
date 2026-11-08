@@ -4,7 +4,7 @@
     <div class="row g-2 align-items-center">
       <div class="col">
         <div class="page-pretitle text-uppercase font-semibold text-slate-400">
-          Sitecore XM Architecture &bull; GĐ 7
+          Treecraft Architecture &bull; GĐ 7
         </div>
         <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
           <i class="ti ti-lock text-purple-600"></i>
@@ -45,7 +45,7 @@
         <span class="input-group-text bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 text-xs">
           <i class="ti ti-folder"></i>
         </span>
-        <input type="text" class="form-control form-control-sm text-xs" id="inputTargetItem" placeholder="Ví dụ: /sitecore/content/home hoặc {ID}" value="<%= initialPath || '/sitecore/content/home' %>">
+        <input type="text" class="form-control form-control-sm text-xs" id="inputTargetItem" placeholder="Ví dụ: /root/content/home hoặc {ID}" value="<%= initialPath || '/root/content/home' %>">
         <button class="btn btn-primary btn-sm text-xs px-3 d-flex align-items-center gap-1" type="button" id="btnLoadItemAcl">
           <i class="ti ti-refresh"></i>
           <span>Tải phân quyền</span>
@@ -55,12 +55,12 @@
       <!-- Quick path pills -->
       <div class="d-flex align-items-center gap-1.5 flex-wrap">
         <span class="text-slate-400 text-[11px] me-1">Chọn nhanh gốc cây:</span>
-        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore">/sitecore</button>
-        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/content/home">/sitecore/content/home</button>
-        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/layout">/sitecore/layout</button>
-        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/templates">/sitecore/templates</button>
-        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/media library">/sitecore/media library</button>
-        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/system">/sitecore/system</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/root">/root</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/root/content/home">/root/content/home</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/root/layout">/root/layout</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/root/templates">/root/templates</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/root/media library">/root/media library</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/root/system">/root/system</button>
       </div>
     </div>
   </div>
@@ -107,7 +107,7 @@
           <select class="form-select form-select-sm text-xs" id="newPrincipalId">
             <optgroup label="Vai trò Hệ thống" id="newGroupRoles">
               <% roles.forEach(r => { %>
-                <option value="<%= r._id %>"><%= r.name %> (<%= r.domain || 'sitecore' %>)</option>
+                <option value="<%= r._id %>"><%= r.name %> (<%= r.domain || 'treecraft' %>)</option>
               <% }) %>
             </optgroup>
             <optgroup label="Tài khoản Người dùng" id="newGroupUsers" class="d-none">
@@ -253,6 +253,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const pathJson = await pathRes.json();
         if (pathJson.success && pathJson.data && pathJson.data._id) {
           resolvedId = pathJson.data._id;
+        } else if (pathJson._id) {
+          resolvedId = pathJson._id;
         } else {
           // Fallback search
           const searchRes = await fetch(`/api/items/search?q=${encodeURIComponent(rawTarget)}`);
@@ -329,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </span>
               <div>
                 <div class="font-bold text-slate-800 dark:text-slate-100">${p.name}</div>
-                <div class="text-[10px] text-slate-400">${p.domain || 'sitecore'}</div>
+                <div class="text-[10px] text-slate-400">${p.domain || 'treecraft'}</div>
               </div>
             </div>
           </td>

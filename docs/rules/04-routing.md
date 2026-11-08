@@ -60,7 +60,7 @@ flowchart TD
 ### 4. Public Site Renderer Routes (`/`, `/:slug`, `/:lang/:slug`)
 - **Đặc điểm:** Tuyến đường công khai phục vụ người dùng cuối xem website chính thức, đọc dữ liệu hoàn toàn từ database `items_web` (sau khi đã publish từ Master).
 - **Cơ chế hoạt động:**
-  - `GET /`: Phân giải tới Start Item (node `Home` tại `/sitecore/content/Home`).
+  - `GET /`: Phân giải tới Start Item (node `Home` tại `/root/content/Home`).
   - `GET /:slug` (ví dụ `/about-us`, `/news/company-announcement`): Phân giải segment theo cây nội dung `items_web`.
   - `GET /:lang/:slug` (ví dụ `/en/about-us`): Phục vụ phiên bản đa ngôn ngữ với ngôn ngữ mặc định là `vi` (không có prefix).
   - Trích xuất cấu hình Presentation (Layout EJS + Placeholder mappings + Rendering EJS components) và render 100% mã HTML ra trình duyệt.

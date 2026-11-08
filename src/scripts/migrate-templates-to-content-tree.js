@@ -1,6 +1,6 @@
 /**
  * Migration Script: Di chuyển toàn bộ Template vào Cây Nội dung (Content Tree)
- * Cấu trúc phân cấp: /sitecore/templates/ (System, Feature/Components, Project/Pages)
+ * Cấu trúc phân cấp: /root/templates/ (System, Feature/Components, Project/Pages)
  *
  * Cách chạy:
  *   node src/scripts/migrate-templates-to-content-tree.js --dry-run
@@ -13,6 +13,7 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const Template = require('../models/Template');
 const Item = require('../models/Item');
+const branding = require('../config/branding');
 
 const isDryRun = process.argv.includes('--dry-run');
 
@@ -28,14 +29,14 @@ async function migrateTemplatesToContentTree() {
   }
 
   console.log('===============================================================');
-  console.log('MIGRATION: DI CHUYỂN TEMPLATES VÀO CONTENT TREE (/sitecore/templates)');
+  console.log('MIGRATION: DI CHUYỂN TEMPLATES VÀO CONTENT TREE (/root/templates)');
   console.log(`Chế độ: ${isDryRun ? 'DRY-RUN (CHỈ KIỂM TRA, KHÔNG GHI DB)' : 'THỰC THI THỰC TẾ'}`);
   console.log('===============================================================\n');
 
-  // 1. Root /sitecore
-  const sitecoreRoot = await Item.findOne({ path: '/sitecore' });
-  if (!sitecoreRoot) {
-    throw new Error('Chưa tìm thấy node gốc /sitecore. Vui lòng chạy seed ban đầu trước.');
+  // 1. Root
+  const rootNode = await Item.findOne({ path: { $in: [branding.PATHS.ROOT, '/root'] } });
+  if (!rootNode) {
+    throw new Error(`Chưa tìm thấy node gốc ${branding.PATHS.ROOT}. Vui lòng chạy seed ban đầu trước.`);
   }
 
   // 2. Đảm bảo 2 System Template: "Template Folder" và "Template"
@@ -112,13 +113,13 @@ async function migrateTemplatesToContentTree() {
     return item;
   }
 
-  // 3. Khởi tạo cây thư mục chuẩn dưới /sitecore/templates
+  // 3. Khởi tạo cây thư mục chuẩn dưới templates root
   const templatesRoot = await ensureFolderItem({
     name: 'templates',
     displayName: 'Templates',
-    parentId: sitecoreRoot._id,
-    ancestors: [sitecoreRoot._id],
-    path: '/sitecore/templates',
+    parentId: rootNode._id,
+    ancestors: [rootNode._id],
+    path: branding.PATHS.TEMPLATES,
     sortOrder: 400,
     icon: 'ti ti-folder',
   });
@@ -127,8 +128,8 @@ async function migrateTemplatesToContentTree() {
     name: 'System',
     displayName: 'System',
     parentId: templatesRoot._id,
-    ancestors: [sitecoreRoot._id, templatesRoot._id],
-    path: '/sitecore/templates/System',
+    ancestors: [rootNode._id, templatesRoot._id],
+    path: branding.PATHS.SYSTEM_TEMPLATES,
     sortOrder: 100,
     icon: 'ti ti-folder-cog',
   });
@@ -137,8 +138,8 @@ async function migrateTemplatesToContentTree() {
     name: 'Feature',
     displayName: 'Feature',
     parentId: templatesRoot._id,
-    ancestors: [sitecoreRoot._id, templatesRoot._id],
-    path: '/sitecore/templates/Feature',
+    ancestors: [rootNode._id, templatesRoot._id],
+    path: branding.PATHS.FEATURE_TEMPLATES,
     sortOrder: 200,
     icon: 'ti ti-folder-star',
   });
@@ -147,8 +148,8 @@ async function migrateTemplatesToContentTree() {
     name: 'Components',
     displayName: 'Components',
     parentId: featureFolder._id,
-    ancestors: [sitecoreRoot._id, templatesRoot._id, featureFolder._id],
-    path: '/sitecore/templates/Feature/Components',
+    ancestors: [rootNode._id, templatesRoot._id, featureFolder._id],
+    path: branding.PATHS.FEATURE_COMPONENTS,
     sortOrder: 100,
     icon: 'ti ti-folder-plus',
   });
@@ -157,8 +158,8 @@ async function migrateTemplatesToContentTree() {
     name: 'Project',
     displayName: 'Project',
     parentId: templatesRoot._id,
-    ancestors: [sitecoreRoot._id, templatesRoot._id],
-    path: '/sitecore/templates/Project',
+    ancestors: [rootNode._id, templatesRoot._id],
+    path: branding.PATHS.PROJECT_TEMPLATES,
     sortOrder: 300,
     icon: 'ti ti-folder',
   });
@@ -167,13 +168,13 @@ async function migrateTemplatesToContentTree() {
     name: 'Pages',
     displayName: 'Pages',
     parentId: projectFolder._id,
-    ancestors: [sitecoreRoot._id, templatesRoot._id, projectFolder._id],
-    path: '/sitecore/templates/Project/Pages',
+    ancestors: [rootNode._id, templatesRoot._id, projectFolder._id],
+    path: branding.PATHS.PROJECT_PAGES,
     sortOrder: 100,
     icon: 'ti ti-folder',
   });
 
-  // 4. Dọn dẹp dummy items cũ dưới /sitecore/templates (nếu không phải là một trong các folder chuẩn)
+  // 4. Dọn dẹp dummy items cũ dưới templates (nếu không phải là một trong các folder chuẩn)
   const standardFolderIds = [
     templatesRoot._id.toString(),
     systemFolder._id.toString(),
@@ -187,7 +188,7 @@ async function migrateTemplatesToContentTree() {
   const allTemplateIds = new Set(allTemplates.map((t) => t._id.toString()));
 
   const existingTreeItems = await Item.find({
-    path: { $regex: '^/sitecore/templates', $options: 'i' },
+    path: { $regex: `^(${branding.PATHS.TEMPLATES}|/root/templates)`, $options: 'i' },
   });
 
   let dummyCleaned = 0;

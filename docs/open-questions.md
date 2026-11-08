@@ -1,4 +1,4 @@
-# CÂU HỎI CẦN XÁC NHẬN CHO GIAI ĐOẠN 6.2 (OPEN QUESTIONS)
+# CÂU HỎI KỸ THUẬT GIAI ĐOẠN 6.2 (OPEN QUESTIONS)
 
 Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho yêu cầu thay đổi: **Rendering gắn Component Template & Page Template không kế thừa Component Template (GĐ 6.2)**, kèm theo đề xuất mặc định của Tech Lead.
 
@@ -18,7 +18,7 @@ Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp v
 - **Quyết định liên quan:** [DEC-035](decisions/DEC-035-component-field-inheritance-and-context.md), [DEC-036](decisions/DEC-036-rendering-component-template-and-effective-field-resolution.md)
 - **Lựa chọn A (Đề xuất mặc định):** **Có.** Nếu một page item có 2 hay nhiều rendering cùng loại (ví dụ 2 khối `HeroBanner`), cả 2 sẽ dùng chung một bộ giá trị field đọc từ chính page item. Nếu tác giả cần nội dung độc lập cho từng khối, tác giả sẽ sử dụng trường tùy chọn `datasourceId` trỏ tới item nội dung riêng.
 - **Lựa chọn B:** Tự động tạo bản sao trường với hậu tố số thứ tự (ví dụ `HeroTitle_1`, `HeroTitle_2`).
-- **Lý do đề xuất:** Tránh làm ô nhiễm và biến dạng schema template; đúng chuẩn thiết kế của CMS Sitecore truyền thống (Datasource Item cho các component độc lập tái sử dụng).
+- **Lý do đề xuất:** Tránh làm ô nhiễm và biến dạng schema template; đúng chuẩn thiết kế CMS phân cấp truyền thống (Datasource Item cho các component độc lập tái sử dụng).
 
 ---
 
@@ -43,7 +43,7 @@ Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp v
 ### 5. Chặn hay chỉ cảnh báo khi chọn template `Feature/Components` làm base template của page template?
 - **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
 - **Quyết định liên quan:** [DEC-036](decisions/DEC-036-rendering-component-template-and-effective-field-resolution.md)
-- **Lựa chọn A (Đề xuất mặc định):** **Chỉ cảnh báo.** Trong Template Manager (tab Base Templates), khi người dùng tick chọn một template nằm dưới `/sitecore/templates/Feature/Components`, hiển thị thông báo/cảnh báo màu vàng: *"Template này là Component Template, trường sẽ được tự động suy ra khi gắn vào Presentation. Không khuyến khích kế thừa trực tiếp làm Base Template"*. Không chặn cứng (hard block) để duy trì tính linh hoạt nếu có nhu cầu kiến trúc đặc thù.
+- **Lựa chọn A (Đề xuất mặc định):** **Chỉ cảnh báo.** Trong Template Manager (tab Base Templates), khi người dùng tick chọn một template nằm dưới `/root/templates/Feature/Components`, hiển thị thông báo/cảnh báo màu vàng: *"Template này là Component Template, trường sẽ được tự động suy ra khi gắn vào Presentation. Không khuyến khích kế thừa trực tiếp làm Base Template"*. Không chặn cứng (hard block) để duy trì tính linh hoạt nếu có nhu cầu kiến trúc đặc thù.
 - **Lựa chọn B:** Chặn cứng (báo lỗi và không cho lưu).
 - **Lý do đề xuất:** Tránh gây gián đoạn khó chịu cho người dùng quản trị cấp cao (Admin/Developer), vừa giáo dục hướng dẫn đúng chuẩn vừa không cản trở thao tác tự do.
 
@@ -96,7 +96,7 @@ Tài liệu này lưu trữ danh sách 8 câu hỏi kỹ thuật / nghiệp vụ
 - **Quyết định liên quan:** [DEC-038: Mục 2.3](decisions/DEC-038-cloudinary-media-item-unification.md)
 - **Lựa chọn A (Đề xuất mặc định):** **Có.** Khi xóa media trên Content Editor, chỉ đánh dấu `isDeleted: true` trên Item CMS (đưa vào Recycle Bin), giữ nguyên file trên Cloudinary để có thể khôi phục (Restore). Chỉ khi nào dọn sạch vĩnh viễn thùng rác (Purge Recycle Bin ở GĐ 9), hệ thống mới gọi lệnh `cloudinary.uploader.destroy`.
 - **Lựa chọn B:** Xóa tức thì file vật lý trên Cloudinary ngay khi xóa Item trên CMS.
-- **Lý do đề xuất:** Tránh rủi ro xóa nhầm làm mất vĩnh viễn tệp gốc của khách hàng mà không thể hoàn tác; phù hợp hoàn hảo với kiến trúc Recycle Bin của Sitecore XM.
+- **Lý do đề xuất:** Tránh rủi ro xóa nhầm làm mất vĩnh viễn tệp gốc của khách hàng mà không thể hoàn tác; phù hợp hoàn hảo với kiến trúc Recycle Bin của Treecraft.
 
 ---
 
@@ -185,6 +185,103 @@ Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp v
 - **Quyết định liên quan:** [DEC-041](decisions/DEC-041-content-editor-database-switcher-master-web.md), Launchpad
 - **Lựa chọn A (Đề xuất mặc định):** **Đặt làm ứng dụng độc lập tại `/admin/databases`, có Tile riêng trên Launchpad** và có liên kết truy cập nhanh từ ứng dụng Publish Manager.
 - **Lựa chọn B:** Tích hợp thành một tab con bên trong trang `/admin/publish-manager`.
-- **Lý do đề xuất:** Giữ đúng triết lý của Sitecore Desktop: Các công cụ quản trị hệ thống (Databases, Publish Manager, Content Editor, Workbox) là các ứng dụng độc lập trên Launchpad để tiện mở theo từng ngữ cảnh tác vụ.
+- **Lý do đề xuất:** Giữ đúng triết lý của Treecraft Desktop: Các công cụ quản trị hệ thống (Databases, Publish Manager, Content Editor, Workbox) là các ứng dụng độc lập trên Launchpad để tiện mở theo từng ngữ cảnh tác vụ.
+
+---
+
+# CÂU HỎI CẦN XÁC NHẬN CHO GIAI ĐOẠN R1 (REBRAND & ROOT RENAME)
+
+Tài liệu này lưu trữ danh sách 10 câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho kế hoạch: **Đổi tên dự án sang "Treecraft" và đổi Root `/root` &rarr; `/root` (GĐ R1)**, kèm đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Domain người dùng đổi `treecraft\admin` &rarr; `treecraft\admin` hay giữ `sitecore`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md), `Domain` model, `User` model
+- **Lựa chọn A (Đề xuất mặc định):** **Đổi sang `treecraft\admin`** (domain mặc định là `treecraft`). Cung cấp migration đổi domain của các user hiện có từ `sitecore` sang `treecraft`, đồng thời cập nhật bản ghi domain mặc định trong collection `domains`.
+- **Lựa chọn B:** Giữ nguyên domain `treecraft\admin` hoặc đổi sang định danh trung tính `cms\admin`.
+- **Lý do đề xuất:** Nhất quán 100% với thương hiệu mới `Treecraft`; loại bỏ triệt để mọi dấu vết của từ khóa `sitecore` trên giao diện đăng nhập và Quick Info.
+
+---
+
+### 2. Giữ thư mục Cloudinary `/AdminCMS`, chỉ đổi mapper?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038](decisions/DEC-038-cloudinary-media-item-unification.md), [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md), `src/utils/mediaPathMapper.js`
+- **Lựa chọn A (Đề xuất mặc định):** **Giữ nguyên thư mục gốc Cloudinary `AdminCMS`**, không đổi tên folder trên Cloudinary. Chỉ cập nhật hằng số trong mapper `ROOT_MEDIA_PATH = '/root/media library'` (đọc từ `branding.PATHS.MEDIA`).
+- **Lựa chọn B:** Đổi tên thư mục trên Cloudinary thành `TreecraftCMS` hoặc `Treecraft`.
+- **Lý do đề xuất:** Đổi tên thư mục trên Cloudinary đòi hỏi gọi API Cloudinary Rename hàng loạt asset, tiềm ẩn rủi ro rate-limit, lỗi mạng làm mất liên kết ảnh đã gắn trong các bài viết và rich text. Giữ nguyên Cloudinary folder là giải pháp an toàn tuyệt đối, zero-downtime cho media assets.
+
+---
+
+### 3. Có đổi tên database thật (Mongo) hay chỉ đổi biến env / tên hiển thị?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md), `src/config/env.js`, `.env.example`
+- **Lựa chọn A (Đề xuất mặc định):** **Không đổi tên cơ sở dữ liệu vật lý đang chạy trên MongoDB Atlas.** Chỉ cập nhật chuỗi kết nối mẫu trong `.env.example` (`treecraft_master`) và biến env `APP_NAME="Treecraft CMS"`.
+- **Lựa chọn B:** Yêu cầu người dùng dump & restore database MongoDB sang tên mới (ví dụ `treecraft_cms_master`).
+- **Lý do đề xuất:** Tránh rủi ro gián đoạn dịch vụ và không bắt buộc người dùng phải can thiệp cấu hình MongoDB cluster phức tạp trong giai đoạn này.
+
+---
+
+### 4. Đổi tên cookie / session (làm mất phiên hiện tại)?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md), `src/config/session.js`
+- **Lựa chọn A (Đề xuất mặc định):** **Đổi tên cookie session thành `treecraft_session_id`** (thay cho `cms_session_id`). Chấp nhận người dùng quản trị hiện tại phải đăng nhập lại một lần sau khi deploy R1.
+- **Lựa chọn B:** Giữ nguyên tên cookie `cms_session_id`.
+- **Lý do đề xuất:** Đảm bảo tính nhận diện thương hiệu đồng bộ và phân biệt rõ cookie của Treecraft với các hệ thống CMS khác trên cùng domain máy chủ.
+
+---
+
+### 5. Thuật ngữ vay mượn (`Launchpad`, `Workbox`, `Standard Values`, `Experience Editor`...): Giữ hay đổi?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Giữ nguyên toàn bộ thuật ngữ nghiệp vụ này trong giai đoạn R1.**
+- **Lựa chọn B:** Đổi đồng loạt (ví dụ: `Launchpad` &rarr; `Dashboard`, `Workbox` &rarr; `ApprovalQueue`, `Standard Values` &rarr; `DefaultValues`).
+- **Lý do đề xuất:** Các thuật ngữ này đã gắn liền với mã nguồn, tên model (`WorkboxService`), test suites (305 tests), và tài liệu 14 giai đoạn đã hoàn thành. Giữ nguyên giúp tập trung chính xác vào mục tiêu cốt lõi của R1: Rebrand thương hiệu `Treecraft` và đổi Root path `/root` &rarr; `/root` mà không gây phình to phạm vi rủi ro logic.
+
+---
+
+### 6. Dữ liệu hiện tại là dữ liệu thử, nên reset và seed lại hay migration?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md), `src/scripts/`
+- **Lựa chọn A (Đề xuất mặc định):** **Cung cấp Script Migration idempotent (`migrate-phase-r1-root-rename.js`) hỗ trợ cả `--dry-run` và rollback** để nâng cấp dữ liệu DB hiện có (72 Master items, 53 Web items, 24 templates); đồng thời **cập nhật bộ seed scripts** để môi trường cài đặt mới (Clean DB) tự động tạo cây `/root` ngay từ đầu.
+- **Lựa chọn B:** Chỉ hỗ trợ xóa sạch database (Reset) và chạy seed lại từ đầu.
+- **Lý do đề xuất:** Cung cấp migration thể hiện năng lực kiến trúc chuyên nghiệp của Tech Lead, bảo vệ dữ liệu nội dung người dùng đã biên tập (bài viết, ảnh Cloudinary, phân quyền ACL 55 rules đã gán), đồng thời vẫn bảo đảm khả năng bootstrap DB mới sạch sẽ.
+
+---
+
+### 7. Migration / seed cũ: Sửa trực tiếp sang `ROOT_PATH` hay giữ bất biến và thêm migration mới?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Cập nhật các seed script chính (`seed-initial-data.js`, `seed-presentation-data.js`, `seed-sample-site.js`, `sync-system-templates.js`) sử dụng hằng số `branding.PATHS.ROOT`** để các môi trường mới dựng lên đúng chuẩn `/root`. Các migration lịch sử từ GĐ 0 đến GĐ 8 giữ bất biến (đóng băng lịch sử) và bổ sung 1 migration duy nhất cho R1: `migrate-phase-r1-root-rename.js`.
+- **Lựa chọn B:** Sửa toàn bộ tất cả migration cũ từ GĐ 0 &rarr; 8.
+- **Lý do đề xuất:** Tuân thủ nguyên tắc "Migration Immutability" trong kỹ nghệ phần mềm: Migration cũ đã chạy trên production không được sửa lại; chỉ tạo migration mới để chuyển dịch trạng thái.
+
+---
+
+### 8. Item gốc: Đổi `name` `sitecore` &rarr; `root` và giữ nguyên `_id`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md), Item Model
+- **Lựa chọn A (Đề xuất mặc định):** **Đổi `name: "root"`, `path: "/root"` nhưng giữ nguyên `_id: ObjectId("6ae95cc6b1e541e051fd4162")`** trên cả Master và Web.
+- **Lựa chọn B:** Xóa item cũ và tạo một item gốc mới với `_id` mới.
+- **Lý do đề xuất:** Giữ nguyên `_id` đảm bảo toàn bộ quan hệ `parentId`, liên kết ACL rules (`itemId: 6ae95cc6b1e541e051fd4162`), và lịch sử xuất bản không bị mồ côi hoặc gãy vỡ.
+
+---
+
+### 9. Có logo / favicon Treecraft chưa, hay dùng placeholder chữ?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md), Topbar & Shell
+- **Lựa chọn A (Đề xuất mặc định):** **Dùng Logo chữ Treecraft tinh tế kèm biểu tượng cây cách điệu (Tabler icon `ti ti-trees` hoặc `ti ti-binary-tree`) và SVG Favicon xanh lá/navy hiện đại.** Khi người dùng có file ảnh logo chính thức sẽ thay thế sau mà không ảnh hưởng mã nguồn.
+- **Lựa chọn B:** Giữ logo cũ hoặc để trống không hiển thị icon.
+- **Lý do đề xuất:** Tạo ngay nhận diện thị giác mới chuyên nghiệp, đẹp mắt và đồng bộ trên topbar, taskbar, login và tab trình duyệt.
+
+---
+
+### 10. Tên repository git và thư mục dự án (`Admin-CMS`) có đổi không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-043](decisions/DEC-043-rebrand-treecraft-and-root-rename.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Không đổi tên thư mục hay git remote trong giai đoạn R1.** Việc đổi tên thư mục dự án trên máy cá nhân hoặc đổi tên repo trên GitHub thuộc quyền chủ động của người dùng sau khi commit mã nguồn xong.
+- **Lựa chọn B:** Yêu cầu kịch bản đổi tên thư mục và remote origin.
+- **Lý do đề xuất:** Tránh xung đột đường dẫn workspace hiện tại của IDE và terminal runner.
+
 
 

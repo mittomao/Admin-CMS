@@ -1,16 +1,16 @@
 # HƯỚNG DẪN TẠO TRANG VÀ COMPONENT MỚI (PHASE 10)
 
-Tài liệu này hướng dẫn lập trình viên và tác giả nội dung cách tạo thêm trang web mới (Page) và thành phần hiển thị (Rendering Component) trong hệ thống **Sitecore Experience Management (XM) Monolith SSR**.
+Tài liệu này hướng dẫn lập trình viên và tác giả nội dung cách tạo thêm trang web mới (Page) và thành phần hiển thị (Rendering Component) trong hệ thống **Treecraft Experience Management (XM) Monolith SSR**.
 
 ---
 
 ## 1. Kiến trúc Tổng quan
 
 ```
-[Content Tree (/sitecore/content)]
+[Content Tree (/root/content)]
          │
          ▼
-[Page Item: /sitecore/content/Services] ── (Kế thừa Presentation)
+[Page Item: /root/content/Services] ── (Kế thừa Presentation)
          │
          ├── Layout: HomeLayout (src/views/site/layouts/HomeLayout.ejs)
          │
@@ -52,10 +52,10 @@ Ví dụ: `src/views/site/components/FeatureList.ejs`
 
 ### Bước 2: Đăng ký Rendering Item trong CMS
 1. Truy cập **Content Editor** tại `/admin/content-editor`.
-2. Mở nhánh `/sitecore/layout/Renderings`.
+2. Mở nhánh `/root/layout/Renderings`.
 3. Tạo item con mới:
    - **Tên (Name):** `FeatureList`
-   - **Template:** `/sitecore/templates/System/Rendering`
+   - **Template:** `/root/templates/System/Rendering`
    - **viewPath:** `components/FeatureList.ejs` (hoặc `site/components/FeatureList.ejs`)
    - **Icon:** `ti ti-list-check`
 4. Bấm **Save**.
@@ -66,7 +66,7 @@ Ví dụ: `src/views/site/components/FeatureList.ejs`
 
 ### Bước 1: Tạo Template cho Trang (Nếu chưa có)
 1. Mở **Template Manager** tại `/admin/template-manager`.
-2. Dưới `/sitecore/templates/Project/Pages`, tạo template `Services Page`.
+2. Dưới `/root/templates/Project/Pages`, tạo template `Services Page`.
 3. Thêm các trường nội dung:
    - `PageTitle` (Single-Line Text)
    - `SectionTitle` (Single-Line Text)
@@ -76,7 +76,7 @@ Ví dụ: `src/views/site/components/FeatureList.ejs`
 
 ### Bước 2: Tạo Page Item trong Content Tree
 1. Mở **Content Editor** tại `/admin/content-editor`.
-2. Nhấp chuột phải vào `/sitecore/content` hoặc `/sitecore/content/Home`, chọn **Insert** $\rightarrow$ `Services Page`.
+2. Nhấp chuột phải vào `/root/content` hoặc `/root/content/Home`, chọn **Insert** $\rightarrow$ `Services Page`.
 3. Đặt tên item: `Services` (URL tương ứng sẽ là `/services` hoặc `/en/services`).
 4. Nhập nội dung các trường trên form.
 5. (Nếu chưa cấu hình ở Template): Chuyển sang tab **Presentation Details**, chọn Layout `HomeLayout`, thêm Rendering `FeatureList` vào placeholder `maincontent`.
@@ -85,7 +85,7 @@ Ví dụ: `src/views/site/components/FeatureList.ejs`
 ### Bước 3: Xem trước trang trong Admin (Preview)
 1. Trên thanh công cụ trên cùng của Content Editor, bấm nút **Preview**.
 2. Một tab mới sẽ mở ra tại `/admin/preview?id={itemId}&lang=vi`.
-3. Kiểm tra bố cục, placeholder và giao diện hiển thị với thanh banner màu tối "Sitecore XM Preview Mode".
+3. Kiểm tra bố cục, placeholder và giao diện hiển thị với thanh banner màu tối "Treecraft Preview Mode".
 
 ### Bước 4: Xuất bản (Publish) trang ra Website Công khai
 1. Trên Ribbon, chọn tab **PUBLISH** $\rightarrow$ **Publish Item** (hoặc mở `/admin/publish-manager`).

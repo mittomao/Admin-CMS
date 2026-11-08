@@ -7,6 +7,7 @@ const eventBus = require('../utils/eventBus');
 const { RIGHTS, ACTIONS, mapActionToRight } = require('../config/permissions');
 const { NotFoundError, ForbiddenError, ValidationError } = require('../utils/errors');
 const logger = require('../utils/logger');
+const branding = require('../config/branding');
 
 class AclService {
   constructor() {
@@ -430,7 +431,8 @@ class AclService {
     }
 
     // Special item tree protections (DEC-032 / Layout tree permissions)
-    const isLayoutTree = item.path && item.path.toLowerCase().startsWith('/sitecore/layout');
+    const layoutPath = branding.PATHS.LAYOUT.toLowerCase();
+    const isLayoutTree = item.path && (item.path.toLowerCase().startsWith(layoutPath) || item.path.toLowerCase().startsWith('/root/layout'));
     if (isLayoutTree) {
       const roleNames = [
         ...(Array.isArray(user.roleNames) ? user.roleNames : []),
@@ -825,7 +827,7 @@ class AclService {
           id: p.principalId,
           name: principalDoc.name || principalDoc.username,
           displayName: principalDoc.displayName || principalDoc.fullName || principalDoc.name,
-          domain: principalDoc.domain || 'sitecore',
+          domain: principalDoc.domain || branding.DEFAULT_DOMAIN,
         },
         rights: rightsMatrix,
       });

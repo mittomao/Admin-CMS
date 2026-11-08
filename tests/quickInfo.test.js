@@ -2,6 +2,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../src/app');
+const branding = require('../src/config/branding');
 const User = require('../src/models/User');
 const Role = require('../src/models/Role');
 const Template = require('../src/models/Template');
@@ -35,7 +36,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
     const passwordHash = await User.hashPassword('pass123');
     adminUser = await User.create({
       username: 'admin',
-      email: 'admin@sitecore.local',
+      email: 'admin@treecraft.local',
       fullName: 'System Administrator',
       passwordHash,
       roles: [adminRole._id],
@@ -48,7 +49,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       name: 'Folder',
       displayName: 'Folder',
       icon: 'ti ti-folder',
-      path: '/sitecore/templates/System/Folder',
+      path: `${branding.PATHS.TEMPLATES}/System/Folder`,
       isSystem: true,
       sections: [],
     });
@@ -57,7 +58,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       name: 'HomePage',
       displayName: 'Home Page Template',
       icon: 'ti ti-home',
-      path: '/sitecore/templates/Project/Pages/HomePage',
+      path: `${branding.PATHS.TEMPLATES}/Project/Pages/HomePage`,
       isSystem: false,
       sections: [
         {
@@ -77,7 +78,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       name: 'Layout',
       displayName: 'Layout Definition',
       icon: 'ti ti-layout',
-      path: '/sitecore/templates/System/Layout',
+      path: `${branding.PATHS.TEMPLATES}/System/Layout`,
       isSystem: true,
       sections: [],
     });
@@ -86,7 +87,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       name: 'Rendering',
       displayName: 'Rendering Definition',
       icon: 'ti ti-puzzle',
-      path: '/sitecore/templates/System/Rendering',
+      path: `${branding.PATHS.TEMPLATES}/System/Rendering`,
       isSystem: true,
       sections: [],
     });
@@ -95,19 +96,19 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       name: 'Placeholder',
       displayName: 'Placeholder Definition',
       icon: 'ti ti-box',
-      path: '/sitecore/templates/System/Placeholder',
+      path: `${branding.PATHS.TEMPLATES}/System/Placeholder`,
       isSystem: true,
       sections: [],
     });
 
     // 2. Base tree structure
     const rootItem = await Item.create({
-      name: 'sitecore',
-      displayName: 'Sitecore',
+      name: branding.ROOT_NAME,
+      displayName: branding.ROOT_NAME,
       templateId: folderTpl._id,
       parentId: null,
       ancestors: [],
-      path: '/sitecore',
+      path: branding.ROOT_PATH,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -119,7 +120,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: folderTpl._id,
       parentId: rootItem._id,
       ancestors: [rootItem._id],
-      path: '/sitecore/content',
+      path: branding.PATHS.CONTENT,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -131,7 +132,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: pageTpl._id,
       parentId: contentFolder._id,
       ancestors: [rootItem._id, contentFolder._id],
-      path: '/sitecore/content/home',
+      path: `${branding.PATHS.CONTENT}/home`,
       createdBy: adminUser._id,
       languages: [
         {
@@ -155,7 +156,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: folderTpl._id,
       parentId: rootItem._id,
       ancestors: [rootItem._id],
-      path: '/sitecore/layout',
+      path: branding.PATHS.LAYOUT,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -167,7 +168,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: folderTpl._id,
       parentId: layoutFolder._id,
       ancestors: [rootItem._id, layoutFolder._id],
-      path: '/sitecore/layout/Layouts',
+      path: `${branding.PATHS.LAYOUT}/Layouts`,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -179,7 +180,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: layoutTpl._id,
       parentId: layoutsSub._id,
       ancestors: [rootItem._id, layoutFolder._id, layoutsSub._id],
-      path: '/sitecore/layout/Layouts/HomeLayout',
+      path: `${branding.PATHS.LAYOUT}/Layouts/HomeLayout`,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -191,7 +192,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: folderTpl._id,
       parentId: layoutFolder._id,
       ancestors: [rootItem._id, layoutFolder._id],
-      path: '/sitecore/layout/Renderings',
+      path: `${branding.PATHS.LAYOUT}/Renderings`,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -203,7 +204,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: renderingTpl._id,
       parentId: renderingsSub._id,
       ancestors: [rootItem._id, layoutFolder._id, renderingsSub._id],
-      path: '/sitecore/layout/Renderings/HeroBanner',
+      path: `${branding.PATHS.LAYOUT}/Renderings/HeroBanner`,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -215,7 +216,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: folderTpl._id,
       parentId: layoutFolder._id,
       ancestors: [rootItem._id, layoutFolder._id],
-      path: '/sitecore/layout/Placeholders',
+      path: `${branding.PATHS.LAYOUT}/Placeholders`,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -227,7 +228,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       templateId: placeholderTpl._id,
       parentId: placeholdersSub._id,
       ancestors: [rootItem._id, layoutFolder._id, placeholdersSub._id],
-      path: '/sitecore/layout/Placeholders/maincontent',
+      path: `${branding.PATHS.LAYOUT}/Placeholders/maincontent`,
       createdBy: adminUser._id,
       languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
       deleted: false,
@@ -266,12 +267,12 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       expect(qi.name).toBe('home');
 
       // Row 3: Item path
-      expect(qi.path).toBe('/sitecore/content/home');
+      expect(qi.path).toBe(`${branding.PATHS.CONTENT}/home`);
 
       // Row 4: Template
       expect(qi.template).toBeDefined();
       expect(qi.template.id).toBe(`{${pageTpl._id.toString().toUpperCase()}}`);
-      expect(qi.template.path).toBe('/sitecore/templates/Project/Pages/HomePage');
+      expect(qi.template.path).toBe(`${branding.PATHS.TEMPLATES}/Project/Pages/HomePage`);
 
       // Row 5: Created from (null initially -> [unknown])
       expect(qi.createdFrom.isUnknown).toBe(true);
@@ -279,21 +280,21 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
 
       // Row 6: Item owner
       expect(qi.itemOwner.isUnknown).toBe(false);
-      expect(qi.itemOwner.displayText).toBe('sitecore\\admin');
+      expect(qi.itemOwner.displayText).toBe(`${branding.DEFAULT_DOMAIN}\\admin`);
     });
 
     it('should return correct metadata for Presentation items (Layout, Rendering, Placeholder)', async () => {
       const layoutQi = await itemService.getQuickInfo(layoutItem._id);
-      expect(layoutQi.path).toBe('/sitecore/layout/Layouts/HomeLayout');
-      expect(layoutQi.template.path).toBe('/sitecore/templates/System/Layout');
+      expect(layoutQi.path).toBe(`${branding.PATHS.LAYOUT}/Layouts/HomeLayout`);
+      expect(layoutQi.template.path).toBe(`${branding.PATHS.TEMPLATES}/System/Layout`);
 
       const renderingQi = await itemService.getQuickInfo(renderingItem._id);
-      expect(renderingQi.path).toBe('/sitecore/layout/Renderings/HeroBanner');
-      expect(renderingQi.template.path).toBe('/sitecore/templates/System/Rendering');
+      expect(renderingQi.path).toBe(`${branding.PATHS.LAYOUT}/Renderings/HeroBanner`);
+      expect(renderingQi.template.path).toBe(`${branding.PATHS.TEMPLATES}/System/Rendering`);
 
       const placeholderQi = await itemService.getQuickInfo(placeholderItem._id);
-      expect(placeholderQi.path).toBe('/sitecore/layout/Placeholders/maincontent');
-      expect(placeholderQi.template.path).toBe('/sitecore/templates/System/Placeholder');
+      expect(placeholderQi.path).toBe(`${branding.PATHS.LAYOUT}/Placeholders/maincontent`);
+      expect(placeholderQi.template.path).toBe(`${branding.PATHS.TEMPLATES}/System/Placeholder`);
     });
 
     it('should return correct metadata for a Template item', async () => {
@@ -301,7 +302,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       expect(tplQi).toBeDefined();
       expect(tplQi.itemId).toBe(`{${pageTpl._id.toString().toUpperCase()}}`);
       expect(tplQi.name).toBe('HomePage');
-      expect(tplQi.path).toBe('/sitecore/templates/Project/Pages/HomePage');
+      expect(tplQi.path).toBe(`${branding.PATHS.TEMPLATES}/Project/Pages/HomePage`);
     });
 
     it('should fallback to [unknown] when createdBy or createdFrom are not present', async () => {
@@ -311,7 +312,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
         templateId: folderTpl._id,
         parentId: homeItem._id,
         ancestors: [...homeItem.ancestors, homeItem._id],
-        path: '/sitecore/content/home/orphan-item',
+        path: `${branding.PATHS.CONTENT}/home/orphan-item`,
         createdBy: null,
         createdFrom: null,
         languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
@@ -380,13 +381,13 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       expect(html).toContain('Item name:');
       expect(html).toContain('home');
       expect(html).toContain('Item path:');
-      expect(html).toContain('/sitecore/content/home');
+      expect(html).toContain(`${branding.PATHS.CONTENT}/home`);
       expect(html).toContain('Template:');
-      expect(html).toContain('/sitecore/templates/Project/Pages/HomePage');
+      expect(html).toContain(`${branding.PATHS.TEMPLATES}/Project/Pages/HomePage`);
       expect(html).toContain('Created from:');
       expect(html).toContain('[unknown]');
       expect(html).toContain('Item owner:');
-      expect(html).toContain('sitecore\\admin');
+      expect(html).toContain(`${branding.DEFAULT_DOMAIN}\\admin`);
 
       // Copy buttons
       expect(html).toContain('title="Copy Item ID"');
@@ -414,7 +415,7 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
         templateId: folderTpl._id,
         parentId: homeItem._id,
         ancestors: [...homeItem.ancestors, homeItem._id],
-        path: '/sitecore/content/home/xss-item',
+        path: `${branding.PATHS.CONTENT}/home/xss-item`,
         createdBy: adminUser._id,
         languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
         deleted: false,
@@ -447,8 +448,8 @@ describe('GĐ 6.3 — Quick Info Section in Content Editor (DEC-037)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data).toBeDefined();
       expect(res.body.data.itemId).toBe(`{${homeItem._id.toString().toUpperCase()}}`);
-      expect(res.body.data.path).toBe('/sitecore/content/home');
-      expect(res.body.data.itemOwner.displayText).toBe('sitecore\\admin');
+      expect(res.body.data.path).toBe(`${branding.PATHS.CONTENT}/home`);
+      expect(res.body.data.itemOwner.displayText).toBe(`${branding.DEFAULT_DOMAIN}\\admin`);
     });
 
     it('should return 404 for non-existent item id', async () => {

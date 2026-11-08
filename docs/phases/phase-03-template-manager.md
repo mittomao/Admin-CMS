@@ -44,7 +44,7 @@ Xây dựng công cụ Template Manager cho phép người quản trị định 
   - `POST /admin/template-manager/:id/standard-values`: Lưu giá trị mặc định.
   - `POST /admin/template-manager/:id/insert-options`: Cập nhật insert options.
 - [x] **Task 3.4:** Thiết kế giao diện EJS Template Manager:
-  - `src/views/admin/templates/manager.ejs`: Cây template nằm dưới nhánh `/sitecore/templates`.
+  - `src/views/admin/templates/manager.ejs`: Cây template nằm dưới nhánh `/root/templates`.
   - `src/views/admin/templates/builder.ejs`: Bảng thiết kế Section và Field cho phép thêm/sửa/xóa trường nhanh, chọn loại trường từ dropdown.
   - `src/views/admin/templates/modals/insert-options-modal.ejs`: Hộp thoại chọn template con được phép tạo.
 - [x] **Task 3.5:** Tích hợp kế thừa trường vào Content Editor:

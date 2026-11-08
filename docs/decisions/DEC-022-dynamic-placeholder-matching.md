@@ -1,7 +1,7 @@
 # DEC-022: Quy tắc Khớp Dynamic Placeholder Keys
 
 > [!WARNING]
-> **Trạng thái:** Bị thay thế bởi [DEC-032](DEC-032-three-branch-layout-tree-structure.md). Thư mục `Placeholder Settings` và cơ chế khớp wildcard phức tạp cho React được xóa bỏ. Thay thế bằng thư mục `/sitecore/layout/Placeholders/` chứa trực tiếp các Item Placeholder (`header`, `maincontent`, `footer`) định nghĩa `placeholderKey` và `allowedRenderings[]` rõ ràng, đơn giản.
+> **Trạng thái:** Bị thay thế bởi [DEC-032](DEC-032-three-branch-layout-tree-structure.md). Thư mục `Placeholder Settings` và cơ chế khớp wildcard phức tạp cho React được xóa bỏ. Thay thế bằng thư mục `/root/layout/Placeholders/` chứa trực tiếp các Item Placeholder (`header`, `maincontent`, `footer`) định nghĩa `placeholderKey` và `allowedRenderings[]` rõ ràng, đơn giản.
 
 - **Ngày quyết định:** 2026-11-03
 - **Giai đoạn liên quan:** GĐ 6 (Presentation)
@@ -20,5 +20,5 @@ Hỗ trợ cú pháp placeholder key động với ký tự đại diện (Wildc
 
 ## 3. Hệ quả & Lưu ý kỹ thuật
 - Tăng tính linh hoạt vượt trội cho các component layout phức tạp trên React Frontend.
-- Đơn giản hóa số lượng Placeholder Settings cần khởi tạo trong cây hệ thống `/sitecore/layout/Placeholder Settings`.
+- Đơn giản hóa số lượng Placeholder Settings cần khởi tạo trong cây hệ thống `/root/layout/Placeholder Settings`.
 

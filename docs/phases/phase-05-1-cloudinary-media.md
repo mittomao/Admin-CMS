@@ -10,13 +10,13 @@
 
 ## 1. Mục tiêu Giai đoạn
 Tái cấu trúc toàn diện phân hệ Quản lý Đa phương tiện (Media Library) theo hai nguyên lý cốt lõi:
-1. **Triết lý Sitecore XM thuần túy — "Mọi Media đều là Item"**:
+1. **Triết lý Treecraft thuần túy — "Mọi Media đều là Item"**:
    - Xóa bỏ mô hình CSDL phân mảnh (loại bỏ collection tách rời `media`).
-   - Mọi tệp ảnh, tài liệu, video và thư mục media đều là các **Item** chính danh thuộc collection `items_master` (và xuất bản sang `items_web` ở GĐ 8) nằm dưới nhánh cây phân cấp `/sitecore/media library`.
-   - Mỗi item media gắn với một **System Template** tương ứng (`Media Folder`, `Image`, `File`, `Video`) tại `/sitecore/templates/System`.
+   - Mọi tệp ảnh, tài liệu, video và thư mục media đều là các **Item** chính danh thuộc collection `items_master` (và xuất bản sang `items_web` ở GĐ 8) nằm dưới nhánh cây phân cấp `/root/media library`.
+   - Mỗi item media gắn với một **System Template** tương ứng (`Media Folder`, `Image`, `File`, `Video`) tại `/root/templates/System`.
    - Tên của Item media **không chứa phần mở rộng file** (extension); phần mở rộng được lưu trữ tại trường dữ liệu `extension`.
 2. **Cloudinary Cloud Storage là nguồn lưu trữ nhị phân duy nhất**:
-   - Thư mục gốc `/AdminCMS` trên Cloudinary ánh xạ 1-1 với nhánh `/sitecore/media library` trên CMS. Cấu trúc cây thư mục con khớp nhau hoàn toàn.
+   - Thư mục gốc `/AdminCMS` trên Cloudinary ánh xạ 1-1 với nhánh `/root/media library` trên CMS. Cấu trúc cây thư mục con khớp nhau hoàn toàn.
    - Quản trị toàn bộ vòng đời tài nguyên nhị phân (Upload, Rename, Move, Replace, Delete) đồng bộ hai chiều thời gian thực giữa CMS Item Tree và Cloudinary.
    - Cung cấp công cụ Reverse Sync (`npm run media:sync` và UI Ribbon Sync) quét `/AdminCMS` trên Cloudinary để tự động nhập (import) asset sẵn có, cập nhật metadata và cảnh báo asset thất lạc.
 
@@ -26,11 +26,11 @@ Tái cấu trúc toàn diện phân hệ Quản lý Đa phương tiện (Media L
 
 | Hạng mục | Hiện trạng (GĐ 5 cũ) | Yêu cầu mới (GĐ 5.1) | Hành động kỹ thuật | Rủi ro & Giải pháp giảm thiểu |
 | :--- | :--- | :--- | :--- | :--- |
-| **Vị trí lưu trữ dữ liệu** | Bảng CSDL riêng `media` (`collection: 'media'`) nằm tách rời với `items_master`. | Mọi media là Item nằm trong `items_master` dưới nhánh `/sitecore/media library`. | **Chuyển đổi dữ liệu (Migration):** Chuyển toàn bộ bản ghi từ `media` sang `Item` (`items_master`), gán template tương ứng, xóa bỏ collection `media`. | **Rủi ro:** Gãy ID tham chiếu trong các trường `Image` và thẻ Rich Text cũ.<br/>**Giải pháp:** Giữ nguyên chính xác `_id` cũ khi chuyển sang collection `items_master`. |
+| **Vị trí lưu trữ dữ liệu** | Bảng CSDL riêng `media` (`collection: 'media'`) nằm tách rời với `items_master`. | Mọi media là Item nằm trong `items_master` dưới nhánh `/root/media library`. | **Chuyển đổi dữ liệu (Migration):** Chuyển toàn bộ bản ghi từ `media` sang `Item` (`items_master`), gán template tương ứng, xóa bỏ collection `media`. | **Rủi ro:** Gãy ID tham chiếu trong các trường `Image` và thẻ Rich Text cũ.<br/>**Giải pháp:** Giữ nguyên chính xác `_id` cũ khi chuyển sang collection `items_master`. |
 | **Tầng Storage Provider** | `LocalStorageProvider` lưu file cục bộ trên ổ cứng đĩa tại `storage/uploads/YYYY/MM/`. | `CloudinaryStorageProvider` lưu trữ độc quyền trên Cloudinary dưới thư mục gốc `AdminCMS`. | **Xóa / Sửa:** Xóa vĩnh viễn `LocalStorageProvider.js`. Chuẩn hóa `CloudinaryStorageProvider` theo interface `StorageProvider`. | **Rủi ro:** Lỗi mạng hoặc giới hạn API Cloudinary làm hỏng thao tác.<br/>**Giải pháp:** Bọc Transaction/Rollback an toàn; nếu Cloudinary lỗi thì không tạo/sửa Item; đánh dấu `syncStatus=error`. |
 | **Cấu trúc Thư mục Cloudinary** | Tạo thư mục con theo thời gian `AdminCMS/YYYY/MM/`. | Khớp 1-1 với cây thư mục CMS: `AdminCMS/<đường dẫn item dưới media library>/`. | **Sửa:** Xóa bỏ `getDateSubdir()`; xây dựng hàm hai chiều `mediaPathMapper` ánh xạ giữa item path và Cloudinary `public_id`/`asset_folder`. | **Rủi ro:** Tên thư mục hoặc file có dấu tiếng Việt/ký tự đặc biệt gây lỗi URL Cloudinary.<br/>**Giải pháp:** Kebab-case chuẩn hóa cho Item name; mã hóa an toàn ký tự cho Cloudinary publicId. |
 | **Định danh & Tên Item** | Tên item gắn kèm đuôi file: `hero-banner.jpg`. | Tên item không kèm đuôi file: `hero-banner`; đuôi file lưu ở field `extension`. | **Sửa:** Khi upload hoặc đồng bộ, tách `baseName` làm `item.name`, lưu đuôi file vào field `extension` và `format`. | **Rủi ro:** Hai file khác đuôi cùng tên (`banner.jpg` và `banner.png`) trong một thư mục bị xung đột tên item.<br/>**Giải pháp:** Chặn upload trùng tên, hiển thị thông báo lỗi rõ ràng hoặc yêu cầu đổi tên. |
-| **System Templates cho Media** | Chưa có System Template chuẩn cho media trong Content Editor. | Tạo 3 System Templates tại `/sitecore/templates/System`: `Media Folder`, `Image`, `File` (kèm `Video`). | **Thêm mới (Seed):** Khởi tạo Template với đầy đủ Section và Fields (`publicId`, `secureUrl`, `dimensions`, `fileSize`, `altText`, `title`, `description`...). | **Rủi ro:** Template thiếu trường hoặc không tương thích hệ thống phân cấp.<br/>**Giải pháp:** Tuân thủ chuẩn Sitecore System Template schema đã định hình ở GĐ 3. |
+| **System Templates cho Media** | Chưa có System Template chuẩn cho media trong Content Editor. | Tạo 3 System Templates tại `/root/templates/System`: `Media Folder`, `Image`, `File` (kèm `Video`). | **Thêm mới (Seed):** Khởi tạo Template với đầy đủ Section và Fields (`publicId`, `secureUrl`, `dimensions`, `fileSize`, `altText`, `title`, `description`...). | **Rủi ro:** Template thiếu trường hoặc không tương thích hệ thống phân cấp.<br/>**Giải pháp:** Tuân thủ chuẩn Treecraft System Template schema đã định hình ở GĐ 3. |
 | **Giao diện Item Form (Content Editor)** | Chưa có form biên tập chi tiết cho Item media trong Content Editor (chỉ có popup Inspector của MediaBrowser). | Content Editor hiển thị form biên tập Item Media hoàn chỉnh: Khung xem trước ảnh (preview), URL Cloudinary, kích thước, dung lượng, nút Download/Replace. | **Sửa / Thêm mới:** Tùy biến renderer cho trường media preview chỉ đọc trong Content Editor `item-form.ejs`. | **Rủi ro:** UI bị vỡ trên màn hình nhỏ hoặc load ảnh gốc quá nặng.<br/>**Giải pháp:** Sử dụng Cloudinary thumbnail transformation URL tối ưu hóa hiển thị. |
 | **Sinh Thumbnail & Biến đổi ảnh** | Sử dụng thư viện `sharp` trên máy chủ Node.js để sinh file ảnh WebP lưu tại `storage/thumbnails/`. | Sử dụng trực tiếp **Cloudinary Transformation URL** theo các preset kích thước whitelisted (`thumb`, `medium`, `large`). | **Sửa:** Chuyển `generateThumbnail` sang Cloudinary URL builder với preset (`c_fill,h_300,w_300,f_webp,q_auto`). | **Rủi ro:** Lạm dụng query tùy tiện làm tăng phí bandwidth Cloudinary.<br/>**Giải pháp:** Giới hạn strict whitelist các preset tham số, không cho phép client truyền kích thước tự do. |
 | **Phục vụ tệp tin cũ (`/media/file/:id`)** | Stream trực tiếp luồng nhị phân từ ổ cứng local. | Tự động chuyển hướng **HTTP 301/302 Redirect** sang Cloudinary CDN `secure_url`. | **Sửa:** Cập nhật endpoint `serveFile` trong `mediaController.js` chỉ thực hiện 302 Redirect sang CDN. | **Rủi ro:** Client không nhận diện 302 hoặc cache cũ.<br/>**Giải pháp:** Gửi kèm header `Cache-Control: public, max-age=31536000, immutable`. |
@@ -53,10 +53,10 @@ flowchart TD
 ```
 
 1. **GĐ 2 (Content Editor):**
-   - Cây Fancytree hiển thị các Item media bên dưới `/sitecore/media library` tương tự các item nội dung khác, với icon phân biệt (ảnh, file, folder).
+   - Cây Fancytree hiển thị các Item media bên dưới `/root/media library` tương tự các item nội dung khác, với icon phân biệt (ảnh, file, folder).
    - Form biên tập hiển thị section chuyên biệt: Preview ảnh, thông số kỹ thuật (publicId, kích thước, định dạng, dung lượng), nút Download và nút Replace.
 2. **GĐ 3 (Template Manager):**
-   - Đăng ký các System Templates trong nhánh `/sitecore/templates/System`:
+   - Đăng ký các System Templates trong nhánh `/root/templates/System`:
      - `Media Folder` (chứa các item con, quản lý phân cấp).
      - `Image` (chứa các trường metadata ảnh: `publicId`, `assetId`, `format`, `extension`, `secureUrl`, `fileSize`, `width`, `height`, `checksum`, `altText`, `title`, `description`, `syncedAt`).
      - `File` (chứa metadata tài liệu/tệp chung: PDF, Zip, Docs).
@@ -80,13 +80,13 @@ flowchart TD
 ### 4.1. Hàm Ánh Xạ Đường Dẫn Hai Chiều (`mediaPathMapper`)
 Module `src/utils/mediaPathMapper.js` chịu trách nhiệm chuẩn hóa duy nhất quy tắc chuyển đổi:
 - **Từ CMS Item Path sang Cloudinary `public_id` và `asset_folder`:**
-  - Nhánh gốc: `/sitecore/media library` tương ứng gốc `AdminCMS`.
-  - Item Path: `/sitecore/media library/Banners/Summer/hero-banner`
+  - Nhánh gốc: `/root/media library` tương ứng gốc `AdminCMS`.
+  - Item Path: `/root/media library/Banners/Summer/hero-banner`
   - `asset_folder`: `AdminCMS/Banners/Summer`
   - `public_id`: `AdminCMS/Banners/Summer/hero-banner` (đối với image/video, không kèm extension; đối với raw/file tài liệu, kèm extension).
 - **Từ Cloudinary Asset sang CMS Item Path:**
   - Cloudinary asset: `asset_folder = 'AdminCMS/Banners/Summer'`, `display_name = 'hero-banner'` (hoặc cắt từ `public_id`).
-  - Item Path: `/sitecore/media library/Banners/Summer/hero-banner`.
+  - Item Path: `/root/media library/Banners/Summer/hero-banner`.
   - Item Name: `hero-banner` (kebab-case, không đuôi).
 
 ### 4.2. Xử Lý Trùng Tên (Name Conflict Policy)
@@ -124,11 +124,11 @@ Module `src/utils/mediaPathMapper.js` chịu trách nhiệm chuẩn hóa duy nh�
 - [x] Kiểm tra package `cloudinary` (đã có trong dependencies); bảo đảm API Secret không bao giờ gửi ra trình duyệt; gỡ bỏ dependency `sharp` không còn sử dụng.
 
 ### Task 5.1.2: System Templates & Cấu trúc Item Media
-- [x] Xây dựng migration/seed tạo 3 System Templates tại `/sitecore/templates/System`:
+- [x] Xây dựng migration/seed tạo 3 System Templates tại `/root/templates/System`:
   - [x] `Media Folder`: icon `ti ti-folder`, insertOptions cho phép tạo `Media Folder`, `Image`, `File`.
   - [x] `Image`: icon `ti ti-photo`, các trường `publicId`, `assetId`, `format`, `extension`, `secureUrl`, `fileSize`, `width`, `height`, `checksum`, `altText` (đa ngôn ngữ), `title`, `description`.
   - [x] `File`: icon `ti ti-file`, các trường tương ứng cho tài liệu chung.
-- [x] Đảm bảo node gốc `/sitecore/media library` là một `Item` chính danh sử dụng template `Media Folder`.
+- [x] Đảm bảo node gốc `/root/media library` là một `Item` chính danh sử dụng template `Media Folder`.
 
 ### Task 5.1.3: Module Ánh Xạ Đường Dẫn (`mediaPathMapper`)
 - [x] Tạo `src/utils/mediaPathMapper.js` hỗ trợ chuyển đổi hai chiều:
@@ -149,7 +149,7 @@ Module `src/utils/mediaPathMapper.js` chịu trách nhiệm chuẩn hóa duy nh�
 
 ### Task 5.1.5: Nghiệp Vụ Đồng Bộ Hai Chiều (`mediaItemService`)
 - [x] Hợp nhất nghiệp vụ Media vào mô hình `Item`:
-  - [x] Tạo Item media dưới `/sitecore/media library` khi upload.
+  - [x] Tạo Item media dưới `/root/media library` khi upload.
   - [x] Chặn trùng tên trong cùng thư mục.
   - [x] Cập nhật Cloudinary tương ứng khi Rename, Move, Replace.
   - [x] Xử lý lỗi Cloudinary: Rollback tạo Item nếu upload thất bại, không để lại dữ liệu rác.
@@ -164,7 +164,7 @@ Module `src/utils/mediaPathMapper.js` chịu trách nhiệm chuẩn hóa duy nh�
   - [x] Nếu Item thuộc template `Image` hoặc `File`: Render section xem trước ảnh (preview), hiển thị thông số kỹ thuật (URL, dimensions, size), nút Download, nút Replace.
   - [x] Cho phép biên tập các trường metadata `altText` theo từng ngôn ngữ.
 - [x] Cập nhật `MediaPicker` modal và field `Image`:
-  - [x] Picker duyệt trực tiếp cây Item bên dưới `/sitecore/media library`.
+  - [x] Picker duyệt trực tiếp cây Item bên dưới `/root/media library`.
   - [x] Lưu trữ `mediaId` (ID của Item media).
   - [x] Hiển thị thumbnail từ Cloudinary URL của Item.
 
@@ -177,7 +177,7 @@ Module `src/utils/mediaPathMapper.js` chịu trách nhiệm chuẩn hóa duy nh�
 ### Task 5.1.8: Kế Hoạch Migration Dữ Liệu Cũ
 - [x] Tạo script migration `scripts/migrate-legacy-media-to-items.js`:
   - [x] Đọc tất cả bản ghi từ collection `media`.
-  - [x] Tạo các node `Item` tương ứng dưới `/sitecore/media library` với template chuẩn.
+  - [x] Tạo các node `Item` tương ứng dưới `/root/media library` với template chuẩn.
   - [x] Giữ nguyên chính xác `_id` của bản ghi cũ để không gãy liên kết trong các trường `Image` và bài viết Rich Text.
   - [x] Hỗ trợ cờ `--dry-run` và cờ `--rollback`.
   - [x] Nhắc nhở người dùng backup CSDL trước khi chạy.
@@ -219,9 +219,9 @@ sequenceDiagram
 
 ## 7. Definition of Done (DoD) & Tiêu Chí Nghiệm Thu
 
-1. [ ] **Mọi Media là Item:** Nhánh `/sitecore/media library` chỉ chứa các `Item` thuộc collection `items_master`. Collection `media` cũ không còn được sử dụng ở luồng chính.
+1. [ ] **Mọi Media là Item:** Nhánh `/root/media library` chỉ chứa các `Item` thuộc collection `items_master`. Collection `media` cũ không còn được sử dụng ở luồng chính.
 2. [ ] **Ánh xạ 1-1 với Cloudinary:** Mọi tệp tải lên đều được lưu tại `AdminCMS/<path>` trên Cloudinary. Item name trên CMS không chứa đuôi file.
-3. [ ] **Đầy đủ System Templates:** Các template `Media Folder`, `Image`, `File` hoạt động ổn định tại `/sitecore/templates/System`.
+3. [ ] **Đầy đủ System Templates:** Các template `Media Folder`, `Image`, `File` hoạt động ổn định tại `/root/templates/System`.
 4. [ ] **Giao diện Item Media:** Form biên tập Content Editor hiển thị preview ảnh từ Cloudinary, thông tin kỹ thuật chỉ đọc, cho phép sửa `altText` đa ngôn ngữ và có nút Replace/Download.
 5. [ ] **Đồng bộ thao tác:** Thao tác Rename, Move, Replace trên CMS đồng bộ chính xác tới Cloudinary. Nếu Cloudinary gặp sự cố, hệ thống hủy thao tác và không tạo dữ liệu hỏng.
 6. [ ] **Reverse Sync:** Lệnh `npm run media:sync` và UI Ribbon Sync quét thành công `/AdminCMS` trên Cloudinary, nhập asset còn thiếu, cập nhật metadata và báo cáo asset mất mà không nhân bản trùng lặp (Idempotent).

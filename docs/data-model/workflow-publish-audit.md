@@ -72,7 +72,7 @@
   startedAt: ISODate("2026-11-03T10:00:00.000Z"),
   finishedAt: ISODate("2026-11-03T10:00:05.000Z"),
   logDetails: [
-    { itemId: ObjectId("..."), action: "PUBLISHED", path: "/sitecore/content/home" }
+    { itemId: ObjectId("..."), action: "PUBLISHED", path: "/root/content/home" }
   ]
 }
 ```
@@ -88,7 +88,7 @@
   username: "editor1",
   action: "ITEM_PRESENTATION_UPDATE",  // LOGIN, LOGOUT, ITEM_CREATE, ITEM_UPDATE, ITEM_DELETE, ITEM_RESTORE, PUBLISH, WORKFLOW_CHANGE, ITEM_PRESENTATION_UPDATE
   targetItemId: ObjectId("64a1b2c3d4e5f67890123400"),
-  itemPath: "/sitecore/content/home",
+  itemPath: "/root/content/home",
   details: {
     changedFields: ["fields.pageTitle"],
     oldValues: { "pageTitle": "Old Title" },

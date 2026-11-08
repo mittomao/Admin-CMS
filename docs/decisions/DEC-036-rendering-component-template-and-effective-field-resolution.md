@@ -27,15 +27,15 @@ Do đó, cần một cơ chế tự động suy ra trường (computed/effective
 ## 2. Quyết định kỹ thuật
 
 ### 2.1. Rendering Item mang thuộc tính `componentTemplate`
-1. **Thuộc tính bắt buộc:** Mỗi item Rendering dưới `/sitecore/layout/Renderings/` có thêm trường **`componentTemplate`** (ObjectId, bắt buộc).
-2. **Nguồn chọn hợp lệ:** Chỉ được phép chọn các Template nằm trong nhánh thư mục `/sitecore/templates/Feature/Components` (hỗ trợ duyệt qua các thư mục con phân cấp, chỉ chọn được node Template, không chọn được node Folder).
+1. **Thuộc tính bắt buộc:** Mỗi item Rendering dưới `/root/layout/Renderings/` có thêm trường **`componentTemplate`** (ObjectId, bắt buộc).
+2. **Nguồn chọn hợp lệ:** Chỉ được phép chọn các Template nằm trong nhánh thư mục `/root/templates/Feature/Components` (hỗ trợ duyệt qua các thư mục con phân cấp, chỉ chọn được node Template, không chọn được node Folder).
 3. **Form quản trị Rendering:**
    - `viewPath`: Đường dẫn view EJS (kiểm tra whitelist `src/views/site/` và đuôi `.ejs`).
    - `componentTemplate`: Hộp chọn đơn (ItemPicker / Dropdown) trỏ tới Component Template hợp lệ.
    - `icon`: Icon hiển thị của component.
    - `parametersTemplate`: Template định nghĩa tham số (tuỳ chọn).
 4. **Ràng buộc toàn vẹn dữ liệu (Integrity Constraints):**
-   - **Chặn xoá/di chuyển:** Không cho phép xoá hoặc di chuyển một Template ra khỏi `/sitecore/templates/Feature/Components` nếu đang có Rendering tham chiếu đến nó. Hệ thống phải liệt kê rõ danh sách các Rendering đang sử dụng.
+   - **Chặn xoá/di chuyển:** Không cho phép xoá hoặc di chuyển một Template ra khỏi `/root/templates/Feature/Components` nếu đang có Rendering tham chiếu đến nó. Hệ thống phải liệt kê rõ danh sách các Rendering đang sử dụng.
    - **Cảnh báo khi thay đổi:** Khi biên tập viên thay đổi `componentTemplate` của một Rendering đang được sử dụng trong các Presentation, hệ thống hiển thị hộp thoại cảnh báo số lượng Page Template và Content Item bị ảnh hưởng. Dữ liệu cũ đã nhập của item theo `fieldId` được giữ nguyên trong cơ sở dữ liệu, không bị xoá.
 
 ---

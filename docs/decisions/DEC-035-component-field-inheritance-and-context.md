@@ -23,12 +23,12 @@ Trong mô hình Presentation SSR:
 ## 2. Quyết định kỹ thuật
 
 ### 2.1. Kế thừa Template (Template Inheritance): Component Template $\rightarrow$ Page Template
-1. **Component Template (`/sitecore/templates/Feature/Components/`):**
+1. **Component Template (`/root/templates/Feature/Components/`):**
    - Mỗi component (Rendering) được liên kết với một Component Template xác định các field nội dung của nó.
    - Ví dụ:
      - Component `HeroBanner` có template chứa các fields: `BackgroundImage` (Image), `HeroTitle` (Single-Line Text), `HeroDescription` (Rich Text).
      - Component `Introduction` có template chứa: `IntroHeading` (Single-Line Text), `IntroBody` (Rich Text).
-2. **Page Template (`/sitecore/templates/Project/Pages/`):**
+2. **Page Template (`/root/templates/Project/Pages/`):**
    - Page Template (ví dụ `Home`, `About us`) kế thừa (thông qua mảng `base_templates`) các Component Template tương ứng với những component xuất hiện trên trang đó.
    - Nhờ đó, khi Content Author tạo một Page Item từ Page Template, Form nhập liệu của trang sẽ có sẵn đầy đủ các section và field của tất cả các component trên trang.
 3. **Mặc định Component đọc field từ chính Page Item:**

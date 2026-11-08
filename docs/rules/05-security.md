@@ -32,7 +32,7 @@
 Mỗi Item trên cây nội dung có thể được gán quyền riêng cho User hoặc Role với cơ chế kế thừa phân cấp từ nút cha xuống con:
 
 ### Thuật toán Đánh giá Quyền Hiệu dụng (Effective Permissions Calculation)
-Thứ tự ưu tiên đánh giá quyền theo chuẩn Sitecore:
+Thứ tự ưu tiên đánh giá quyền theo chuẩn Treecraft:
 $$\text{Explicit Deny} > \text{Explicit Allow} > \text{Inherited Deny} > \text{Inherited Allow} > \text{Default Deny}$$
 
 - **Explicit (Gán trực tiếp trên Item):** Ưu tiên cao hơn mọi quyền kế thừa từ tổ tiên.
