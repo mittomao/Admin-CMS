@@ -33,6 +33,8 @@ const adminDatabaseRoutes = require('./routes/admin/databaseRoutes');
 const apiPublishRoutes = require('./routes/api/publishRoutes');
 const apiWorkboxRoutes = require('./routes/api/workboxRoutes');
 const apiDatabaseRoutes = require('./routes/api/databaseRoutes');
+const adminSecurityRoutes = require('./routes/admin/securityRoutes');
+const apiSecurityRoutes = require('./routes/api/securityRoutes');
 const siteRoutes = require('./routes/site/siteRoutes');
 const mediaController = require('./controllers/admin/mediaController');
 const contentEditorController = require('./controllers/admin/contentEditorController');
@@ -135,6 +137,7 @@ app.use('/admin/media', adminMediaRoutes);
 app.use('/admin/workbox', adminWorkboxRoutes);
 app.use('/admin/publish-manager', adminPublishRoutes);
 app.use('/admin/databases', adminDatabaseRoutes);
+app.use('/admin/security', adminSecurityRoutes);
 app.use('/api/presentation', apiPresentationRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);
@@ -143,6 +146,7 @@ app.use('/api/media', apiMediaRoutes);
 app.use('/api/publish', apiPublishRoutes);
 app.use('/api/workbox', apiWorkboxRoutes);
 app.use('/api/databases', apiDatabaseRoutes);
+app.use('/api/security', apiSecurityRoutes);
 
 // 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10)
 app.use('/', siteRoutes);

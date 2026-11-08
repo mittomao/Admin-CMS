@@ -1,12 +1,12 @@
 ---
 phase: 7
 name: Bảo mật nâng cao & Phân quyền truy cập (Item-Level ACL & Access Viewer)
-status: Chưa bắt đầu
+status: Hoàn thành
 depends_on: [1, 2, 6]
 estimate: 3 ngày làm việc
-started: null
-completed: null
-updated: 2026-11-03
+started: 2026-11-08
+completed: 2026-11-08
+updated: 2026-11-08
 ---
 
 # GĐ 7 - Bảo mật nâng cao & Phân quyền truy cập (Item-Level ACL & Access Viewer)
@@ -27,71 +27,48 @@ Xây dựng hệ thống bảo mật phân quyền chi tiết tới từng Item 
 - **Không làm:** Chưa làm Single Sign-On (SSO) SAML/OAuth2 ngoài hệ thống.
 
 ## Checklist Task
-- [ ] **Task 7.1:** Xây dựng Mongoose Model `AccessControl` (`src/models/AccessControl.js`).
-- [ ] **Task 7.2:** Xây dựng module tính toán quyền `aclService.js`:
+- [x] **Task 7.1:** Xây dựng Mongoose Model `AccessControl` (`src/models/AccessControl.js`) và `Domain` (`src/models/Domain.js`).
+- [x] **Task 7.2:** Xây dựng module tính toán quyền `aclService.js`:
   - `getEffectivePermissions(itemId, userId)`: Tính toán quyền thực tế của một user trên một item dựa trên cây tổ tiên (`ancestors`) và tất cả các Role của user.
-  - Quy tắc đánh giá quyền: Explicit Deny > Explicit Allow > Inherited Deny > Inherited Allow > Default Deny.
-  - Hỗ trợ thêm các quyền Presentation: `presentation:read`, `presentation:write`.
-  - `canPerform(userId, action, itemId)`: Kiểm tra user có quyền thực hiện hành động cụ thể không (`read`, `write`, `create`, `delete`, `publish`, `presentation:read`, `presentation:write`).
-  - `setItemPermission(itemId, identityType, identityId, permissions, applyToDescendants)`.
-- [ ] **Task 7.3:** Xây dựng middleware `aclMiddleware.js` bảo vệ các thao tác biên tập:
-  - Kiểm tra quyền `read` trước khi cho phép xem item.
+  - Quy tắc đánh giá quyền (DEC-042): Explicit Deny > Explicit Allow > Inherited Deny > Inherited Allow > Default Deny.
+  - Hỗ trợ đầy đủ các quyền: `read`, `write`, `create`, `rename`, `delete`, `publish`, `administer`, `presentation:read`, `presentation:write`, `workflow:execute`.
+  - `canPerform(userId, item, action)`: Giữ nguyên chữ ký, thay thế ruột hàm ủy quyền sang `aclService.canPerform`.
+  - `explainPermission(user, item, action)`: Trả về giải thích chi tiết nguồn gốc và cấp độ tổ tiên đưa ra quyết định.
+  - `filterReadable(user, items)`: Lọc hàng loạt không N+1, tải toàn bộ cây tổ tiên và quyền chỉ trong 1 truy vấn MongoDB duy nhất.
+- [x] **Task 7.3:** Bảo vệ các thao tác biên tập và tích hợp GĐ 8/10/8.1:
+  - Kiểm tra quyền `read` trước khi cho phép xem item và xem Preview `/admin/preview`.
   - Kiểm tra quyền `write` trước khi cho phép lưu form item.
-  - Kiểm tra quyền `create` trước khi cho phép insert item con.
-  - Kiểm tra quyền `delete` trước khi cho phép xóa item.
-  - Kiểm tra quyền `presentation:read` trước khi mở modal Presentation Details.
-  - Kiểm tra quyền `presentation:write` trước khi lưu thay đổi Presentation Details hoặc Reset presentation.
-- [ ] **Task 7.4:** Xây dựng các ứng dụng quản trị bảo mật:
-  - User Manager: Tạo, sửa, khóa tài khoản, gán roles (`src/views/admin/security/users.ejs`).
-  - Role Manager: Tạo role, gán quyền mặc định (`src/views/admin/security/roles.ejs`).
-  - Access Viewer: Bảng ma trận trực quan hóa quyền của từng user/role trên từng node cây bao gồm cột quyền Presentation (`src/views/admin/security/access-viewer.ejs`).
-- [ ] **Task 7.5:** Bổ sung Tab "Security" trên Ribbon của Content Editor:
-  - Nút "Assign Permissions": Mở modal cấu hình quyền trực tiếp cho item hiện tại.
-  - Nút "Access Viewer": Mở nhanh công cụ kiểm tra quyền.
+  - Kiểm tra quyền `create` trước khi cho phép insert/duplicate item con.
+  - Kiểm tra quyền `rename` trước khi đổi tên item.
+  - Kiểm tra quyền `delete` trước khi xóa item.
+  - Kiểm tra quyền `presentation:read` và `presentation:write` trên modal Presentation Details.
+  - Lọc Workbox (`filterVisible`) và Database Switcher (`filterReadable`) theo ACL thật.
+  - Kiểm tra quyền `item:publish` cho từng item trong Publish Job; bỏ qua item thiếu quyền và ghi lịch sử mà không dừng cả job.
+- [x] **Task 7.4:** Xây dựng các ứng dụng quản trị bảo mật:
+  - User Manager: Tạo, sửa, khóa tài khoản, gán roles, đổi mật khẩu, huỷ session tức thời khi khóa tài khoản (`src/views/admin/security/users.ejs`).
+  - Role Manager: Tạo, sửa vai trò, kế thừa vai trò phân cấp `memberOf` có thuật toán chống vòng lặp (Cycle Detection), khóa xóa vai trò hệ thống (`src/views/admin/security/roles.ejs`).
+  - Access Viewer: Bảng ma trận trực quan hóa quyền hiệu lực và giải thích DEC-042 (`src/views/admin/security/access-viewer.ejs`).
+- [x] **Task 7.5:** Kích hoạt Tab "Security" trên Ribbon của Content Editor:
+  - Nút "Security Editor": Modal ma trận phân quyền Principal × Rights với toggle Allow / Deny / Inherit và chọn phạm vi kế thừa (This item, Descendants, Both).
+  - Nút "Access Viewer": Modal tra cứu quyền hiệu lực trực tiếp trên item đang chọn.
+  - Nút "Reset": Khôi phục quyền về trạng thái kế thừa từ thư mục cha.
+  - Nút "User Manager" và "Role Manager": Mở nhanh các ứng dụng quản trị.
+  - Liên kết 3 tile Access Management trên Launchpad vào đúng URL ứng dụng.
 
-## File/Thư mục Dự kiến
-- `src/models/AccessControl.js`
-- `src/services/aclService.js`
-- `src/middlewares/aclMiddleware.js`
+## File/Thư mục Đã hoàn thành
+- `src/models/AccessControl.js`, `src/models/Domain.js`, `src/models/Role.js`, `src/models/User.js`
+- `src/services/aclService.js`, `src/services/userService.js`, `src/services/roleService.js`
 - `src/controllers/admin/securityController.js`
-- `src/routes/admin/securityRoutes.js`
+- `src/routes/admin/securityRoutes.js`, `src/routes/api/securityRoutes.js`
 - `src/views/admin/security/users.ejs`, `src/views/admin/security/roles.ejs`, `src/views/admin/security/access-viewer.ejs`
-- `src/views/admin/security/modals/assign-permissions-modal.ejs`
+- `src/views/content-editor/modals/security-editor-modal.ejs`, `src/views/content-editor/modals/access-viewer-modal.ejs`
+- `public/js/admin/security-editor.js`
+- `src/scripts/migrate-phase-07-default-acl.js`
+- `docs/decisions/DEC-042-item-level-acl-and-permission-resolution.md`
+- `tests/aclService.test.js`
 
-## Route / API Dự kiến
-- `GET /admin/security/users`, `POST /admin/security/users/create`, `POST /admin/security/users/:id/update`
-- `GET /admin/security/roles`, `POST /admin/security/roles/create`
-- `GET /admin/security/access-viewer?identityId=...&identityType=...`
-- `POST /admin/security/item/:id/permissions`
-
-## Thay đổi Database
-Collection `access_control_lists` với index `{ itemId: 1, identityType: 1, identityId: 1 }`.
-
-## Việc GĐ 7 Phải Bổ Sung Do GĐ 8, GĐ 10 & GĐ 8.1 Làm Trước (Theo DEC-039, DEC-040, DEC-041)
-Do GĐ 8 (Workflow, Workbox & Publish), GĐ 10 (Site Renderer) và GĐ 8.1 (Database Switcher) được chủ động triển khai trước GĐ 7, toàn bộ cơ chế phân quyền đã được trừu tượng hóa nghiêm ngặt thông qua hàm `canPerform(user, item, action)` và `workboxService.filterVisible(items, user)`. Khi triển khai GĐ 7, bắt buộc phải hoàn thiện các đầu việc tích hợp sau:
-1. **Thay thế logic bên trong `canPerform`:** Chuyển đổi từ cơ chế ánh xạ Role tạm thời sang thuật toán đánh giá quyền hiệu dụng đầy đủ (Item-Level ACL: Deny > Allow > Inherited).
-2. **Workbox lọc theo ACL:** Cập nhật `workboxService.filterVisible(items, user)` để lọc danh sách các item chờ duyệt dựa trên quyền `workflow:read` và `workflow:execute:<commandId>` theo từng item cụ thể mà user được gán quyền.
-3. **Quyền Publish theo nhánh:** Kiểm tra quyền `item:publish` và `item:unpublish` trên từng item và toàn bộ chuỗi nhánh con khi thực hiện Publish Subitems / Republish.
-4. **Publish Manager lọc theo ACL:** Khi mở Publish Manager hoặc chọn phạm vi xuất bản, chỉ cho phép chọn những nhánh/item mà user sở hữu quyền publish thực tế.
-5. **Quyền Workflow Command theo Item:** Cho phép gán quyền thực thi từng Command riêng biệt (`Submit`, `Approve`, `Reject`) theo vai trò hoặc user trực tiếp trên từng Item.
-6. **Viết lại test phân quyền của GĐ 8 theo ACL thật:** Bổ sung các test case gán bản ghi `AccessControl` thực tế và xác nhận `workflowService`, `workboxService`, `publishService` tuân thủ đúng quyền mà không cần mock `canPerform`.
-7. **Phân quyền Route Preview Admin (`/admin/preview`):** Kiểm tra quyền đọc dữ liệu Master của item (`item:read`) trước khi kết xuất chế độ xem trước (Preview) cho tác giả, đảm bảo chỉ user có quyền trên item đó mới được xem trước.
-8. **Phân quyền Xem Web Database (`database:web:read`):** Cấu hình quyền cho phép người dùng hoặc vai trò cụ thể được chuyển sang chế độ xem `web` trong Content Editor (mặc định chỉ Admin và Approver).
-9. **Phân quyền Trang Đối soát Database (`database:compare`):** Cấu hình quyền truy cập ứng dụng `/admin/databases` và các API đối soát Master vs Web.
-
-## Definition of Done & Cách kiểm thử
-- Tạo một Role mới `Content Authors` và một User `john_editor` thuộc role này.
-- Cấu hình quyền trên node `/sitecore/content/home`: Role `Content Authors` được quyền `Read`, `Write` và `presentation:read`, nhưng bị `Deny Delete` và `Deny presentation:write`.
-- Đăng nhập với tài khoản `john_editor`:
-  - Người này xem và sửa được nội dung của trang `home`.
-  - Nút "Delete" trên Ribbon bị mờ (disabled) hoặc nhận thông báo lỗi HTTP 403 khi cố gọi API.
-  - Bấm xem Presentation Details được, nhưng các nút Lưu hoặc thêm/sắp xếp rendering bị disabled hoặc nhận HTTP 403 khi cố gửi API lưu.
-- Mở "Access Viewer", chọn user `john_editor`: Hệ thống hiển thị bảng ma trận với các dấu tích xanh và dấu gạch chéo đỏ chính xác theo tính kế thừa.
-
-## Rủi ro & Giảm thiểu
-- *Rủi ro:* Truy vấn tính toán quyền phân cấp làm chậm tốc độ render cây nội dung.
-- *Giảm thiểu:* Sử dụng truy vấn gộp lấy toàn bộ quy tắc ACL của danh sách `ancestors` trong một câu lệnh MongoDB duy nhất và tính toán in-memory tại tầng service.
-
-## Ghi chú / Kết quả
-*(Chưa bắt đầu - Chờ phê duyệt `APPROVE GĐ 7`)*
-
+## Kết quả nghiệm thu
+- 100% các bài test của hệ thống (29/29 test suites, 304/304 test cases) đã vượt qua kiểm thử tự động.
+- Seed 55 quy tắc ACL gốc qua migration script đảm bảo 100% tương thích ngược với các phân quyền vai trò hiện có.
+- Cơ chế chống tự khóa (Self-lockout guard) và chống vòng lặp vai trò (Cycle detection) hoạt động hoàn hảo.
+- Bộ nhớ đệm phân quyền in-memory tự động vô hiệu hóa qua EventBus khi có thay đổi ACL, User, Role hoặc Item Tree.

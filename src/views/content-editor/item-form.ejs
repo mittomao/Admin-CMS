@@ -79,20 +79,30 @@
                     <%= tplName %>
                   </span>
                   <% if (typeof workflowStateInfo !=='undefined' && workflowStateInfo && workflowStateInfo.state) { %>
-                    <button type="button"
-                      id="btnWorkflowTriggerBadge"
-                      data-action="workflow:execute-command"
-                      data-item-id="<%= item._id %>"
-                      class="badge <%= workflowStateInfo.isFinal ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 hover:bg-amber-100 cursor-pointer' %> border text-xs d-inline-flex align-items-center gap-1 transition"
-                      onclick="if(typeof window.openWorkflowExecuteModal === 'function') { window.openWorkflowExecuteModal('<%= item._id %>'); } else { document.getElementById('btn-workflow-execute')?.click(); }"
-                      title="Quy trình: <%= workflowStateInfo.workflow.displayName || workflowStateInfo.workflow.name %> — Bấm để chuyển bước duyệt">
-                      <i class="<%= workflowStateInfo.state.icon || 'ti ti-clock' %> me-1 pointer-events-none"></i>
-                      <span class="pointer-events-none"><%= workflowStateInfo.state.displayName || workflowStateInfo.state.name %></span>
-                      <% if (!workflowStateInfo.isFinal && typeof currentDb !== 'undefined' && currentDb !== 'web') { %>
-                        <i class="ti ti-arrow-right text-[10px] text-amber-600 pointer-events-none"></i>
-                        <span class="text-indigo-600 font-semibold underline ms-0.5 pointer-events-none">Chuyển bước...</span>
-                      <% } %>
-                    </button>
+                    <% if (workflowStateInfo.isFinal) { %>
+                      <span
+                        id="btnWorkflowTriggerBadge"
+                        class="badge bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 border text-xs d-inline-flex align-items-center gap-1 select-none"
+                        title="Quy trình: <%= workflowStateInfo.workflow.displayName || workflowStateInfo.workflow.name %> — Trạng thái: <%= workflowStateInfo.state.displayName || workflowStateInfo.state.name %> (Đã duyệt)">
+                        <i class="<%= workflowStateInfo.state.icon || 'ti ti-circle-check' %> me-1"></i>
+                        <span><%= workflowStateInfo.state.displayName || workflowStateInfo.state.name %></span>
+                      </span>
+                    <% } else { %>
+                      <button type="button"
+                        id="btnWorkflowTriggerBadge"
+                        data-action="workflow:execute-command"
+                        data-item-id="<%= item._id %>"
+                        class="badge bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 hover:bg-amber-100 cursor-pointer border text-xs d-inline-flex align-items-center gap-1 transition"
+                        onclick="if(typeof window.openWorkflowExecuteModal === 'function') { window.openWorkflowExecuteModal('<%= item._id %>'); } else { document.getElementById('btn-workflow-execute')?.click(); }"
+                        title="Quy trình: <%= workflowStateInfo.workflow.displayName || workflowStateInfo.workflow.name %> — Bấm để chuyển bước duyệt">
+                        <i class="<%= workflowStateInfo.state.icon || 'ti ti-clock' %> me-1 pointer-events-none"></i>
+                        <span class="pointer-events-none"><%= workflowStateInfo.state.displayName || workflowStateInfo.state.name %></span>
+                        <% if (typeof currentDb !== 'undefined' && currentDb !== 'web') { %>
+                          <i class="ti ti-arrow-right text-[10px] text-amber-600 pointer-events-none"></i>
+                          <span class="text-indigo-600 font-semibold underline ms-0.5 pointer-events-none">Chuyển bước...</span>
+                        <% } %>
+                      </button>
+                    <% } %>
                   <% } %>
                     <% if (typeof isPublishedOnWeb !=='undefined' ) { %>
                       <span

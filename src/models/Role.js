@@ -8,6 +8,17 @@ const roleSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    domain: {
+      type: String,
+      trim: true,
+      default: 'sitecore',
+    },
+    memberOf: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
     description: {
       type: String,
       trim: true,

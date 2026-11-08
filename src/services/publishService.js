@@ -102,7 +102,17 @@ class PublishService {
    * Determine if a version is eligible for publishing
    */
   async isVersionPublishable(item, langCode, version) {
-    const ver = item.getVersion ? item.getVersion(langCode, version) : null;
+    let ver = null;
+    if (typeof item?.getVersion === 'function') {
+      ver = item.getVersion(langCode, version);
+    } else if (item && Array.isArray(item.languages)) {
+      const code = (langCode || 'vi').toLowerCase().trim();
+      const vNum = parseInt(version, 10) || 1;
+      const langEntry = item.languages.find((l) => (l.code || '').toLowerCase() === code);
+      if (langEntry && Array.isArray(langEntry.versions)) {
+        ver = langEntry.versions.find((v) => Number(v.version) === vNum) || null;
+      }
+    }
     if (!ver) return { publishable: false, reason: 'Version does not exist' };
 
     // Check "neverPublish"
@@ -391,6 +401,21 @@ class PublishService {
 
     for (const it of targetItems) {
       try {
+        // GĐ 7: Check item:publish right for EACH individual item if user is present
+        if (user) {
+          const itemService = require('./itemService');
+          const canPublishItem = await itemService.canPerform(user, it, 'item:publish');
+          if (!canPublishItem) {
+            logs.push({
+              itemId: it._id,
+              path: it.path,
+              action: 'SKIPPED',
+              details: 'Bỏ qua: người dùng không có quyền item:publish trên mục này.',
+            });
+            continue;
+          }
+        }
+
         const res = await this.publishSingleItemToWeb(it, languages, user);
         logs.push({
           itemId: it._id,

@@ -1,4 +1,5 @@
 const itemService = require('../../services/itemService');
+const aclService = require('../../services/aclService');
 const templateService = require('../../services/templateService');
 const versionService = require('../../services/versionService');
 const workflowService = require('../../services/workflowService');
@@ -20,7 +21,7 @@ const contentEditorController = {
       const requestedId = req.params.id;
       const rawDb = req.query.db || 'master';
       const currentDb = itemService.validateDb(rawDb);
-      const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+      const canReadWeb = await itemService.canPerform(req.user, null, 'database:web:read');
 
       if (currentDb === 'web' && !canReadWeb) {
         throw new ForbiddenError('Bạn không có quyền truy cập cơ sở dữ liệu Web (database:web:read).');
@@ -125,7 +126,7 @@ const contentEditorController = {
       const currentDb = itemService.validateDb(rawDb);
 
       if (currentDb === 'web') {
-        const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+        const canReadWeb = await itemService.canPerform(req.user, null, 'database:web:read');
         if (!canReadWeb) {
           return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền truy cập cơ sở dữ liệu Web (database:web:read).</div>');
         }
@@ -217,6 +218,12 @@ const contentEditorController = {
       }
 
       const { item, resolvedTemplate, languagesList, versionsList, hasLanguage, hasVersion, versionInfo, componentTemplates, quickInfo } = schemaData;
+
+      // GĐ 7: Check read permission on item
+      if (!(await itemService.canPerform(req.user, item, 'item:read'))) {
+        return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền đọc (item:read) trên mục này.</div>');
+      }
+
       const breadcrumbs = await itemService.getPathBreadcrumb(item, 'master');
 
       // GĐ 8 & 8.1: Resolve workflow state, available commands and publish status
@@ -348,7 +355,7 @@ const contentEditorController = {
       const currentDb = itemService.validateDb(rawDb);
 
       if (currentDb === 'web') {
-        const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+        const canReadWeb = await itemService.canPerform(req.user, null, 'database:web:read');
         if (!canReadWeb) {
           return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền truy cập cơ sở dữ liệu Web (database:web:read).</div>');
         }
@@ -359,7 +366,10 @@ const contentEditorController = {
         return res.status(404).send('<div class="alert alert-danger m-3">Item not found.</div>');
       }
 
-      const children = await itemService.getChildren(id, { db: currentDb });
+      let children = await itemService.getChildren(id, { db: currentDb });
+      if (req.user) {
+        children = await aclService.filterReadable(req.user, children);
+      }
       const breadcrumbs = await itemService.getPathBreadcrumb(item, currentDb);
       const quickInfo = await itemService.getQuickInfo(item, currentDb);
 
@@ -406,7 +416,7 @@ const contentEditorController = {
       const currentDb = itemService.validateDb(rawDb);
 
       if (currentDb === 'web') {
-        const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+        const canReadWeb = await itemService.canPerform(req.user, null, 'database:web:read');
         if (!canReadWeb) {
           return res.status(403).json({ error: 'Bạn không có quyền truy cập cơ sở dữ liệu Web (database:web:read).' });
         }
@@ -428,9 +438,34 @@ const contentEditorController = {
       }
 
       const children = await itemService.getChildren(id, { db: currentDb });
-      const nodes = children.map((child) =>
-        treeHelper.toFancytreeNode(child, child.hasChildren, child.templateId)
-      );
+      const accessibleChildren = [];
+      for (const child of children) {
+        const canRead = await itemService.canPerform(req.user, child, 'item:read');
+        if (canRead) {
+          accessibleChildren.push(child);
+        } else {
+          // Check if user has read permission on any descendant
+          const descendants = await Item.find({
+            path: { $regex: new RegExp(`^${child.path}/`, 'i') },
+            deleted: { $ne: true },
+          }).lean();
+          const readableDescendants = await aclService.filterReadable(req.user, descendants);
+          if (readableDescendants.length > 0) {
+            child.navigationOnly = true;
+            accessibleChildren.push(child);
+          }
+        }
+      }
+
+      const nodes = accessibleChildren.map((child) => {
+        const node = treeHelper.toFancytreeNode(child, child.hasChildren, child.templateId);
+        if (child.navigationOnly) {
+          node.extraClasses = (node.extraClasses || '') + ' opacity-50 text-slate-400';
+          node.data = node.data || {};
+          node.data.navigationOnly = true;
+        }
+        return node;
+      });
 
       res.json(nodes);
     } catch (error) {
@@ -470,13 +505,16 @@ const contentEditorController = {
       const currentDb = itemService.validateDb(rawDb);
 
       if (currentDb === 'web') {
-        const canReadWeb = itemService.canPerform(req.user, null, 'database:web:read');
+        const canReadWeb = await itemService.canPerform(req.user, null, 'database:web:read');
         if (!canReadWeb) {
           return res.status(403).json({ error: 'Forbidden' });
         }
       }
 
-      const results = await itemService.search(query, 20, currentDb);
+      let results = await itemService.search(query, 20, currentDb);
+      if (req.user) {
+        results = await aclService.filterReadable(req.user, results);
+      }
       res.json({ success: true, data: results });
     } catch (error) {
       next(error);
@@ -494,11 +532,19 @@ const contentEditorController = {
       const user = req.session?.user;
 
       const parent = await Item.findById(parentId).lean();
-      if (parent && parent.path?.toLowerCase().startsWith('/sitecore/layout')) {
-        if (!itemService.canPerform(user, parent, 'presentation:write')) {
+      if (parent) {
+        if (parent.path?.toLowerCase().startsWith('/sitecore/layout')) {
+          if (!(await itemService.canPerform(user, parent, 'presentation:write'))) {
+            return res.status(403).json({
+              success: false,
+              message: 'Bạn không có quyền tạo item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            });
+          }
+        }
+        if (!(await itemService.canPerform(user, parent, 'item:create'))) {
           return res.status(403).json({
             success: false,
-            message: 'Bạn không có quyền tạo item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            message: 'Bạn không có quyền tạo mục con dưới mục này (cần quyền create).',
           });
         }
       }
@@ -541,12 +587,20 @@ const contentEditorController = {
       const user = req.session?.user;
 
       const targetItem = await Item.findById(id).lean();
-      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
-        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+      if (targetItem) {
+        if (!(await itemService.canPerform(user, targetItem, 'item:write'))) {
           return res.status(403).json({
             success: false,
-            message: 'Bạn không có quyền chỉnh sửa item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            message: 'Bạn không có quyền chỉnh sửa mục này (cần quyền write).',
           });
+        }
+        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+          if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
+            return res.status(403).json({
+              success: false,
+              message: 'Bạn không có quyền chỉnh sửa item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            });
+          }
         }
       }
 
@@ -613,7 +667,7 @@ const contentEditorController = {
       const { lang = 'vi', copyFromVersion = null, note = '' } = req.body;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'version:create')) {
+      if (!(await itemService.canPerform(user, id, 'version:create'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền tạo phiên bản mới.' });
       }
 
@@ -642,7 +696,7 @@ const contentEditorController = {
       const { lang, copyFromLang = null, copyFromVersion = 1, note = '' } = req.body;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'version:create')) {
+      if (!(await itemService.canPerform(user, id, 'version:create'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền thêm ngôn ngữ mới.' });
       }
 
@@ -671,7 +725,7 @@ const contentEditorController = {
       const { id, lang, version } = req.params;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'version:delete')) {
+      if (!(await itemService.canPerform(user, id, 'version:delete'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền xóa phiên bản.' });
       }
 
@@ -695,7 +749,7 @@ const contentEditorController = {
       const { id, lang, version } = req.params;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'version:restore')) {
+      if (!(await itemService.canPerform(user, id, 'version:restore'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền khôi phục phiên bản.' });
       }
 
@@ -745,12 +799,20 @@ const contentEditorController = {
       const user = req.session?.user;
 
       const targetItem = await Item.findById(id).lean();
-      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
-        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+      if (targetItem) {
+        if (!(await itemService.canPerform(user, targetItem, 'item:rename'))) {
           return res.status(403).json({
             success: false,
-            message: 'Bạn không có quyền đổi tên item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            message: 'Bạn không có quyền đổi tên item này (cần quyền rename).',
           });
+        }
+        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+          if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
+            return res.status(403).json({
+              success: false,
+              message: 'Bạn không có quyền đổi tên item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            });
+          }
         }
       }
 
@@ -781,12 +843,20 @@ const contentEditorController = {
       const user = req.session?.user;
 
       const targetItem = await Item.findById(id).lean();
-      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
-        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+      if (targetItem) {
+        if (!(await itemService.canPerform(user, targetItem, 'item:create'))) {
           return res.status(403).json({
             success: false,
-            message: 'Bạn không có quyền nhân bản item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            message: 'Bạn không có quyền nhân bản item này (cần quyền create).',
           });
+        }
+        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+          if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
+            return res.status(403).json({
+              success: false,
+              message: 'Bạn không có quyền nhân bản item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            });
+          }
         }
       }
 
@@ -852,12 +922,20 @@ const contentEditorController = {
       const user = req.session?.user;
 
       const targetItem = await Item.findById(id).lean();
-      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
-        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+      if (targetItem) {
+        if (!(await itemService.canPerform(user, targetItem, 'item:write'))) {
           return res.status(403).json({
             success: false,
-            message: 'Bạn không có quyền di chuyển item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            message: 'Bạn không có quyền di chuyển item này (cần quyền write).',
           });
+        }
+        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+          if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
+            return res.status(403).json({
+              success: false,
+              message: 'Bạn không có quyền di chuyển item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            });
+          }
         }
       }
 
@@ -911,12 +989,20 @@ const contentEditorController = {
       const user = req.session?.user;
 
       const targetItem = await Item.findById(id).lean();
-      if (targetItem && targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
-        if (!itemService.canPerform(user, targetItem, 'presentation:write')) {
+      if (targetItem) {
+        if (!(await itemService.canPerform(user, targetItem, 'item:delete'))) {
           return res.status(403).json({
             success: false,
-            message: 'Bạn không có quyền xoá item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            message: 'Bạn không có quyền xoá item này (cần quyền delete).',
           });
+        }
+        if (targetItem.path?.toLowerCase().startsWith('/sitecore/layout')) {
+          if (!(await itemService.canPerform(user, targetItem, 'presentation:write'))) {
+            return res.status(403).json({
+              success: false,
+              message: 'Bạn không có quyền xoá item trong nhánh Layout (yêu cầu quyền presentation:write).',
+            });
+          }
         }
       }
 
@@ -993,7 +1079,7 @@ const contentEditorController = {
       }
 
       // Check permission via canPerform (strictly NO hardcoded role checks!)
-      if (!itemService.canPerform(user, item, 'item:read')) {
+      if (!(await itemService.canPerform(user, item, 'item:read'))) {
         throw new ForbiddenError('You do not have permission to preview this item');
       }
 

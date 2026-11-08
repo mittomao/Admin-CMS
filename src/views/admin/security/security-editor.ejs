@@ -1,0 +1,527 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Sitecore XM Architecture &bull; GĐ 7
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-lock text-purple-600"></i>
+          <span>Security Editor &bull; Thiết lập Phân quyền Item-level ACL</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Gán quyền truy cập chi tiết (Read, Write, Create, Rename, Delete, Publish, Administer) theo từng Item hoặc kế thừa theo nhánh cây theo kiến trúc DEC-042.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/security/access-viewer" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-lock-access"></i>
+          <span>Access Viewer</span>
+        </a>
+        <a href="/admin/security/users" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-users"></i>
+          <span>User Manager</span>
+        </a>
+        <a href="/admin/security/roles" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-shield-lock"></i>
+          <span>Role Manager</span>
+        </a>
+        <a href="/admin/content-editor" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-folder"></i>
+          <span>Content Editor</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item Selector Card -->
+  <div class="card border border-slate-200 dark:border-slate-800 shadow-2xs rounded-xl mb-4 bg-white dark:bg-slate-900">
+    <div class="card-body p-4">
+      <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-300">
+        Chọn Mục nội dung cần phân quyền (Item Path hoặc Item ID)
+      </label>
+      <div class="input-group mb-2">
+        <span class="input-group-text bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 text-xs">
+          <i class="ti ti-folder"></i>
+        </span>
+        <input type="text" class="form-control form-control-sm text-xs" id="inputTargetItem" placeholder="Ví dụ: /sitecore/content/home hoặc {ID}" value="<%= initialPath || '/sitecore/content/home' %>">
+        <button class="btn btn-primary btn-sm text-xs px-3 d-flex align-items-center gap-1" type="button" id="btnLoadItemAcl">
+          <i class="ti ti-refresh"></i>
+          <span>Tải phân quyền</span>
+        </button>
+      </div>
+
+      <!-- Quick path pills -->
+      <div class="d-flex align-items-center gap-1.5 flex-wrap">
+        <span class="text-slate-400 text-[11px] me-1">Chọn nhanh gốc cây:</span>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore">/sitecore</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/content/home">/sitecore/content/home</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/layout">/sitecore/layout</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/templates">/sitecore/templates</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/media library">/sitecore/media library</button>
+        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 text-[11px] quick-path-btn" data-path="/sitecore/system">/sitecore/system</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Security Matrix Card -->
+  <div class="card border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900 mb-4">
+    <div class="card-header border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex-wrap gap-2 d-flex justify-content-between align-items-center bg-slate-50/60 dark:bg-slate-800/40">
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 text-xs">
+          <i class="ti ti-folder me-1"></i>
+          <span id="labelItemPath">Đang tải...</span>
+        </span>
+        <span class="badge bg-slate-100 text-slate-500 font-monospace text-[10px]" id="labelItemId"></span>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-primary text-xs d-flex align-items-center gap-1.5" id="btnToggleAddPrincipal">
+          <i class="ti ti-plus"></i>
+          <span>Thêm Người dùng / Vai trò</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger text-xs d-flex align-items-center gap-1.5" id="btnResetToInherited">
+          <i class="ti ti-arrow-back-up"></i>
+          <span>Khôi phục Kế thừa (Reset)</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary text-xs" id="btnRefreshMatrix" title="Tải lại">
+          <i class="ti ti-refresh"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Principal Toolbar (Collapsible) -->
+    <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-purple-50/40 dark:bg-purple-950/20 d-none" id="addPrincipalToolbar">
+      <div class="row g-2 align-items-center">
+        <div class="col-auto">
+          <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Thêm đối tượng:</span>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select form-select-sm text-xs" id="newPrincipalType">
+            <option value="role" selected>Vai trò (Role)</option>
+            <option value="user">Người dùng (User)</option>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <select class="form-select form-select-sm text-xs" id="newPrincipalId">
+            <optgroup label="Vai trò Hệ thống" id="newGroupRoles">
+              <% roles.forEach(r => { %>
+                <option value="<%= r._id %>"><%= r.name %> (<%= r.domain || 'sitecore' %>)</option>
+              <% }) %>
+            </optgroup>
+            <optgroup label="Tài khoản Người dùng" id="newGroupUsers" class="d-none">
+              <% users.forEach(u => { %>
+                <option value="<%= u._id %>"><%= u.username %> (<%= u.displayName || u.fullName || u.username %>)</option>
+              <% }) %>
+            </optgroup>
+          </select>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-sm btn-purple text-xs text-white bg-purple-600 hover:bg-purple-700" id="btnConfirmAddPrincipal">
+            <i class="ti ti-check me-1"></i>Thêm vào bảng
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary text-xs ms-1" id="btnCancelAddPrincipal">
+            Huỷ
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matrix Table -->
+    <div class="table-responsive">
+      <table class="table table-vcenter table-hover text-nowrap mb-0" id="tableSecurityMatrix">
+        <thead class="bg-slate-50 dark:bg-slate-800/80 text-[11px] text-slate-500 uppercase font-semibold">
+          <tr>
+            <th class="ps-4">Đối tượng (Principal)</th>
+            <th class="text-center" style="width: 80px;">Loại</th>
+            <th style="width: 140px;">Phạm vi (Scope)</th>
+            <th class="text-center" style="width: 75px;" title="Quyền đọc nội dung">Read</th>
+            <th class="text-center" style="width: 75px;" title="Quyền chỉnh sửa trường">Write</th>
+            <th class="text-center" style="width: 75px;" title="Quyền tạo mục con">Create</th>
+            <th class="text-center" style="width: 75px;" title="Quyền đổi tên">Rename</th>
+            <th class="text-center" style="width: 75px;" title="Quyền xoá">Delete</th>
+            <th class="text-center" style="width: 75px;" title="Quyền xuất bản">Publish</th>
+            <th class="text-center" style="width: 85px;" title="Quyền quản trị phân quyền">Administer</th>
+            <th class="text-center pe-4" style="width: 80px;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="secMatrixBody" class="text-xs divide-y divide-slate-100 dark:divide-slate-800">
+          <tr>
+            <td colspan="11" class="text-center py-5 text-slate-400">
+              <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+              <div>Đang nạp dữ liệu phân quyền...</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer Guide -->
+    <div class="card-footer px-4 py-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div class="d-flex align-items-center gap-3">
+        <span class="d-flex align-items-center gap-1">
+          <i class="ti ti-check-circle text-emerald-600 font-bold"></i> Cho phép (Allow)
+        </span>
+        <span class="d-flex align-items-center gap-1">
+          <i class="ti ti-ban text-rose-600 font-bold"></i> Từ chối (Deny)
+        </span>
+        <span class="d-flex align-items-center gap-1 text-slate-400">
+          <i class="ti ti-minus text-slate-400"></i> Kế thừa (Inherit)
+        </span>
+        <span class="text-slate-400 ms-2">
+          &bull; <em>Bấm vào từng ô để chuyển trạng thái theo vòng lặp: Kế thừa &rarr; Cho phép &rarr; Từ chối.</em>
+        </span>
+      </div>
+
+      <div class="text-slate-400 font-medium">
+        <i class="ti ti-shield-lock me-1"></i>DEC-042: Deny thắng Allow &bull; Quyền trực tiếp thắng Kế thừa
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let currentItemId = null;
+  let currentMatrixData = null;
+
+  const inputTarget = document.getElementById('inputTargetItem');
+  const btnLoad = document.getElementById('btnLoadItemAcl');
+  const labelPath = document.getElementById('labelItemPath');
+  const labelId = document.getElementById('labelItemId');
+  const tbody = document.getElementById('secMatrixBody');
+  const btnReset = document.getElementById('btnResetToInherited');
+  const btnRefresh = document.getElementById('btnRefreshMatrix');
+  const btnToggleAdd = document.getElementById('btnToggleAddPrincipal');
+  const addToolbar = document.getElementById('addPrincipalToolbar');
+  const selectType = document.getElementById('newPrincipalType');
+  const selectId = document.getElementById('newPrincipalId');
+  const groupRoles = document.getElementById('newGroupRoles');
+  const groupUsers = document.getElementById('newGroupUsers');
+  const btnConfirmAdd = document.getElementById('btnConfirmAddPrincipal');
+  const btnCancelAdd = document.getElementById('btnCancelAddPrincipal');
+
+  // Quick path pills
+  document.querySelectorAll('.quick-path-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      inputTarget.value = btn.getAttribute('data-path');
+      loadMatrix();
+    });
+  });
+
+  // Toggle Principal Type in Add bar
+  selectType.addEventListener('change', () => {
+    if (selectType.value === 'user') {
+      groupUsers.classList.remove('d-none');
+      groupRoles.classList.add('d-none');
+      if (groupUsers.options.length > 0) selectId.value = groupUsers.options[0].value;
+    } else {
+      groupRoles.classList.remove('d-none');
+      groupUsers.classList.add('d-none');
+      if (groupRoles.options.length > 0) selectId.value = groupRoles.options[0].value;
+    }
+  });
+
+  btnToggleAdd.addEventListener('click', () => {
+    addToolbar.classList.toggle('d-none');
+  });
+
+  btnCancelAdd.addEventListener('click', () => {
+    addToolbar.classList.add('d-none');
+  });
+
+  // Load Matrix function
+  async function loadMatrix() {
+    const rawTarget = inputTarget.value.trim();
+    if (!rawTarget) return;
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="11" class="text-center py-5 text-slate-400">
+          <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+          <div>Đang nạp dữ liệu phân quyền...</div>
+        </td>
+      </tr>
+    `;
+
+    try {
+      let resolvedId = rawTarget;
+      // If it looks like a path, resolve it first
+      if (rawTarget.startsWith('/')) {
+        const pathRes = await fetch(`/api/items/resolve-path?path=${encodeURIComponent(rawTarget)}`);
+        const pathJson = await pathRes.json();
+        if (pathJson.success && pathJson.data && pathJson.data._id) {
+          resolvedId = pathJson.data._id;
+        } else {
+          // Fallback search
+          const searchRes = await fetch(`/api/items/search?q=${encodeURIComponent(rawTarget)}`);
+          const searchJson = await searchRes.json();
+          const found = (searchJson.data || []).find((it) => it.path.toLowerCase() === rawTarget.toLowerCase());
+          if (found) resolvedId = found._id;
+          else throw new Error(`Không tìm thấy Item với đường dẫn [${rawTarget}]`);
+        }
+      }
+
+      currentItemId = resolvedId;
+      const res = await fetch(`/api/security/items/${resolvedId}/acl`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Lỗi khi tải bảng phân quyền');
+
+      currentMatrixData = json.data;
+      labelPath.textContent = currentMatrixData.path || rawTarget;
+      labelId.textContent = `{${currentMatrixData.itemId}}`;
+
+      renderTable(currentMatrixData);
+    } catch (err) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="11" class="text-center py-4 text-rose-500">
+            <i class="ti ti-alert-triangle fs-2 d-block mb-1"></i>
+            ${err.message}
+          </td>
+        </tr>
+      `;
+      labelPath.textContent = 'Lỗi tải mục';
+      labelId.textContent = '';
+    }
+  }
+
+  // Render Table Rows
+  function renderTable(data) {
+    const rights = data.rightsList || ['read', 'write', 'create', 'rename', 'delete', 'publish', 'administer'];
+    const matrix = data.matrix || [];
+
+    if (matrix.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="11" class="text-center py-5 text-slate-400">
+            <i class="ti ti-shield-off fs-1 d-block mb-2 text-slate-300"></i>
+            Chưa có quy tắc phân quyền nào trên mục này hoặc từ mục cha.
+            <div class="mt-2">
+              <button type="button" class="btn btn-sm btn-outline-primary text-xs" onclick="document.getElementById('btnToggleAddPrincipal').click()">
+                <i class="ti ti-plus"></i> Thêm User hoặc Role đầu tiên
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    let html = '';
+    matrix.forEach((row, pIdx) => {
+      const p = row.principal;
+      const isUser = p.type === 'user';
+      const typeBadge = isUser
+        ? '<span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] py-0 px-1.5">User</span>'
+        : '<span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-[10px] py-0 px-1.5">Role</span>';
+
+      const icon = isUser ? 'ti ti-user' : 'ti ti-shield';
+      const scopeVal = row.scope || 'both';
+
+      html += `
+        <tr data-pidx="${pIdx}" data-ptype="${p.type}" data-pid="${p.id}" class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+          <td class="ps-4">
+            <div class="d-flex align-items-center gap-2">
+              <span class="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
+                <i class="${icon}"></i>
+              </span>
+              <div>
+                <div class="font-bold text-slate-800 dark:text-slate-100">${p.name}</div>
+                <div class="text-[10px] text-slate-400">${p.domain || 'sitecore'}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-center">${typeBadge}</td>
+          <td>
+            <select class="form-select form-select-sm text-xs py-1 scope-selector" data-pidx="${pIdx}">
+              <option value="both" ${scopeVal === 'both' ? 'selected' : ''}>Mục này & Nhánh con</option>
+              <option value="thisItem" ${scopeVal === 'thisItem' ? 'selected' : ''}>Chỉ mục này</option>
+              <option value="descendants" ${scopeVal === 'descendants' ? 'selected' : ''}>Chỉ nhánh con</option>
+            </select>
+          </td>
+      `;
+
+      rights.forEach((r) => {
+        const rule = row.rights[r] || { access: 'inherit', isExplicit: false };
+        let iconHtml = '<i class="ti ti-minus text-slate-300 dark:text-slate-600"></i>';
+        let bgClass = 'bg-slate-50/50 dark:bg-slate-800/20 text-slate-400';
+        let titleTip = 'Kế thừa';
+
+        if (rule.access === 'allow') {
+          if (rule.isExplicit) {
+            iconHtml = '<i class="ti ti-check text-emerald-600 font-bold fs-5"></i>';
+            bgClass = 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700';
+            titleTip = 'Cho phép trực tiếp (Explicit Allow)';
+          } else {
+            iconHtml = '<i class="ti ti-check text-emerald-300 font-medium fs-6"></i>';
+            bgClass = 'bg-emerald-50/40 text-emerald-500';
+            titleTip = 'Cho phép kế thừa từ cha (Inherited Allow)';
+          }
+        } else if (rule.access === 'deny') {
+          if (rule.isExplicit) {
+            iconHtml = '<i class="ti ti-ban text-rose-600 font-bold fs-5"></i>';
+            bgClass = 'bg-rose-50 dark:bg-rose-950/40 text-rose-700';
+            titleTip = 'Từ chối trực tiếp (Explicit Deny)';
+          } else {
+            iconHtml = '<i class="ti ti-ban text-rose-300 font-medium fs-6"></i>';
+            bgClass = 'bg-rose-50/40 text-rose-400';
+            titleTip = 'Từ chối kế thừa từ cha (Inherited Deny)';
+          }
+        }
+
+        html += `
+          <td class="text-center p-0">
+            <div class="matrix-cell py-2 px-1 cursor-pointer select-none transition ${bgClass} hover:opacity-80"
+                 data-pidx="${pIdx}"
+                 data-right="${r}"
+                 title="${titleTip} — Bấm để đổi">
+              ${iconHtml}
+            </div>
+          </td>
+        `;
+      });
+
+      const hasDirect = Object.values(row.rights).some((rule) => rule && rule.isExplicit);
+      html += `
+          <td class="text-center pe-4">
+            ${hasDirect ? `
+              <button type="button" class="btn btn-xs btn-outline-danger py-0.5 px-1.5 text-[10px] btn-delete-row" data-pidx="${pIdx}" title="Xoá tất cả quyền trực tiếp của đối tượng này trên mục">
+                <i class="ti ti-trash"></i>
+              </button>
+            ` : '<span class="text-slate-300 text-[10px]">—</span>'}
+          </td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = html;
+    bindMatrixEvents();
+  }
+
+  // Bind Cell Clicks & Scope Changes
+  function bindMatrixEvents() {
+    // 1. Cell toggle: inherit -> allow -> deny -> inherit
+    tbody.querySelectorAll('.matrix-cell').forEach((cell) => {
+      cell.addEventListener('click', async () => {
+        const pIdx = parseInt(cell.getAttribute('data-pidx'), 10);
+        const right = cell.getAttribute('data-right');
+        const row = currentMatrixData.matrix[pIdx];
+        if (!row) return;
+
+        const currentRule = row.rights[right] || { access: 'inherit', isExplicit: false };
+        let nextAccess = 'allow';
+        if (currentRule.isExplicit && currentRule.access === 'allow') nextAccess = 'deny';
+        else if (currentRule.isExplicit && currentRule.access === 'deny') nextAccess = 'inherit';
+
+        const scopeSelect = tbody.querySelector(`.scope-selector[data-pidx="${pIdx}"]`);
+        const inheritance = scopeSelect ? scopeSelect.value : 'both';
+
+        await saveEntry(row.principal, right, nextAccess, inheritance);
+      });
+    });
+
+    // 2. Scope change
+    tbody.querySelectorAll('.scope-selector').forEach((sel) => {
+      sel.addEventListener('change', async () => {
+        const pIdx = parseInt(sel.getAttribute('data-pidx'), 10);
+        const row = currentMatrixData.matrix[pIdx];
+        if (!row) return;
+
+        // Apply updated scope to any existing explicit rules
+        for (const [r, rule] of Object.entries(row.rights)) {
+          if (rule && rule.isExplicit) {
+            await saveEntry(row.principal, r, rule.access, sel.value, false);
+          }
+        }
+        await loadMatrix();
+      });
+    });
+
+    // 3. Delete row explicit entries
+    tbody.querySelectorAll('.btn-delete-row').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const pIdx = parseInt(btn.getAttribute('data-pidx'), 10);
+        const row = currentMatrixData.matrix[pIdx];
+        if (!row || !confirm(`Xoá toàn bộ quy tắc phân quyền trực tiếp của [${row.principal.name}] trên mục này?`)) return;
+
+        for (const [r, rule] of Object.entries(row.rights)) {
+          if (rule && rule.isExplicit && rule.entryId) {
+            await fetch(`/api/security/entries/${rule.entryId}`, { method: 'DELETE' });
+          }
+        }
+        await loadMatrix();
+      });
+    });
+  }
+
+  // Save single entry
+  async function saveEntry(principal, right, access, inheritance, reload = true) {
+    if (!currentItemId) return;
+    try {
+      const res = await fetch(`/api/security/items/${currentItemId}/acl`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          principalType: principal.type,
+          principalId: principal.id,
+          right,
+          access,
+          inheritance,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Không thể lưu quyền');
+
+      if (reload) await loadMatrix();
+    } catch (err) {
+      alert(`Lỗi: ${err.message}`);
+    }
+  }
+
+  // Add Principal Confirm
+  btnConfirmAdd.addEventListener('click', async () => {
+    const pType = selectType.value;
+    const pId = selectId.value;
+    if (!pId) return;
+
+    // Check if principal already exists in current matrix
+    const exists = (currentMatrixData?.matrix || []).some((r) => r.principal.type === pType && r.principal.id === pId);
+    if (exists) {
+      alert('Đối tượng này đã có trong danh sách phân quyền.');
+      addToolbar.classList.add('d-none');
+      return;
+    }
+
+    // Default grant read: allow
+    await saveEntry({ type: pType, id: pId }, 'read', 'allow', 'both');
+    addToolbar.classList.add('d-none');
+  });
+
+  // Reset to Inherited
+  btnReset.addEventListener('click', async () => {
+    if (!currentItemId) return;
+    if (!confirm('Bạn có chắc chắn muốn xoá toàn bộ quyền đặt trực tiếp trên mục này để trở về trạng thái kế thừa từ thư mục cha?')) return;
+
+    try {
+      const res = await fetch(`/api/security/items/${currentItemId}/acl/reset`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Lỗi khôi phục kế thừa');
+      await loadMatrix();
+    } catch (err) {
+      alert(`Lỗi: ${err.message}`);
+    }
+  });
+
+  btnRefresh.addEventListener('click', loadMatrix);
+  btnLoad.addEventListener('click', loadMatrix);
+  inputTarget.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loadMatrix();
+  });
+
+  // Initial load
+  loadMatrix();
+});
+</script>
+

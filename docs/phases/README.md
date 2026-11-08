@@ -17,7 +17,7 @@ flowchart TD
     GD2 & GD3 & GD4 & GD5_1 --> GD6["GĐ 6: Presentation (EJS SSR)<br/>(Hoàn thành)"]
     GD6 --> GD6_2["GĐ 6.2: Rendering Component Template<br/>(Hoàn thành)"]
     GD6_2 --> GD6_3["GĐ 6.3: Quick Info Metadata<br/>(Hoàn thành)"]
-    GD1 & GD2 & GD6_3 --> GD7["GĐ 7: Bảo mật nâng cao (ACL)<br/>(Chưa bắt đầu)"]
+    GD1 & GD2 & GD6_3 --> GD7["GĐ 7: Bảo mật nâng cao (ACL)<br/>(Hoàn thành)"]
     GD2 & GD4 & GD6_2 --> GD8["GĐ 8: Workflow & Publish<br/>(Hoàn thành)"]
     GD8 --> GD8_1["GĐ 8.1: Database Switcher (Master/Web)<br/>(Hoàn thành)"]
     GD2 & GD8 --> GD9["GĐ 9: Recycle Bin & Audit<br/>(Chưa bắt đầu)"]
@@ -42,7 +42,7 @@ flowchart TD
 | **6** | Presentation (Layout, Rendering, Placeholders) | **Hoàn thành** | 2, 3, 4, 5 | [`phase-06-presentation.md`](./phase-06-presentation.md) | 2026-11-04 | 2026-11-04 | Quản trị Server-Side EJS Presentation: cây 3 nhánh (`Layouts`, `Placeholders`, `Renderings`), `viewPath`, SortableJS, Standard Presentation, `getFinalPresentation` |
 | **6.2** | Rendering Component Template & Effective Fields | **Hoàn thành** | 6 | [`phase-06-2-rendering-template.md`](./phase-06-2-rendering-template.md) | 2026-11-04 | 2026-11-04 | Rendering gắn `componentTemplate`, Page Template không kế thừa qua `baseTemplates`, Content Editor tự suy ra trường bằng `resolveEffectiveTemplate` |
 | **6.3** | Quick Info cho mọi Item trong Content Editor | **Hoàn thành** | 6.2 | [`phase-06-3-quick-info.md`](./phase-06-3-quick-info.md) | 2026-11-04 | 2026-11-04 | Section Quick Info chuẩn Sitecore: 6 dòng metadata, collapsible nhớ state, liên kết template, copy ID/path nhanh |
-| **7** | Bảo mật nâng cao & Phân quyền ACL | **Chưa bắt đầu** | 1, 2, 6.3 | [`phase-07-item-acl.md`](./phase-07-item-acl.md) | - | - | Đánh số lại từ GĐ 6 cũ; bổ sung phân quyền Presentation Details |
+| **7** | Bảo mật nâng cao & Phân quyền ACL | **Hoàn thành** | 1, 2, 6.3 | [`phase-07-item-acl.md`](./phase-07-item-acl.md) | 2026-11-08 | 2026-11-08 | Phân quyền Item-level ACL, Access Viewer, Security Editor, Role/User Manager, DEC-042 |
 | **8** | Workflow Engine, Workbox & Publishing | **Hoàn thành** | 2, 4, 6 | [`phase-08-workflow-publish.md`](./phase-08-workflow-publish.md) | 2026-11-07 | 2026-11-07 | Hoàn thành trước GĐ 7 theo DEC-039; trừu tượng hóa quyền qua `canPerform`; tách Master/Web, Workflow Engine, Workbox, Publishing Engine, Publish Manager |
 | **8.1** | Bộ chuyển Database Master / Web trong Content Editor | **Hoàn thành** | 8 | [`phase-08-1-database-switcher.md`](./phase-08-1-database-switcher.md) | 2026-11-07 | 2026-11-07 | Chuyển đổi Master/Web qua `?db=web`, duyệt cây & form Web chỉ đọc, huy hiệu Publish status, trang đối soát `/admin/databases` |
 | **9** | Thùng rác (Recycle Bin) & Audit Log | **Chưa bắt đầu** | 2, 8 | [`phase-09-recycle-bin-audit.md`](./phase-09-recycle-bin-audit.md) | - | - | Đánh số lại từ GĐ 8 cũ; audit log biến động Presentation & kiểm tra toàn vẹn xoá |

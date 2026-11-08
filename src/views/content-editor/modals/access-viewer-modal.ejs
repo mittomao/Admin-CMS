@@ -1,0 +1,76 @@
+<!-- Modal Access Viewer (Item Context inside Content Editor) -->
+<div class="modal fade" id="modalAccessViewer" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content rounded-xl border-0 shadow-2xl">
+      <!-- Modal Header -->
+      <div class="modal-header bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 py-3 px-4">
+        <div>
+          <h5 class="modal-title font-bold text-slate-900 dark:text-white d-flex align-items-center gap-2 m-0 text-sm">
+            <i class="ti ti-lock-access text-purple-600 fs-2"></i>
+            <span>Access Viewer &bull; Quyền Hiệu lực trên Item</span>
+          </h5>
+          <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="accessModalItemPath">/sitecore</div>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="p-3 bg-slate-50/50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+        <div class="row g-2 align-items-center">
+          <div class="col-auto">
+            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Xem quyền của:</span>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select form-select-sm text-xs rounded-lg" id="modalAccessPrincipalType">
+              <option value="user" selected>Người dùng (User)</option>
+              <option value="role">Vai trò (Role)</option>
+            </select>
+          </div>
+          <div class="col-md-5">
+            <select class="form-select form-select-sm text-xs rounded-lg" id="modalAccessPrincipalId">
+              <!-- Populated dynamically via JS -->
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover border-none text-xs rounded-lg px-3" id="btnModalRefreshAccess">
+              <i class="ti ti-refresh me-1"></i> Kiểm tra
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body p-0 overflow-auto">
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table text-xs m-0">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 uppercase tracking-wider font-bold text-[10px]">
+              <tr>
+                <th class="ps-4">Quyền hạn (Right)</th>
+                <th class="text-center" style="width: 130px;">Quyền hiệu lực</th>
+                <th class="text-center" style="width: 120px;">Nguồn gốc</th>
+                <th>Lý do và Quy tắc quyết định (DEC-042)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800" id="modalAccessTableBody">
+              <tr>
+                <td colspan="4" class="text-center py-4 text-slate-400">
+                  <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+                  <div>Đang tính toán quyền truy cập hiệu lực...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 py-2.5 px-4 d-flex justify-content-between">
+        <span class="text-[11px] text-slate-400">
+          Quy tắc DEC-042: Gần hơn thắng xa hơn &bull; User thắng Role &bull; Deny thắng Allow.
+        </span>
+        <button type="button" class="btn btn-sm btn-secondary text-xs rounded-lg px-3" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+

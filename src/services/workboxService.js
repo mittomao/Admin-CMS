@@ -7,17 +7,20 @@ const logger = require('../utils/logger');
 class WorkboxService {
   /**
    * Single gateway for filtering items visible to user in Workbox.
-   * In GĐ 8: Evaluated via canPerform(user, item, 'workbox:read').
-   * In GĐ 7: Will seamlessly integrate Item ACL rules inside this single method.
+   * GĐ 7: Uses ACL batch resolution (filterReadable) - NO N+1 queries.
    * @param {Array<object>} items
    * @param {User|object} user
-   * @returns {Array<object>}
+   * @returns {Promise<Array<object>>}
    */
-  filterVisible(items, user) {
+  async filterVisible(items, user) {
     if (!Array.isArray(items) || !user) return [];
+    const aclService = require('./aclService');
+    const itemEntities = items.map((it) => it.item || it);
+    const readable = await aclService.filterReadable(user, itemEntities);
+    const readableIdSet = new Set(readable.map((r) => r._id?.toString()));
     return items.filter((it) => {
       const itemContext = it.item || it;
-      return itemService.canPerform(user, itemContext, 'workbox:read');
+      return readableIdSet.has(itemContext._id?.toString());
     });
   }
 
@@ -35,7 +38,7 @@ class WorkboxService {
       const stateSummaries = [];
       for (const st of wf.states) {
         const rawItems = await workflowService.getItemsByState(st._id);
-        const visibleItems = this.filterVisible(rawItems, user);
+        const visibleItems = await this.filterVisible(rawItems, user);
 
         stateSummaries.push({
           _id: st._id,
@@ -75,7 +78,7 @@ class WorkboxService {
     if (!stateId) return { items: [], total: 0, page: 1, limit: 20 };
 
     const rawItems = await workflowService.getItemsByState(stateId);
-    let items = this.filterVisible(rawItems, user);
+    let items = await this.filterVisible(rawItems, user);
 
     // Filter by language
     if (options.lang) {
@@ -140,7 +143,7 @@ class WorkboxService {
       throw new ValidationError('No items selected for bulk operation');
     }
 
-    const isAllowed = itemService.canPerform(user, null, 'workbox:bulk');
+    const isAllowed = await itemService.canPerform(user, null, 'workbox:bulk');
     if (!isAllowed) {
       throw new ForbiddenError('Bạn không có quyền thực hiện thao tác hàng loạt (workbox:bulk)');
     }

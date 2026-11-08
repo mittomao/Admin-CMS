@@ -1,0 +1,517 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Sitecore XM Architecture &bull; GĐ 7
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-users text-purple-600"></i>
+          <span>User Manager &bull; Quản lý Tài khoản Người dùng</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Quản trị tài khoản, gán vai trò hệ thống, khoá/mở tài khoản và đặt lại mật khẩu với cơ chế huỷ phiên đăng nhập tức thời.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/security/roles" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-shield-lock"></i>
+          <span>Role Manager</span>
+        </a>
+        <a href="/admin/security/access-viewer" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-lock-access"></i>
+          <span>Access Viewer</span>
+        </a>
+        <button type="button" class="btn btn-primary bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm" id="btnOpenCreateUserModal">
+          <i class="ti ti-user-plus"></i>
+          <span>Tạo người dùng mới</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Toolbar -->
+  <div class="card border border-slate-200 dark:border-slate-800 shadow-2xs rounded-xl mb-4 bg-white dark:bg-slate-900">
+    <div class="card-body p-3">
+      <form method="GET" action="/admin/security/users" class="row g-3 align-items-center" id="userFilterForm">
+        <div class="col-md-4">
+          <div class="input-icon">
+            <span class="input-icon-addon">
+              <i class="ti ti-search text-slate-400"></i>
+            </span>
+            <input type="text" name="search" class="form-control form-control-sm text-xs rounded-lg" placeholder="Tìm theo username, họ tên, email..." value="<%= query.search || '' %>">
+          </div>
+        </div>
+
+        <div class="col-md-2">
+          <select name="domain" class="form-select form-select-sm text-xs rounded-lg">
+            <option value="">Tất cả Domain</option>
+            <% domains.forEach(d => { %>
+              <option value="<%= d.name %>" <%= query.domain === d.name ? 'selected' : '' %>><%= d.displayName || d.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <select name="roleId" class="form-select form-select-sm text-xs rounded-lg">
+            <option value="">Tất cả Vai trò (Roles)</option>
+            <% roles.forEach(r => { %>
+              <option value="<%= r._id %>" <%= query.roleId === r._id.toString() ? 'selected' : '' %>><%= r.name %> (<%= r.domain %>)</option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select name="status" class="form-select form-select-sm text-xs rounded-lg">
+            <option value="all" <%= !query.status || query.status === 'all' ? 'selected' : '' %>>Tất cả trạng thái</option>
+            <option value="active" <%= query.status === 'active' ? 'selected' : '' %>>Đang hoạt động</option>
+            <option value="disabled" <%= query.status === 'disabled' ? 'selected' : '' %>>Đã khoá</option>
+          </select>
+        </div>
+
+        <div class="col-md-1 d-flex gap-1">
+          <button type="submit" class="btn btn-sm btn-primary text-xs rounded-lg px-2.5">Lọc</button>
+          <a href="/admin/security/users" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg px-2" title="Xoá bộ lọc">
+            <i class="ti ti-x"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Users Table Card -->
+  <div class="card border border-slate-200 dark:border-slate-800 shadow-2xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+    <div class="table-responsive">
+      <table class="table table-vcenter table-hover card-table text-xs">
+        <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 uppercase tracking-wider font-semibold text-[11px]">
+          <tr>
+            <th class="w-1">Avatar</th>
+            <th>Tài khoản (Username)</th>
+            <th>Họ và tên</th>
+            <th>Email</th>
+            <th>Domain</th>
+            <th>Vai trò (Roles)</th>
+            <th class="text-center">Trạng thái</th>
+            <th>Đăng nhập cuối</th>
+            <th class="text-end">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          <% if (!users || users.length === 0) { %>
+            <tr>
+              <td colspan="9" class="text-center py-5 text-slate-400">
+                <i class="ti ti-users-minus fs-1 d-block mb-2 text-slate-300"></i>
+                Không tìm thấy người dùng nào phù hợp với bộ lọc.
+              </td>
+            </tr>
+          <% } else { %>
+            <% users.forEach(u => { %>
+              <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                <td>
+                  <span class="avatar avatar-xs rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                    <%= (u.username || 'U').substring(0, 2).toUpperCase() %>
+                  </span>
+                </td>
+                <td class="font-bold text-slate-900 dark:text-white">
+                  <%= u.username %>
+                  <% if (u.isAdmin) { %>
+                    <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px] py-0 px-1.5 ms-1">Admin</span>
+                  <% } %>
+                </td>
+                <td class="text-slate-700 dark:text-slate-300">
+                  <%= u.fullName || u.displayName || '-' %>
+                </td>
+                <td class="text-slate-500"><%= u.email %></td>
+                <td>
+                  <span class="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-[10px]"><%= u.domain || 'sitecore' %></span>
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1" style="max-width: 240px;">
+                    <% if (u.roles && u.roles.length > 0) { %>
+                      <% u.roles.forEach(r => { %>
+                        <span class="badge bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-[10px] py-0 px-1.5">
+                          <%= r.name || r %>
+                        </span>
+                      <% }) %>
+                    <% } else { %>
+                      <span class="text-slate-400 italic text-[11px]">(Chưa có vai trò)</span>
+                    <% } %>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <% if (u.isDisabled) { %>
+                    <span class="badge bg-red-50 text-red-700 border border-red-200 text-[10px]">Đã khoá</span>
+                  <% } else { %>
+                    <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px]">Hoạt động</span>
+                  <% } %>
+                </td>
+                <td class="text-slate-400 text-[11px]">
+                  <%= u.lastLogin ? new Date(u.lastLogin).toLocaleString('vi-VN') : 'Chưa đăng nhập' %>
+                </td>
+                <td class="text-end">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-xs btn-outline-secondary btn-edit-user" data-user='<%= JSON.stringify(u) %>' title="Sửa thông tin">
+                      <i class="ti ti-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-secondary btn-reset-pwd" data-id="<%= u._id %>" data-username="<%= u.username %>" title="Đặt lại mật khẩu">
+                      <i class="ti ti-key"></i>
+                    </button>
+                    <button type="button" class="btn btn-xs <%= u.isDisabled ? 'btn-outline-success' : 'btn-outline-danger' %> btn-toggle-status" data-id="<%= u._id %>" data-username="<%= u.username %>" data-disabled="<%= u.isDisabled ? 'true' : 'false' %>" title="<%= u.isDisabled ? 'Mở khoá tài khoản' : 'Khoá tài khoản' %>">
+                      <i class="<%= u.isDisabled ? 'ti ti-lock-open' : 'ti ti-lock' %>"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    <% if (pagination && pagination.totalPages > 1) { %>
+      <div class="card-footer d-flex align-items-center justify-content-between p-3 border-t border-slate-100 dark:border-slate-800">
+        <p class="m-0 text-slate-500 text-xs">
+          Hiển thị <strong><%= users.length %></strong> trên tổng số <strong><%= pagination.total %></strong> người dùng
+        </p>
+        <ul class="pagination pagination-sm m-0">
+          <li class="page-item <%= pagination.page <= 1 ? 'disabled' : '' %>">
+            <a class="page-link" href="?page=<%= pagination.page - 1 %>&search=<%= query.search || '' %>&domain=<%= query.domain || '' %>&roleId=<%= query.roleId || '' %>&status=<%= query.status || '' %>">Trước</a>
+          </li>
+          <% for (let p = 1; p <= pagination.totalPages; p++) { %>
+            <li class="page-item <%= pagination.page === p ? 'active' : '' %>">
+              <a class="page-link" href="?page=<%= p %>&search=<%= query.search || '' %>&domain=<%= query.domain || '' %>&roleId=<%= query.roleId || '' %>&status=<%= query.status || '' %>"><%= p %></a>
+            </li>
+          <% } %>
+          <li class="page-item <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>">
+            <a class="page-link" href="?page=<%= pagination.page + 1 %>&search=<%= query.search || '' %>&domain=<%= query.domain || '' %>&roleId=<%= query.roleId || '' %>&status=<%= query.status || '' %>">Sau</a>
+          </li>
+        </ul>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Modal Create User -->
+<div class="modal fade" id="modalCreateUser" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-xl border-0 shadow-lg">
+      <div class="modal-header border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h5 class="modal-title font-bold text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-user-plus text-primary"></i>
+          <span>Thêm tài khoản người dùng mới</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formCreateUser">
+        <div class="modal-body space-y-3 py-3">
+          <div>
+            <label class="form-label text-xs font-semibold required">Tên đăng nhập (Username)</label>
+            <input type="text" name="username" class="form-control form-control-sm text-xs rounded-lg" placeholder="e.g. editor_john" required pattern="^[a-zA-Z0-9_\-\.]{3,30}$">
+            <span class="text-[11px] text-slate-400">Từ 3-30 ký tự (chữ cái, số, gạch dưới, gạch ngang).</span>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold required">Email</label>
+            <input type="email" name="email" class="form-control form-control-sm text-xs rounded-lg" placeholder="john@example.com" required>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label text-xs font-semibold required">Họ và tên</label>
+              <input type="text" name="fullName" class="form-control form-control-sm text-xs rounded-lg" placeholder="John Doe" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label text-xs font-semibold">Tên hiển thị (Display)</label>
+              <input type="text" name="displayName" class="form-control form-control-sm text-xs rounded-lg" placeholder="John D.">
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label text-xs font-semibold required">Mật khẩu</label>
+              <input type="password" name="password" class="form-control form-control-sm text-xs rounded-lg" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+            </div>
+            <div class="col-6">
+              <label class="form-label text-xs font-semibold">Domain</label>
+              <select name="domain" class="form-select form-select-sm text-xs rounded-lg">
+                <% domains.forEach(d => { %>
+                  <option value="<%= d.name %>"><%= d.displayName || d.name %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Gán vai trò (Roles)</label>
+            <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 max-h-40 overflow-y-auto space-y-1">
+              <% roles.forEach(r => { %>
+                <label class="form-check form-check-sm mb-1 d-flex align-items-center">
+                  <input class="form-check-input" type="checkbox" name="roleIds" value="<%= r._id %>">
+                  <span class="form-check-label text-xs ms-2 font-medium">
+                    <%= r.name %>
+                    <span class="text-slate-400 text-[10px]">(<%= r.domain %>)</span>
+                  </span>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-t border-slate-100 dark:border-slate-800 py-2">
+          <button type="button" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg" data-bs-dismiss="modal">Huỷ</button>
+          <button type="submit" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover border-none text-xs rounded-lg px-3">Lưu người dùng</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit User -->
+<div class="modal fade" id="modalEditUser" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-xl border-0 shadow-lg">
+      <div class="modal-header border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h5 class="modal-title font-bold text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-edit text-primary"></i>
+          <span>Chỉnh sửa tài khoản người dùng</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formEditUser">
+        <input type="hidden" name="id" id="editUserId">
+        <input type="hidden" name="expectedUpdatedAt" id="editExpectedUpdatedAt">
+        <div class="modal-body space-y-3 py-3">
+          <div>
+            <label class="form-label text-xs font-semibold">Tên đăng nhập (Username)</label>
+            <input type="text" id="editUsername" class="form-control form-control-sm text-xs rounded-lg bg-slate-50 text-slate-500" readonly>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold required">Email</label>
+            <input type="email" name="email" id="editEmail" class="form-control form-control-sm text-xs rounded-lg" required>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label text-xs font-semibold required">Họ và tên</label>
+              <input type="text" name="fullName" id="editFullName" class="form-control form-control-sm text-xs rounded-lg" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label text-xs font-semibold">Tên hiển thị</label>
+              <input type="text" name="displayName" id="editDisplayName" class="form-control form-control-sm text-xs rounded-lg">
+            </div>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Domain</label>
+            <select name="domain" id="editDomain" class="form-select form-select-sm text-xs rounded-lg">
+              <% domains.forEach(d => { %>
+                <option value="<%= d.name %>"><%= d.displayName || d.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Vai trò (Roles)</label>
+            <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 max-h-40 overflow-y-auto space-y-1" id="editRolesContainer">
+              <% roles.forEach(r => { %>
+                <label class="form-check form-check-sm mb-1 d-flex align-items-center">
+                  <input class="form-check-input edit-role-checkbox" type="checkbox" name="roleIds" value="<%= r._id %>" id="role-chk-<%= r._id %>">
+                  <span class="form-check-label text-xs ms-2 font-medium">
+                    <%= r.name %>
+                    <span class="text-slate-400 text-[10px]">(<%= r.domain %>)</span>
+                  </span>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-t border-slate-100 dark:border-slate-800 py-2">
+          <button type="button" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg" data-bs-dismiss="modal">Huỷ</button>
+          <button type="submit" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover border-none text-xs rounded-lg px-3">Lưu thay đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reset Password -->
+<div class="modal fade" id="modalResetPassword" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-xl border-0 shadow-lg">
+      <div class="modal-header border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h5 class="modal-title font-bold text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-key text-warning"></i>
+          <span>Đặt lại mật khẩu</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formResetPassword">
+        <input type="hidden" name="id" id="resetPwdUserId">
+        <div class="modal-body py-3">
+          <p class="text-xs text-slate-500 mb-3">
+            Đặt mật khẩu mới cho tài khoản <strong id="resetPwdUsername" class="text-slate-800 dark:text-white"></strong>. Mọi phiên đăng nhập hiện tại sẽ bị vô hiệu hoá.
+          </p>
+          <div>
+            <label class="form-label text-xs font-semibold required">Mật khẩu mới</label>
+            <input type="password" name="newPassword" id="inputNewPassword" class="form-control form-control-sm text-xs rounded-lg" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+          </div>
+        </div>
+        <div class="modal-footer border-t border-slate-100 dark:border-slate-800 py-2">
+          <button type="button" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg" data-bs-dismiss="modal">Huỷ</button>
+          <button type="submit" class="btn btn-sm btn-warning text-xs rounded-lg px-3">Xác nhận đổi mật khẩu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+  // 1. Create User
+  const modalCreateUser = new bootstrap.Modal(document.getElementById('modalCreateUser'));
+  document.getElementById('btnOpenCreateUserModal')?.addEventListener('click', () => {
+    document.getElementById('formCreateUser').reset();
+    modalCreateUser.show();
+  });
+
+  document.getElementById('formCreateUser')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      username: formData.get('username'),
+      email: formData.get('email'),
+      fullName: formData.get('fullName'),
+      displayName: formData.get('displayName'),
+      password: formData.get('password'),
+      domain: formData.get('domain'),
+      roleIds: formData.getAll('roleIds'),
+    };
+
+    try {
+      const res = await fetch('/api/security/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Lỗi tạo người dùng');
+      modalCreateUser.hide();
+      window.location.reload();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // 2. Edit User
+  const modalEditUser = new bootstrap.Modal(document.getElementById('modalEditUser'));
+  document.querySelectorAll('.btn-edit-user').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const user = JSON.parse(btn.getAttribute('data-user'));
+      document.getElementById('editUserId').value = user._id;
+      document.getElementById('editExpectedUpdatedAt').value = user.updatedAt || '';
+      document.getElementById('editUsername').value = user.username;
+      document.getElementById('editEmail').value = user.email;
+      document.getElementById('editFullName').value = user.fullName || '';
+      document.getElementById('editDisplayName').value = user.displayName || '';
+      document.getElementById('editDomain').value = user.domain || 'sitecore';
+
+      // Reset checkboxes
+      document.querySelectorAll('.edit-role-checkbox').forEach(chk => { chk.checked = false; });
+      if (Array.isArray(user.roles)) {
+        user.roles.forEach(r => {
+          const rId = r._id || r;
+          const chk = document.getElementById(`role-chk-${rId}`);
+          if (chk) chk.checked = true;
+        });
+      }
+
+      modalEditUser.show();
+    });
+  });
+
+  document.getElementById('formEditUser')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editUserId').value;
+    const formData = new FormData(e.target);
+    const data = {
+      email: formData.get('email'),
+      fullName: formData.get('fullName'),
+      displayName: formData.get('displayName'),
+      domain: formData.get('domain'),
+      expectedUpdatedAt: document.getElementById('editExpectedUpdatedAt').value,
+      roleIds: formData.getAll('roleIds'),
+    };
+
+    try {
+      const res = await fetch(`/api/security/users/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Lỗi cập nhật người dùng');
+      modalEditUser.hide();
+      window.location.reload();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // 3. Reset Password
+  const modalResetPassword = new bootstrap.Modal(document.getElementById('modalResetPassword'));
+  document.querySelectorAll('.btn-reset-pwd').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('resetPwdUserId').value = btn.getAttribute('data-id');
+      document.getElementById('resetPwdUsername').textContent = btn.getAttribute('data-username');
+      document.getElementById('inputNewPassword').value = '';
+      modalResetPassword.show();
+    });
+  });
+
+  document.getElementById('formResetPassword')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('resetPwdUserId').value;
+    const newPassword = document.getElementById('inputNewPassword').value;
+
+    try {
+      const res = await fetch(`/api/security/users/${id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify({ newPassword }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Lỗi đặt lại mật khẩu');
+      modalResetPassword.hide();
+      alert('Đã đặt lại mật khẩu thành công!');
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // 4. Toggle Lock/Unlock
+  document.querySelectorAll('.btn-toggle-status').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      const username = btn.getAttribute('data-username');
+      const isDisabled = btn.getAttribute('data-disabled') === 'true';
+      const newDisabledState = !isDisabled;
+
+      const confirmMsg = newDisabledState
+        ? `Bạn có chắc chắn muốn KHOÁ tài khoản "${username}"? Phiên đăng nhập đang hoạt động của người dùng sẽ bị huỷ ngay lập tức.`
+        : `Mở khoá tài khoản "${username}" để người dùng có thể đăng nhập trở lại?`;
+
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch(`/api/security/users/${id}/toggle-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+          body: JSON.stringify({ isDisabled: newDisabledState }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || 'Lỗi cập nhật trạng thái');
+        window.location.reload();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+});
+</script>
+

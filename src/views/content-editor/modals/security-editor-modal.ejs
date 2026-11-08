@@ -1,0 +1,106 @@
+<!-- Modal Security Editor (Sitecore XM Item ACL Matrix) -->
+<div class="modal fade" id="modalSecurityEditor" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content rounded-xl border-0 shadow-2xl">
+      <!-- Modal Header -->
+      <div class="modal-header bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 py-3 px-4">
+        <div>
+          <h5 class="modal-title font-bold text-slate-900 dark:text-white d-flex align-items-center gap-2 m-0 text-sm">
+            <i class="ti ti-shield-lock text-purple-600 fs-2"></i>
+            <span>Security Editor &bull; Ma trận Phân quyền</span>
+          </h5>
+          <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="secModalItemPath">/sitecore</div>
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <button type="button" class="btn btn-sm btn-outline-secondary text-xs rounded-lg px-2.5 py-1 d-flex align-items-center gap-1" id="btnSecAddPrincipal">
+            <i class="ti ti-user-plus text-primary"></i>
+            <span>Thêm User / Role</span>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-warning text-xs rounded-lg px-2.5 py-1 d-flex align-items-center gap-1" id="btnSecResetInherited" title="Xoá tất cả quyền đặt trực tiếp, khôi phục trạng thái kế thừa hoàn toàn từ thư mục cha">
+            <i class="ti ti-arrow-back-up"></i>
+            <span>Reset Kế thừa</span>
+          </button>
+          <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <!-- Add Principal Popover/Bar (hidden by default) -->
+      <div id="secAddPrincipalBar" class="bg-blue-50/60 dark:bg-blue-950/40 border-b border-blue-100 dark:border-blue-900/60 p-3 d-none">
+        <div class="row g-2 align-items-center">
+          <div class="col-auto">
+            <span class="text-xs font-bold text-blue-900 dark:text-blue-300">Thêm quyền cho:</span>
+          </div>
+          <div class="col-md-2">
+            <select class="form-select form-select-sm text-xs rounded-lg" id="secNewPrincipalType">
+              <option value="role" selected>Vai trò (Role)</option>
+              <option value="user">Người dùng (User)</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-select form-select-sm text-xs rounded-lg" id="secNewPrincipalSelect">
+              <!-- Populated dynamically via JS -->
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover border-none text-xs rounded-lg px-3" id="btnConfirmAddPrincipal">
+              Thêm vào ma trận
+            </button>
+            <button type="button" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg px-2" id="btnCancelAddPrincipal">
+              Huỷ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Body Matrix -->
+      <div class="modal-body p-0 overflow-auto">
+        <div class="table-responsive">
+          <table class="table table-vcenter table-hover card-table text-xs m-0" id="tableSecurityMatrix">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider font-bold text-[10px] sticky-top z-10 shadow-2xs">
+              <tr>
+                <th class="ps-4" style="min-width: 180px;">Đối tượng (Principal)</th>
+                <th class="text-center" style="width: 85px;">Read</th>
+                <th class="text-center" style="width: 85px;">Write</th>
+                <th class="text-center" style="width: 85px;">Create</th>
+                <th class="text-center" style="width: 85px;">Rename</th>
+                <th class="text-center" style="width: 85px;">Delete</th>
+                <th class="text-center" style="width: 85px;">Publish</th>
+                <th class="text-center" style="width: 85px;">Administer</th>
+                <th class="text-center" style="min-width: 140px;">Phạm vi kế thừa</th>
+                <th class="text-end pe-4" style="width: 60px;"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800" id="secMatrixBody">
+              <tr>
+                <td colspan="10" class="text-center py-5 text-slate-400">
+                  <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+                  <div>Đang nạp ma trận phân quyền của Item...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 py-2.5 px-4 d-flex align-items-center justify-content-between">
+        <div class="text-[11px] text-slate-500 d-flex align-items-center gap-3">
+          <span class="d-inline-flex align-items-center gap-1">
+            <span class="badge bg-emerald-100 text-emerald-800 border border-emerald-300 px-1 py-0 text-[9px]"><i class="ti ti-check"></i> Allow</span>
+            <span class="badge bg-red-100 text-red-800 border border-red-300 px-1 py-0 text-[9px]"><i class="ti ti-ban"></i> Deny</span>
+            <span class="badge bg-slate-100 text-slate-600 border border-slate-300 px-1 py-0 text-[9px]"><i class="ti ti-circle-dotted"></i> Inherit</span>
+          </span>
+          <span class="text-slate-400">&bull; Bấm vào từng ô để đổi Allow &rarr; Deny &rarr; Inherit.</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg px-3" data-bs-dismiss="modal">Đóng</button>
+          <button type="button" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none text-xs rounded-lg px-4 font-semibold" id="btnSecSaveAcl">
+            <i class="ti ti-device-floppy me-1"></i>
+            <span>Lưu phân quyền</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

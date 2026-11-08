@@ -1,6 +1,7 @@
 const Item = require('../../models/Item');
 const PublishedItem = require('../../models/PublishedItem');
 const itemService = require('../../services/itemService');
+const aclService = require('../../services/aclService');
 const logger = require('../../utils/logger');
 const { ForbiddenError } = require('../../utils/errors');
 
@@ -22,7 +23,7 @@ const databaseController = {
    */
   async index(req, res, next) {
     try {
-      if (!itemService.canPerform(req.user, null, 'database:compare')) {
+      if (!(await itemService.canPerform(req.user, null, 'database:compare'))) {
         throw new ForbiddenError('Bạn không có quyền truy cập trang quản trị và đối soát Database (database:compare).');
       }
 
@@ -45,7 +46,7 @@ const databaseController = {
    */
   async getSummary(req, res, next) {
     try {
-      if (!itemService.canPerform(req.user, null, 'database:compare')) {
+      if (!(await itemService.canPerform(req.user, null, 'database:compare'))) {
         return res.status(403).json({ success: false, message: 'Forbidden: database:compare permission required.' });
       }
 
@@ -94,7 +95,7 @@ const databaseController = {
    */
   async getDiff(req, res, next) {
     try {
-      if (!itemService.canPerform(req.user, null, 'database:compare')) {
+      if (!(await itemService.canPerform(req.user, null, 'database:compare'))) {
         return res.status(403).json({ success: false, message: 'Forbidden: database:compare permission required.' });
       }
 
@@ -180,6 +181,9 @@ const databaseController = {
       else if (type === 'orphan') resultList = orphan;
       else if (type === 'changed') resultList = changed;
       else resultList = [...missing, ...changed, ...orphan];
+
+      // GĐ 7: Filter diff results based on Item ACL read permissions
+      resultList = await aclService.filterReadable(req.user, resultList);
 
       const total = resultList.length;
       const pageNum = Math.max(1, parseInt(page, 10) || 1);

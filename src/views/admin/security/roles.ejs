@@ -1,0 +1,400 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Sitecore XM Architecture &bull; GĐ 7
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-shield-lock text-purple-600"></i>
+          <span>Role Manager &bull; Quản lý Vai trò Phân quyền</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Định nghĩa vai trò, kế thừa vai trò phân cấp (Role Inheritance với thuật toán chống vòng lặp), và quản lý quyền nhóm tập trung.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/security/users" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-users"></i>
+          <span>User Manager</span>
+        </a>
+        <a href="/admin/security/access-viewer" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-lock-access"></i>
+          <span>Access Viewer</span>
+        </a>
+        <button type="button" class="btn btn-primary bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm" id="btnOpenCreateRoleModal">
+          <i class="ti ti-plus"></i>
+          <span>Tạo vai trò mới</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Toolbar -->
+  <div class="card border border-slate-200 dark:border-slate-800 shadow-2xs rounded-xl mb-4 bg-white dark:bg-slate-900">
+    <div class="card-body p-3">
+      <form method="GET" action="/admin/security/roles" class="row g-3 align-items-center">
+        <div class="col-md-6">
+          <div class="input-icon">
+            <span class="input-icon-addon">
+              <i class="ti ti-search text-slate-400"></i>
+            </span>
+            <input type="text" name="search" class="form-control form-control-sm text-xs rounded-lg" placeholder="Tìm theo tên vai trò, mô tả..." value="<%= query.search || '' %>">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <select name="domain" class="form-select form-select-sm text-xs rounded-lg">
+            <option value="">Tất cả Domain</option>
+            <% domains.forEach(d => { %>
+              <option value="<%= d.name %>" <%= query.domain === d.name ? 'selected' : '' %>><%= d.displayName || d.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-1">
+          <button type="submit" class="btn btn-sm btn-primary text-xs rounded-lg px-3">Lọc</button>
+          <a href="/admin/security/roles" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg px-2" title="Xoá bộ lọc">
+            <i class="ti ti-x"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Roles Table Card -->
+  <div class="card border border-slate-200 dark:border-slate-800 shadow-2xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+    <div class="table-responsive">
+      <table class="table table-vcenter table-hover card-table text-xs">
+        <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 uppercase tracking-wider font-semibold text-[11px]">
+          <tr>
+            <th class="w-1"></th>
+            <th>Tên vai trò (Role Name)</th>
+            <th>Domain</th>
+            <th>Mô tả</th>
+            <th>Kế thừa từ vai trò cha (memberOf)</th>
+            <th class="text-center">Người dùng</th>
+            <th class="text-center">Loại vai trò</th>
+            <th class="text-end">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          <% if (!roles || roles.length === 0) { %>
+            <tr>
+              <td colspan="8" class="text-center py-5 text-slate-400">
+                <i class="ti ti-shield-x fs-1 d-block mb-2 text-slate-300"></i>
+                Không tìm thấy vai trò nào.
+              </td>
+            </tr>
+          <% } else { %>
+            <% roles.forEach(r => { %>
+              <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                <td>
+                  <span class="avatar avatar-xs rounded-lg <%= r.isSystem ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600' %>">
+                    <i class="ti ti-shield fs-3"></i>
+                  </span>
+                </td>
+                <td class="font-bold text-slate-900 dark:text-white">
+                  <%= r.name %>
+                </td>
+                <td>
+                  <span class="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-[10px]"><%= r.domain || 'sitecore' %></span>
+                </td>
+                <td class="text-slate-500 max-w-xs truncate">
+                  <%= r.description || '-' %>
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1" style="max-width: 240px;">
+                    <% if (r.memberOf && r.memberOf.length > 0) { %>
+                      <% r.memberOf.forEach(parentRole => { %>
+                        <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-0 px-1.5 d-flex align-items-center gap-1">
+                          <i class="ti ti-arrow-narrow-up text-[10px]"></i>
+                          <span><%= parentRole.name || parentRole %></span>
+                        </span>
+                      <% }) %>
+                    <% } else { %>
+                      <span class="text-slate-400 italic text-[11px]">(Độc lập / Gốc)</span>
+                    <% } %>
+                  </div>
+                </td>
+                <td class="text-center font-semibold text-slate-700 dark:text-slate-300">
+                  <a href="/admin/security/users?roleId=<%= r._id %>" class="text-decoration-none hover:underline" title="Xem người dùng thuộc vai trò này">
+                    <%= r.userCount || 0 %>
+                  </a>
+                </td>
+                <td class="text-center">
+                  <% if (r.isSystem) { %>
+                    <span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px]">Hệ thống</span>
+                  <% } else { %>
+                    <span class="badge bg-slate-50 text-slate-600 border border-slate-200 text-[10px]">Tuỳ chỉnh</span>
+                  <% } %>
+                </td>
+                <td class="text-end">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-xs btn-outline-secondary btn-edit-role" data-role='<%= JSON.stringify(r) %>' title="Sửa vai trò">
+                      <i class="ti ti-edit"></i>
+                    </button>
+                    <% if (!r.isSystem && r.name !== 'Administrator') { %>
+                      <button type="button" class="btn btn-xs btn-outline-danger btn-delete-role" data-id="<%= r._id %>" data-name="<%= r.name %>" title="Xoá vai trò">
+                        <i class="ti ti-trash"></i>
+                      </button>
+                    <% } else { %>
+                      <button type="button" class="btn btn-xs btn-outline-secondary disabled opacity-30 cursor-not-allowed" title="Không thể xoá vai trò hệ thống">
+                        <i class="ti ti-lock"></i>
+                      </button>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Create Role -->
+<div class="modal fade" id="modalCreateRole" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-xl border-0 shadow-lg">
+      <div class="modal-header border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h5 class="modal-title font-bold text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-shield-plus text-primary"></i>
+          <span>Tạo vai trò mới</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formCreateRole">
+        <div class="modal-body space-y-3 py-3">
+          <div>
+            <label class="form-label text-xs font-semibold required">Tên vai trò (Role Name)</label>
+            <input type="text" name="name" class="form-control form-control-sm text-xs rounded-lg" placeholder="e.g. Marketing Lead" required>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Domain</label>
+            <select name="domain" class="form-select form-select-sm text-xs rounded-lg">
+              <% domains.forEach(d => { %>
+                <option value="<%= d.name %>"><%= d.displayName || d.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Mô tả mục đích</label>
+            <textarea name="description" class="form-control form-control-sm text-xs rounded-lg" rows="2" placeholder="Mô tả phạm vi quyền hạn của vai trò này..."></textarea>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Kế thừa quyền từ vai trò khác (memberOf)</label>
+            <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 max-h-40 overflow-y-auto space-y-1">
+              <% roles.forEach(r => { %>
+                <label class="form-check form-check-sm mb-1 d-flex align-items-center">
+                  <input class="form-check-input" type="checkbox" name="memberOf" value="<%= r._id %>">
+                  <span class="form-check-label text-xs ms-2 font-medium">
+                    <%= r.name %>
+                    <span class="text-slate-400 text-[10px]">(<%= r.domain %>)</span>
+                  </span>
+                </label>
+              <% }) %>
+            </div>
+            <span class="text-[11px] text-slate-400 mt-1 d-block">Vai trò mới sẽ được thừa hưởng tất cả quyền hạn của các vai trò cha đã chọn.</span>
+          </div>
+        </div>
+        <div class="modal-footer border-t border-slate-100 dark:border-slate-800 py-2">
+          <button type="button" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg" data-bs-dismiss="modal">Huỷ</button>
+          <button type="submit" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover border-none text-xs rounded-lg px-3">Lưu vai trò</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit Role -->
+<div class="modal fade" id="modalEditRole" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-xl border-0 shadow-lg">
+      <div class="modal-header border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h5 class="modal-title font-bold text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-edit text-primary"></i>
+          <span>Chỉnh sửa vai trò</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formEditRole">
+        <input type="hidden" name="id" id="editRoleId">
+        <input type="hidden" name="expectedUpdatedAt" id="editRoleExpectedUpdatedAt">
+        <div class="modal-body space-y-3 py-3">
+          <div>
+            <label class="form-label text-xs font-semibold required">Tên vai trò (Role Name)</label>
+            <input type="text" name="name" id="editRoleName" class="form-control form-control-sm text-xs rounded-lg" required>
+            <span id="systemRoleNotice" class="text-[11px] text-amber-600 dark:text-amber-400 d-none mt-1">Vai trò hệ thống không được đổi tên.</span>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Domain</label>
+            <select name="domain" id="editRoleDomain" class="form-select form-select-sm text-xs rounded-lg">
+              <% domains.forEach(d => { %>
+                <option value="<%= d.name %>"><%= d.displayName || d.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Mô tả mục đích</label>
+            <textarea name="description" id="editRoleDescription" class="form-control form-control-sm text-xs rounded-lg" rows="2"></textarea>
+          </div>
+          <div>
+            <label class="form-label text-xs font-semibold">Kế thừa quyền từ vai trò cha (memberOf)</label>
+            <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 max-h-40 overflow-y-auto space-y-1" id="editMemberOfContainer">
+              <% roles.forEach(r => { %>
+                <label class="form-check form-check-sm mb-1 d-flex align-items-center edit-memberof-item" id="memberof-row-<%= r._id %>">
+                  <input class="form-check-input edit-memberof-checkbox" type="checkbox" name="memberOf" value="<%= r._id %>" id="role-parent-chk-<%= r._id %>">
+                  <span class="form-check-label text-xs ms-2 font-medium">
+                    <%= r.name %>
+                    <span class="text-slate-400 text-[10px]">(<%= r.domain %>)</span>
+                  </span>
+                </label>
+              <% }) %>
+            </div>
+            <span class="text-[11px] text-slate-400 mt-1 d-block">Hệ thống tự động phát hiện và chặn các vòng lặp kế thừa vai trò.</span>
+          </div>
+        </div>
+        <div class="modal-footer border-t border-slate-100 dark:border-slate-800 py-2">
+          <button type="button" class="btn btn-sm btn-ghost-secondary text-xs rounded-lg" data-bs-dismiss="modal">Huỷ</button>
+          <button type="submit" class="btn btn-sm btn-primary bg-sc-red hover:bg-sc-red-hover border-none text-xs rounded-lg px-3">Lưu thay đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+  // 1. Create Role
+  const modalCreateRole = new bootstrap.Modal(document.getElementById('modalCreateRole'));
+  document.getElementById('btnOpenCreateRoleModal')?.addEventListener('click', () => {
+    document.getElementById('formCreateRole').reset();
+    modalCreateRole.show();
+  });
+
+  document.getElementById('formCreateRole')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      name: formData.get('name'),
+      domain: formData.get('domain'),
+      description: formData.get('description'),
+      memberOf: formData.getAll('memberOf'),
+    };
+
+    try {
+      const res = await fetch('/api/security/roles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Lỗi tạo vai trò');
+      modalCreateRole.hide();
+      window.location.reload();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // 2. Edit Role
+  const modalEditRole = new bootstrap.Modal(document.getElementById('modalEditRole'));
+  document.querySelectorAll('.btn-edit-role').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const role = JSON.parse(btn.getAttribute('data-role'));
+      document.getElementById('editRoleId').value = role._id;
+      document.getElementById('editRoleExpectedUpdatedAt').value = role.updatedAt || '';
+      document.getElementById('editRoleName').value = role.name;
+      document.getElementById('editRoleDomain').value = role.domain || 'sitecore';
+      document.getElementById('editRoleDescription').value = role.description || '';
+
+      const isSystem = Boolean(role.isSystem);
+      const nameInput = document.getElementById('editRoleName');
+      const notice = document.getElementById('systemRoleNotice');
+      if (isSystem) {
+        nameInput.setAttribute('readonly', 'true');
+        nameInput.classList.add('bg-slate-50', 'text-slate-500');
+        notice.classList.remove('d-none');
+      } else {
+        nameInput.removeAttribute('readonly');
+        nameInput.classList.remove('bg-slate-50', 'text-slate-500');
+        notice.classList.add('d-none');
+      }
+
+      // Reset checkboxes and hide current role row to prevent self-selection
+      document.querySelectorAll('.edit-memberof-checkbox').forEach(chk => { chk.checked = false; });
+      document.querySelectorAll('.edit-memberof-item').forEach(item => { item.classList.remove('d-none'); });
+
+      const selfRow = document.getElementById(`memberof-row-${role._id}`);
+      if (selfRow) selfRow.classList.add('d-none');
+
+      if (Array.isArray(role.memberOf)) {
+        role.memberOf.forEach(p => {
+          const pId = p._id || p;
+          const chk = document.getElementById(`role-parent-chk-${pId}`);
+          if (chk) chk.checked = true;
+        });
+      }
+
+      modalEditRole.show();
+    });
+  });
+
+  document.getElementById('formEditRole')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editRoleId').value;
+    const formData = new FormData(e.target);
+    const data = {
+      name: formData.get('name'),
+      domain: formData.get('domain'),
+      description: formData.get('description'),
+      expectedUpdatedAt: document.getElementById('editRoleExpectedUpdatedAt').value,
+      memberOf: formData.getAll('memberOf'),
+    };
+
+    try {
+      const res = await fetch(`/api/security/roles/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Lỗi cập nhật vai trò');
+      modalEditRole.hide();
+      window.location.reload();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // 3. Delete Role
+  document.querySelectorAll('.btn-delete-role').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      const name = btn.getAttribute('data-name');
+
+      if (!confirm(`Bạn có chắc chắn muốn xoá vai trò "${name}"? Các quy tắc phân quyền liên kết với vai trò này sẽ bị gỡ bỏ.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/security/roles/${id}`, {
+          method: 'DELETE',
+          headers: { 'X-CSRF-Token': csrfToken },
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || 'Lỗi xoá vai trò');
+        window.location.reload();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+});
+</script>
+

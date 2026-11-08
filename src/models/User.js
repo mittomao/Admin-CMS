@@ -27,6 +27,24 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Full name is required'],
       trim: true,
     },
+    displayName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    domain: {
+      type: String,
+      trim: true,
+      default: 'sitecore',
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    isDisabled: {
+      type: Boolean,
+      default: false,
+    },
     avatar: {
       type: String,
       default: '/images/avatars/default.png',
@@ -45,12 +63,29 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
     collection: 'users',
   }
 );
+
+// Synchronize isActive and isDisabled on pre-save
+userSchema.pre('save', function (next) {
+  if (this.isModified('isDisabled')) {
+    this.isActive = !this.isDisabled;
+  } else if (this.isModified('isActive')) {
+    this.isDisabled = !this.isActive;
+  }
+  if (!this.displayName) {
+    this.displayName = this.fullName || this.username;
+  }
+  next();
+});
 
 // Method to verify password
 userSchema.methods.comparePassword = async function (candidatePassword) {

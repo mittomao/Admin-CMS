@@ -14,7 +14,7 @@ class PresentationController {
       const { lang = 'vi', version = 1 } = req.query;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'presentation:read')) {
+      if (!(await itemService.canPerform(user, id, 'presentation:read'))) {
         return res
           .status(403)
           .send('<div class="alert alert-danger m-3">Bạn không có quyền xem Presentation Details.</div>');
@@ -46,7 +46,7 @@ class PresentationController {
       const { lang = 'vi', version = 1 } = req.query;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'presentation:read')) {
+      if (!(await itemService.canPerform(user, id, 'presentation:read'))) {
         return res
           .status(403)
           .send('<div class="alert alert-danger m-3">Bạn không có quyền xem Presentation Preview.</div>');
@@ -77,7 +77,7 @@ class PresentationController {
       const { lang = 'vi', version = 1 } = req.query;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'presentation:read')) {
+      if (!(await itemService.canPerform(user, id, 'presentation:read'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền truy cập Presentation.' });
       }
 
@@ -113,7 +113,7 @@ class PresentationController {
       } = req.body;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'presentation:write')) {
+      if (!(await itemService.canPerform(user, id, 'presentation:write'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền lưu Presentation.' });
       }
 
@@ -158,7 +158,7 @@ class PresentationController {
       } = req.body;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'presentation:write')) {
+      if (!(await itemService.canPerform(user, id, 'presentation:write'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền khôi phục Presentation.' });
       }
 
@@ -279,7 +279,7 @@ class PresentationController {
       const { layoutId, renderings = [] } = req.body;
       const user = req.session?.user;
 
-      if (!itemService.canPerform(user, null, 'presentation:write')) {
+      if (!(await itemService.canPerform(user, id, 'presentation:write'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền cấu hình Standard Presentation.' });
       }
 

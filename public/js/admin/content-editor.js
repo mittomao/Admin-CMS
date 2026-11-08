@@ -5,6 +5,7 @@
 
 import { MediaPicker } from './media-picker.js';
 import { initRichTextEditors } from './tinymce-config.js';
+import { openSecurityEditorModal, openAccessViewerModal, initSecurityEditorModal } from './security-editor.js';
 
 // Helper to get CSRF Token from meta tag
 const getCsrfToken = () => {
@@ -38,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDirtyTracker();
   initDatabaseSwitcherControls();
   initPublishModalEvents();
+  initSecurityEditorModal();
   updateRibbonStateForDb();
 });
 
@@ -457,6 +459,31 @@ async function handleRibbonAction(action, triggerBtn = null) {
 
     case 'toggle-publish-badges':
       togglePublishBadges();
+      break;
+
+    // GĐ 7: Security Ribbon Actions
+    case 'security:editor':
+    case 'security:assign':
+    case 'security:reset': {
+      const activeNode = treeInstance ? treeInstance.getActiveNode() : null;
+      const path = activeNode?.data?.path || currentItemId;
+      openSecurityEditorModal(currentItemId, path);
+      break;
+    }
+
+    case 'security:access-viewer': {
+      const activeNode = treeInstance ? treeInstance.getActiveNode() : null;
+      const path = activeNode?.data?.path || currentItemId;
+      openAccessViewerModal(currentItemId, path);
+      break;
+    }
+
+    case 'security:open-users':
+      window.open('/admin/security/users', '_blank');
+      break;
+
+    case 'security:open-roles':
+      window.open('/admin/security/roles', '_blank');
       break;
   }
 }

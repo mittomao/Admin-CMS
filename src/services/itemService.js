@@ -53,90 +53,26 @@ const itemService = {
   isProtectedSystemPath,
 
   /**
-   * Permission check gateway (DEC-039 / Phase 8 abstraction, will be fully integrated with ACL in GĐ 7)
+   * Permission check gateway (Sitecore XM Item-Level ACL according to DEC-042 & Phase 7)
+   * Keeps exact function signature: canPerform(user, item, action)
+   * Handles synchronous resolution for global/admin actions, and async resolution for item ACL.
    */
   canPerform(user, item, action) {
     if (!user) return false;
-    const userRoles = [
-      ...(Array.isArray(user.roles) ? user.roles.map((r) => (r.name ? r.name : r.toString())) : []),
-      ...(Array.isArray(user.roleNames) ? user.roleNames : []),
-    ];
-
-    const isAdmin = userRoles.includes('Administrator');
-    const isDeveloper = userRoles.includes('Developer');
-    const isEditor = userRoles.includes('Editor');
-    const isAuthor = userRoles.includes('Author');
-    const isApprover = userRoles.includes('Approver');
-
-    if (isAdmin) return true;
-
-    // Check actions on items under /sitecore/layout/
-    const isLayoutTreeItem = item && item.path && item.path.toLowerCase().startsWith('/sitecore/layout');
-    if (isLayoutTreeItem) {
-      if (action === 'item:read' || action === 'presentation:read') {
-        return true;
-      }
-      return isDeveloper;
+    const aclService = require('./aclService');
+    if (aclService.isAdministrator(user)) return true;
+    if (!item) {
+      return aclService.evaluateGlobalAction(user, action);
     }
+    return aclService.canPerform(user, item, action);
+  },
 
-    if (action === 'presentation:write') {
-      return isAdmin || isDeveloper;
-    }
-
-    if (action === 'presentation:read') {
-      return true;
-    }
-
-    if (action === 'version:delete') {
-      return isEditor || isApprover;
-    }
-
-    if (action === 'version:create' || action === 'version:restore') {
-      return isAuthor || isEditor || isApprover;
-    }
-
-    // GĐ 8: Workflow Actions
-    if (action === 'workflow:read') {
-      return true; // All authenticated users can read workflow state of items they can see
-    }
-
-    if (action === 'workflow:manage') {
-      return isAdmin || isDeveloper;
-    }
-
-    if (action === 'workbox:read') {
-      return isAdmin || isApprover || isEditor || isAuthor;
-    }
-
-    if (action === 'workbox:bulk') {
-      return isAdmin || isApprover;
-    }
-
-    if (action.startsWith('workflow:execute')) {
-      const parts = action.split(':');
-      const cmdName = (parts[2] || '').toLowerCase();
-      if (cmdName === 'submit') {
-        return isAuthor || isEditor || isApprover;
-      }
-      // Approve, Reject and other commands require Approver
-      return isApprover;
-    }
-
-    // GĐ 8: Publishing Actions
-    if (action === 'item:publish' || action === 'item:unpublish') {
-      return isAdmin || isApprover;
-    }
-
-    if (action === 'publish:manage') {
-      return isAdmin;
-    }
-
-    // GĐ 8.1: Database Switcher Actions
-    if (action === 'database:web:read' || action === 'database:compare') {
-      return isAdmin || isApprover;
-    }
-
-    return true;
+  /**
+   * Explain permission determination for Access Viewer (Phase 7)
+   */
+  async explainPermission(user, item, action) {
+    const aclService = require('./aclService');
+    return aclService.explainPermission(user, item, action);
   },
 
   /**

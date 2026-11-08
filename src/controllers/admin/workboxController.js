@@ -9,7 +9,7 @@ const workboxController = {
    */
   async renderWorkbox(req, res, next) {
     try {
-      if (!itemService.canPerform(req.user, null, 'workbox:read')) {
+      if (!(await itemService.canPerform(req.user, null, 'workbox:read'))) {
         return res.status(403).render('errors/403', {
           title: '403 - Forbidden',
           message: 'Bạn không có quyền truy cập ứng dụng Workbox.',
@@ -57,7 +57,7 @@ const workboxController = {
         ? await workboxService.getWorkboxItems(selectedStateId, req.query, req.user)
         : { items: [], total: 0, page: 1, limit: 20, totalPages: 1 };
 
-      const canBulk = itemService.canPerform(req.user, null, 'workbox:bulk');
+      const canBulk = await itemService.canPerform(req.user, null, 'workbox:bulk');
 
       res.render('admin/workbox/index', {
         title: 'Workbox - Phê duyệt Nội dung',
@@ -85,7 +85,7 @@ const workboxController = {
    */
   async getSummary(req, res, next) {
     try {
-      if (!itemService.canPerform(req.user, null, 'workbox:read')) {
+      if (!(await itemService.canPerform(req.user, null, 'workbox:read'))) {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
       const summary = await workboxService.getWorkboxSummary(req.user);
@@ -101,7 +101,7 @@ const workboxController = {
    */
   async getItems(req, res, next) {
     try {
-      if (!itemService.canPerform(req.user, null, 'workbox:read')) {
+      if (!(await itemService.canPerform(req.user, null, 'workbox:read'))) {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
       const { stateId } = req.query;

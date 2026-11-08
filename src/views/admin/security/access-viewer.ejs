@@ -1,0 +1,283 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Sitecore XM Architecture &bull; GĐ 7
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-lock-access text-purple-600"></i>
+          <span>Access Viewer &bull; Kiểm tra Quyền truy cập Hiệu lực</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Minh bạch hoá quy tắc phân giải quyền (DEC-042): Tra cứu quyền thực tế của Người dùng hoặc Vai trò trên từng Item cụ thể kèm giải thích nguồn gốc quy tắc.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/security/users" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-users"></i>
+          <span>User Manager</span>
+        </a>
+        <a href="/admin/security/roles" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-shield-lock"></i>
+          <span>Role Manager</span>
+        </a>
+        <a href="/admin/content-editor" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-folder"></i>
+          <span>Content Editor</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inspector Controls Card -->
+  <div class="card border border-slate-200 dark:border-slate-800 shadow-2xs rounded-xl mb-4 bg-white dark:bg-slate-900">
+    <div class="card-body p-4">
+      <div class="row g-3">
+        <!-- Select Principal Type & Target -->
+        <div class="col-md-5">
+          <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-300">
+            1. Chọn Đối tượng kiểm tra (Principal)
+          </label>
+          <div class="input-group">
+            <select class="form-select form-select-sm text-xs rounded-l-lg" id="selectPrincipalType" style="max-width: 130px;">
+              <option value="user" selected>Người dùng (User)</option>
+              <option value="role">Vai trò (Role)</option>
+            </select>
+            <select class="form-select form-select-sm text-xs rounded-r-lg" id="selectPrincipalId">
+              <optgroup label="Tài khoản Người dùng" id="groupUsers">
+                <% users.forEach(u => { %>
+                  <option value="<%= u._id %>"><%= u.username %> (<%= u.fullName || u.displayName || u.username %>)</option>
+                <% }) %>
+              </optgroup>
+              <optgroup label="Vai trò Hệ thống" id="groupRoles" class="d-none">
+                <% roles.forEach(r => { %>
+                  <option value="<%= r._id %>"><%= r.name %> (<%= r.domain %>)</option>
+                <% }) %>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <!-- Select Item -->
+        <div class="col-md-5">
+          <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-300">
+            2. Mục nội dung cần kiểm tra (Item Path hoặc ID)
+          </label>
+          <div class="input-group">
+            <input type="text" class="form-control form-control-sm text-xs" id="inputTargetItem" placeholder="Nhập ID hoặc đường dẫn, ví dụ: /sitecore/content/home" value="/sitecore/content/home">
+            <button class="btn btn-sm btn-outline-secondary text-xs" type="button" id="btnBrowseItem">
+              <i class="ti ti-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Inspect -->
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="button" class="btn btn-primary bg-sc-red hover:bg-sc-red-hover active:bg-red-800 border-none w-100 text-xs font-semibold py-1.5 rounded-lg d-flex align-items-center justify-content-center gap-1.5" id="btnInspectAccess">
+            <i class="ti ti-scan"></i>
+            <span>Kiểm tra Quyền</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Item Badges -->
+      <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 d-flex flex-wrap align-items-center gap-2">
+        <span class="text-[11px] font-semibold text-slate-400 text-uppercase">Mục gợi ý nhanh:</span>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore">/sitecore</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/content">/sitecore/content</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/content/home">/sitecore/content/home</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/layout">/sitecore/layout</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/templates">/sitecore/templates</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/media library">/sitecore/media library</button>
+        <button type="button" class="btn btn-xs btn-ghost-secondary quick-path-btn text-[11px] py-0.5" data-path="/sitecore/system">/sitecore/system</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resolution Explanation Card -->
+  <div class="card border border-slate-200 dark:border-slate-800 shadow-2xs rounded-xl overflow-hidden bg-white dark:bg-slate-900" id="accessResultsCard">
+    <div class="card-header bg-slate-50 dark:bg-slate-800/60 p-3 d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="card-title text-xs font-bold text-slate-900 dark:text-white m-0 d-flex align-items-center gap-2">
+          <i class="ti ti-table text-primary"></i>
+          <span>Bảng phân giải quyền hiệu lực (Effective Rights Matrix)</span>
+        </h4>
+        <span class="text-slate-400 text-[11px]" id="resultContextSubtitle">Đang chờ lựa chọn đối tượng...</span>
+      </div>
+      <div id="resultSummaryBadge"></div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table text-xs">
+        <thead class="bg-slate-50/50 dark:bg-slate-800/40 text-slate-500 uppercase tracking-wider font-semibold text-[11px]">
+          <tr>
+            <th class="w-1">Quyền hạn (Right)</th>
+            <th class="text-center" style="width: 140px;">Kết quả Hiệu lực</th>
+            <th class="text-center" style="width: 140px;">Nguồn gốc (Origin)</th>
+            <th>Lý do và Quy tắc quyết định (DEC-042 Resolution Logic)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800" id="accessResultsBody">
+          <tr>
+            <td colspan="4" class="text-center py-5 text-slate-400">
+              <i class="ti ti-search fs-1 d-block mb-2 text-slate-300"></i>
+              Bấm nút <strong>"Kiểm tra Quyền"</strong> ở trên để nạp ma trận phân giải quyền truy cập.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Rule Reference Footer -->
+    <div class="card-footer bg-slate-50/50 dark:bg-slate-900 p-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 space-y-1">
+      <div class="font-semibold text-slate-700 dark:text-slate-300">Thứ tự ưu tiên phân giải quyền (Sitecore XM &bull; DEC-042):</div>
+      <div class="d-flex flex-wrap gap-x-4 gap-y-1">
+        <span>1. <strong>Gần hơn thắng xa hơn:</strong> Quyền trực tiếp trên Item thắng quyền kế thừa từ mục cha.</span>
+        <span>2. <strong>User thắng Role:</strong> Tại cùng một mức cây, quy tắc đặt riêng cho User thắng quy tắc của Role.</span>
+        <span>3. <strong>Deny thắng Allow:</strong> Tại cùng một mức cây giữa các Role, Deny luôn thắng Allow.</span>
+        <span>4. <strong>Mặc định:</strong> Không có quy tắc nào khớp sẽ Deny (ngoại trừ vai trò Administrator luôn Allow tất cả).</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const selectType = document.getElementById('selectPrincipalType');
+  const groupUsers = document.getElementById('groupUsers');
+  const groupRoles = document.getElementById('groupRoles');
+  const selectPrincipalId = document.getElementById('selectPrincipalId');
+  const inputTarget = document.getElementById('inputTargetItem');
+  const btnInspect = document.getElementById('btnInspectAccess');
+  const resultsBody = document.getElementById('accessResultsBody');
+  const subtitle = document.getElementById('resultContextSubtitle');
+
+  // Toggle between User and Role dropdowns
+  selectType.addEventListener('change', () => {
+    const isUser = selectType.value === 'user';
+    if (isUser) {
+      groupUsers.classList.remove('d-none');
+      groupRoles.classList.add('d-none');
+      if (groupUsers.options.length > 0) selectPrincipalId.value = groupUsers.options[0].value;
+    } else {
+      groupUsers.classList.add('d-none');
+      groupRoles.classList.remove('d-none');
+      if (groupRoles.options.length > 0) selectPrincipalId.value = groupRoles.options[0].value;
+    }
+  });
+
+  // Quick path buttons
+  document.querySelectorAll('.quick-path-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      inputTarget.value = btn.getAttribute('data-path');
+      btnInspect.click();
+    });
+  });
+
+  // Run inspection
+  btnInspect.addEventListener('click', async () => {
+    const principalType = selectType.value;
+    const principalId = selectPrincipalId.value;
+    const target = inputTarget.value.trim();
+
+    if (!target) {
+      alert('Vui lòng nhập đường dẫn hoặc ID của Item!');
+      return;
+    }
+
+    resultsBody.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center py-4 text-slate-400">
+          <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+          <div>Đang nạp và phân giải quyền theo cấu trúc cây...</div>
+        </td>
+      </tr>
+    `;
+
+    try {
+      // 1. Resolve Item ID if path was given
+      let itemId = target;
+      if (target.startsWith('/')) {
+        const itemRes = await fetch(`/api/items?path=${encodeURIComponent(target)}`);
+        const itemJson = await itemRes.json();
+        if (!itemJson || !itemJson._id) {
+          throw new Error(`Không tìm thấy Item tại đường dẫn "${target}"`);
+        }
+        itemId = itemJson._id;
+      }
+
+      // 2. Fetch Access Explanation
+      const res = await fetch(`/api/security/items/${itemId}/access-explain?principalType=${principalType}&principalId=${principalId}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Lỗi tra cứu quyền');
+
+      const data = json.data;
+      subtitle.textContent = `Item: ${target} (ID: ${itemId}) | Đối tượng: ${selectPrincipalId.options[selectPrincipalId.selectedIndex].text}`;
+
+      const rightsKeys = ['read', 'write', 'create', 'rename', 'delete', 'publish', 'administer'];
+      let html = '';
+
+      rightsKeys.forEach(r => {
+        const itemRule = data[r] || { isAllowed: false, access: 'deny', origin: 'default', reason: 'Không có quy tắc áp dụng (Mặc định Deny).' };
+        const isAllowed = itemRule.isAllowed;
+
+        const badgeClass = isAllowed
+          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+          : 'bg-red-50 text-red-700 border border-red-200';
+        const badgeIcon = isAllowed ? 'ti-check' : 'ti-x';
+        const badgeText = isAllowed ? 'CHO PHÉP (Allow)' : 'TỪ CHỐI (Deny)';
+
+        let originBadge = '';
+        if (itemRule.origin === 'administrator') {
+          originBadge = '<span class="badge bg-purple-50 text-purple-700 border border-purple-200 text-[10px]">Administrator Bypass</span>';
+        } else if (itemRule.origin === 'explicit') {
+          originBadge = '<span class="badge bg-blue-50 text-blue-700 border border-blue-200 text-[10px]">Trực tiếp (This Item)</span>';
+        } else if (itemRule.origin === 'inherited') {
+          originBadge = `<span class="badge bg-amber-50 text-amber-700 border border-amber-200 text-[10px]">Kế thừa (Level ${itemRule.level || 1})</span>`;
+        } else {
+          originBadge = '<span class="badge bg-slate-100 text-slate-600 text-[10px]">Mặc định hệ thống</span>';
+        }
+
+        html += `
+          <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+            <td class="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
+              <i class="ti ti-shield me-1 text-slate-400"></i>
+              ${r}
+            </td>
+            <td class="text-center">
+              <span class="badge ${badgeClass} text-[11px] py-1 px-2.5 font-bold d-inline-flex align-items-center gap-1">
+                <i class="ti ${badgeIcon}"></i>
+                <span>${badgeText}</span>
+              </span>
+            </td>
+            <td class="text-center">${originBadge}</td>
+            <td class="text-slate-600 dark:text-slate-300">
+              <div class="d-flex align-items-start gap-1.5">
+                <i class="ti ti-info-circle text-slate-400 mt-0.5"></i>
+                <span>${itemRule.reason || '-'}</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      resultsBody.innerHTML = html;
+    } catch (err) {
+      resultsBody.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center py-4 text-red-500">
+            <i class="ti ti-alert-triangle fs-1 d-block mb-1"></i>
+            ${err.message}
+          </td>
+        </tr>
+      `;
+    }
+  });
+
+  // Auto-run first inspection on load
+  btnInspect.click();
+});
+</script>
+

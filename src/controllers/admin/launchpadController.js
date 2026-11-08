@@ -89,8 +89,8 @@ const defaultFallbackApps = [
     icon: 'ti ti-users',
     iconBg: 'purple',
     group: 'Access Management',
-    url: '#',
-    isStub: true,
+    url: '/admin/security/users',
+    isStub: false,
   },
   {
     name: 'Role Manager',
@@ -98,8 +98,17 @@ const defaultFallbackApps = [
     icon: 'ti ti-shield-lock',
     iconBg: 'purple',
     group: 'Access Management',
-    url: '#',
-    isStub: true,
+    url: '/admin/security/roles',
+    isStub: false,
+  },
+  {
+    name: 'Security Editor',
+    description: 'Assign item-level access rights and permissions',
+    icon: 'ti ti-lock',
+    iconBg: 'purple',
+    group: 'Access Management',
+    url: '/admin/security/security-editor',
+    isStub: false,
   },
   {
     name: 'Access Viewer',
@@ -107,8 +116,8 @@ const defaultFallbackApps = [
     icon: 'ti ti-lock-access',
     iconBg: 'purple',
     group: 'Access Management',
-    url: '#',
-    isStub: true,
+    url: '/admin/security/access-viewer',
+    isStub: false,
   },
   {
     name: 'Databases',
@@ -176,17 +185,40 @@ const getLaunchpad = async (req, res) => {
 
     // Normalize icons to Tabler class and resolve operational apps
     const normalizedApps = visibleApps.map((app) => {
-      const isMediaLib = app.name === 'Media Library';
-      const isWorkbox = app.name === 'Workbox';
-      const isDatabases = app.name === 'Databases';
+      let resolvedUrl = app.url;
+      let resolvedStub = Boolean(app.isStub);
+
+      if (app.name === 'Media Library') {
+        resolvedUrl = '/admin/media-library';
+        resolvedStub = false;
+      } else if (app.name === 'Workbox') {
+        resolvedUrl = '/admin/workbox';
+        resolvedStub = false;
+      } else if (app.name === 'Databases') {
+        resolvedUrl = '/admin/databases';
+        resolvedStub = false;
+      } else if (app.name === 'User Manager') {
+        resolvedUrl = '/admin/security/users';
+        resolvedStub = false;
+      } else if (app.name === 'Role Manager') {
+        resolvedUrl = '/admin/security/roles';
+        resolvedStub = false;
+      } else if (app.name === 'Security Editor') {
+        resolvedUrl = '/admin/security/security-editor';
+        resolvedStub = false;
+      } else if (app.name === 'Access Viewer') {
+        resolvedUrl = '/admin/security/access-viewer';
+        resolvedStub = false;
+      }
+
       return {
         name: app.name,
         description: app.description,
         icon: mapToTablerIcon(app.icon),
         iconBg: app.iconBg || 'blue',
         group: app.group || 'Content Editing',
-        url: isMediaLib ? '/admin/media-library' : (isWorkbox ? '/admin/workbox' : (isDatabases ? '/admin/databases' : app.url)),
-        isStub: isMediaLib || isWorkbox || isDatabases ? false : Boolean(app.isStub),
+        url: resolvedUrl,
+        isStub: resolvedStub,
       };
     });
 

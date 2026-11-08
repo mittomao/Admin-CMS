@@ -11,7 +11,7 @@ const publishManagerController = {
    */
   async renderManager(req, res, next) {
     try {
-      if (!itemService.canPerform(req.user, null, 'publish:manage')) {
+      if (!(await itemService.canPerform(req.user, null, 'publish:manage'))) {
         return res.status(403).render('errors/403', {
           title: '403 - Forbidden',
           message: 'Bạn không có quyền truy cập trang Quản lý Xuất bản (cần quyền publish:manage).',
@@ -58,13 +58,13 @@ const publishManagerController = {
     try {
       const { mode, rootItemId, includeSubitems, includeRelated, languages } = req.body;
 
-      if (mode === 'Site') {
-        if (!itemService.canPerform(req.user, null, 'publish:manage')) {
-          return res.status(403).json({ success: false, message: 'Yêu cầu quyền publish:manage để xuất bản toàn bộ Site.' });
+      if (mode === 'Site' || mode === 'Republish') {
+        if (!(await itemService.canPerform(req.user, null, 'publish:manage'))) {
+          return res.status(403).json({ success: false, message: 'Yêu cầu quyền publish:manage để xuất bản toàn bộ Site hoặc Republish.' });
         }
       } else {
-        if (!itemService.canPerform(req.user, null, 'item:publish')) {
-          return res.status(403).json({ success: false, message: 'Bạn không có quyền item:publish.' });
+        if (!(await itemService.canPerform(req.user, rootItemId, 'item:publish'))) {
+          return res.status(403).json({ success: false, message: 'Bạn không có quyền item:publish trên mục này.' });
         }
       }
 

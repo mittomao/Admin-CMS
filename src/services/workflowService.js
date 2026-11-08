@@ -8,6 +8,22 @@ const eventBus = require('../utils/eventBus');
 const { NotFoundError, ValidationError, ConflictError, ForbiddenError } = require('../utils/errors');
 const logger = require('../utils/logger');
 
+/**
+ * Helper to safely get version object from either Mongoose document or lean plain object
+ */
+function getItemVersion(item, langCode = 'vi', versionNumber = 1) {
+  if (!item) return null;
+  if (typeof item.getVersion === 'function') {
+    return item.getVersion(langCode, versionNumber);
+  }
+  const code = (langCode || 'vi').toLowerCase().trim();
+  const vNum = parseInt(versionNumber, 10) || 1;
+  const languages = Array.isArray(item.languages) ? item.languages : [];
+  const langEntry = languages.find((l) => (l.code || '').toLowerCase() === code);
+  if (!langEntry || !Array.isArray(langEntry.versions)) return null;
+  return langEntry.versions.find((v) => Number(v.version) === vNum) || null;
+}
+
 class WorkflowService {
   constructor() {
     this.actionRegistry = new Map();
@@ -42,7 +58,7 @@ class WorkflowService {
     // 2. validate action
     this.registerAction('validate', async ({ item, lang, version }) => {
       logger.info(`[Workflow Action] Validating item ${item._id} (${lang} v${version})`);
-      const ver = item.getVersion ? item.getVersion(lang, version) : null;
+      const ver = getItemVersion(item, lang, version);
 
       // Check required fields based on template
       const effectiveTemplate = await templateService.resolveEffectiveTemplate(item, lang, version);
@@ -283,7 +299,7 @@ class WorkflowService {
       return null; // Item does not participate in workflow
     }
 
-    const ver = item.getVersion ? item.getVersion(lang, version) : null;
+    const ver = getItemVersion(item, lang, version);
     if (!ver) {
       // If version not created yet, default to initial state
       const initState = workflow.states.find((s) => s.isInitial) || workflow.states[0];
@@ -341,7 +357,7 @@ class WorkflowService {
     for (const cmd of stateInfo.state.commands) {
       const actionName = `workflow:execute:${cmd.name}`;
       // Check authorization via canPerform passing item
-      const isAllowed = user ? itemService.canPerform(user, item, actionName) : false;
+      const isAllowed = user ? await itemService.canPerform(user, item, actionName) : false;
       if (isAllowed) {
         availableCommands.push({
           id: cmd._id.toString(),
@@ -404,7 +420,7 @@ class WorkflowService {
 
     // 4. Permission Check via canPerform (DEC-039)
     const itemService = require('./itemService');
-    const isAllowed = itemService.canPerform(user, item, `workflow:execute:${cmd.name}`);
+    const isAllowed = await itemService.canPerform(user, item, `workflow:execute:${cmd.name}`);
     if (!isAllowed) {
       throw new ForbiddenError(`Bạn không có quyền thực hiện lệnh "${cmd.displayName || cmd.name}".`);
     }
@@ -525,14 +541,19 @@ class WorkflowService {
    * Reset workflow state back to initial state when an approved/final item is edited
    * (Per DEC-039 / Phase 8 rules: Web preserves previously published version until re-approved)
    */
-  async handleItemEdited(item, lang = 'vi', version = 1, user = null) {
+  async handleItemEdited(itemOrDoc, lang = 'vi', version = 1, user = null) {
+    let item = itemOrDoc;
+    if (item && !item.save && item._id) {
+      item = await Item.findById(item._id);
+    }
+    if (!item) return;
     const stateInfo = await this.getState(item, lang, version);
     if (!stateInfo || !stateInfo.state) return;
 
     if (stateInfo.isFinal) {
       const initState = stateInfo.workflow.states.find((s) => s.isInitial) || stateInfo.workflow.states[0];
       if (initState && initState._id.toString() !== stateInfo.state._id.toString()) {
-        const ver = item.getVersion ? item.getVersion(lang, version) : null;
+        const ver = getItemVersion(item, lang, version);
         if (ver) {
           ver.workflowState = initState._id;
           await item.save();

@@ -10,6 +10,8 @@ const Workflow = require('./Workflow');
 const WorkflowHistory = require('./WorkflowHistory');
 const PublishHistory = require('./PublishHistory');
 const PublishJob = require('./PublishJob');
+const AccessControl = require('./AccessControl');
+const Domain = require('./Domain');
 
 module.exports = {
   Role,
@@ -24,4 +26,6 @@ module.exports = {
   WorkflowHistory,
   PublishHistory,
   PublishJob,
+  AccessControl,
+  Domain,
 };

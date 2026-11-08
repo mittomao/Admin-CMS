@@ -119,7 +119,7 @@ router.post('/:id/unpublish', csrfMiddleware.verifyToken, async (req, res, next)
   try {
     const { id } = req.params;
     const item = await itemService.getById(id);
-    if (!itemService.canPerform(req.user, item, 'item:unpublish')) {
+    if (!(await itemService.canPerform(req.user, item, 'item:unpublish'))) {
       return res.status(403).json({ success: false, message: 'Bạn không có quyền gỡ bỏ item khỏi Web (item:unpublish).' });
     }
     const result = await publishService.unpublishItem(id, {
