@@ -103,15 +103,24 @@
 
           <div>
             <label class="form-label text-xs font-semibold text-slate-700">Ngôn ngữ Xuất bản</label>
-            <div class="space-y-1.5 text-xs">
-              <div class="form-check">
-                <input class="form-check-input pub-lang-check" type="checkbox" value="vi" id="pubLangVi" checked />
-                <label class="form-check-label" for="pubLangVi">Tiếng Việt (vi)</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input pub-lang-check" type="checkbox" value="en" id="pubLangEn" />
-                <label class="form-check-label" for="pubLangEn">English (en)</label>
-              </div>
+            <div class="space-y-1.5 text-xs" id="pubModalLanguagesList">
+              <% if (typeof languages !== 'undefined' && Array.isArray(languages) && languages.length > 0) { %>
+                <% languages.forEach((l, idx) => { %>
+                  <div class="form-check">
+                    <input class="form-check-input pub-lang-check" type="checkbox" value="<%= l.code %>" id="pubLang_<%= l.code %>" <%= l.isDefault || idx === 0 ? 'checked' : '' %> />
+                    <label class="form-check-label" for="pubLang_<%= l.code %>"><%= l.displayName || l.name %> (<%= l.code %>)</label>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="form-check">
+                  <input class="form-check-input pub-lang-check" type="checkbox" value="vi" id="pubLangVi" checked />
+                  <label class="form-check-label" for="pubLangVi">Tiếng Việt (vi)</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input pub-lang-check" type="checkbox" value="en" id="pubLangEn" />
+                  <label class="form-check-label" for="pubLangEn">English (en)</label>
+                </div>
+              <% } %>
             </div>
           </div>
         </div>

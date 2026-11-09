@@ -181,7 +181,7 @@
           mode,
           includeSubitems: true,
           includeRelated: true,
-          languages: ['vi', 'en']
+          languages: <%- JSON.stringify((typeof languages !== 'undefined' ? languages : []).map(l => l.code)) %>
         })
       });
 

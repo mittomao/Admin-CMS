@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Item = require('../models/Item');
-const Language = require('../models/Language');
+const languageService = require('./languageService');
 const templateService = require('./templateService');
 const { getFieldHandler } = require('../fields');
 const { diffValues } = require('../utils/diffHelper');
@@ -47,7 +47,7 @@ const versionService = {
    * @param {string|ObjectId} itemId
    */
   async listLanguages(itemId) {
-    const activeLanguages = await Language.find({ active: true }).sort({ sortOrder: 1, code: 1 }).lean();
+    const activeLanguages = await languageService.list({ enabledOnly: true });
     let itemLanguagesMap = new Set();
 
     if (itemId && mongoose.Types.ObjectId.isValid(itemId)) {
@@ -148,11 +148,27 @@ const versionService = {
     let versionedFields = versionEntry ? mapToObject(versionEntry.fields) : {};
     let isFallbackContent = false;
 
-    // Fallback logic: Nếu ngôn ngữ yêu cầu chưa có bản dịch (ví dụ vi chưa có, nhưng item có en)
+    // Fallback logic: Nếu ngôn ngữ yêu cầu chưa có bản dịch, tìm theo fallback chain của ngôn ngữ đó (DEC-048)
     if (!langEntry || (!versionEntry && (!langEntry.versions || langEntry.versions.length === 0))) {
-      const fallbackLang =
-        (item.languages || []).find((l) => l.code === 'en' && Array.isArray(l.versions) && l.versions.length > 0) ||
-        (item.languages || []).find((l) => Array.isArray(l.versions) && l.versions.length > 0);
+      let fallbackLang = null;
+      try {
+        const fallbackChain = await languageService.getFallbackChain(code);
+        for (const fbCode of fallbackChain) {
+          const found = (item.languages || []).find(
+            (l) => l.code.toLowerCase() === fbCode.toLowerCase() && Array.isArray(l.versions) && l.versions.length > 0
+          );
+          if (found) {
+            fallbackLang = found;
+            break;
+          }
+        }
+      } catch (_err) {
+        // Fallback gracefully
+      }
+
+      if (!fallbackLang) {
+        fallbackLang = (item.languages || []).find((l) => Array.isArray(l.versions) && l.versions.length > 0);
+      }
 
       if (fallbackLang && Array.isArray(fallbackLang.versions) && fallbackLang.versions.length > 0) {
         const latestFallbackVer = [...fallbackLang.versions].sort((a, b) => b.version - a.version)[0];
@@ -244,15 +260,16 @@ const versionService = {
    * @param {string} langCode
    * @param {Object} options
    */
-  async addVersion(itemId, langCode = 'vi', { copyFromVersion = null, userId = null, note = '' } = {}) {
+  async addVersion(itemId, langCode = null, { copyFromVersion = null, userId = null, note = '' } = {}) {
     if (!itemId || !mongoose.Types.ObjectId.isValid(itemId)) {
       throw new ValidationError('ID Item không hợp lệ.');
     }
-    const code = (langCode || 'vi').toLowerCase().trim();
+    const defaultLang = await languageService.getDefault();
+    const code = (langCode || defaultLang.code).toLowerCase().trim();
 
     // Verify language is active
-    const languageDoc = await Language.findOne({ code, active: true });
-    if (!languageDoc) {
+    const isValidLang = await languageService.isValid(code);
+    if (!isValidLang) {
       throw new ValidationError(`Ngôn ngữ [${code}] không tồn tại hoặc đã bị vô hiệu hóa.`);
     }
 
@@ -362,8 +379,8 @@ const versionService = {
       throw new ValidationError('Mã ngôn ngữ là bắt buộc.');
     }
 
-    const languageDoc = await Language.findOne({ code, active: true });
-    if (!languageDoc) {
+    const isValidLang = await languageService.isValid(code);
+    if (!isValidLang) {
       throw new ValidationError(`Ngôn ngữ [${code}] không tồn tại trong hệ thống.`);
     }
 

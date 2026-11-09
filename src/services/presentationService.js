@@ -4,6 +4,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const Item = require('../models/Item');
 const Template = require('../models/Template');
+const languageService = require('./languageService');
 const logger = require('../utils/logger');
 const branding = require('../config/branding');
 
@@ -312,7 +313,7 @@ const presentationService = {
    * Phân giải Final Presentation cho một Item:
    * Độ ưu tiên: Final Layout (version & lang) > Shared Layout > Standard Presentation (từ Template)
    */
-  async getFinalPresentation(itemOrId, lang = 'vi', version = 1) {
+  async getFinalPresentation(itemOrId, lang = null, version = 1) {
     let item = null;
     if (typeof itemOrId === 'string' || itemOrId instanceof mongoose.Types.ObjectId) {
       item = await Item.findById(itemOrId).lean();
@@ -324,7 +325,8 @@ const presentationService = {
       throw new NotFoundError('Không tìm thấy Item để phân giải Presentation.');
     }
 
-    const currentLang = (lang || 'vi').toLowerCase().trim();
+    const defaultCode = (await languageService.getDefault()).code;
+    const currentLang = (lang || defaultCode).toLowerCase().trim();
     const currentVersion = Number(version) || 1;
 
     // 1. Lấy Standard Presentation từ Template
@@ -499,13 +501,14 @@ const presentationService = {
   /**
    * Get presentation details for Content Editor modal
    */
-  async getPresentationDetails(itemId, lang = 'vi', version = 1) {
+  async getPresentationDetails(itemId, lang = null, version = 1) {
     const item = await Item.findById(itemId).lean();
     if (!item) {
       throw new NotFoundError('Không tìm thấy Item.');
     }
 
-    const currentLang = (lang || 'vi').toLowerCase().trim();
+    const defaultCode = (await languageService.getDefault()).code;
+    const currentLang = (lang || defaultCode).toLowerCase().trim();
     const currentVersion = Number(version) || 1;
 
     const allLayouts = await this.getAllLayouts();
@@ -580,8 +583,9 @@ const presentationService = {
    * Lưu cấu hình Presentation cho Item (Shared hoặc Final)
    */
   async savePresentation(itemId, presentationData, scope = 'shared', options = {}) {
-    const { lang = 'vi', version = 1, expectedUpdatedAt = null, userId = null } = options;
-    const targetLang = (lang || 'vi').toLowerCase().trim();
+    const defaultCode = (await languageService.getDefault()).code;
+    const { lang = defaultCode, version = 1, expectedUpdatedAt = null, userId = null } = options;
+    const targetLang = (lang || defaultCode).toLowerCase().trim();
     const targetVersion = Number(version) || 1;
     const item = await Item.findById(itemId);
     if (!item) {
@@ -716,7 +720,8 @@ const presentationService = {
    * Reset Presentation về Standard Presentation của Template
    */
   async resetToStandard(itemId, scope = 'final', options = {}) {
-    const { lang = 'vi', version = 1, expectedUpdatedAt = null, userId = null } = options;
+    const defaultCode = (await languageService.getDefault()).code;
+    const { lang = defaultCode, version = 1, expectedUpdatedAt = null, userId = null } = options;
     const item = await Item.findById(itemId);
     if (!item) {
       throw new NotFoundError('Không tìm thấy Item để reset Presentation.');
@@ -731,7 +736,7 @@ const presentationService = {
       }
     }
 
-    const targetLang = (lang || 'vi').toLowerCase().trim();
+    const targetLang = (lang || defaultCode).toLowerCase().trim();
     const targetVersion = Number(version) || 1;
 
     if (scope === 'final' || scope === 'all') {

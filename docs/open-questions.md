@@ -1,3 +1,81 @@
+# CÂU HỎI KỸ THUẬT GIAI ĐOẠN L1 (LANGUAGE MANAGER - QUẢN LÝ NGÔN NGỮ ĐỘNG)
+
+Tài liệu này lưu trữ danh sách 8 câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho **Giai đoạn L1: Quản lý Ngôn ngữ Động (Language Manager) Thay thế Hard-code**, kèm theo đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Language là Item dưới `/root/system/Languages` hay collection `settings`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-048: Kiến Trúc Quản Lý Ngôn Ngữ Động](decisions/DEC-048-dynamic-language-manager-item-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Language là Item phân cấp dưới `/root/system/Languages`**, sử dụng System Templates `Language` và `Languages Folder`. Được xuất bản (publish) sang Web database như các item hệ thống khác.
+- **Lựa chọn B:** Lưu dưới dạng cấu hình mảng trong collection `settings` (tương tự `basicAuth`).
+- **Lý do đề xuất:** Tuân thủ triệt để triết lý *"Mọi thứ là Item"*, tận dụng toàn bộ hạ tầng sẵn có của Treecraft: ACL, phả hệ cây, xuất bản Master/Web, audit log, và cho phép biên tập viên mở xem trong Content Editor.
+
+---
+
+### 2. Mã ngôn ngữ `code` theo chuẩn BCP 47 (`vi`, `en`, `fr-FR`) và có tính chất bất biến?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-048: Kiến Trúc Quản Lý Ngôn Ngữ Động](decisions/DEC-048-dynamic-language-manager-item-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Mã `code` phải tuân theo định dạng BCP 47 rút gọn (regex `^[a-zA-Z]{2,3}(-[a-zA-Z0-9]+)?$`, chuẩn hoá chữ hoa/thường như `fr-FR`) và **bất biến tuyệt đối sau khi tạo**.
+- **Lựa chọn B:** Cho phép đổi `code` và chạy background job quét toàn bộ database để cập nhật lại tất cả `item.languages[].code`.
+- **Lý do đề xuất:** `code` là khóa định danh dùng trong cấu trúc dữ liệu `Item.languages`, `unversionedFields`, `presentation.final` và URL. Việc cho phép sửa mã sẽ tiềm ẩn rủi ro phá vỡ tính toàn vẹn dữ liệu cực lớn. Nếu muốn đổi mã, người dùng tạo ngôn ngữ mới và nhập lại nội dung.
+
+---
+
+### 3. Ngôn ngữ mặc định hệ thống (Site Default Language) lưu ở đâu?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-048: Kiến Trúc Quản Lý Ngôn Ngữ Động](decisions/DEC-048-dynamic-language-manager-item-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Lưu tại cấu hình site trong collection `settings`** (key `siteConfig.defaultLanguage`), bắt buộc phải trỏ tới một Language item đang có trạng thái `enabled = true`.
+- **Lựa chọn B:** Lưu cờ `isDefault: true` trực tiếp trên Language Item.
+- **Lý do đề xuất:** Ngôn ngữ mặc định là thuộc tính cấp toàn site, không phải thuộc tính nội tại của từng item ngôn ngữ riêng lẻ. Lưu tại `settings` tránh rủi ro nhiều item cùng nhận `isDefault: true` do lỗi bất đồng bộ.
+
+---
+
+### 4. Khi ngôn ngữ bị tắt (`enabled = false`), biên tập viên trong Admin có được xem nội dung cũ không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-048: Kiến Trúc Quản Lý Ngôn Ngữ Động](decisions/DEC-048-dynamic-language-manager-item-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có, nhưng ở chế độ chỉ đọc (Read-only)**. Ẩn khỏi dropdown tạo phiên bản mới và ẩn hoàn toàn khỏi website công khai (URL trả về 404), nhưng bảo toàn 100% dữ liệu để biên tập viên vẫn có thể tra cứu khi cần.
+- **Lựa chọn B:** Ẩn hoàn toàn cả trong Admin khiến biên tập viên không xem được nội dung cũ.
+- **Lý do đề xuất:** Tránh mất mát dữ liệu và phục vụ nhu cầu tham chiếu lịch sử nội dung trước khi quyết định bật lại.
+
+---
+
+### 5. Có cho phép xóa vĩnh viễn ngôn ngữ khi còn dữ liệu liên kết không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-048: Kiến Trúc Quản Lý Ngôn Ngữ Động](decisions/DEC-048-dynamic-language-manager-item-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Không cho xóa.** Chỉ cho phép xóa khi `getUsage(code) === 0` và không phải ngôn ngữ mặc định. Nếu còn dữ liệu, hệ thống chặn lại, hiển thị số liệu chi tiết và gợi ý chuyển sang vô hiệu hóa (`enabled = false`).
+- **Lựa chọn B:** Cho phép xóa kèm tùy chọn xóa thác đổ (cascade delete) toàn bộ các version của ngôn ngữ đó.
+- **Lý do đề xuất:** Tuân thủ nguyên tắc Safe Deletion tương tự DEC-018 và DEC-044, chống mất mát dữ liệu nghiêm trọng ngoài ý muốn của người dùng.
+
+---
+
+### 6. Có cần thuộc tính `fallbackLanguage` cấu hình cho từng ngôn ngữ ngay từ bản đầu không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-048: Kiến Trúc Quản Lý Ngôn Ngữ Động](decisions/DEC-048-dynamic-language-manager-item-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có, nhưng là tùy chọn (optional).** Mỗi ngôn ngữ có thể chỉ định `fallbackLanguage` (ví dụ `ja` fallback sang `en`, `en` fallback sang `vi`). Hệ thống có thuật toán phát hiện chu trình (cycle detection) và giới hạn tối đa 5 bước fallback.
+- **Lựa chọn B:** Luôn luôn fallback cứng về ngôn ngữ mặc định của site.
+- **Lý do đề xuất:** Linh hoạt cho các tổ chức đa quốc gia khi các chi nhánh khu vực muốn fallback theo ngôn ngữ bản địa lân cận trước khi về ngôn ngữ chính.
+
+---
+
+### 7. Tiền tố URL (`urlPrefix`) trên Website công khai có cho phép tùy biến khác mã `code` không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-048: Kiến Trúc Quản Lý Ngôn Ngữ Động](decisions/DEC-048-dynamic-language-manager-item-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có, nhưng mặc định bằng `code`.** Cho phép quản trị viên tùy biến trường `urlPrefix` (ví dụ code `en-US` có thể đặt `urlPrefix: 'us'` hoặc `en`). Ngôn ngữ mặc định của site không áp dụng tiền tố URL.
+- **Lựa chọn B:** Bắt buộc `urlPrefix` luôn bằng `code`.
+- **Lý do đề xuất:** Tối ưu hóa SEO và trải nghiệm URL người dùng cuối cho các thị trường địa phương.
+
+---
+
+### 8. Role nào được phép quản trị ngôn ngữ (thêm, sửa, đổi mặc định, xóa)?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-048: Kiến Trúc Quản Lý Ngôn Ngữ Động](decisions/DEC-048-dynamic-language-manager-item-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Chỉ Administrator** (hoặc user có quyền `language:manage` được cấp thông qua ACL/Role). Các user khác chỉ có quyền `language:read` để hiển thị danh sách trên các dropdown.
+- **Lựa chọn B:** Cả Administrator và Content Editor / Publisher đều được cấu hình ngôn ngữ.
+- **Lý do đề xuất:** Cấu hình ngôn ngữ là thiết lập hệ thống quan trọng ảnh hưởng trực tiếp tới cấu trúc URL công khai, sitemap và toàn bộ cơ sở dữ liệu. Cần giới hạn nghiêm ngặt ở quyền quản trị cấp cao.
+
+---
+
 # CÂU HỎI KỸ THUẬT GIAI ĐOẠN B1 (BASIC AUTHENTICATION)
 
 Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật cần xác nhận cho **Giai đoạn B1: Basic Auth (Bảo vệ Site Công Khai)**, kèm theo đề xuất mặc định của Tech Lead.

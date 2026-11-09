@@ -3,6 +3,7 @@ const aclService = require('../../services/aclService');
 const templateService = require('../../services/templateService');
 const versionService = require('../../services/versionService');
 const workflowService = require('../../services/workflowService');
+const languageService = require('../../services/languageService');
 const Item = require('../../models/Item');
 const PublishedItem = require('../../models/PublishedItem');
 const Template = require('../../models/Template');
@@ -742,14 +743,16 @@ const contentEditorController = {
   async addVersion(req, res) {
     try {
       const { id } = req.params;
-      const { lang = 'vi', copyFromVersion = null, note = '' } = req.body;
+      const defaultLang = await languageService.getDefault();
+      const targetLang = req.body.lang || defaultLang.code;
+      const { copyFromVersion = null, note = '' } = req.body;
       const user = req.session?.user;
 
       if (!(await itemService.canPerform(user, id, 'version:create'))) {
         return res.status(403).json({ success: false, message: 'Bạn không có quyền tạo phiên bản mới.' });
       }
 
-      const result = await versionService.addVersion(id, lang, {
+      const result = await versionService.addVersion(id, targetLang, {
         copyFromVersion,
         userId: user?.id,
         note,
@@ -758,7 +761,7 @@ const contentEditorController = {
       eventBus.emit('version.added', {
         itemId: id,
         itemPath: result.path || '',
-        lang,
+        lang: targetLang,
         version: result.version,
         user,
         userId: user?.id,

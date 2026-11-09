@@ -36,6 +36,18 @@ class RenderCache {
       this.clear();
       logger.info('[RenderCache] Cleared all cache entries after publish job finished.');
     });
+
+    // Invalidate site render cache when languages or default language change (GĐ L1 / DEC-048)
+    const clearOnLangEvent = (eventName) => {
+      this.clear();
+      logger.info(`[RenderCache] Cleared all cache entries after language event: ${eventName}.`);
+    };
+
+    eventBus.on('language.default.changed', () => clearOnLangEvent('language.default.changed'));
+    eventBus.on('language.enabled', () => clearOnLangEvent('language.enabled'));
+    eventBus.on('language.disabled', () => clearOnLangEvent('language.disabled'));
+    eventBus.on('language.deleted', () => clearOnLangEvent('language.deleted'));
+    eventBus.on('language.updated', () => clearOnLangEvent('language.updated'));
   }
 
   /**

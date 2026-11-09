@@ -11,6 +11,7 @@ const { AppError, NotFoundError } = require('../utils/errors');
 const logger = require('../utils/logger');
 const env = require('../config/env');
 const branding = require('../config/branding');
+const languageService = require('./languageService');
 
 const VIEWS_SITE_DIR = path.resolve(__dirname, '../views/site');
 
@@ -65,12 +66,13 @@ class SiteRenderer {
    * @param {object} options { isPreview, req, res }
    * @returns {Promise<{ html: string, etag: string, fromCache?: boolean }>}
    */
-  async render(item, lang = 'vi', options = {}) {
+  async render(item, lang = null, options = {}) {
     if (!item) {
       throw new AppError('Item is required for rendering', 400);
     }
 
-    const code = (lang || 'vi').toLowerCase();
+    const defaultLang = await languageService.getDefault('web');
+    const code = (lang || defaultLang.code).toLowerCase();
     const isPreview = Boolean(options.isPreview);
 
     // 1. In-Memory Cache Check (Only for public requests)
@@ -150,7 +152,10 @@ class SiteRenderer {
         startItem: branding.PATHS.START_ITEM,
         host: options.req?.headers?.host || 'localhost:4000',
       },
-      lang: code,
+      lang: (await languageService.getByCode(code, { store: isPreview ? 'master' : 'web' }))?.code || code,
+      direction: (await languageService.getByCode(code, { store: isPreview ? 'master' : 'web' }))?.direction || 'ltr',
+      langInfo: (await languageService.getByCode(code, { store: isPreview ? 'master' : 'web' })) || { code, direction: 'ltr', displayName: code },
+      availableLanguages: await languageService.list({ enabledOnly: true, store: isPreview ? 'master' : 'web' }),
       item,
       fields: pageFields,
       isPreview,

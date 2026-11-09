@@ -231,10 +231,16 @@
           <!-- Alt Text (Multilingual) -->
           <div class="form-group border-t border-slate-100 pt-2">
             <div class="d-flex justify-content-between align-items-center flex items-center justify-between mb-1">
-              <label class="form-label-sm font-semibold text-slate-600 m-0" for="inspectorAlt">Alt Text (<span class="js-alt-lang-badge uppercase font-bold text-primary">en</span>)</label>
+              <label class="form-label-sm font-semibold text-slate-600 m-0" for="inspectorAlt">Alt Text (<span class="js-alt-lang-badge uppercase font-bold text-primary">vi</span>)</label>
               <select class="form-select-sm js-inspector-alt-lang text-xs rounded border-slate-200 py-0.5" style="width: auto;">
-                <option value="en">EN</option>
-                <option value="vi">VI</option>
+                <% if (typeof languages !== 'undefined' && Array.isArray(languages) && languages.length > 0) { %>
+                  <% languages.forEach(l => { %>
+                    <option value="<%= l.code %>"><%= l.code.toUpperCase() %></option>
+                  <% }) %>
+                <% } else { %>
+                  <option value="vi">VI</option>
+                  <option value="en">EN</option>
+                <% } %>
               </select>
             </div>
             <input type="text" class="form-control form-control-sm js-inspector-alt w-full rounded-md border-slate-300 py-1 text-xs focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150" id="inspectorAlt" placeholder="Image description..." />

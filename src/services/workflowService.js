@@ -4,6 +4,7 @@ const WorkflowHistory = require('../models/WorkflowHistory');
 const Item = require('../models/Item');
 const Template = require('../models/Template');
 const templateService = require('./templateService');
+const languageService = require('./languageService');
 const eventBus = require('../utils/eventBus');
 const { NotFoundError, ValidationError, ConflictError, ForbiddenError } = require('../utils/errors');
 const logger = require('../utils/logger');
@@ -11,12 +12,13 @@ const logger = require('../utils/logger');
 /**
  * Helper to safely get version object from either Mongoose document or lean plain object
  */
-function getItemVersion(item, langCode = 'vi', versionNumber = 1) {
+function getItemVersion(item, langCode = null, versionNumber = 1) {
   if (!item) return null;
+  const code = (langCode || '').toLowerCase().trim();
+  if (!code) return null;
   if (typeof item.getVersion === 'function') {
-    return item.getVersion(langCode, versionNumber);
+    return item.getVersion(code, versionNumber);
   }
-  const code = (langCode || 'vi').toLowerCase().trim();
   const vNum = parseInt(versionNumber, 10) || 1;
   const languages = Array.isArray(item.languages) ? item.languages : [];
   const langEntry = languages.find((l) => (l.code || '').toLowerCase() === code);
@@ -287,19 +289,22 @@ class WorkflowService {
    * @param {number} version
    * @returns {Promise<{ workflow: object, state: object, isInitial: boolean, isFinal: boolean }|null>}
    */
-  async getState(itemOrId, lang = 'vi', version = 1) {
+  async getState(itemOrId, lang = null, version = 1) {
     let item = itemOrId;
     if (typeof item === 'string' || item instanceof mongoose.Types.ObjectId) {
       item = await Item.findById(item);
     }
     if (!item) return null;
 
+    const defaultLang = await languageService.getDefault();
+    const targetLang = lang || defaultLang.code;
+
     const workflow = await this.resolveWorkflowForItem(item);
     if (!workflow) {
       return null; // Item does not participate in workflow
     }
 
-    const ver = getItemVersion(item, lang, version);
+    const ver = getItemVersion(item, targetLang, version);
     if (!ver) {
       // If version not created yet, default to initial state
       const initState = workflow.states.find((s) => s.isInitial) || workflow.states[0];
@@ -339,14 +344,17 @@ class WorkflowService {
    * @param {User|object} user
    * @returns {Promise<Array<object>>}
    */
-  async getCommands(itemOrId, lang = 'vi', version = 1, user = null) {
+  async getCommands(itemOrId, lang = null, version = 1, user = null) {
     let item = itemOrId;
     if (typeof item === 'string' || item instanceof mongoose.Types.ObjectId) {
       item = await Item.findById(item);
     }
     if (!item) return [];
 
-    const stateInfo = await this.getState(item, lang, version);
+    const defaultLang = await languageService.getDefault();
+    const targetLang = lang || defaultLang.code;
+
+    const stateInfo = await this.getState(item, targetLang, version);
     if (!stateInfo || !stateInfo.state || !Array.isArray(stateInfo.state.commands)) {
       return [];
     }
@@ -386,12 +394,15 @@ class WorkflowService {
    * @param {Date|string} expectedUpdatedAt
    * @returns {Promise<object>}
    */
-  async execute(itemId, lang = 'vi', version = 1, commandIdOrName, comment = '', user = null, expectedUpdatedAt = null) {
+  async execute(itemId, lang = null, version = 1, commandIdOrName, comment = '', user = null, expectedUpdatedAt = null) {
     if (!itemId) throw new ValidationError('itemId is required');
     if (!user) throw new ForbiddenError('User is required to execute workflow command');
 
     const item = await Item.findById(itemId);
     if (!item) throw new NotFoundError('Item not found');
+
+    const defaultLang = await languageService.getDefault();
+    const targetLang = lang || defaultLang.code;
 
     // 1. Optimistic Locking check (409 Conflict)
     if (expectedUpdatedAt) {
@@ -403,7 +414,7 @@ class WorkflowService {
     }
 
     // 2. Resolve current workflow state
-    const stateInfo = await this.getState(item, lang, version);
+    const stateInfo = await this.getState(item, targetLang, version);
     if (!stateInfo || !stateInfo.state) {
       throw new ValidationError('Item không thuộc quy trình phê duyệt (Workflow) nào.');
     }
@@ -541,19 +552,23 @@ class WorkflowService {
    * Reset workflow state back to initial state when an approved/final item is edited
    * (Per DEC-039 / Phase 8 rules: Web preserves previously published version until re-approved)
    */
-  async handleItemEdited(itemOrDoc, lang = 'vi', version = 1, user = null) {
+  async handleItemEdited(itemOrDoc, lang = null, version = 1, user = null) {
     let item = itemOrDoc;
     if (item && !item.save && item._id) {
       item = await Item.findById(item._id);
     }
     if (!item) return;
-    const stateInfo = await this.getState(item, lang, version);
+
+    const defaultLang = await languageService.getDefault();
+    const targetLang = lang || defaultLang.code;
+
+    const stateInfo = await this.getState(item, targetLang, version);
     if (!stateInfo || !stateInfo.state) return;
 
     if (stateInfo.isFinal) {
       const initState = stateInfo.workflow.states.find((s) => s.isInitial) || stateInfo.workflow.states[0];
       if (initState && initState._id.toString() !== stateInfo.state._id.toString()) {
-        const ver = getItemVersion(item, lang, version);
+        const ver = getItemVersion(item, targetLang, version);
         if (ver) {
           ver.workflowState = initState._id;
           await item.save();

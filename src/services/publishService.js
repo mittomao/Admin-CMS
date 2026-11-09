@@ -5,6 +5,8 @@ const PublishedItem = require('../models/PublishedItem');
 const PublishHistory = require('../models/PublishHistory');
 const PublishJob = require('../models/PublishJob');
 const workflowService = require('./workflowService');
+const languageService = require('./languageService');
+const branding = require('../config/branding');
 const eventBus = require('../utils/eventBus');
 const logger = require('../utils/logger');
 const { NotFoundError } = require('../utils/errors');
@@ -199,6 +201,20 @@ class PublishService {
       }
     }
 
+    // 3. Language items under /root/system/Languages (DEC-048)
+    try {
+      const langItems = await Item.find({
+        path: { $regex: new RegExp(`^${branding.PATHS.SYSTEM_LANGUAGES}/[^/]+$`, 'i') },
+        deleted: { $ne: true },
+        isDeleted: { $ne: true },
+      }).select('_id').lean();
+      for (const li of langItems) {
+        relatedIds.add(li._id.toString());
+      }
+    } catch (_err) {
+      // Ignore if not present
+    }
+
     if (relatedIds.size === 0) return [];
 
     // Query valid items from Master
@@ -212,7 +228,11 @@ class PublishService {
   /**
    * Publish a single item to items_web
    */
-  async publishSingleItemToWeb(itemDoc, languages = ['vi'], user = null) {
+  async publishSingleItemToWeb(itemDoc, languages = null, user = null) {
+    if (!languages || !languages.length) {
+      const defLang = await languageService.getDefault();
+      languages = [defLang.code];
+    }
     const item = itemDoc.toObject ? itemDoc : await Item.findById(itemDoc._id);
     if (!item || item.deleted || item.isDeleted) {
       // Remove from web if deleted
@@ -334,7 +354,8 @@ class PublishService {
    */
   async publishItem(rootItemId, options = {}) {
     const mode = options.mode || 'Item';
-    const languages = options.languages && options.languages.length > 0 ? options.languages : ['vi'];
+    const defLang = await languageService.getDefault();
+    const languages = options.languages && options.languages.length > 0 ? options.languages : [defLang.code];
     const includeSubitems = options.includeSubitems !== false;
     const includeRelated = options.includeRelated !== false;
     const user = options.user || null;
@@ -544,12 +565,15 @@ class PublishService {
    * Create and queue an asynchronous Publish Job
    */
   async queuePublishJob(params, user = null) {
+    const defLang = await languageService.getDefault();
+    const jobLangs = params.languages && params.languages.length > 0 ? params.languages : [defLang.code];
+
     const job = await PublishJob.create({
       mode: params.mode || 'Item',
       rootItemId: params.rootItemId || null,
       includeSubitems: params.includeSubitems !== false,
       includeRelated: params.includeRelated !== false,
-      languages: params.languages || ['vi'],
+      languages: jobLangs,
       status: 'Pending',
       createdBy: user?._id || null,
     });
@@ -665,8 +689,9 @@ class PublishService {
       isDeleted: { $ne: true },
     }).select('_id');
 
+    const defLang = await languageService.getDefault();
     for (const it of itemsToPublish) {
-      await this.publishSingleItemToWeb(it, ['vi']);
+      await this.publishSingleItemToWeb(it, [defLang.code]);
     }
 
     // Find items whose validTo <= now that are currently published

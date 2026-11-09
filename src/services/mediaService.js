@@ -11,6 +11,7 @@ const { sniffBuffer } = require('../utils/fileSniffer');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
 const branding = require('../config/branding');
+const languageService = require('./languageService');
 
 const ROOT_MEDIA_PATH = branding.PATHS.MEDIA;
 
@@ -57,46 +58,38 @@ class MediaService {
       thumbUrl = shared.thumbnailUrl || item.fileDetails?.thumbnailUrl || directUrl;
     }
 
-    let viAlt = '';
-    let viTitle = '';
-    let viDesc = '';
-    const viVer = item.languages?.find((l) => l.code === 'vi')?.versions?.[0];
-    if (viVer && viVer.fields) {
-      if (viVer.fields instanceof Map) {
-        viAlt = viVer.fields.get('altText') || '';
-        viTitle = viVer.fields.get('title') || '';
-        viDesc = viVer.fields.get('description') || '';
-      } else {
-        viAlt = viVer.fields.altText || '';
-        viTitle = viVer.fields.title || '';
-        viDesc = viVer.fields.description || '';
-      }
-    }
-
-    let enAlt = '';
-    let enTitle = '';
-    let enDesc = '';
-    const enVer = item.languages?.find((l) => l.code === 'en')?.versions?.[0];
-    if (enVer && enVer.fields) {
-      if (enVer.fields instanceof Map) {
-        enAlt = enVer.fields.get('altText') || '';
-        enTitle = enVer.fields.get('title') || '';
-        enDesc = enVer.fields.get('description') || '';
-      } else {
-        enAlt = enVer.fields.altText || '';
-        enTitle = enVer.fields.title || '';
-        enDesc = enVer.fields.description || '';
-      }
-    }
-
     const altMap = new Map();
-    altMap.set('vi', viAlt || item.altText?.vi || '');
-    altMap.set('en', enAlt || item.altText?.en || '');
-    altMap.vi = altMap.get('vi');
-    altMap.en = altMap.get('en');
+    let firstTitle = '';
+    let firstDesc = '';
 
-    const title = viTitle || enTitle || item.title || item.displayName || item.name;
-    const description = viDesc || enDesc || item.description || '';
+    if (Array.isArray(item.languages)) {
+      for (const langObj of item.languages) {
+        const langCode = langObj.code?.toLowerCase();
+        if (!langCode) continue;
+        const ver0 = langObj.versions?.[0];
+        let alt = '';
+        let t = '';
+        let d = '';
+        if (ver0 && ver0.fields) {
+          if (ver0.fields instanceof Map) {
+            alt = ver0.fields.get('altText') || '';
+            t = ver0.fields.get('title') || '';
+            d = ver0.fields.get('description') || '';
+          } else {
+            alt = ver0.fields.altText || '';
+            t = ver0.fields.title || '';
+            d = ver0.fields.description || '';
+          }
+        }
+        altMap.set(langCode, alt || item.altText?.[langCode] || '');
+        altMap[langCode] = altMap.get(langCode);
+        if (!firstTitle && t) firstTitle = t;
+        if (!firstDesc && d) firstDesc = d;
+      }
+    }
+
+    const title = firstTitle || item.title || item.displayName || item.name;
+    const description = firstDesc || item.description || '';
 
     return {
       _id: item._id,
@@ -621,7 +614,7 @@ class MediaService {
         },
         languages: [
           {
-            code: 'vi',
+            code: (await languageService.getDefault()).code,
             unversionedFields: {},
             versions: [
               {
@@ -820,44 +813,56 @@ class MediaService {
 
     item.languages = item.languages || [];
 
-    // Cập nhật tiếng Việt
-    let viLang = item.languages.find((l) => l.code === 'vi');
-    if (!viLang) {
-      item.languages.push({ code: 'vi', unversionedFields: {}, versions: [{ version: 1, fields: new Map(), createdBy: userId }] });
-      viLang = item.languages[item.languages.length - 1];
-    }
-    const viVer = viLang.versions?.[0];
-    if (viVer) {
-      if (!viVer.fields) viVer.fields = new Map();
-      if (viVer.fields instanceof Map) {
-        if (altText?.vi !== undefined) viVer.fields.set('altText', altText.vi);
-        if (title !== undefined) viVer.fields.set('title', title);
-        if (description !== undefined) viVer.fields.set('description', description);
-      } else {
-        if (altText?.vi !== undefined) viVer.fields.altText = altText.vi;
-        if (title !== undefined) viVer.fields.title = title;
-        if (description !== undefined) viVer.fields.description = description;
-      }
-    }
+    // Cập nhật altText đa ngôn ngữ động (GĐ L1 / DEC-048)
+    if (altText && typeof altText === 'object') {
+      for (const [rawLang, altVal] of Object.entries(altText)) {
+        const langCode = rawLang.trim().toLowerCase();
+        let targetLang = item.languages.find((l) => l.code.toLowerCase() === langCode);
+        if (!targetLang) {
+          item.languages.push({
+            code: langCode,
+            unversionedFields: {},
+            versions: [{ version: 1, fields: new Map(), createdBy: userId }],
+          });
+          targetLang = item.languages[item.languages.length - 1];
+        }
 
-    // Cập nhật tiếng Anh
-    if (altText && typeof altText === 'object' && altText.en !== undefined) {
-      let enLang = item.languages.find((l) => l.code === 'en');
-      if (!enLang) {
-        item.languages.push({ code: 'en', unversionedFields: {}, versions: [{ version: 1, fields: new Map(), createdBy: userId }] });
-        enLang = item.languages[item.languages.length - 1];
+        const ver0 = targetLang.versions?.[0];
+        if (ver0) {
+          if (!ver0.fields) ver0.fields = new Map();
+          if (ver0.fields instanceof Map) {
+            if (altVal !== undefined) ver0.fields.set('altText', altVal);
+            if (title !== undefined) ver0.fields.set('title', title);
+            if (description !== undefined) ver0.fields.set('description', description);
+          } else {
+            if (altVal !== undefined) ver0.fields.altText = altVal;
+            if (title !== undefined) ver0.fields.title = title;
+            if (description !== undefined) ver0.fields.description = description;
+          }
+        }
       }
-      const enVer = enLang.versions?.[0];
-      if (enVer) {
-        if (!enVer.fields) enVer.fields = new Map();
-        if (enVer.fields instanceof Map) {
-          enVer.fields.set('altText', altText.en);
-          if (title !== undefined) enVer.fields.set('title', title);
-          if (description !== undefined) enVer.fields.set('description', description);
+    } else {
+      // Nếu không truyền altText theo map, cập nhật ngôn ngữ mặc định
+      const defaultLang = await languageService.getDefault();
+      const defCode = defaultLang.code;
+      let targetLang = item.languages.find((l) => l.code.toLowerCase() === defCode.toLowerCase());
+      if (!targetLang) {
+        item.languages.push({
+          code: defCode,
+          unversionedFields: {},
+          versions: [{ version: 1, fields: new Map(), createdBy: userId }],
+        });
+        targetLang = item.languages[item.languages.length - 1];
+      }
+      const ver0 = targetLang.versions?.[0];
+      if (ver0) {
+        if (!ver0.fields) ver0.fields = new Map();
+        if (ver0.fields instanceof Map) {
+          if (title !== undefined) ver0.fields.set('title', title);
+          if (description !== undefined) ver0.fields.set('description', description);
         } else {
-          enVer.fields.altText = altText.en;
-          if (title !== undefined) enVer.fields.title = title;
-          if (description !== undefined) enVer.fields.description = description;
+          if (title !== undefined) ver0.fields.title = title;
+          if (description !== undefined) ver0.fields.description = description;
         }
       }
     }

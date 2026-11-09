@@ -1,5 +1,6 @@
 const workboxService = require('../../services/workboxService');
 const itemService = require('../../services/itemService');
+const languageService = require('../../services/languageService');
 const logger = require('../../utils/logger');
 
 const workboxController = {
@@ -58,6 +59,7 @@ const workboxController = {
         : { items: [], total: 0, page: 1, limit: 20, totalPages: 1 };
 
       const canBulk = await itemService.canPerform(req.user, null, 'workbox:bulk');
+      const languages = await languageService.list({ enabledOnly: true });
 
       res.render('admin/workbox/index', {
         title: 'Workbox - Phê duyệt Nội dung',
@@ -69,6 +71,7 @@ const workboxController = {
         selectedState,
         selectedWorkflow,
         itemsData,
+        languages,
         query: req.query,
         canBulk,
         csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : ''),

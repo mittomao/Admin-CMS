@@ -86,7 +86,7 @@ router.post('/:id/presentation/reset', csrfMiddleware.verifyToken, presentationC
 router.get('/:id/workflow', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { lang = 'vi', version = 1 } = req.query;
+    const { lang, version = 1 } = req.query;
     const stateInfo = await workflowService.getState(id, lang, parseInt(version, 10));
     const commands = await workflowService.getCommands(id, lang, parseInt(version, 10), req.user);
     res.json({ success: true, data: { stateInfo, commands } });
@@ -98,7 +98,7 @@ router.get('/:id/workflow', async (req, res, next) => {
 router.post('/:id/workflow/execute', csrfMiddleware.verifyToken, async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { lang = 'vi', version = 1, command, comment = '', expectedUpdatedAt } = req.body;
+    const { lang, version = 1, command, comment = '', expectedUpdatedAt } = req.body;
     const result = await workflowService.execute(id, lang, parseInt(version, 10), command, comment, req.user, expectedUpdatedAt);
     res.json({ success: true, data: result });
   } catch (err) {

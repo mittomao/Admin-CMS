@@ -1,0 +1,182 @@
+<!-- Modal Thêm / Chỉnh Sửa Ngôn Ngữ (GĐ L1) -->
+<div class="modal modal-blur fade" id="modalLanguage" tabindex="-1" role="dialog" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow-xl border-0 rounded-2xl overflow-hidden">
+      <div class="modal-header bg-slate-50 dark:bg-slate-800/60 px-4 py-3 border-b border-slate-200/80 dark:border-slate-700">
+        <h5 class="modal-title font-semibold text-slate-800 dark:text-slate-100 d-flex align-items-center gap-2" id="modalLanguageHeading">
+          <i class="ti ti-language text-primary"></i>
+          <span id="modalLanguageTitleText">Thêm Ngôn Ngữ Mới</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="formLanguage" autocomplete="off">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" id="langCsrfToken" />
+        <input type="hidden" id="langIsEdit" value="0" />
+        <input type="hidden" id="langExpectedUpdatedAt" value="" />
+
+        <div class="modal-body p-4 space-y-4">
+          <!-- Preset Chips for Common Languages -->
+          <div id="commonPresetsContainer" class="mb-3">
+            <label class="form-label text-xs font-semibold text-slate-500 mb-1.5">Gợi ý mã ngôn ngữ phổ biến:</label>
+            <div class="d-flex flex-wrap gap-1.5">
+              <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-0.5 text-xs rounded-lg preset-btn" data-code="ja" data-name="Japanese" data-native="日本語" data-dir="ltr">🇯🇵 ja (Nhật)</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-0.5 text-xs rounded-lg preset-btn" data-code="ko" data-name="Korean" data-native="한국어" data-dir="ltr">🇰🇷 ko (Hàn)</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-0.5 text-xs rounded-lg preset-btn" data-code="zh-CN" data-name="Chinese (Simplified)" data-native="简体中文" data-dir="ltr">🇨🇳 zh-CN (Trung)</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-0.5 text-xs rounded-lg preset-btn" data-code="fr-FR" data-name="French" data-native="Français" data-dir="ltr">🇫🇷 fr-FR (Pháp)</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-0.5 text-xs rounded-lg preset-btn" data-code="de-DE" data-name="German" data-native="Deutsch" data-dir="ltr">🇩🇪 de-DE (Đức)</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm px-2 py-0.5 text-xs rounded-lg preset-btn" data-code="ar" data-name="Arabic" data-native="العربية" data-dir="rtl">🇸🇦 ar (Ả Rập - RTL)</button>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <!-- Language Code -->
+            <div class="col-md-6">
+              <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1" for="langCode">
+                Mã Ngôn Ngữ (BCP 47) <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full"
+                id="langCode"
+                name="code"
+                placeholder="vd: ja, ko, fr-FR"
+                required
+              />
+              <div class="form-text text-2xs text-slate-500 mt-1" id="langCodeHint">
+                Khóa bất biến sau khi tạo. Chuẩn BCP 47 (chữ thường hoặc kèm subtag hoa).
+              </div>
+            </div>
+
+            <!-- Display Name -->
+            <div class="col-md-6">
+              <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1" for="langDisplayName">
+                Tên Hiển Thị <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full"
+                id="langDisplayName"
+                name="displayName"
+                placeholder="vd: Japanese, Tiếng Nhật"
+                required
+              />
+            </div>
+
+            <!-- Native Name -->
+            <div class="col-md-6">
+              <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1" for="langNativeName">
+                Tên Bản Địa (Native Name)
+              </label>
+              <input
+                type="text"
+                class="form-control text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full"
+                id="langNativeName"
+                name="nativeName"
+                placeholder="vd: 日本語, Français"
+              />
+            </div>
+
+            <!-- Direction -->
+            <div class="col-md-6">
+              <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1" for="langDirection">
+                Hướng Văn Bản (Direction)
+              </label>
+              <select class="form-select text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full" id="langDirection" name="direction">
+                <option value="ltr" selected>LTR (Trái sang Phải - Tiêu chuẩn)</option>
+                <option value="rtl">RTL (Phải sang Trái - vd: Ả Rập, Do Thái)</option>
+              </select>
+            </div>
+
+            <!-- URL Prefix -->
+            <div class="col-md-6">
+              <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1" for="langUrlPrefix">
+                Tiền Tố URL (URL Prefix)
+              </label>
+              <input
+                type="text"
+                class="form-control text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full"
+                id="langUrlPrefix"
+                name="urlPrefix"
+                placeholder="Mặc định bằng mã code"
+              />
+              <div class="form-text text-2xs text-slate-500 mt-1">
+                Xem trước: <span class="badge bg-slate-100 text-slate-700 border" id="previewUrlPrefix">https://domain.com/ja/about-us</span>
+              </div>
+            </div>
+
+            <!-- Fallback Language -->
+            <div class="col-md-6">
+              <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1" for="langFallback">
+                Ngôn Ngữ Fallback Dự Phòng
+              </label>
+              <select class="form-select text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full" id="langFallback" name="fallbackLanguage">
+                <option value="">(Tự động theo Ngôn ngữ mặc định)</option>
+                <% if (typeof languages !== 'undefined') { %>
+                  <% languages.forEach(l => { %>
+                    <option value="<%= l.code %>"><%= l.displayName %> (<%= l.code %>)</option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+
+            <!-- Sort Order -->
+            <div class="col-md-6">
+              <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1" for="langSortOrder">
+                Thứ Tự Sắp Xếp (Sort Order)
+              </label>
+              <input
+                type="number"
+                class="form-control text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full"
+                id="langSortOrder"
+                name="sortOrder"
+                value="100"
+                min="1"
+                step="5"
+              />
+            </div>
+
+            <!-- Flag Icon -->
+            <div class="col-md-6">
+              <label class="form-label text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1" for="langFlagIcon">
+                Icon Cờ / Biểu Tượng
+              </label>
+              <input
+                type="text"
+                class="form-control text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full"
+                id="langFlagIcon"
+                name="flagIcon"
+                value="ti ti-world"
+                placeholder="ti ti-world"
+              />
+            </div>
+
+            <!-- Enabled Switch -->
+            <div class="col-12 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <div class="text-xs font-semibold text-slate-800 dark:text-slate-100">Kích hoạt Ngôn ngữ (Enabled)</div>
+                  <div class="text-2xs text-slate-500">Cho phép tạo nội dung và phục vụ trên website công khai</div>
+                </div>
+                <label class="form-check form-switch mb-0 cursor-pointer">
+                  <input type="checkbox" class="form-check-input cursor-pointer" id="langEnabled" name="enabled" value="true" checked />
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-slate-50/70 px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" class="btn btn-outline-secondary px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 hover:bg-slate-100" data-bs-dismiss="modal">
+            Hủy
+          </button>
+          <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg shadow-xs" id="btnSubmitLanguage">
+            <i class="ti ti-check text-sm"></i>
+            <span id="btnSubmitLanguageText">Lưu Ngôn Ngữ</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

@@ -6,6 +6,7 @@ const User = require('../models/User');
 const { getFieldHandler } = require('../fields');
 const templateService = require('./templateService');
 const versionService = require('./versionService');
+const languageService = require('./languageService');
 const webItemService = require('./webItemService');
 const { resolveItemIcon, getIconUrl } = require('../config/icons');
 const branding = require('../config/branding');
@@ -33,6 +34,7 @@ const PROTECTED_SYSTEM_PATHS = new Set([
   branding.PATHS.CONTENT.toLowerCase(),
   branding.PATHS.MEDIA.toLowerCase(),
   branding.PATHS.SYSTEM.toLowerCase(),
+  branding.PATHS.SYSTEM_LANGUAGES.toLowerCase(),
   branding.PATHS.TEMPLATES.toLowerCase(),
   `${branding.PATHS.TEMPLATES}/system/sample component`.toLowerCase(),
   `${branding.PATHS.TEMPLATES}/system/standard template`.toLowerCase(),
@@ -48,6 +50,7 @@ const PROTECTED_SYSTEM_PATHS = new Set([
   '/root/content',
   '/root/media library',
   '/root/system',
+  '/root/system/languages',
   '/root/templates',
   '/root/templates/system/sample component',
   '/root/templates/system/standard template',
@@ -174,15 +177,16 @@ const itemService = {
   /**
    * Get an item with resolved inherited template and calculated field values
    */
-  async getItemWithRenderSchema(id, langCode = 'vi', versionNumber = 1, db = 'master') {
+  async getItemWithRenderSchema(id, langCode = null, versionNumber = 1, db = 'master') {
     const cleanDb = this.validateDb(db);
+    const defLang = await languageService.getDefault({ store: cleanDb });
+    const code = (langCode || defLang.code).toLowerCase().trim();
 
     // 1. Web Database Mode (Strict Read-Only)
     if (cleanDb === 'web') {
       const item = await this.getById(id, 'web');
       if (!item) return null;
 
-      const code = (langCode || 'vi').toLowerCase().trim();
       const languages = Array.isArray(item.languages) ? item.languages : [];
       const langEntry = languages.find((l) => l.code === code) || null;
       const pubVersion = langEntry ? langEntry.publishedVersion : (item.sourceVersion || 1);
@@ -310,7 +314,7 @@ const itemService = {
       item,
       resolvedTemplate,
       standardValues,
-      lang: (langCode || 'vi').toLowerCase().trim(),
+      lang: code,
       version: parseInt(versionNumber, 10) || 1,
       versionInfo: resolvedResult.versionInfo,
       languagesList,
@@ -727,6 +731,9 @@ const itemService = {
       if (templateDefTpl) actualTemplateId = templateDefTpl._id;
     }
 
+    const defLang = await languageService.getDefault();
+    const initialLangCode = defLang.code;
+
     const newItem = await Item.create({
       name,
       displayName: itemDisplayName,
@@ -739,7 +746,7 @@ const itemService = {
       sharedFields,
       languages: [
         {
-          code: 'vi',
+          code: initialLangCode,
           unversionedFields: {},
           versions: [
             {
@@ -782,7 +789,7 @@ const itemService = {
 
     // Apply Standard Values from effective template (including component templates)
     try {
-      const effTpl = await templateService.resolveEffectiveTemplate(newItem, 'vi', 1);
+      const effTpl = await templateService.resolveEffectiveTemplate(newItem, initialLangCode, 1);
       if (effTpl && effTpl.standardValues && Object.keys(effTpl.standardValues).length > 0) {
         let modified = false;
         const allFields = effTpl.sections?.flatMap((s) => s.fields) || [];
@@ -1527,7 +1534,7 @@ const itemService = {
   /**
    * Get Publish Status for a single item (UNPUBLISHED, PUBLISHED, CHANGED)
    */
-  async getPublishStatus(itemOrId, langCode = 'vi', _versionNumber = 1) {
+  async getPublishStatus(itemOrId, langCode = null, _versionNumber = 1) {
     if (!itemOrId) return 'UNPUBLISHED';
     const id = itemOrId._id || itemOrId;
     const masterItem = itemOrId.name ? itemOrId : await Item.findById(id).lean();
@@ -1536,7 +1543,8 @@ const itemService = {
     const webItem = await PublishedItem.findById(id).lean();
     if (!webItem || webItem.isDeleted) return 'UNPUBLISHED';
 
-    const code = (langCode || 'vi').toLowerCase().trim();
+    const defLang = await languageService.getDefault();
+    const code = (langCode || defLang.code).toLowerCase().trim();
     const webLang = (webItem.languages || []).find((l) => l.code === code);
     if (!webLang) return 'UNPUBLISHED';
 
@@ -1561,7 +1569,7 @@ const itemService = {
   /**
    * Get Publish Status Batch for multiple items (optimized with $in)
    */
-  async getPublishStatusBatch(ids, langCode = 'vi') {
+  async getPublishStatusBatch(ids, langCode = null) {
     if (!Array.isArray(ids) || ids.length === 0) return {};
     const validIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
     if (validIds.length === 0) return {};
@@ -1571,7 +1579,8 @@ const itemService = {
       PublishedItem.find({ _id: { $in: validIds } }).select('_id updatedAt sourceVersion languages isDeleted').lean(),
     ]);
 
-    const code = (langCode || 'vi').toLowerCase().trim();
+    const defLang = await languageService.getDefault();
+    const code = (langCode || defLang.code).toLowerCase().trim();
     const webMap = new Map(webItems.map((w) => [w._id.toString(), w]));
     const statusMap = {};
 

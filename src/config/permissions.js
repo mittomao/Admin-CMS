@@ -80,6 +80,10 @@ const ACTIONS = {
   SERIALIZATION_READ: 'serialization:read',
   SERIALIZATION_EXPORT: 'serialization:export',
   SERIALIZATION_IMPORT: 'serialization:import',
+
+  // Language Manager Operations (GĐ L1)
+  LANGUAGE_READ: 'language:read',
+  LANGUAGE_MANAGE: 'language:manage',
 };
 
 /**

@@ -3,12 +3,11 @@ const PublishedItem = require('../models/PublishedItem');
 const { NotFoundError, AppError } = require('../utils/errors');
 const logger = require('../utils/logger');
 const branding = require('../config/branding');
+const languageService = require('./languageService');
 
 class SiteResolver {
   constructor() {
     this.startItemPath = process.env.SITE_START_ITEM || branding.PATHS.START_ITEM;
-    this.defaultLanguage = 'vi';
-    this.supportedLanguages = ['vi', 'en'];
   }
 
   /**
@@ -41,16 +40,25 @@ class SiteResolver {
       throw new AppError('Invalid path characters', 400);
     }
 
-    // 2. Extract Language Prefix first
-    let lang = options.defaultLang || this.defaultLanguage;
+    // 2. Fetch enabled languages and default language from Web store (DEC-048)
+    const enabledLanguages = await languageService.list({ enabledOnly: true, store: 'web' });
+    const defaultLanguageObj = await languageService.getDefault({ store: 'web' });
+    const defaultLangCode = options.defaultLang || defaultLanguageObj.code;
+
+    // 3. Extract Language Prefix
+    let lang = defaultLangCode;
     let cleanPath = path;
 
     const segments = path.split('/').filter(Boolean);
     let hasLangPrefix = false;
     if (segments.length > 0) {
       const firstSegment = segments[0].toLowerCase();
-      if (this.supportedLanguages.includes(firstSegment)) {
-        lang = firstSegment;
+      const matchedLang = enabledLanguages.find(
+        (l) => (l.urlPrefix && l.urlPrefix.toLowerCase() === firstSegment) || l.code.toLowerCase() === firstSegment
+      );
+
+      if (matchedLang) {
+        lang = matchedLang.code;
         hasLangPrefix = true;
         // Remaining path after language prefix
         segments.shift();
@@ -58,7 +66,7 @@ class SiteResolver {
       }
     }
 
-    // 3. Trailing Slash Check (DEC-034): 301 Redirect for non-root paths ending in /
+    // 4. Trailing Slash Check (DEC-034): 301 Redirect for non-root paths ending in /
     if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
       const trimmedClean = cleanPath.replace(/\/+$/, '') || '/';
       const redirectTarget = hasLangPrefix ? `/${lang}${trimmedClean}` : trimmedClean;

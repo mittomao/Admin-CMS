@@ -39,6 +39,7 @@ module.exports = {
     COMMON_TEMPLATES: `${ROOT_PATH}/templates/Common`,
     MEDIA: `${ROOT_PATH}/media library`,
     SYSTEM: `${ROOT_PATH}/system`,
+    SYSTEM_LANGUAGES: `${ROOT_PATH}/system/Languages`,
     START_ITEM: `${ROOT_PATH}/content/Home`,
     HOME: `${ROOT_PATH}/content/Home`,
   },

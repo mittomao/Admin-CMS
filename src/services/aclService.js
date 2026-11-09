@@ -514,7 +514,11 @@ class AclService {
       case ACTIONS.SERIALIZATION_READ:
       case ACTIONS.SERIALIZATION_EXPORT:
       case ACTIONS.SERIALIZATION_IMPORT:
+      case ACTIONS.LANGUAGE_MANAGE:
         return false; // Only Administrator
+
+      case ACTIONS.LANGUAGE_READ:
+        return true; // All authenticated users can read languages (e.g. for dropdowns)
 
       case ACTIONS.MEDIA_READ:
         return true;

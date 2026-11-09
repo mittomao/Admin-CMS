@@ -1,6 +1,7 @@
 'use strict';
 
 const mediaService = require('../../services/mediaService');
+const languageService = require('../../services/languageService');
 const AppError = require('../../utils/AppError');
 
 class MediaController {
@@ -14,12 +15,14 @@ class MediaController {
       }
 
       const root = await mediaService.getOrCreateRootFolder(req.user?._id);
+      const languages = await languageService.list({ enabledOnly: true });
 
       res.render('admin/media/library', {
         title: 'Media Library',
         layout: 'layouts/shell',
         user: req.user,
         rootFolder: root,
+        languages,
         csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : ''),
         currentApp: 'media-library'
       });
@@ -38,10 +41,12 @@ class MediaController {
       }
 
       const root = await mediaService.getOrCreateRootFolder(req.user?._id);
+      const languages = await languageService.list({ enabledOnly: true });
 
       res.render('admin/media/modals/media-picker-modal', {
         layout: false,
         rootFolder: root,
+        languages,
         csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : '')
       });
     } catch (err) {

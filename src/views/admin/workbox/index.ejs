@@ -61,8 +61,11 @@
       <div class="w-40">
         <select name="lang" class="form-select form-select-sm text-xs rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" onchange="this.form.submit()">
           <option value="">Tất cả ngôn ngữ</option>
-          <option value="vi" <%= query.lang === 'vi' ? 'selected' : '' %>>Tiếng Việt (vi)</option>
-          <option value="en" <%= query.lang === 'en' ? 'selected' : '' %>>English (en)</option>
+          <% (typeof languages !== 'undefined' ? languages : []).forEach(function(l) { %>
+            <option value="<%= l.code %>" <%= query.lang === l.code ? 'selected' : '' %>>
+              <%= l.displayName || l.code %> (<%= l.code %>)
+            </option>
+          <% }); %>
         </select>
       </div>
       <div class="input-group input-group-sm w-56">

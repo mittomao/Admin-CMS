@@ -22,8 +22,9 @@ flowchart TD
     GD8 --> GD8_1["GĐ 8.1: Database Switcher (Master/Web)<br/>(Hoàn thành)"]
     GD2 & GD8 --> GD9["GĐ 9: Recycle Bin & Audit<br/>(Chưa bắt đầu)"]
     GD6_2 & GD8 --> GD10["GĐ 10: Public Site Renderer (EJS)<br/>(Hoàn thành)"]
-    GD2 & GD3 & GD8 --> GD11["GĐ 11: Mở rộng tính năng<br/>(Chưa bắt đầu)"]
-    GD0 & GD1 & GD2 & GD3 & GD4 & GD5 & GD6 & GD6_2 & GD7 & GD8 & GD9 & GD10 & GD11 --> GD12["GĐ 12: Hoàn thiện & Docker<br/>(Chưa bắt đầu)"]
+    GD2 & GD3 & GD8 --> GD11["GĐ 11: Mở rộng tính năng<br/>(Hoàn thành)"]
+    GD4 & GD8 & GD10 --> GDL1["GĐ L1: Quản lý Ngôn ngữ Động (Language Manager)<br/>(Hoàn thành)"]
+    GD0 & GD1 & GD2 & GD3 & GD4 & GD5 & GD6 & GD6_2 & GD7 & GD8 & GD9 & GD10 & GD11 & GDL1 --> GD12["GĐ 12: Hoàn thiện & Docker<br/>(Chưa bắt đầu)"]
 ```
 
 ---
@@ -51,7 +52,8 @@ flowchart TD
 | **R2** | Hoàn tất đổi tên Treecraft / Root (Dọn sạch sót) | **Hoàn thành** | R1 | [`phase-R2-cleanup-treecraft.md`](./phase-R2-cleanup-treecraft.md) | 2026-11-08 | 2026-11-08 | Quét toàn diện 932 vị trí còn sót, chuẩn hóa 100% code, test, seed, EJS, docs sang Treecraft và `/root`, bổ sung `check:branding` |
 | **B1** | Basic Auth (Bảo vệ Site Công Khai) | **Hoàn thành** | 0, 1, 10 | [`phase-B1-basic-auth.md`](./phase-B1-basic-auth.md) | 2026-11-09 | 2026-11-09 | Bảo vệ site công khai qua HTTP Basic Auth, quản lý trong Control Panel, chống brute-force, gỡ khoá khẩn cấp |
 | **11** | Serialization (JSON Export/Import 2 Tab & Toast) | **Hoàn thành** | 2, 3, 8 | [`phase-11-extensions.md`](./phase-11-extensions.md) | 2026-11-09 | 2026-11-09 | Trang quản trị Serialization 2 Tab (Export/Import), tùy chọn 5 phân vùng, thứ tự nạp an toàn 4 bước & thông báo Toast chi tiết |
-| **12** | Hoàn thiện, Bảo mật, E2E SSR Test & Docker | **Chưa bắt đầu** | 0 → 11 | [`phase-12-hardening.md`](./phase-12-hardening.md) | - | - | E2E test luồng Page -> Template -> Presentation -> Publish -> Site Renderer EJS |
+| **L1** | Quản lý Ngôn ngữ Động (Language Manager) Thay thế Hard-code | **Hoàn thành** | 4, 4.1, 8, 10 | [`phase-L1-language-manager.md`](./phase-L1-language-manager.md) | 2026-11-09 | 2026-11-09 | Chuyển đổi ngôn ngữ thành Item (/root/system/Languages), languageService duy nhất, dynamic prefix & views, check:languages |
+| **12** | Hoàn thiện, Bảo mật, E2E SSR Test & Docker | **Chưa bắt đầu** | 0 → 11, L1 | [`phase-12-hardening.md`](./phase-12-hardening.md) | - | - | E2E test luồng Page -> Template -> Presentation -> Publish -> Site Renderer EJS |
 
 ---
 

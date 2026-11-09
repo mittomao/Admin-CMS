@@ -1,0 +1,284 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Treecraft Quản trị Hệ thống &bull; GĐ L1
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-language text-primary"></i>
+          <span>Quản lý Ngôn ngữ (Language Manager)</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Quản lý toàn bộ các ngôn ngữ hệ thống theo triết lý "Mọi thứ là Item", phân giải URL tiền tố động và kiểm soát xuất bản sang Web Store.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/launchpad" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-apps"></i>
+          <span>Launchpad</span>
+        </a>
+        <a href="/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" title="Mở trang chủ Website ở tab mới">
+          <i class="ti ti-external-link"></i>
+          <span>Xem Site</span>
+        </a>
+        <% if (permissions.canManage) { %>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" id="btn-add-language">
+          <i class="ti ti-plus"></i>
+          <span>Thêm Ngôn Ngữ</span>
+        </button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Overview Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-4">
+      <div class="card card-sm border-0 shadow-xs rounded-xl bg-white dark:bg-slate-800 p-3">
+        <div class="d-flex align-items-center gap-3">
+          <span class="avatar bg-blue-lt text-blue rounded-lg p-2.5">
+            <i class="ti ti-world fs-2"></i>
+          </span>
+          <div>
+            <div class="text-2xs font-semibold uppercase text-slate-400">Tổng Số Ngôn Ngữ</div>
+            <div class="h2 mb-0 font-bold text-slate-800 dark:text-slate-100" id="stat-total-count"><%= languages.length %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-4">
+      <div class="card card-sm border-0 shadow-xs rounded-xl bg-white dark:bg-slate-800 p-3">
+        <div class="d-flex align-items-center gap-3">
+          <span class="avatar bg-green-lt text-green rounded-lg p-2.5">
+            <i class="ti ti-check fs-2"></i>
+          </span>
+          <div>
+            <div class="text-2xs font-semibold uppercase text-slate-400">Đang Kích Hoạt</div>
+            <div class="h2 mb-0 font-bold text-green-600 dark:text-green-400" id="stat-enabled-count">
+              <%= languages.filter(l => l.enabled).length %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-12 col-lg-4">
+      <div class="card card-sm border-0 shadow-xs rounded-xl bg-white dark:bg-slate-800 p-3">
+        <div class="d-flex align-items-center gap-3">
+          <span class="avatar bg-amber-lt text-amber rounded-lg p-2.5">
+            <i class="ti ti-star fs-2"></i>
+          </span>
+          <div>
+            <div class="text-2xs font-semibold uppercase text-slate-400">Ngôn Ngữ Mặc Định</div>
+            <div class="h3 mb-0 font-bold text-slate-800 dark:text-slate-100 d-flex align-items-center gap-1.5" id="stat-default-name">
+              <span><%= defaultLanguage.displayName %></span>
+              <span class="badge bg-amber-lt text-amber font-mono text-2xs uppercase"><%= defaultLanguage.code %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Languages Table Card -->
+  <div class="card border-0 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
+    <div class="card-header bg-slate-50/80 dark:bg-slate-800/80 px-4 py-3 d-flex align-items-center justify-content-between border-b border-slate-200/80 dark:border-slate-700">
+      <div>
+        <h3 class="card-title font-semibold text-slate-800 dark:text-slate-100 mb-0">Danh Sách Ngôn Ngữ Hệ Thống</h3>
+        <p class="text-slate-500 text-2xs mb-0 mt-0.5">Kéo thả các hàng để sắp xếp thứ tự hiển thị ưu tiên trên dropdown và giao diện.</p>
+      </div>
+      <div class="text-xs text-slate-400">
+        <span class="badge bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+          <i class="ti ti-lock me-1"></i>Mã code bất biến
+        </span>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-hover" id="languagesTable">
+        <thead>
+          <tr>
+            <th class="w-1 text-center">#</th>
+            <th>Mã BCP 47</th>
+            <th>Tên Hiển Thị & Bản Địa</th>
+            <th>Hướng</th>
+            <th>Tiền Tố URL</th>
+            <th class="text-center">Nội Dung Đang Dùng</th>
+            <th class="text-center">Mặc Định</th>
+            <th class="text-center">Trạng Thái</th>
+            <th class="w-1 text-end">Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody id="languagesTableBody">
+          <% if (languages.length === 0) { %>
+          <tr id="emptyRow">
+            <td colspan="9" class="text-center py-5 text-slate-400">
+              <i class="ti ti-world-off fs-1 d-block mb-2"></i>
+              Chưa có ngôn ngữ nào được cấu hình.
+            </td>
+          </tr>
+          <% } else { %>
+            <% languages.forEach((lang, idx) => { %>
+              <tr data-code="<%= lang.code %>" data-id="<%= lang.id %>" data-sort="<%= lang.sortOrder %>" class="align-middle language-row">
+                <td class="text-center text-slate-400 cursor-move sort-handle" title="Kéo để đổi thứ tự">
+                  <i class="ti ti-grip-vertical"></i>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar avatar-xs bg-slate-100 text-slate-700 rounded-md">
+                      <i class="<%= lang.flagIcon || 'ti ti-world' %>"></i>
+                    </span>
+                    <span class="font-mono font-bold text-xs text-slate-900 dark:text-white"><%= lang.code %></span>
+                  </div>
+                </td>
+                <td>
+                  <div class="font-semibold text-xs text-slate-800 dark:text-slate-100"><%= lang.displayName %></div>
+                  <div class="text-2xs text-slate-400"><%= lang.nativeName %></div>
+                </td>
+                <td>
+                  <span class="badge bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-mono text-2xs">
+                    <%= lang.direction.toUpperCase() %>
+                  </span>
+                </td>
+                <td>
+                  <span class="font-mono text-xs text-slate-600 dark:text-slate-300">
+                    <% if (lang.isDefault) { %>
+                      <span class="text-slate-400 italic">/ (không có prefix)</span>
+                    <% } else { %>
+                      <span class="badge bg-blue-lt font-mono">/<%= lang.urlPrefix || lang.code %>/</span>
+                    <% } %>
+                  </span>
+                </td>
+                <td class="text-center">
+                  <% const usage = lang.usage || { itemCount: 0, versionCount: 0, presentationCount: 0, total: 0 }; %>
+                  <% if (usage.total > 0) { %>
+                    <span class="badge bg-green-lt text-green font-semibold cursor-help" title="<%= usage.itemCount %> items, <%= usage.versionCount %> versions, <%= usage.presentationCount %> layout overrides">
+                      <i class="ti ti-files me-1"></i><%= usage.itemCount %> trang
+                    </span>
+                  <% } else { %>
+                    <span class="badge bg-slate-100 text-slate-400 text-2xs">0 trang</span>
+                  <% } %>
+                </td>
+                <td class="text-center">
+                  <% if (lang.isDefault) { %>
+                    <span class="badge bg-amber text-white font-semibold shadow-2xs">
+                      <i class="ti ti-star-filled me-1"></i>Mặc Định
+                    </span>
+                  <% } else if (permissions.canManage && lang.enabled) { %>
+                    <button type="button" class="btn btn-ghost-amber btn-sm px-2 py-1 text-2xs rounded-lg btn-set-default" data-code="<%= lang.code %>" title="Đặt làm ngôn ngữ mặc định toàn hệ thống">
+                      <i class="ti ti-star me-1"></i>Đặt Mặc Định
+                    </button>
+                  <% } else { %>
+                    <span class="text-slate-300 text-2xs">-</span>
+                  <% } %>
+                </td>
+                <td class="text-center">
+                  <% if (permissions.canManage) { %>
+                    <label class="form-check form-switch mb-0 d-inline-block cursor-pointer">
+                      <input
+                        type="checkbox"
+                        class="form-check-input lang-status-toggle"
+                        data-code="<%= lang.code %>"
+                        <%= lang.enabled ? 'checked' : '' %>
+                        <%= lang.isDefault ? 'disabled title="Không thể vô hiệu hóa ngôn ngữ mặc định"' : '' %>
+                      />
+                    </label>
+                  <% } else { %>
+                    <span class="badge <%= lang.enabled ? 'bg-green-lt' : 'bg-secondary-lt' %>">
+                      <%= lang.enabled ? 'Bật' : 'Tắt' %>
+                    </span>
+                  <% } %>
+                </td>
+                <td class="text-end text-nowrap">
+                  <div class="d-inline-flex gap-1">
+                    <button
+                      type="button"
+                      class="btn btn-ghost-secondary btn-icon btn-sm rounded-lg btn-edit-language"
+                      data-code="<%= lang.code %>"
+                      title="Chỉnh sửa ngôn ngữ"
+                    >
+                      <i class="ti ti-edit"></i>
+                    </button>
+                    <% if (permissions.canManage) { %>
+                      <button
+                        type="button"
+                        class="btn btn-ghost-danger btn-icon btn-sm rounded-lg btn-delete-language"
+                        data-code="<%= lang.code %>"
+                        data-usage="<%= (lang.usage?.total || 0) %>"
+                        <%= (lang.isDefault || (lang.usage?.total || 0) > 0) ? 'disabled title="' + (lang.isDefault ? 'Không thể xóa ngôn ngữ mặc định' : 'Không thể xóa: Còn ' + (lang.usage?.itemCount || 0) + ' trang đang dùng') + '"' : 'title="Xóa vĩnh viễn ngôn ngữ"' %>
+                      >
+                        <i class="ti ti-trash"></i>
+                      </button>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Xác Nhận Đặt Mặc Định -->
+<div class="modal modal-blur fade" id="modalConfirmDefault" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg border-0 rounded-2xl">
+      <div class="modal-status bg-amber"></div>
+      <div class="modal-body text-center py-4">
+        <i class="ti ti-alert-triangle text-amber fs-1 mb-2 d-block"></i>
+        <h3 class="font-bold text-slate-800 dark:text-white">Đổi Ngôn Ngữ Mặc Định?</h3>
+        <div class="text-slate-500 text-xs px-2 mt-2">
+          Bạn sắp đặt ngôn ngữ <strong class="text-slate-900 dark:text-white" id="confirmDefaultLangCode"></strong> làm mặc định toàn hệ thống.
+          <div class="p-2.5 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 rounded-lg text-2xs text-start mt-2 border border-amber-200/60">
+            <i class="ti ti-info-circle me-1"></i>Hệ quả: Tiền tố URL trang công khai sẽ thay đổi, toàn bộ bộ nhớ đệm cache site sẽ tự động được làm mới.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-slate-50/50 p-2 d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary w-full text-xs font-semibold rounded-lg" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-amber w-full text-xs font-semibold rounded-lg shadow-xs" id="btnConfirmSetDefault">Xác Nhận Đổi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Xác Nhận Xóa Ngôn Ngữ -->
+<div class="modal modal-blur fade" id="modalConfirmDelete" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg border-0 rounded-2xl">
+      <div class="modal-status bg-danger"></div>
+      <div class="modal-body text-center py-4">
+        <i class="ti ti-trash text-danger fs-1 mb-2 d-block"></i>
+        <h3 class="font-bold text-slate-800 dark:text-white">Xóa Vĩnh Viễn Ngôn Ngữ?</h3>
+        <div class="text-slate-500 text-xs px-2 mt-2">
+          Bạn có chắc chắn muốn xóa ngôn ngữ <strong class="text-danger" id="confirmDeleteLangCode"></strong>? Hành động này không thể hoàn tác.
+        </div>
+      </div>
+      <div class="modal-footer bg-slate-50/50 p-2 d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary w-full text-xs font-semibold rounded-lg" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-danger w-full text-xs font-semibold rounded-lg shadow-xs" id="btnConfirmDeleteLanguage">Xóa Vĩnh Viễn</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include Modal Thêm / Sửa -->
+<%- include('./modals/language-modal') %>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+  <div id="languageToast" class="toast align-items-center border-0 shadow-lg rounded-xl" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-2 text-xs font-semibold" id="languageToastMessage"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin/language-manager.js" defer></script>
+

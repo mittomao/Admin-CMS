@@ -1,6 +1,7 @@
 const PublishJob = require('../../models/PublishJob');
 const PublishHistory = require('../../models/PublishHistory');
 const publishService = require('../../services/publishService');
+const languageService = require('../../services/languageService');
 const itemService = require('../../services/itemService');
 const logger = require('../../utils/logger');
 
@@ -35,6 +36,8 @@ const publishManagerController = {
         .populate('rootItemId', 'name path')
         .lean();
 
+      const languages = await languageService.list({ enabledOnly: true });
+
       res.render('admin/publish/manager', {
         title: 'Publish Manager - Quản lý Xuất bản',
         layout: 'layouts/shell',
@@ -42,6 +45,7 @@ const publishManagerController = {
         user: req.user,
         activeJobs,
         histories,
+        languages,
         csrfToken: req.session?.csrfToken || res.locals?.csrfToken || (req.csrfToken ? req.csrfToken() : ''),
       });
     } catch (err) {

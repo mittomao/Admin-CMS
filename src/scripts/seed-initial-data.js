@@ -234,6 +234,18 @@ const seedData = async () => {
         allowedRoles: [rolesMap['Administrator']],
       },
       {
+        name: 'Language Manager',
+        description: 'Quản lý danh mục ngôn ngữ, hướng đọc LTR/RTL và ngôn ngữ mặc định',
+        icon: 'ti ti-language',
+        iconBg: 'emerald',
+        group: 'Control Panel & Maintenance',
+        url: '/admin/languages',
+        sortOrder: 45,
+        isEnabled: true,
+        isStub: false,
+        allowedRoles: [rolesMap['Administrator']],
+      },
+      {
         name: 'Serialization',
         description: 'Export and import content, templates, layouts, and renderings as JSON packages',
         icon: 'ti ti-package-export',

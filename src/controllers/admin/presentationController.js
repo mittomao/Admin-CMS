@@ -1,5 +1,6 @@
 const presentationService = require('../../services/presentationService');
 const itemService = require('../../services/itemService');
+const languageService = require('../../services/languageService');
 const Template = require('../../models/Template');
 const logger = require('../../utils/logger');
 
@@ -11,7 +12,8 @@ class PresentationController {
   async getPresentationDetailsModal(req, res) {
     try {
       const { id } = req.params;
-      const { lang = 'vi', version = 1 } = req.query;
+      const defLang = await languageService.getDefault();
+      const { lang = defLang.code, version = 1 } = req.query;
       const user = req.session?.user;
 
       if (!(await itemService.canPerform(user, id, 'presentation:read'))) {
@@ -43,7 +45,8 @@ class PresentationController {
   async getPreviewJsonModal(req, res) {
     try {
       const { id } = req.params;
-      const { lang = 'vi', version = 1 } = req.query;
+      const defLang = await languageService.getDefault();
+      const { lang = defLang.code, version = 1 } = req.query;
       const user = req.session?.user;
 
       if (!(await itemService.canPerform(user, id, 'presentation:read'))) {
@@ -74,7 +77,8 @@ class PresentationController {
   async getPresentationJson(req, res) {
     try {
       const { id } = req.params;
-      const { lang = 'vi', version = 1 } = req.query;
+      const defLang = await languageService.getDefault();
+      const { lang = defLang.code, version = 1 } = req.query;
       const user = req.session?.user;
 
       if (!(await itemService.canPerform(user, id, 'presentation:read'))) {
@@ -103,11 +107,12 @@ class PresentationController {
   async savePresentation(req, res) {
     try {
       const { id } = req.params;
+      const defLang = await languageService.getDefault();
       const {
         layoutId,
         renderings = [],
         scope = 'shared',
-        lang = 'vi',
+        lang = defLang.code,
         version = 1,
         expectedUpdatedAt = null,
       } = req.body;
@@ -150,9 +155,10 @@ class PresentationController {
   async resetPresentation(req, res) {
     try {
       const { id } = req.params;
+      const defLang = await languageService.getDefault();
       const {
         scope = 'all',
-        lang = 'vi',
+        lang = defLang.code,
         version = 1,
         expectedUpdatedAt = null,
       } = req.body;

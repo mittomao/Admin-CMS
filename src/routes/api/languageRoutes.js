@@ -1,50 +1,29 @@
+'use strict';
+
+/**
+ * Treecraft CMS - Language API Routes (GĐ L1 / DEC-048)
+ */
+
 const express = require('express');
 const router = express.Router();
-const Language = require('../../models/Language');
+const languageController = require('../../controllers/admin/languageController');
 const { requireAuth } = require('../../middlewares/authMiddleware');
 const csrfMiddleware = require('../../middlewares/csrfMiddleware');
 
 router.use(requireAuth);
 
-/**
- * GET /api/languages
- * List all system languages
- */
-router.get('/', async (req, res) => {
-  try {
-    const languages = await Language.find().sort({ sortOrder: 1, code: 1 }).lean();
-    res.json({ success: true, data: languages });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+// Query endpoints
+router.get('/', languageController.listApi);
+router.get('/:code/usage', languageController.getUsageApi);
+router.get('/:code', languageController.getByCodeApi);
 
-/**
- * POST /api/languages
- * Create a new system language
- */
-router.post('/', csrfMiddleware.verifyToken, async (req, res) => {
-  try {
-    const { code, name, nativeName, icon, isDefault, active, sortOrder } = req.body;
-    if (!code || !name) {
-      return res.status(400).json({ success: false, message: 'Mã ngôn ngữ và Tên ngôn ngữ là bắt buộc.' });
-    }
-
-    const newLang = await Language.create({
-      code: code.trim().toLowerCase(),
-      name: name.trim(),
-      nativeName: nativeName || '',
-      icon: icon || 'ti ti-world',
-      isDefault: !!isDefault,
-      active: active !== undefined ? !!active : true,
-      sortOrder: sortOrder ? parseInt(sortOrder, 10) : 100,
-    });
-
-    res.status(201).json({ success: true, message: `Created language ${newLang.code}`, data: newLang });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-});
+// Mutation endpoints (protected by CSRF)
+router.post('/', csrfMiddleware.verifyToken, languageController.createApi);
+router.put('/reorder', csrfMiddleware.verifyToken, languageController.reorderApi);
+router.post('/default', csrfMiddleware.verifyToken, languageController.setDefaultApi);
+router.put('/:code', csrfMiddleware.verifyToken, languageController.updateApi);
+router.post('/:code/enable', csrfMiddleware.verifyToken, languageController.toggleEnableApi);
+router.post('/:code/disable', csrfMiddleware.verifyToken, languageController.toggleEnableApi);
+router.delete('/:code', csrfMiddleware.verifyToken, languageController.deleteApi);
 
 module.exports = router;
-

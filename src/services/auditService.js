@@ -651,6 +651,55 @@ class AuditService {
       });
     });
 
+    // Language Events (GĐ L1 / DEC-048)
+    eventBus.on('language.created', (data) => {
+      this.log({
+        action: 'LANGUAGE_CREATE',
+        user: data.userId || 'system',
+        details: { code: data.code, summary: `Tạo mới ngôn ngữ hệ thống '${data.code}'` },
+      });
+    });
+
+    eventBus.on('language.updated', (data) => {
+      this.log({
+        action: 'LANGUAGE_UPDATE',
+        user: data.userId || 'system',
+        details: { code: data.code, summary: `Cập nhật cấu hình ngôn ngữ '${data.code || 'system'}'` },
+      });
+    });
+
+    eventBus.on('language.enabled', (data) => {
+      this.log({
+        action: 'LANGUAGE_ENABLE',
+        user: data.userId || 'system',
+        details: { code: data.code, summary: `Kích hoạt ngôn ngữ '${data.code}'` },
+      });
+    });
+
+    eventBus.on('language.disabled', (data) => {
+      this.log({
+        action: 'LANGUAGE_DISABLE',
+        user: data.userId || 'system',
+        details: { code: data.code, summary: `Vô hiệu hóa ngôn ngữ '${data.code}'` },
+      });
+    });
+
+    eventBus.on('language.default.changed', (data) => {
+      this.log({
+        action: 'LANGUAGE_SET_DEFAULT',
+        user: data.userId || 'system',
+        details: { defaultLanguage: data.defaultLanguage, summary: `Thiết lập ngôn ngữ mặc định toàn hệ thống là '${data.defaultLanguage}'` },
+      });
+    });
+
+    eventBus.on('language.deleted', (data) => {
+      this.log({
+        action: 'LANGUAGE_DELETE',
+        user: data.userId || 'system',
+        details: { code: data.code, summary: `Xóa vĩnh viễn ngôn ngữ '${data.code}'` },
+      });
+    });
+
     logger.info('[auditService] Event listeners initialized successfully.');
   }
 }
