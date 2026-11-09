@@ -74,3 +74,17 @@ Tầng `aclService.js` cung cấp hàm chuẩn kiểm tra quyền của user tr�
 - **Quy tắc render an toàn:** Mặc định luôn escape bằng `<%= %>`. Cú pháp `<%- %>` chỉ được dùng cho nội dung trường `Rich Text` đã qua `sanitize-html` và được xử lý qua hàm `resolveRichText(html)`.
 - **Chống DDoS & Brute Force:** Áp dụng `express-rate-limit` giới hạn tần suất request công khai trên mỗi IP (ví dụ 100 req/phút).
 
+---
+
+## 6. Bảo vệ Website Công Khai Bằng HTTP Basic Authentication (GĐ B1 / DEC-046)
+- **Chuẩn RFC 7617:** Khi tính năng bật, yêu cầu header `Authorization: Basic <base64(user:pass)>`. Nếu thiếu hoặc sai, trả về `401 Unauthorized` kèm header `WWW-Authenticate: Basic realm="..."`.
+- **Mật khẩu an toàn:** Mật khẩu người dùng Basic Auth chỉ lưu dạng băm bcrypt (`SALT_ROUNDS = 10`) trong collection `settings` (key `basicAuth`). Tuyệt đối không lưu mật khẩu thô và không trả `passwordHash` ra API hoặc giao diện.
+- **Timing Attack Mitigation:** Khi username không tồn tại, thực hiện so sánh với `DUMMY_HASH` để đảm bảo thời gian tính toán bcrypt không làm lộ sự tồn tại của người dùng.
+- **Chống Brute-force:** Rate-limit in-memory theo `(ip, username)` khóa tạm tài khoản sau 5 lần thử sai trong 15 phút (`429 Too Many Requests` kèm `Retry-After: 900`).
+- **Phân định phạm vi:** Tuyệt đối không chặn các route quản trị (`/admin`), API (`/api`), kiểm tra trạng thái (`/health`), hoặc trang xem trước (`/admin/preview`). Hỗ trợ cấu hình `excludePaths` và `ipAllowlist` (hỗ trợ dải CIDR).
+- **Chống rò rỉ Cache:** Mọi phản hồi thuộc phạm vi bảo vệ của Basic Auth luôn mang header `Cache-Control: private, no-store, max-age=0, must-revalidate`.
+- **Technical SEO:** Endpoint `/robots.txt` tự động trả về `User-agent: *\nDisallow: /` khi Basic Auth bật để ngăn chặn máy tìm kiếm thu thập dữ liệu site staging/dev.
+- **Quyền hạn quản trị:** Toàn bộ quyền xem và thay đổi cấu hình Basic Auth được kiểm soát qua `canPerform(user, null, 'basicauth:read')` và `canPerform(user, null, 'basicauth:manage')`. Không kiểm tra cứng role name.
+- **Gỡ khoá khẩn cấp:** Hỗ trợ biến môi trường `BASIC_AUTH_ENABLED=false` và các lệnh CLI cứu hộ (`npm run basicauth:disable`, `npm run basicauth:add-user -- <username>`).
+
+

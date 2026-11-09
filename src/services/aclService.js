@@ -509,6 +509,8 @@ class AclService {
       case ACTIONS.SECURITY_MANAGE:
       case ACTIONS.SECURITY_USER_MANAGE:
       case ACTIONS.SECURITY_ROLE_MANAGE:
+      case ACTIONS.BASICAUTH_READ:
+      case ACTIONS.BASICAUTH_MANAGE:
         return false; // Only Administrator
 
       case ACTIONS.MEDIA_READ:

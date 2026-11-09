@@ -55,10 +55,12 @@ flowchart TD
   - `GET /api/databases/summary`: Báo cáo thống kê tổng quan số lượng item giữa Master và Web.
   - `GET /api/databases/diff`: Danh sách đối soát chi tiết các item Missing, Changed, Orphan.
   - `GET /api/items/publish-status-batch`: Tính toán huy hiệu trạng thái xuất bản theo lô cho Fancytree.
+  - `GET /admin/basic-auth`, `GET /api/basic-auth`, `PUT /api/basic-auth`: Màn hình và API cấu hình HTTP Basic Auth bảo vệ site công khai (GĐ B1 / DEC-046).
   - Mọi route Content Editor và API Item đều hỗ trợ tham số `?db=master|web` (chế độ Web là chỉ đọc).
 
 ### 4. Public Site Renderer Routes (`/`, `/:slug`, `/:lang/:slug`)
 - **Đặc điểm:** Tuyến đường công khai phục vụ người dùng cuối xem website chính thức, đọc dữ liệu hoàn toàn từ database `items_web` (sau khi đã publish từ Master).
+- **Bảo vệ bằng Basic Auth (GĐ B1 / DEC-046):** Khi tính năng Basic Auth được bật trong Control Panel, mọi truy cập vào Site Renderer sẽ bị chặn qua hộp thoại xác thực gốc của trình duyệt (`WWW-Authenticate: Basic realm="..."`). Nếu người dùng huỷ bỏ hoặc chưa đăng nhập, trả về HTTP 401 kèm view tùy chỉnh `src/views/site/errors/401.ejs`.
 - **Cơ chế hoạt động:**
   - `GET /`: Phân giải tới Start Item (node `Home` tại `/root/content/Home`).
   - `GET /:slug` (ví dụ `/about-us`, `/news/company-announcement`): Phân giải segment theo cây nội dung `items_web`.

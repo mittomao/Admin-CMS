@@ -2,6 +2,7 @@ const LaunchpadApp = require('../../models/LaunchpadApp');
 require('../../models/Role');
 const logger = require('../../utils/logger');
 const branding = require('../../config/branding');
+const itemService = require('../../services/itemService');
 
 // Icon fallback mapping helper to ensure 100% Tabler icon font usage
 const mapToTablerIcon = (icon) => {
@@ -156,6 +157,15 @@ const defaultFallbackApps = [
     url: '/admin/audit-log',
     isStub: false,
   },
+  {
+    name: 'Basic Auth',
+    description: 'Protect public website with HTTP Basic Authentication',
+    icon: 'ti ti-door-enter',
+    iconBg: 'cyan',
+    group: 'Control Panel & Maintenance',
+    url: '/admin/basic-auth',
+    isStub: false,
+  },
 ];
 
 const getLaunchpad = async (req, res) => {
@@ -175,10 +185,22 @@ const getLaunchpad = async (req, res) => {
 
     if (!apps || apps.length === 0) {
       apps = defaultFallbackApps;
+    } else {
+      // Đảm bảo các built-in apps mới (như Basic Auth) không bị thiếu nếu collection DB chưa cập nhật
+      const existingAppNames = new Set(apps.map((a) => a.name));
+      const missingApps = defaultFallbackApps.filter((fbApp) => !existingAppNames.has(fbApp.name));
+      if (missingApps.length > 0) {
+        apps = [...apps, ...missingApps];
+      }
     }
 
     // Role-based filtering
+    const canReadBasicAuth = await itemService.canPerform(user, null, 'basicauth:read');
+
     const visibleApps = apps.filter((app) => {
+      if (app.name === 'Basic Auth') {
+        return canReadBasicAuth;
+      }
       if (isAdmin) return true;
       if (!app.allowedRoles || app.allowedRoles.length === 0) return true;
       return app.allowedRoles.some((role) => userRoleIds.includes((role._id || role).toString()));
@@ -215,6 +237,9 @@ const getLaunchpad = async (req, res) => {
         resolvedStub = false;
       } else if (app.name === 'Audit Log') {
         resolvedUrl = '/admin/audit-log';
+        resolvedStub = false;
+      } else if (app.name === 'Basic Auth') {
+        resolvedUrl = '/admin/basic-auth';
         resolvedStub = false;
       }
 

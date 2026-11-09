@@ -223,6 +223,16 @@ const seedData = async () => {
         sortOrder: 30,
         allowedRoles: [rolesMap['Administrator']],
       },
+      {
+        name: 'Basic Auth',
+        description: 'Protect public website with HTTP Basic Authentication',
+        icon: 'ti ti-door-enter',
+        iconBg: 'cyan',
+        group: 'Control Panel & Maintenance',
+        url: '/admin/basic-auth',
+        sortOrder: 40,
+        allowedRoles: [rolesMap['Administrator']],
+      },
     ];
 
     for (const appData of appsConfig) {

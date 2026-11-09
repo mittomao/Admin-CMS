@@ -40,6 +40,9 @@ const env = {
   SITE_CACHE_MAX_ITEMS: parseInt(process.env.SITE_CACHE_MAX_ITEMS || '500', 10),
   RECYCLE_BIN_RETENTION_DAYS: parseInt(process.env.RECYCLE_BIN_RETENTION_DAYS || '30', 10),
   AUDIT_RETENTION_DAYS: parseInt(process.env.AUDIT_RETENTION_DAYS || '90', 10),
+  BASIC_AUTH_ENABLED: process.env.BASIC_AUTH_ENABLED, // 'false' overrides DB to disable
+  BASIC_AUTH_REALM: process.env.BASIC_AUTH_REALM || branding.PROJECT_NAME,
+  TRUST_PROXY: process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1',
   isDev: (process.env.NODE_ENV || 'development') === 'development',
   isProd: process.env.NODE_ENV === 'production',
 };

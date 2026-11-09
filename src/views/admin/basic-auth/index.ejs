@@ -1,0 +1,622 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Treecraft An toàn & Bảo mật &bull; GĐ B1
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-door-enter text-cyan"></i>
+          <span>Cấu hình Basic Authentication (Site Công Khai)</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Bảo vệ toàn bộ Website công khai cho môi trường UAT / Staging bằng hộp thoại xác thực gốc RFC 7617 của trình duyệt.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/launchpad" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-apps"></i>
+          <span>Launchpad</span>
+        </a>
+        <a href="/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" title="Mở trang chủ Website ở tab mới">
+          <i class="ti ti-external-link"></i>
+          <span>Thử nghiệm Site</span>
+        </a>
+        <% if (permissions.canManage) { %>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" id="btn-save-config">
+          <i class="ti ti-device-floppy"></i>
+          <span>Lưu Cấu Hình</span>
+        </button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warning Banners -->
+  <% if (!isHttps) { %>
+  <div class="alert alert-warning d-flex align-items-center gap-2 p-3 mb-3 rounded-xl border-0 shadow-sm" role="alert">
+    <i class="ti ti-alert-triangle fs-2 text-warning"></i>
+    <div>
+      <h4 class="alert-title font-semibold mb-0">Cảnh báo bảo mật kết nối HTTP</h4>
+      <div class="text-xs text-secondary">
+        Website đang chạy trên giao thức HTTP chưa mã hóa TLS. Thông tin xác thực Basic Auth có nguy cơ bị nhìn trộm trên mạng công cộng. Khuyến nghị kích hoạt HTTPS khi triển khai UAT.
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (config.isOverriddenByEnv) { %>
+  <div class="alert alert-danger d-flex align-items-center gap-2 p-3 mb-3 rounded-xl border-0 shadow-sm" role="alert">
+    <i class="ti ti-shield-x fs-2 text-danger"></i>
+    <div>
+      <h4 class="alert-title font-semibold mb-0">Basic Auth đang bị vô hiệu hoá khẩn cấp bởi Biến Môi Trường</h4>
+      <div class="text-xs text-secondary">
+        Cấu hình <code>BASIC_AUTH_ENABLED=false</code> trong tệp <code>.env</code> đang ghi đè và tạm tắt toàn bộ xác thực Basic Auth của hệ thống.
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Main Settings Card -->
+  <div class="row g-3">
+    <!-- Left Column: Master Switch & Realm & Users -->
+    <div class="col-lg-8">
+      <!-- Master Switch & Realm -->
+      <div class="card border-0 shadow-sm rounded-xl mb-3">
+        <div class="card-header bg-white dark:bg-slate-800 border-bottom py-3">
+          <h3 class="card-title font-semibold text-slate-800 dark:text-white d-flex align-items-center gap-2">
+            <i class="ti ti-toggle-right text-primary"></i>
+            <span>Chế độ Kích hoạt & Định danh</span>
+          </h3>
+        </div>
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800 mb-3 border">
+            <div>
+              <div class="font-bold text-slate-900 dark:text-white mb-0.5">
+                Kích hoạt Basic Authentication
+              </div>
+              <div class="text-xs text-slate-500">
+                Bật tính năng này sẽ chặn khách vãng lai và yêu cầu mọi người truy cập site phải nhập tài khoản.
+              </div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" role="switch" id="switch-enabled" <%= config.rawEnabled ? 'checked' : '' %> <%= !permissions.canManage ? 'disabled' : '' %> style="width: 2.75rem; height: 1.5rem; cursor: pointer;">
+            </div>
+          </div>
+
+          <div class="mb-0">
+            <label class="form-label font-semibold text-xs text-slate-600 dark:text-slate-300">
+              Tên Khu vực Xác thực (HTTP Realm)
+            </label>
+            <input type="text" class="form-control rounded-lg" id="input-realm" value="<%= config.realm %>" placeholder="Ví dụ: Treecraft UAT" <%= !permissions.canManage ? 'disabled' : '' %>>
+            <small class="form-hint text-xs text-slate-400">
+              Hiển thị trong hộp thoại đăng nhập của trình duyệt.
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Table Card -->
+      <div class="card border-0 shadow-sm rounded-xl overflow-hidden mb-3">
+        <div class="card-header bg-white dark:bg-slate-800 border-bottom py-3 d-flex align-items-center justify-content-between">
+          <h3 class="card-title font-semibold text-slate-800 dark:text-white d-flex align-items-center gap-2">
+            <i class="ti ti-users text-cyan"></i>
+            <span>Tài khoản Truy cập (<span id="user-count"><%= config.users.length %></span>)</span>
+          </h3>
+          <% if (permissions.canManage) { %>
+          <button type="button" class="btn btn-sm btn-cyan d-flex align-items-center gap-1 rounded-lg" id="btn-open-add-user">
+            <i class="ti ti-user-plus"></i>
+            <span>Thêm tài khoản</span>
+          </button>
+          <% } %>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-vcenter table-hover card-table mb-0">
+            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 text-xs font-semibold text-uppercase">
+              <tr>
+                <th style="width: 30%;">Tên đăng nhập</th>
+                <th style="width: 20%;">Trạng thái</th>
+                <th style="width: 25%;">Ngày tạo</th>
+                <th style="width: 15%;">Người tạo</th>
+                <th style="width: 10%;" class="text-end">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm" id="users-table-body">
+              <% if (!config.users || config.users.length === 0) { %>
+              <tr id="row-empty-users">
+                <td colspan="5" class="text-center py-5 text-slate-400">
+                  <i class="ti ti-user-off fs-1 d-block mb-2 text-slate-300"></i>
+                  <span>Chưa có tài khoản nào. Vui lòng bấm <strong>Thêm tài khoản</strong> trước khi kích hoạt.</span>
+                </td>
+              </tr>
+              <% } else { %>
+                <% config.users.forEach(function(u) { %>
+                <tr id="row-user-<%= u.username %>" data-username="<%= u.username %>" data-disabled="<%= u.disabled ? 'true' : 'false' %>">
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="avatar avatar-xs rounded bg-cyan-subtle text-cyan font-bold font-mono">
+                        <%= u.username.substring(0, 2).toUpperCase() %>
+                      </div>
+                      <div class="font-mono font-bold text-slate-900 dark:text-white">
+                        <%= u.username %>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <% if (u.disabled) { %>
+                    <span class="badge bg-slate-100 text-slate-600 border border-slate-200">Đã khóa</span>
+                    <% } else { %>
+                    <span class="badge bg-green-lt">Hoạt động</span>
+                    <% } %>
+                  </td>
+                  <td class="text-xs text-slate-500 font-mono">
+                    <%= u.createdAt ? new Date(u.createdAt).toLocaleString('vi-VN') : '-' %>
+                  </td>
+                  <td class="text-xs text-slate-500">
+                    <%= u.createdBy || 'system' %>
+                  </td>
+                  <td class="text-end">
+                    <% if (permissions.canManage) { %>
+                    <div class="btn-group btn-group-sm">
+                      <button type="button" class="btn btn-outline-secondary btn-action-pwd" data-username="<%= u.username %>" title="Đổi mật khẩu">
+                        <i class="ti ti-key"></i>
+                      </button>
+                      <button type="button" class="btn btn-outline-warning btn-action-toggle" data-username="<%= u.username %>" data-disabled="<%= u.disabled ? 'true' : 'false' %>" title="<%= u.disabled ? 'Mở khóa tài khoản' : 'Khóa tài khoản' %>">
+                        <i class="ti <%= u.disabled ? 'ti-lock-open' : 'ti-lock' %>"></i>
+                      </button>
+                      <button type="button" class="btn btn-outline-danger btn-action-delete" data-username="<%= u.username %>" title="Xóa tài khoản">
+                        <i class="ti ti-trash"></i>
+                      </button>
+                    </div>
+                    <% } %>
+                  </td>
+                </tr>
+                <% }); %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Quick Status & Advanced Settings -->
+    <div class="col-lg-4">
+      <!-- Status Summary Card -->
+      <div class="card border-0 shadow-sm rounded-xl mb-3">
+        <div class="card-header bg-white dark:bg-slate-800 border-bottom py-3">
+          <h3 class="card-title font-semibold text-slate-800 dark:text-white d-flex align-items-center gap-2">
+            <i class="ti ti-info-circle text-info"></i>
+            <span>Thông tin Trạng thái</span>
+          </h3>
+        </div>
+        <div class="card-body p-3 text-xs space-y-2">
+          <div class="d-flex justify-content-between py-1 border-bottom">
+            <span class="text-slate-500">Trạng thái bảo vệ:</span>
+            <% if (config.isOverriddenByEnv) { %>
+              <span class="font-bold text-danger">Bị tắt qua ENV</span>
+            <% } else if (config.rawEnabled) { %>
+              <span class="font-bold text-success">Đang bảo vệ (ON)</span>
+            <% } else { %>
+              <span class="font-bold text-slate-500">Đã tắt (OFF)</span>
+            <% } %>
+          </div>
+          <div class="d-flex justify-content-between py-1 border-bottom">
+            <span class="text-slate-500">Số tài khoản hoạt động:</span>
+            <span class="font-bold font-mono text-slate-800 dark:text-white" id="stat-active-users">
+              <%= config.users.filter(u => !u.disabled).length %>
+            </span>
+          </div>
+          <div class="d-flex justify-content-between py-1 border-bottom">
+            <span class="text-slate-500">Cập nhật lần cuối:</span>
+            <span class="font-mono text-slate-600 dark:text-slate-300">
+              <%= config.updatedAt ? new Date(config.updatedAt).toLocaleTimeString('vi-VN') : '-' %>
+            </span>
+          </div>
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-slate-500">Người cập nhật:</span>
+            <span class="font-semibold text-slate-700 dark:text-slate-300">
+              <%= config.updatedBy || 'admin' %>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced Settings Accordion -->
+      <div class="card border-0 shadow-sm rounded-xl">
+        <div class="card-header bg-white dark:bg-slate-800 border-bottom py-3 cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced" aria-expanded="false">
+          <h3 class="card-title font-semibold text-slate-800 dark:text-white d-flex align-items-center gap-2">
+            <i class="ti ti-settings-cog text-secondary"></i>
+            <span>Cài đặt Nâng cao</span>
+          </h3>
+          <div class="card-actions">
+            <i class="ti ti-chevron-down text-slate-400"></i>
+          </div>
+        </div>
+        <div class="collapse show" id="collapseAdvanced">
+          <div class="card-body p-3">
+            <!-- Exclude Paths -->
+            <div class="mb-3">
+              <label class="form-label font-semibold text-xs text-slate-700 dark:text-slate-300 mb-1">
+                Đường dẫn Bỏ qua (excludePaths)
+              </label>
+              <textarea class="form-control font-mono text-xs rounded-lg" id="textarea-exclude-paths" rows="3" placeholder="/health&#10;/robots.txt" <%= !permissions.canManage ? 'disabled' : '' %>><%= (config.excludePaths || []).join('\n') %></textarea>
+              <small class="form-hint text-2xs text-slate-400 mt-1">
+                Mỗi đường dẫn trên một dòng. <code>/health</code> và <code>/robots.txt</code> luôn tự động được giữ lại.
+              </small>
+            </div>
+
+            <!-- IP Allowlist -->
+            <div class="mb-0">
+              <label class="form-label font-semibold text-xs text-slate-700 dark:text-slate-300 mb-1">
+                Danh sách IP Miễn trừ (ipAllowlist)
+              </label>
+              <textarea class="form-control font-mono text-xs rounded-lg" id="textarea-ip-allowlist" rows="3" placeholder="127.0.0.1&#10;192.168.1.0/24" <%= !permissions.canManage ? 'disabled' : '' %>><%= (config.ipAllowlist || []).join('\n') %></textarea>
+              <small class="form-hint text-2xs text-slate-400 mt-1">
+                Hỗ trợ IP đơn lẻ hoặc dải mạng CIDR. Các IP này sẽ truy cập site mà không bị yêu cầu nhập Basic Auth.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add User -->
+<div class="modal modal-blur fade" id="modal-add-user" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content rounded-xl shadow-lg border-0">
+      <div class="modal-header">
+        <h5 class="modal-title font-bold text-slate-900 d-flex align-items-center gap-2">
+          <i class="ti ti-user-plus text-cyan"></i>
+          <span>Thêm Tài khoản Basic Auth</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="form-add-user">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label font-semibold text-xs required">Tên người dùng (Username)</label>
+            <input type="text" class="form-control rounded-lg font-mono" id="add-user-username" required placeholder="ví dụ: tester_uat" pattern="^[a-zA-Z0-9_.-]{3,30}$">
+            <small class="form-hint text-2xs text-slate-400">Từ 3-30 ký tự (chữ cái, chữ số, _, -, .), không phân biệt hoa thường.</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label font-semibold text-xs required">Mật khẩu</label>
+            <input type="password" class="form-control rounded-lg" id="add-user-password" required minlength="6" placeholder="Tối thiểu 6 ký tự">
+          </div>
+          <div class="mb-3">
+            <label class="form-label font-semibold text-xs required">Xác nhận mật khẩu</label>
+            <input type="password" class="form-control rounded-lg" id="add-user-confirm-password" required minlength="6" placeholder="Nhập lại mật khẩu trên">
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="add-user-disabled">
+            <label class="form-check-label text-xs" for="add-user-disabled">
+              Khóa tài khoản này sau khi tạo (tạm thời không cho đăng nhập)
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Hủy bỏ</button>
+          <button type="submit" class="btn btn-cyan" id="btn-submit-add-user">Tạo tài khoản</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Change Password -->
+<div class="modal modal-blur fade" id="modal-change-pwd" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content rounded-xl shadow-lg border-0">
+      <div class="modal-header">
+        <h5 class="modal-title font-bold text-slate-900 d-flex align-items-center gap-2">
+          <i class="ti ti-key text-primary"></i>
+          <span>Đổi Mật Khẩu: <span id="change-pwd-username-display" class="font-mono text-cyan"></span></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="form-change-pwd">
+        <input type="hidden" id="change-pwd-username">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label font-semibold text-xs required">Mật khẩu mới</label>
+            <input type="password" class="form-control rounded-lg" id="change-pwd-password" required minlength="6" placeholder="Tối thiểu 6 ký tự">
+          </div>
+          <div class="mb-0">
+            <label class="form-label font-semibold text-xs required">Xác nhận mật khẩu mới</label>
+            <input type="password" class="form-control rounded-lg" id="change-pwd-confirm-password" required minlength="6" placeholder="Nhập lại mật khẩu mới">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Hủy bỏ</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-change-pwd">Lưu mật khẩu mới</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Generic Confirmation -->
+<div class="modal modal-blur fade" id="modal-confirm" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+    <div class="modal-content rounded-xl shadow-lg border-0">
+      <div class="modal-body text-center py-4">
+        <i class="ti ti-alert-triangle fs-1 text-warning d-block mb-3" id="confirm-icon"></i>
+        <h3 class="font-bold text-slate-900 mb-2" id="confirm-title">Xác nhận thao tác</h3>
+        <p class="text-xs text-slate-500 mb-0" id="confirm-message">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+        <button type="button" class="btn btn-primary" id="btn-modal-confirm-action">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const csrfToken = '<%= csrfToken %>';
+  let expectedUpdatedAt = '<%= config.updatedAt %>';
+  let isDirty = false;
+
+  const markDirty = () => {
+    isDirty = true;
+    const saveBtn = document.getElementById('btn-save-config');
+    if (saveBtn) {
+      saveBtn.classList.remove('btn-primary');
+      saveBtn.classList.add('btn-success');
+    }
+  };
+
+  document.getElementById('switch-enabled')?.addEventListener('change', markDirty);
+  document.getElementById('input-realm')?.addEventListener('input', markDirty);
+  document.getElementById('textarea-exclude-paths')?.addEventListener('input', markDirty);
+  document.getElementById('textarea-ip-allowlist')?.addEventListener('input', markDirty);
+
+  // Modals
+  const addModalEl = document.getElementById('modal-add-user');
+  const addModal = addModalEl ? new bootstrap.Modal(addModalEl) : null;
+
+  const pwdModalEl = document.getElementById('modal-change-pwd');
+  const pwdModal = pwdModalEl ? new bootstrap.Modal(pwdModalEl) : null;
+
+  const confirmModalEl = document.getElementById('modal-confirm');
+  const confirmModal = confirmModalEl ? new bootstrap.Modal(confirmModalEl) : null;
+
+  let confirmCallback = null;
+  const showConfirm = ({ title, message, iconClass, btnClass, btnText, onConfirm }) => {
+    document.getElementById('confirm-title').textContent = title || 'Xác nhận';
+    document.getElementById('confirm-message').textContent = message || 'Bạn có chắc chắn?';
+    const iconEl = document.getElementById('confirm-icon');
+    iconEl.className = `ti ${iconClass || 'ti-alert-triangle'} fs-1 d-block mb-3 ${btnClass?.includes('danger') ? 'text-danger' : 'text-warning'}`;
+    const actionBtn = document.getElementById('btn-modal-confirm-action');
+    actionBtn.className = `btn ${btnClass || 'btn-primary'}`;
+    actionBtn.textContent = btnText || 'Xác nhận';
+    confirmCallback = onConfirm;
+    confirmModal?.show();
+  };
+
+  document.getElementById('btn-modal-confirm-action')?.addEventListener('click', async () => {
+    confirmModal?.hide();
+    if (confirmCallback) {
+      await confirmCallback();
+      confirmCallback = null;
+    }
+  });
+
+  // Open Add User Modal
+  document.getElementById('btn-open-add-user')?.addEventListener('click', () => {
+    document.getElementById('form-add-user').reset();
+    addModal?.show();
+  });
+
+  // Submit Add User
+  document.getElementById('form-add-user')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('add-user-username').value.trim();
+    const password = document.getElementById('add-user-password').value;
+    const confirmPassword = document.getElementById('add-user-confirm-password').value;
+    const disabled = document.getElementById('add-user-disabled').checked;
+
+    if (password !== confirmPassword) {
+      alert('Mật khẩu và xác nhận mật khẩu không khớp.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/basic-auth/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+        body: JSON.stringify({ username, password, disabled }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        addModal?.hide();
+        window.location.reload();
+      } else {
+        alert(data?.message || 'Lỗi khi tạo tài khoản.');
+      }
+    } catch (err) {
+      alert('Lỗi kết nối máy chủ khi tạo tài khoản: ' + err.message);
+    }
+  });
+
+  // Delegate user actions in table
+  document.getElementById('users-table-body')?.addEventListener('click', (e) => {
+    const btnPwd = e.target.closest('.btn-action-pwd');
+    if (btnPwd) {
+      const username = btnPwd.dataset.username;
+      document.getElementById('change-pwd-username').value = username;
+      document.getElementById('change-pwd-username-display').textContent = username;
+      document.getElementById('form-change-pwd').reset();
+      pwdModal?.show();
+      return;
+    }
+
+    const btnToggle = e.target.closest('.btn-action-toggle');
+    if (btnToggle) {
+      const username = btnToggle.dataset.username;
+      const isCurrentlyDisabled = btnToggle.dataset.disabled === 'true';
+      const willBeDisabled = !isCurrentlyDisabled;
+      const actionText = willBeDisabled ? 'Khóa' : 'Mở khóa';
+
+      showConfirm({
+        title: `${actionText} tài khoản`,
+        message: `Bạn có chắc chắn muốn ${actionText.toLowerCase()} tài khoản '${username}'?`,
+        iconClass: willBeDisabled ? 'ti-lock text-warning' : 'ti-lock-open text-success',
+        btnClass: willBeDisabled ? 'btn-warning' : 'btn-success',
+        btnText: `${actionText} tài khoản`,
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`/api/basic-auth/users/${encodeURIComponent(username)}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': csrfToken,
+              },
+              body: JSON.stringify({ disabled: willBeDisabled }),
+            });
+            const data = await res.json().catch(() => null);
+            if (res.ok && data?.success) {
+              window.location.reload();
+            } else {
+              alert(data?.message || `Lỗi khi ${actionText.toLowerCase()} tài khoản.`);
+            }
+          } catch (err) {
+            alert(`Lỗi kết nối khi ${actionText.toLowerCase()} tài khoản: ` + err.message);
+          }
+        },
+      });
+      return;
+    }
+
+    const btnDelete = e.target.closest('.btn-action-delete');
+    if (btnDelete) {
+      const username = btnDelete.dataset.username;
+      showConfirm({
+        title: 'Xóa tài khoản',
+        message: `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản '${username}'? Thao tác này không thể hoàn tác.`,
+        iconClass: 'ti-trash text-danger',
+        btnClass: 'btn-danger',
+        btnText: 'Xóa Vĩnh Viễn',
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`/api/basic-auth/users/${encodeURIComponent(username)}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': csrfToken,
+              },
+            });
+            const data = await res.json().catch(() => null);
+            if (res.ok && data?.success) {
+              window.location.reload();
+            } else {
+              alert(data?.message || 'Lỗi khi xóa tài khoản.');
+            }
+          } catch (err) {
+            alert('Lỗi kết nối khi xóa tài khoản: ' + err.message);
+          }
+        },
+      });
+    }
+  });
+
+  // Submit Change Password
+  document.getElementById('form-change-pwd')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('change-pwd-username').value;
+    const password = document.getElementById('change-pwd-password').value;
+    const confirmPassword = document.getElementById('change-pwd-confirm-password').value;
+
+    if (password !== confirmPassword) {
+      alert('Mật khẩu mới và xác nhận mật khẩu không khớp.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/basic-auth/users/${encodeURIComponent(username)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        pwdModal?.hide();
+        alert('Đã đổi mật khẩu thành công.');
+      } else {
+        alert(data?.message || 'Lỗi khi đổi mật khẩu.');
+      }
+    } catch (err) {
+      alert('Lỗi kết nối máy chủ: ' + err.message);
+    }
+  });
+
+  // Save Config
+  document.getElementById('btn-save-config')?.addEventListener('click', async () => {
+    const enabled = document.getElementById('switch-enabled').checked;
+    const realm = document.getElementById('input-realm').value.trim();
+    const excludePaths = document.getElementById('textarea-exclude-paths').value
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
+    const ipAllowlist = document.getElementById('textarea-ip-allowlist').value
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    try {
+      const res = await fetch('/api/basic-auth', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+        body: JSON.stringify({
+          enabled,
+          realm,
+          excludePaths,
+          ipAllowlist,
+          expectedUpdatedAt,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        isDirty = false;
+        alert('Đã lưu cấu hình Basic Authentication thành công.');
+        window.location.reload();
+      } else if (res.status === 409) {
+        alert(data?.message || 'Xung đột phiên bản: Cấu hình đã bị sửa đổi bởi người khác. Trang sẽ tự tải lại.');
+        window.location.reload();
+      } else {
+        alert(data?.message || 'Lỗi khi lưu cấu hình.');
+      }
+    } catch (err) {
+      alert('Lỗi kết nối máy chủ khi lưu cấu hình: ' + err.message);
+    }
+  });
+
+  // Warn if leaving with unsaved changes
+  window.addEventListener('beforeunload', (e) => {
+    if (isDirty) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+});
+</script>
+

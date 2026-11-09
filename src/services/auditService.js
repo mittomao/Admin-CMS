@@ -602,6 +602,55 @@ class AuditService {
       });
     });
 
+    // 8. Basic Auth events (GĐ B1)
+    eventBus.on('basicauth.enabled', (data) => {
+      this.log({
+        action: 'BASICAUTH_ENABLE',
+        user: data.user,
+        details: { summary: 'Kích hoạt Basic Auth bảo vệ site công khai' },
+      });
+    });
+
+    eventBus.on('basicauth.disabled', (data) => {
+      this.log({
+        action: 'BASICAUTH_DISABLE',
+        user: data.user,
+        details: { summary: 'Vô hiệu hóa Basic Auth' },
+      });
+    });
+
+    eventBus.on('basicauth.config.changed', (data) => {
+      this.log({
+        action: 'BASICAUTH_CONFIG',
+        user: data.user,
+        details: { summary: 'Thay đổi cấu hình Basic Auth', ...(data.changes || {}) },
+      });
+    });
+
+    eventBus.on('basicauth.user.added', (data) => {
+      this.log({
+        action: 'BASICAUTH_USER_ADD',
+        user: data.user,
+        details: { targetUsername: data.username, summary: `Thêm tài khoản Basic Auth '${data.username}'` },
+      });
+    });
+
+    eventBus.on('basicauth.user.removed', (data) => {
+      this.log({
+        action: 'BASICAUTH_USER_REMOVE',
+        user: data.user,
+        details: { targetUsername: data.username, summary: `Xóa tài khoản Basic Auth '${data.username}'` },
+      });
+    });
+
+    eventBus.on('basicauth.user.password.changed', (data) => {
+      this.log({
+        action: 'BASICAUTH_PASSWORD_CHANGE',
+        user: data.user,
+        details: { targetUsername: data.username, summary: `Đổi mật khẩu tài khoản Basic Auth '${data.username}'` },
+      });
+    });
+
     logger.info('[auditService] Event listeners initialized successfully.');
   }
 }

@@ -12,6 +12,7 @@ const PublishHistory = require('./PublishHistory');
 const PublishJob = require('./PublishJob');
 const AccessControl = require('./AccessControl');
 const Domain = require('./Domain');
+const Setting = require('./Setting');
 
 module.exports = {
   Role,
@@ -28,4 +29,5 @@ module.exports = {
   PublishJob,
   AccessControl,
   Domain,
+  Setting,
 };

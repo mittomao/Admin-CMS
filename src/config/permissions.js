@@ -71,6 +71,10 @@ const ACTIONS = {
   RECYCLEBIN_RESTORE: 'recyclebin:restore',
   RECYCLEBIN_PURGE: 'recyclebin:purge',
   AUDIT_READ: 'audit:read',
+
+  // Basic Auth Operations (GĐ B1)
+  BASICAUTH_READ: 'basicauth:read',
+  BASICAUTH_MANAGE: 'basicauth:manage',
 };
 
 /**

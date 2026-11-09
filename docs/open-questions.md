@@ -1,3 +1,36 @@
+# CÂU HỎI KỸ THUẬT GIAI ĐOẠN B1 (BASIC AUTHENTICATION)
+
+Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật cần xác nhận cho **Giai đoạn B1: Basic Auth (Bảo vệ Site Công Khai)**, kèm theo đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Cấu hình `trust proxy` trong Express để nhận diện chính xác `ipAllowlist`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-046: Basic Auth](decisions/DEC-046-basic-auth-public-site-protection.md), `src/app.js`
+- **Lựa chọn A (Đề xuất mặc định):** Thêm biến môi trường `TRUST_PROXY` (mặc định `false`, khi chạy sau reverse proxy như Nginx/Cloudflare thì đặt `true` hoặc số hop). Khi `TRUST_PROXY=true`, cấu hình `app.set('trust proxy', 1)`. Middleware sẽ đọc `req.ip` chuẩn xác từ proxy đã tin cậy. Nếu không bật, chỉ dùng `req.socket.remoteAddress` để chống giả mạo header `X-Forwarded-For`.
+- **Lựa chọn B:** Luôn đọc `X-Forwarded-For` không điều kiện.
+- **Lý do đề xuất:** Ngăn chặn kẻ xấu giả mạo header `X-Forwarded-For` để vượt qua `ipAllowlist` khi server chạy độc lập trực tiếp.
+
+---
+
+### 2. Cơ chế Chống Dò Mật Khẩu (Brute-Force Rate Limiting): Dùng bộ đếm In-Memory nội bộ hay cài thêm thư viện?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-046: Basic Auth](decisions/DEC-046-basic-auth-public-site-protection.md), `basicAuthMiddleware.js`
+- **Lựa chọn A (Đề xuất mặc định):** **Sử dụng cấu trúc bộ nhớ In-Memory `Map` nội bộ với cơ chế Sliding Window / Token Bucket** (ví dụ: tối đa 5 lần thử sai trong 15 phút theo cặp `(ip, username)`, khoá tạm 15 phút trả về 429 Too Many Requests kèm header `Retry-After`). Tự động giải phóng bộ nhớ bằng timer định kỳ. Không cài thêm thư viện bên ngoài.
+- **Lựa chọn B:** Cài đặt package `express-rate-limit`.
+- **Lý do đề xuất:** Tuân thủ triệt để Quy tắc Vàng: Không cài thêm package ngoài khi công nghệ hiện có hoặc code native giải quyết được gọn gàng, hiệu năng cao và độc lập.
+
+---
+
+### 3. Phản hồi `robots.txt` khi Basic Auth kích hoạt?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-046: Basic Auth](decisions/DEC-046-basic-auth-public-site-protection.md), `siteController.js`
+- **Lựa chọn A (Đề xuất mặc định):** Khi Basic Auth đang kích hoạt (`enabled = true`), endpoint `/robots.txt` tự động kết xuất `User-agent: *\nDisallow: /` để ngăn chặn hoàn toàn các bot tìm kiếm (Googlebot, Bingbot...) thu thập các trang 401 hoặc làm tràn log xác thực.
+- **Lựa chọn B:** Giữ nguyên nội dung `robots.txt` thông thường.
+- **Lý do đề xuất:** Đúng chuẩn SEO và bảo mật cho các môi trường thử nghiệm (UAT/Staging).
+
+---
+
 # CÂU HỎI KỸ THUẬT GIAI ĐOẠN 6.2 (OPEN QUESTIONS)
 
 Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho yêu cầu thay đổi: **Rendering gắn Component Template & Page Template không kế thừa Component Template (GĐ 6.2)**, kèm theo đề xuất mặc định của Tech Lead.

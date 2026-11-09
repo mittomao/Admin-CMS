@@ -39,13 +39,19 @@ const adminRecycleBinRoutes = require('./routes/admin/recycleBinRoutes');
 const apiRecycleBinRoutes = require('./routes/api/recycleBinRoutes');
 const adminAuditRoutes = require('./routes/admin/auditRoutes');
 const apiAuditRoutes = require('./routes/api/auditRoutes');
+const adminBasicAuthRoutes = require('./routes/admin/basicAuthRoutes');
+const apiBasicAuthRoutes = require('./routes/api/basicAuthRoutes');
 const siteRoutes = require('./routes/site/siteRoutes');
 const mediaController = require('./controllers/admin/mediaController');
 const contentEditorController = require('./controllers/admin/contentEditorController');
 const { requireAuth } = require('./middlewares/authMiddleware');
 const csrfMiddleware = require('./middlewares/csrfMiddleware');
+const basicAuthMiddleware = require('./middlewares/basicAuthMiddleware');
 
 const app = express();
+if (env.TRUST_PROXY) {
+  app.set('trust proxy', 1);
+}
 
 // 1. Security Headers (Helmet with relaxed CSP for local assets, Tabler CDN & Google Fonts)
 app.use(
@@ -144,6 +150,7 @@ app.use('/admin/databases', adminDatabaseRoutes);
 app.use('/admin/security', adminSecurityRoutes);
 app.use('/admin/recycle-bin', adminRecycleBinRoutes);
 app.use('/admin/audit-log', adminAuditRoutes);
+app.use('/admin/basic-auth', adminBasicAuthRoutes);
 app.use('/api/presentation', apiPresentationRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);
@@ -155,8 +162,10 @@ app.use('/api/databases', apiDatabaseRoutes);
 app.use('/api/security', apiSecurityRoutes);
 app.use('/api/recycle-bin', apiRecycleBinRoutes);
 app.use('/api/audit', apiAuditRoutes);
+app.use('/api/basic-auth', apiBasicAuthRoutes);
 
-// 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10)
+// 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10) & Basic Auth (GĐ B1)
+app.use(basicAuthMiddleware);
 app.use('/', siteRoutes);
 
 // 11. Error Handling
