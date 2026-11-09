@@ -150,10 +150,10 @@ describe('GĐ 10: SiteRenderer Unit Tests', () => {
   describe('1. ViewPath Security Whitelist (DEC-033)', () => {
     it('should allow valid view paths inside src/views/site', () => {
       const p1 = siteRenderer.resolveSafeViewPath('layouts/HomeLayout.ejs');
-      expect(p1).toContain('src/views/site/layouts/HomeLayout.ejs');
+      expect(p1.replace(/\\/g, '/')).toContain('src/views/site/layouts/HomeLayout.ejs');
 
       const p2 = siteRenderer.resolveSafeViewPath('site/layouts/HomeLayout.ejs');
-      expect(p2).toContain('src/views/site/layouts/HomeLayout.ejs');
+      expect(p2.replace(/\\/g, '/')).toContain('src/views/site/layouts/HomeLayout.ejs');
     });
 
     it('should reject Path Traversal with 403 Forbidden', () => {

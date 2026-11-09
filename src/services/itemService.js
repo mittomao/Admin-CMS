@@ -467,7 +467,7 @@ const itemService = {
     }
 
     // Normalize path aliases for templates
-    if (targetPath === '/template' || targetPath === '/templates' || targetPath === '/root/template' || targetPath === '/root/template') {
+    if (targetPath === '/template' || targetPath === '/templates' || targetPath === '/root/template') {
       targetPath = branding.PATHS.TEMPLATES;
     } else if (targetPath.toLowerCase().startsWith('/template/')) {
       targetPath = branding.PATHS.TEMPLATES + '/' + targetPath.slice('/template/'.length);
@@ -475,16 +475,12 @@ const itemService = {
       targetPath = branding.PATHS.TEMPLATES + '/' + targetPath.slice('/templates/'.length);
     } else if (targetPath.toLowerCase().startsWith('/root/template/')) {
       targetPath = branding.PATHS.TEMPLATES + '/' + targetPath.slice('/root/template/'.length);
-    } else if (targetPath.toLowerCase().startsWith('/root/template/')) {
-      targetPath = branding.PATHS.TEMPLATES + '/' + targetPath.slice('/root/template/'.length);
     }
 
-    // Try finding exact targetPath first, with fallback to equivalent root/treecraft prefix
+    // Try finding exact targetPath first, with fallback to equivalent root prefix
     let alternativePath = null;
-    if (targetPath.toLowerCase().startsWith('/root')) {
+    if (targetPath.toLowerCase().startsWith('/root/')) {
       alternativePath = branding.PATHS.ROOT + targetPath.slice('/root'.length);
-    } else if (targetPath.toLowerCase().startsWith('/root')) {
-      alternativePath = '/root' + targetPath.slice('/root'.length);
     }
 
     const pathQuery = alternativePath
@@ -1219,9 +1215,10 @@ const itemService = {
   },
 
   /**
-   * Soft delete an item and all its descendants
+   * Soft delete an item and all its descendants (GĐ 9 / DEC-044)
+   * Enforces reference integrity via referenceService.findReferences
    */
-  async delete(id, userId = null) {
+  async delete(id, userId = null, options = {}) {
     const item = await Item.findOne({ _id: id, deleted: false });
     if (!item) {
       throw new ValidationError('Item not found or already deleted.');
@@ -1235,48 +1232,216 @@ const itemService = {
       throw new ValidationError(`Không thể xoá template hệ thống: '${item.displayName || item.name}'.`);
     }
 
-    // Check usage if deleting a Layout, Rendering, or Folder containing them
-    const presentationService = require('./presentationService');
-    const itemsToCheck = await Item.find({
-      $or: [{ _id: item._id }, { ancestors: item._id }],
-      deleted: false,
-    }).populate('templateId').lean();
+    // Reference integrity check (DEC-044)
+    const referenceService = require('./referenceService');
+    const refResult = await referenceService.findReferences(item, { includeDescendants: true });
 
-    for (const target of itemsToCheck) {
-      const tplName = target.templateId?.name;
-      if (tplName === 'Layout' || tplName === 'Rendering') {
-        const usage = await presentationService.getUsage(target._id);
-        if (usage.inUse) {
-          const tplNames = usage.templates.map((t) => t.displayName || t.name).join(', ');
-          const itemPaths = usage.items.map((i) => i.path).join(', ');
-          const details = [];
-          if (tplNames) details.push(`Template: [${tplNames}]`);
-          if (itemPaths) details.push(`Item: [${itemPaths}]`);
-
-          throw new ValidationError(
-            `Không thể xóa '${item.name}' vì component '${target.name}' đang được sử dụng trong ${usage.totalUsage} cấu hình Presentation (${details.join('; ')}).`
-          );
-        }
-      }
-
-      // Check usage if deleting a Template item
-      const templateDoc = await Template.findById(target._id);
-      if (templateDoc) {
-        await templateService.delete(target._id);
-      }
+    if (refResult.blockingCount > 0) {
+      const messages = refResult.references
+        .filter((r) => r.severity === 'BLOCK')
+        .map((r) => r.description || r.message)
+        .slice(0, 5);
+      const extra = refResult.blockingCount > 5 ? ` (và ${refResult.blockingCount - 5} ràng buộc khác)` : '';
+      const isTemplateItem = Boolean(tplDoc || item.path?.toLowerCase().includes('/template'));
+      const itemTypeLabel = isTemplateItem ? 'template' : 'item';
+      const conflictErr = new ConflictError(
+        `Không thể xóa ${itemTypeLabel} '${item.displayName || item.name}': Đang có ${refResult.blockingCount} ràng buộc chặn xoá:\n- ${messages.join('\n- ')}${extra}`
+      );
+      conflictErr.references = refResult.references;
+      throw conflictErr;
     }
 
+    if (refResult.warningCount > 0 && !options.confirmWarnings && !options.force) {
+      const messages = refResult.references
+        .filter((r) => r.severity === 'WARN')
+        .map((r) => r.description || r.message)
+        .slice(0, 5);
+      const extra = refResult.warningCount > 5 ? ` (và ${refResult.warningCount - 5} cảnh báo khác)` : '';
+      const warnErr = new ValidationError(
+        `Cảnh báo khi xoá '${item.displayName || item.name}': Có ${refResult.warningCount} đối tượng bị ảnh hưởng:\n- ${messages.join('\n- ')}${extra}`,
+        { requiresConfirmation: true, references: refResult.references }
+      );
+      warnErr.requiresConfirmation = true;
+      warnErr.references = refResult.references;
+      throw warnErr;
+    }
+
+    const deletionBatchId = new mongoose.Types.ObjectId().toString();
+    const deletedAt = new Date();
+
+    // 1. Soft delete root item
     item.deleted = true;
+    item.isDeleted = true;
+    item.deletedAt = deletedAt;
+    item.deletedBy = userId;
+    item.deletedFromPath = item.path;
+    item.deletedFromParentId = item.parentId;
+    item.deletionBatchId = deletionBatchId;
     item.updatedBy = userId;
     await item.save();
 
-    // Soft delete all descendants
-    await Item.updateMany(
-      { ancestors: item._id, deleted: false },
-      { $set: { deleted: true, updatedBy: userId } }
-    );
+    // 2. Soft delete all descendants
+    const descendants = await Item.find({ ancestors: item._id, deleted: false });
+    for (const desc of descendants) {
+      desc.deleted = true;
+      desc.isDeleted = true;
+      desc.deletedAt = deletedAt;
+      desc.deletedBy = userId;
+      desc.deletedFromPath = desc.path;
+      desc.deletedFromParentId = desc.parentId;
+      desc.deletionBatchId = deletionBatchId;
+      desc.updatedBy = userId;
+      await desc.save();
+    }
 
-    return { success: true, deletedId: item._id };
+    // Invalidate template cache if a template or folder was deleted
+    const templateDoc = await Template.findById(item._id);
+    if (templateDoc) {
+      templateService.invalidateCache();
+    }
+
+    const eventBus = require('../utils/eventBus');
+    eventBus.emit('item.deleted', {
+      item,
+      userId,
+      deletionBatchId,
+      deletedCount: 1 + descendants.length,
+      deletedAt,
+    });
+
+    return {
+      success: true,
+      deletedId: item._id,
+      deletionBatchId,
+      deletedCount: 1 + descendants.length,
+    };
+  },
+
+  /**
+   * Restore a soft-deleted item from Recycle Bin (GĐ 9 / DEC-044)
+   */
+  async restoreItem(id, userId = null, options = {}) {
+    const item = await Item.findOne({ _id: id, $or: [{ deleted: true }, { isDeleted: true }] });
+    if (!item) {
+      throw new ValidationError('Item không tồn tại trong Thùng rác hoặc đã được khôi phục.');
+    }
+
+    // 1. Determine target parent
+    let targetParent = null;
+    if (options.targetParentId) {
+      targetParent = await Item.findOne({ _id: options.targetParentId, deleted: false });
+      if (!targetParent) {
+        throw new ValidationError('Thư mục / Node cha đích không tồn tại hoặc đã bị xoá.');
+      }
+    } else {
+      const originalParentId = item.deletedFromParentId || item.parentId;
+      if (originalParentId) {
+        targetParent = await Item.findOne({ _id: originalParentId, deleted: false });
+      }
+      if (!targetParent) {
+        throw new ValidationError(
+          `Node cha gốc của '${item.displayName || item.name}' không còn tồn tại hoặc đang nằm trong Thùng rác. Vui lòng chọn vị trí cha đích (targetParentId) để khôi phục.`
+        );
+      }
+    }
+
+    // 2. Handle name collision
+    let restoredName = item.name;
+    const existingSibling = await Item.findOne({
+      parentId: targetParent._id,
+      name: restoredName,
+      deleted: false,
+    });
+    if (existingSibling) {
+      if (options.renameIfDuplicate !== false) {
+        let counter = 1;
+        let candidateName = `${item.name} (Restored)`;
+        while (await Item.findOne({ parentId: targetParent._id, name: candidateName, deleted: false })) {
+          counter++;
+          candidateName = `${item.name} (Restored ${counter})`;
+        }
+        restoredName = candidateName;
+      } else {
+        throw new ConflictError(`Một item cùng tên '${restoredName}' đã tồn tại dưới '${targetParent.path}'.`);
+      }
+    }
+
+    // 3. Compute new path & ancestors
+    const newPath = targetParent.path === branding.ROOT_PATH ? `${branding.ROOT_PATH}/${restoredName}` : `${targetParent.path}/${restoredName}`;
+    const newAncestors = [...(targetParent.ancestors || []), targetParent._id];
+
+    const oldPath = item.path;
+    item.name = restoredName;
+    item.path = newPath;
+    item.parentId = targetParent._id;
+    item.ancestors = newAncestors;
+    item.deleted = false;
+    item.isDeleted = false;
+    item.deletedAt = null;
+    item.deletedBy = null;
+    item.deletedFromPath = null;
+    item.deletedFromParentId = null;
+    item.deletionBatchId = null;
+    item.updatedBy = userId;
+    await item.save();
+
+    // 4. Restore descendants if part of the same batch or subtree
+    const descendants = await Item.find({
+      $and: [
+        {
+          $or: [
+            { ancestors: item._id },
+            ...(item.deletionBatchId ? [{ deletionBatchId: item.deletionBatchId, _id: { $ne: item._id } }] : []),
+          ],
+        },
+        { $or: [{ deleted: true }, { isDeleted: true }] },
+      ],
+    });
+
+    let restoredCount = 1;
+    for (const desc of descendants) {
+      desc.deleted = false;
+      desc.isDeleted = false;
+      desc.deletedAt = null;
+      desc.deletedBy = null;
+      desc.deletedFromPath = null;
+      desc.deletedFromParentId = null;
+      desc.deletionBatchId = null;
+      desc.updatedBy = userId;
+
+      // Recalculate descendant path
+      if (desc.path && desc.path.startsWith(oldPath)) {
+        desc.path = newPath + desc.path.substring(oldPath.length);
+      }
+      // Recompute ancestors
+      const parentInBatch = await Item.findById(desc.parentId).lean();
+      if (parentInBatch) {
+        desc.ancestors = [...(parentInBatch.ancestors || []), parentInBatch._id];
+      }
+      await desc.save();
+      restoredCount++;
+    }
+
+    // Invalidate template cache if a template or folder was restored
+    const templateDoc = await Template.findById(item._id);
+    if (templateDoc) {
+      templateService.invalidateCache();
+    }
+
+    const eventBus = require('../utils/eventBus');
+    eventBus.emit('item.restored', {
+      item,
+      userId,
+      restoredCount,
+      targetParentId: targetParent._id,
+      restoredAt: new Date(),
+    });
+
+    return {
+      success: true,
+      restoredItem: item,
+      restoredCount,
+    };
   },
 
   /**

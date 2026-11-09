@@ -13,6 +13,8 @@ const getLogin = (req, res) => {
   });
 };
 
+const eventBus = require('../../utils/eventBus');
+
 const postLogin = async (req, res) => {
   const { username, password, returnUrl } = req.body;
   const redirectTarget = returnUrl && returnUrl.startsWith('/admin') ? returnUrl : '/admin/launchpad';
@@ -33,10 +35,12 @@ const postLogin = async (req, res) => {
         });
       }
 
+      eventBus.emit('auth.login', { user, req });
       logger.info(`User [${user.username}] logged in successfully.`);
       return res.redirect(redirectTarget);
     });
   } catch (error) {
+    eventBus.emit('auth.failed', { username, req, error: error.message });
     logger.warn(`Failed login attempt for [${username}]: ${error.message}`);
     return res.render('admin/auth/login', {
       layout: 'layouts/auth',
@@ -49,9 +53,11 @@ const postLogin = async (req, res) => {
 };
 
 const postLogout = (req, res) => {
-  const username = req.session && req.session.user ? req.session.user.username : 'Unknown';
+  const user = req.session && req.session.user ? req.session.user : null;
+  const username = user ? user.username : 'Unknown';
 
   if (req.session) {
+    eventBus.emit('auth.logout', { user, req });
     req.session.destroy((err) => {
       if (err) {
         logger.error(`Error destroying session for ${username}: ${err.message}`);

@@ -144,8 +144,8 @@ const defaultFallbackApps = [
     icon: 'ti ti-trash',
     iconBg: 'rose',
     group: 'Control Panel & Maintenance',
-    url: '#',
-    isStub: true,
+    url: '/admin/recycle-bin',
+    isStub: false,
   },
   {
     name: 'Audit Log',
@@ -153,8 +153,8 @@ const defaultFallbackApps = [
     icon: 'ti ti-history',
     iconBg: 'amber',
     group: 'Control Panel & Maintenance',
-    url: '#',
-    isStub: true,
+    url: '/admin/audit-log',
+    isStub: false,
   },
 ];
 
@@ -209,6 +209,12 @@ const getLaunchpad = async (req, res) => {
         resolvedStub = false;
       } else if (app.name === 'Access Viewer') {
         resolvedUrl = '/admin/security/access-viewer';
+        resolvedStub = false;
+      } else if (app.name === 'Recycle Bin') {
+        resolvedUrl = '/admin/recycle-bin';
+        resolvedStub = false;
+      } else if (app.name === 'Audit Log') {
+        resolvedUrl = '/admin/audit-log';
         resolvedStub = false;
       }
 

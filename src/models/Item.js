@@ -204,10 +204,40 @@ const itemSchema = new mongoose.Schema(
         },
       ],
     },
-    // Soft delete flag
+    // Soft delete & Recycle Bin metadata (GĐ 9 / DEC-044)
     deleted: {
       type: Boolean,
       default: false,
+      index: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    deletedFromPath: {
+      type: String,
+      default: null,
+    },
+    deletedFromParentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Item',
+      default: null,
+    },
+    deletionBatchId: {
+      type: String,
+      default: null,
+      index: true,
     },
     createdFrom: {
       type: mongoose.Schema.Types.ObjectId,
@@ -310,7 +340,7 @@ itemSchema.index({ parentId: 1, sortOrder: 1, deleted: 1 });
 itemSchema.index({ path: 1, deleted: 1 });
 itemSchema.index({ ancestors: 1 });
 itemSchema.index({ templateId: 1 });
-itemSchema.index({ deleted: 1 });
+itemSchema.index({ deleted: 1, deletedAt: -1 });
 itemSchema.index({ name: 'text', displayName: 'text' });
 itemSchema.index({ 'languages.code': 1 });
 itemSchema.index({ 'languages.versions.version': 1 });

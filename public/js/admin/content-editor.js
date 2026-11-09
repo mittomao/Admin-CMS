@@ -1671,6 +1671,35 @@ if (btnConfirmDelete) {
 
       const result = await res.json();
       if (!res.ok || !result.success) {
+        if (result.requiresConfirmation) {
+          if (confirm(`${result.message}\n\nBạn có chắc chắn vẫn muốn đưa vào Thùng rác?`)) {
+            const retryRes = await fetch(`/api/items/${id}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': getCsrfToken(),
+              },
+              body: JSON.stringify({ confirmWarnings: true }),
+            });
+            const retryResult = await retryRes.json();
+            if (retryRes.ok && retryResult.success) {
+              const modalEl = document.getElementById('deleteItemModal');
+              const modalInstance = window.bootstrap.Modal.getInstance(modalEl);
+              if (modalInstance) modalInstance.hide();
+              showToast('Item đã được đưa vào Thùng rác thành công.', 'success');
+              const node = treeInstance.getNodeByKey(id);
+              if (node) {
+                const parent = node.parent;
+                node.remove();
+                if (parent) parent.setActive(true);
+              }
+              return;
+            }
+            showToast(retryResult.message || 'Xoá thất bại.', 'danger');
+            return;
+          }
+          return;
+        }
         showToast(result.message || 'Failed to delete item.', 'danger');
         return;
       }

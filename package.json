@@ -21,7 +21,10 @@
     "seed:sample": "node src/scripts/seed-sample-site.js",
     "media:sync": "node scripts/sync-cloudinary-media.js",
     "migrate": "node src/scripts/migrate-to-versions-languages.js",
-    "migrate:field-ids": "node src/scripts/migrate-to-field-ids.js"
+    "migrate:field-ids": "node src/scripts/migrate-to-field-ids.js",
+    "migrate:phase-09": "node src/scripts/migrate-phase-09-recycle-bin.js",
+    "recyclebin:purge-expired": "node src/scripts/purge-expired-recyclebin.js",
+    "audit:prune": "node src/scripts/prune-expired-audit-logs.js"
   },
   "keywords": [
     "cms",

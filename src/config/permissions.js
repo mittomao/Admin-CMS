@@ -65,6 +65,12 @@ const ACTIONS = {
   // Database Switcher & Compare Operations (GĐ 8.1)
   DATABASE_WEB_READ: 'database:web:read',
   DATABASE_COMPARE: 'database:compare',
+
+  // Recycle Bin & Audit Operations (GĐ 9)
+  RECYCLEBIN_READ: 'recyclebin:read',
+  RECYCLEBIN_RESTORE: 'recyclebin:restore',
+  RECYCLEBIN_PURGE: 'recyclebin:purge',
+  AUDIT_READ: 'audit:read',
 };
 
 /**

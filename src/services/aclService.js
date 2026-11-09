@@ -524,6 +524,18 @@ class AclService {
       case ACTIONS.MEDIA_SYNC:
         return isDeveloper;
 
+      case ACTIONS.RECYCLEBIN_READ:
+        return isAuthor || isEditor || isApprover || isDeveloper;
+
+      case ACTIONS.RECYCLEBIN_RESTORE:
+        return isEditor || isApprover || isDeveloper;
+
+      case ACTIONS.RECYCLEBIN_PURGE:
+        return isApprover || isDeveloper;
+
+      case ACTIONS.AUDIT_READ:
+        return isApprover || isDeveloper;
+
       case 'workflow:read':
         return true;
 

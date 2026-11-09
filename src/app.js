@@ -35,6 +35,10 @@ const apiWorkboxRoutes = require('./routes/api/workboxRoutes');
 const apiDatabaseRoutes = require('./routes/api/databaseRoutes');
 const adminSecurityRoutes = require('./routes/admin/securityRoutes');
 const apiSecurityRoutes = require('./routes/api/securityRoutes');
+const adminRecycleBinRoutes = require('./routes/admin/recycleBinRoutes');
+const apiRecycleBinRoutes = require('./routes/api/recycleBinRoutes');
+const adminAuditRoutes = require('./routes/admin/auditRoutes');
+const apiAuditRoutes = require('./routes/api/auditRoutes');
 const siteRoutes = require('./routes/site/siteRoutes');
 const mediaController = require('./controllers/admin/mediaController');
 const contentEditorController = require('./controllers/admin/contentEditorController');
@@ -138,6 +142,8 @@ app.use('/admin/workbox', adminWorkboxRoutes);
 app.use('/admin/publish-manager', adminPublishRoutes);
 app.use('/admin/databases', adminDatabaseRoutes);
 app.use('/admin/security', adminSecurityRoutes);
+app.use('/admin/recycle-bin', adminRecycleBinRoutes);
+app.use('/admin/audit-log', adminAuditRoutes);
 app.use('/api/presentation', apiPresentationRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);
@@ -147,6 +153,8 @@ app.use('/api/publish', apiPublishRoutes);
 app.use('/api/workbox', apiWorkboxRoutes);
 app.use('/api/databases', apiDatabaseRoutes);
 app.use('/api/security', apiSecurityRoutes);
+app.use('/api/recycle-bin', apiRecycleBinRoutes);
+app.use('/api/audit', apiAuditRoutes);
 
 // 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10)
 app.use('/', siteRoutes);

@@ -113,7 +113,7 @@ class WebItemService {
       try {
         const templateService = require('./templateService');
         template = await templateService.resolveEffectiveTemplate(item, code, pubVersion);
-      } catch (err) {
+      } catch (_err) {
         template = null;
       }
       if (!template) {

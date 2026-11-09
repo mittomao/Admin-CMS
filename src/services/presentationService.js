@@ -581,6 +581,8 @@ const presentationService = {
    */
   async savePresentation(itemId, presentationData, scope = 'shared', options = {}) {
     const { lang = 'vi', version = 1, expectedUpdatedAt = null, userId = null } = options;
+    const targetLang = (lang || 'vi').toLowerCase().trim();
+    const targetVersion = Number(version) || 1;
     const item = await Item.findById(itemId);
     if (!item) {
       throw new NotFoundError('Không tìm thấy Item để lưu Presentation.');
@@ -689,6 +691,24 @@ const presentationService = {
       logger.debug(`Could not invalidate template cache: ${err.message}`);
     }
 
+    try {
+      const eventBus = require('../utils/eventBus');
+      eventBus.emit('presentation.changed', {
+        itemId: item._id,
+        itemPath: item.path,
+        templateId: item.templateId,
+        scope,
+        lang: targetLang,
+        version: targetVersion,
+        layoutId: layoutId ? layoutId.toString() : null,
+        renderingsCount: formattedRenderings.length,
+        userId,
+        user: options.user,
+      });
+    } catch (evtErr) {
+      logger.debug(`Could not emit presentation.changed: ${evtErr.message}`);
+    }
+
     return this.getFinalPresentation(item, lang, version);
   },
 
@@ -744,6 +764,23 @@ const presentationService = {
       templateService.invalidateCache();
     } catch (err) {
       logger.debug(`Could not invalidate template cache: ${err.message}`);
+    }
+
+    try {
+      const eventBus = require('../utils/eventBus');
+      eventBus.emit('presentation.changed', {
+        itemId: item._id,
+        itemPath: item.path,
+        templateId: item.templateId,
+        scope,
+        lang: targetLang,
+        version: targetVersion,
+        isReset: true,
+        userId,
+        user: options.user,
+      });
+    } catch (evtErr) {
+      logger.debug(`Could not emit presentation.changed: ${evtErr.message}`);
     }
 
     return this.getFinalPresentation(item, lang, version);

@@ -38,6 +38,8 @@ const env = {
   SITE_CACHE: process.env.SITE_CACHE !== 'false',
   SITE_CACHE_TTL: parseInt(process.env.SITE_CACHE_TTL || '300', 10),
   SITE_CACHE_MAX_ITEMS: parseInt(process.env.SITE_CACHE_MAX_ITEMS || '500', 10),
+  RECYCLE_BIN_RETENTION_DAYS: parseInt(process.env.RECYCLE_BIN_RETENTION_DAYS || '30', 10),
+  AUDIT_RETENTION_DAYS: parseInt(process.env.AUDIT_RETENTION_DAYS || '90', 10),
   isDev: (process.env.NODE_ENV || 'development') === 'development',
   isProd: process.env.NODE_ENV === 'production',
 };

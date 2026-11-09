@@ -11,6 +11,7 @@ const ribbonConfig = require('../../config/ribbon');
 const logger = require('../../utils/logger');
 const branding = require('../../config/branding');
 const { ForbiddenError, NotFoundError } = require('../../utils/errors');
+const eventBus = require('../../utils/eventBus');
 
 const isLayoutItem = (p) => p && (p.toLowerCase().startsWith(branding.PATHS.LAYOUT.toLowerCase()) || p.toLowerCase().startsWith('/root/layout'));
 
@@ -625,6 +626,8 @@ const contentEditorController = {
 
       const treeNode = treeHelper.toFancytreeNode(newItem, false, newItem.templateId);
 
+      eventBus.emit('item.created', { item: newItem, user, userId });
+
       res.status(201).json({
         success: true,
         message: `Created item '${newItem.displayName || newItem.name}' successfully.`,
@@ -681,6 +684,15 @@ const contentEditorController = {
         langCode,
         versionNumber
       );
+
+      eventBus.emit('item.updated', {
+        item: targetItem,
+        user,
+        userId,
+        lang: langCode,
+        version: versionNumber,
+        updatedFields: Object.keys(fields || {}),
+      });
 
       res.json({
         success: true,
@@ -743,6 +755,15 @@ const contentEditorController = {
         note,
       });
 
+      eventBus.emit('version.added', {
+        itemId: id,
+        itemPath: result.path || '',
+        lang,
+        version: result.version,
+        user,
+        userId: user?.id,
+      });
+
       res.status(201).json({
         success: true,
         message: `Đã tạo thành công Phiên bản ${result.version} cho ngôn ngữ [${result.language}].`,
@@ -797,6 +818,14 @@ const contentEditorController = {
 
       const result = await versionService.deleteVersion(id, lang, version);
 
+      eventBus.emit('version.deleted', {
+        itemId: id,
+        lang,
+        version: parseInt(version, 10),
+        user,
+        userId: user?.id,
+      });
+
       res.json({
         success: true,
         message: `Đã xóa Phiên bản ${result.deletedVersion} của ngôn ngữ [${result.language}].`,
@@ -820,6 +849,14 @@ const contentEditorController = {
       }
 
       const result = await versionService.restoreVersion(id, lang, version, {
+        userId: user?.id,
+      });
+
+      eventBus.emit('version.restored', {
+        itemId: id,
+        lang,
+        version: result.version,
+        user,
         userId: user?.id,
       });
 
@@ -884,6 +921,14 @@ const contentEditorController = {
 
       const item = await itemService.rename(id, name, displayName, userId);
 
+      eventBus.emit('item.renamed', {
+        item,
+        user,
+        userId,
+        oldName: targetItem.name,
+        newName: item.name,
+      });
+
       res.json({
         success: true,
         message: 'Item renamed successfully.',
@@ -935,6 +980,13 @@ const contentEditorController = {
 
       const treeNode = treeHelper.toFancytreeNode(copy, false, copy.templateId);
 
+      eventBus.emit('item.duplicated', {
+        newItem: copy,
+        sourceItem: targetItem,
+        user,
+        userId,
+      });
+
       res.json({
         success: true,
         message: `Duplicated as '${copy.displayName || copy.name}'.`,
@@ -961,6 +1013,14 @@ const contentEditorController = {
 
       const copy = await itemService.copyTo(id, targetParentId, userId);
       const treeNode = treeHelper.toFancytreeNode(copy, false, copy.templateId);
+
+      eventBus.emit('item.copied', {
+        newItem: copy,
+        sourceItem: { _id: id },
+        targetParentId,
+        user: req.session?.user,
+        userId,
+      });
 
       res.json({
         success: true,
@@ -1007,6 +1067,14 @@ const contentEditorController = {
 
       const movedItem = await itemService.moveTo(id, targetParentId, userId);
 
+      eventBus.emit('item.moved', {
+        item: movedItem,
+        oldPath: targetItem?.path,
+        newParentId: targetParentId,
+        user,
+        userId,
+      });
+
       res.json({
         success: true,
         message: 'Item moved successfully.',
@@ -1031,6 +1099,13 @@ const contentEditorController = {
 
       const item = await itemService.sort(id, direction);
 
+      eventBus.emit('item.sorted', {
+        item,
+        direction,
+        user: req.session?.user,
+        userId: req.session?.user?.id,
+      });
+
       res.json({
         success: true,
         message: `Sorted ${direction}.`,
@@ -1042,6 +1117,28 @@ const contentEditorController = {
         success: false,
         message: error.message,
       });
+    }
+  },
+
+  /**
+   * GET /api/items/:id/references (GĐ 9 / DEC-044)
+   */
+  async getItemReferences(req, res) {
+    try {
+      const { id } = req.params;
+      const targetItem = await Item.findById(id).lean();
+      if (!targetItem) {
+        return res.status(404).json({ success: false, message: 'Item not found.' });
+      }
+      const referenceService = require('../../services/referenceService');
+      const refResult = await referenceService.findReferences(targetItem, { includeDescendants: true });
+      res.json({
+        success: true,
+        data: refResult,
+      });
+    } catch (error) {
+      const statusCode = error.statusCode || 400;
+      res.status(statusCode).json({ success: false, message: error.message });
     }
   },
 
@@ -1072,18 +1169,26 @@ const contentEditorController = {
         }
       }
 
-      await itemService.delete(id, userId);
+      const options = {
+        confirmWarnings: req.body?.confirmWarnings === true,
+        force: req.body?.force === true,
+      };
+
+      const result = await itemService.delete(id, userId, options);
 
       res.json({
         success: true,
         message: 'Item deleted successfully.',
         deletedId: id,
+        ...result,
       });
     } catch (error) {
       const statusCode = error.statusCode || 400;
       res.status(statusCode).json({
         success: false,
         message: error.message,
+        references: error.references || null,
+        requiresConfirmation: error.requiresConfirmation || false,
       });
     }
   },

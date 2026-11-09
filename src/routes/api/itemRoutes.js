@@ -54,6 +54,7 @@ router.get('/publish-status-batch', async (req, res, next) => {
   }
 });
 router.get('/:id/quick-info', contentEditorController.getItemQuickInfo);
+router.get('/:id/references', contentEditorController.getItemReferences);
 router.get('/:id/children', contentEditorController.getTreeNodes);
 router.get('/:id/languages', contentEditorController.getItemLanguages);
 router.get('/:id/versions', contentEditorController.getItemVersions);
