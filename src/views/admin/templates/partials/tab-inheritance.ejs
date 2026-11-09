@@ -85,7 +85,7 @@
 
       <!-- Base Templates Selector Grid -->
       <h5 class="fw-bold mb-2.5 text-slate-800 text-sm font-bold">Select Base Templates</h5>
-      <div class="row row-cards g-2.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+      <div class="row row-cards g-2.5">
         <% allTpls.forEach(t => { %>
           <%
             const isBase = currentBaseIds.includes(t._id.toString());
@@ -103,10 +103,11 @@
                   <%= isBase ? 'checked' : '' %>
                 />
                 <i class="<%= t.icon || 'ti ti-file-text' %> fs-2 text-base <%= isBase ? 'text-purple-600' : 'text-slate-500' %>"></i>
-                <div class="overflow-hidden min-w-0">
-                  <div class="fw-semibold text-truncate small text-slate-800 text-xs font-medium truncate"><%= t.displayName || t.name %></div>
+                <div class="overflow-hidden min-w-0 flex-fill">
+                  <div class="d-flex align-items-center gap-1.5 flex items-center gap-1.5">
+                    <span class="fw-semibold text-truncate small text-slate-800 text-xs font-medium truncate"><%= t.displayName || t.name %></span>
                     <% if (isComponentTemplate) { %>
-                      <span class="badge bg-amber-50 text-amber-700 border border-amber-200 text-[9px] px-1.5 py-0.2 rounded font-mono" title="Component Template - Trường sẽ được tự động suy ra khi gắn vào Presentation. Không khuyến khích kế thừa trực tiếp làm Base Template">
+                      <span class="badge bg-amber-50 text-amber-700 border border-amber-200 text-[9px] px-1.5 py-0.2 rounded font-mono shrink-0" title="Component Template - Trường sẽ được tự động suy ra khi gắn vào Presentation. Không khuyến khích kế thừa trực tiếp làm Base Template">
                         <i class="ti ti-alert-triangle"></i> Comp
                       </span>
                     <% } %>

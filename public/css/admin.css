@@ -415,20 +415,29 @@ body {
   background-color: rgba(var(--tblr-primary-rgb), 0.1);
 }
 
-/* Node có con và đang THU GỌN (COLLAPSED): Icon chevron-right */
+/* Node có con và đang THU GỌN (COLLAPSED / LAZY): Icon chevron-right */
 .fancytree-plain .fancytree-exp-c span.fancytree-expander,
-.fancytree-plain .fancytree-exp-cl span.fancytree-expander {
+.fancytree-plain .fancytree-exp-cl span.fancytree-expander,
+.fancytree-plain .fancytree-exp-cd span.fancytree-expander,
+.fancytree-plain .fancytree-exp-cdl span.fancytree-expander,
+.fancytree-plain [class*="fancytree-exp-c"] span.fancytree-expander {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23495665' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6l-6 6'/%3E%3C/svg%3E") !important;
 }
 
 .fancytree-plain .fancytree-exp-c:hover span.fancytree-expander,
-.fancytree-plain .fancytree-exp-cl:hover span.fancytree-expander {
+.fancytree-plain .fancytree-exp-cl:hover span.fancytree-expander,
+.fancytree-plain .fancytree-exp-cd:hover span.fancytree-expander,
+.fancytree-plain .fancytree-exp-cdl:hover span.fancytree-expander,
+.fancytree-plain [class*="fancytree-exp-c"]:hover span.fancytree-expander {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230054a6' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6l-6 6'/%3E%3C/svg%3E") !important;
 }
 
-/* Node có con và đang BUNG RA (EXPANDED): Icon chevron-down */
+/* Node có con và đang BUNG RA (EXPANDED / LAZY EXPANDED): Icon chevron-down */
 .fancytree-plain .fancytree-exp-e span.fancytree-expander,
-.fancytree-plain .fancytree-exp-el span.fancytree-expander {
+.fancytree-plain .fancytree-exp-el span.fancytree-expander,
+.fancytree-plain .fancytree-exp-ed span.fancytree-expander,
+.fancytree-plain .fancytree-exp-edl span.fancytree-expander,
+.fancytree-plain [class*="fancytree-exp-e"] span.fancytree-expander {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230054a6' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6l6 -6'/%3E%3C/svg%3E") !important;
 }
 

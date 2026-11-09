@@ -27,7 +27,7 @@
         </div>
       </div>
 
-      <div class="row row-cards g-2.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5" id="insertOptionsGrid">
+      <div class="row row-cards g-2.5" id="insertOptionsGrid">
         <% allTpls.forEach(t => { %>
           <%
             const tId = t._id.toString();
@@ -44,7 +44,7 @@
                   <%= isChecked ? 'checked' : '' %>
                 />
                 <i class="<%= t.icon || 'ti ti-file-text' %> fs-2 text-base <%= isChecked ? 'text-primary' : 'text-slate-500' %>"></i>
-                <div class="overflow-hidden min-w-0">
+                <div class="overflow-hidden min-w-0 flex-fill">
                   <div class="fw-semibold text-truncate small text-slate-800 text-xs font-medium truncate"><%= t.displayName || t.name %></div>
                   <div class="text-muted font-monospace font-mono text-[10px] text-slate-400 truncate"><%= t.name %></div>
                 </div>
