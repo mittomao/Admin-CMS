@@ -41,6 +41,8 @@ const adminAuditRoutes = require('./routes/admin/auditRoutes');
 const apiAuditRoutes = require('./routes/api/auditRoutes');
 const adminBasicAuthRoutes = require('./routes/admin/basicAuthRoutes');
 const apiBasicAuthRoutes = require('./routes/api/basicAuthRoutes');
+const adminSerializationRoutes = require('./routes/admin/serializationRoutes');
+const apiSerializationRoutes = require('./routes/api/serializationRoutes');
 const siteRoutes = require('./routes/site/siteRoutes');
 const mediaController = require('./controllers/admin/mediaController');
 const contentEditorController = require('./controllers/admin/contentEditorController');
@@ -151,6 +153,7 @@ app.use('/admin/security', adminSecurityRoutes);
 app.use('/admin/recycle-bin', adminRecycleBinRoutes);
 app.use('/admin/audit-log', adminAuditRoutes);
 app.use('/admin/basic-auth', adminBasicAuthRoutes);
+app.use('/admin/serialization', adminSerializationRoutes);
 app.use('/api/presentation', apiPresentationRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);
@@ -163,6 +166,7 @@ app.use('/api/security', apiSecurityRoutes);
 app.use('/api/recycle-bin', apiRecycleBinRoutes);
 app.use('/api/audit', apiAuditRoutes);
 app.use('/api/basic-auth', apiBasicAuthRoutes);
+app.use('/api/serialization', apiSerializationRoutes);
 
 // 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10) & Basic Auth (GĐ B1)
 app.use(basicAuthMiddleware);

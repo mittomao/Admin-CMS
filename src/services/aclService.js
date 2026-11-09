@@ -511,6 +511,9 @@ class AclService {
       case ACTIONS.SECURITY_ROLE_MANAGE:
       case ACTIONS.BASICAUTH_READ:
       case ACTIONS.BASICAUTH_MANAGE:
+      case ACTIONS.SERIALIZATION_READ:
+      case ACTIONS.SERIALIZATION_EXPORT:
+      case ACTIONS.SERIALIZATION_IMPORT:
         return false; // Only Administrator
 
       case ACTIONS.MEDIA_READ:

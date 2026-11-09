@@ -166,6 +166,15 @@ const defaultFallbackApps = [
     url: '/admin/basic-auth',
     isStub: false,
   },
+  {
+    name: 'Serialization',
+    description: 'Export and import content, templates, layouts, and renderings as JSON packages',
+    icon: 'ti ti-package-export',
+    iconBg: 'cyan',
+    group: 'Control Panel & Maintenance',
+    url: '/admin/serialization',
+    isStub: false,
+  },
 ];
 
 const getLaunchpad = async (req, res) => {

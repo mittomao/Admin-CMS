@@ -75,6 +75,11 @@ const ACTIONS = {
   // Basic Auth Operations (GĐ B1)
   BASICAUTH_READ: 'basicauth:read',
   BASICAUTH_MANAGE: 'basicauth:manage',
+
+  // Serialization Operations (GĐ 11)
+  SERIALIZATION_READ: 'serialization:read',
+  SERIALIZATION_EXPORT: 'serialization:export',
+  SERIALIZATION_IMPORT: 'serialization:import',
 };
 
 /**

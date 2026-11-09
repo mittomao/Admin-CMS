@@ -1,0 +1,722 @@
+<style>
+  .serialization-tabs {
+    border-bottom: none !important;
+    margin-bottom: -1px !important;
+  }
+  .serialization-tabs .nav-link {
+    color: #64748b;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-bottom: 2px solid transparent;
+    font-size: 0.875rem;
+    padding: 0.65rem 1.25rem;
+    line-height: 1.5;
+    transition: all 0.15s ease-in-out;
+  }
+  .serialization-tabs .nav-link:hover {
+    color: #1e293b;
+    background-color: rgba(241, 245, 249, 0.7);
+    border-color: transparent;
+  }
+  .serialization-tabs .nav-link.active {
+    color: #206bc4 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-bottom: 3px solid #206bc4 !important;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+  }
+  [data-bs-theme="dark"] .serialization-tabs .nav-link {
+    color: #94a3b8;
+  }
+  [data-bs-theme="dark"] .serialization-tabs .nav-link:hover {
+    color: #f8fafc;
+    background-color: rgba(30, 41, 59, 0.6);
+  }
+  [data-bs-theme="dark"] .serialization-tabs .nav-link.active {
+    color: #38bdf8 !important;
+    background-color: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-bottom: 3px solid #38bdf8 !important;
+  }
+</style>
+
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Treecraft Quản trị Hệ thống &bull; GĐ 11
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-package-export text-cyan"></i>
+          <span>Quản lý Đóng gói & Phục hồi Dữ liệu (Serialization)</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Kết xuất và nhập khẩu dữ liệu Item, Template, Layout và Rendering chuẩn hóa định dạng JSON phục vụ sao lưu và đồng bộ môi trường.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/launchpad" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-apps"></i>
+          <span>Launchpad</span>
+        </a>
+        <a href="/admin/content-editor" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-sitemap"></i>
+          <span>Content Editor</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="card shadow-sm border-0 rounded-2xl mb-4">
+    <div class="border-b border-slate-200/80 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-800/60 px-5 pt-3 rounded-t-2xl">
+      <ul class="nav nav-tabs serialization-tabs border-bottom-0 gap-2 mb-0" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link active font-bold d-inline-flex align-items-center gap-2 rounded-t-xl" data-bs-toggle="tab" data-bs-target="#tab-export" role="tab" aria-selected="true">
+            <i class="ti ti-package-export text-primary fs-2"></i>
+            <span>Xuất Gói (Export Package)</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link font-bold d-inline-flex align-items-center gap-2 rounded-t-xl" data-bs-toggle="tab" data-bs-target="#tab-import" role="tab" aria-selected="false">
+            <i class="ti ti-package-import text-success fs-2"></i>
+            <span>Nhập Gói (Import Package)</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card-body p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-b-2xl">
+      <div class="tab-content">
+        <!-- ================================================================= -->
+        <!-- TAB 1: EXPORT PACKAGE -->
+        <!-- ================================================================= -->
+        <div class="tab-pane active show" id="tab-export" role="tabpanel">
+          <div class="mb-4">
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">
+              Lựa chọn các phân vùng dữ liệu để đóng gói
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Bạn có thể chọn đóng gói toàn bộ hệ thống hoặc chỉ trích xuất các phân vùng riêng biệt theo nhu cầu.
+            </p>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="d-flex flex-wrap gap-2 mb-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 d-flex align-items-center me-2">
+              <i class="ti ti-bolt me-1 text-amber-500"></i> Chọn nhanh:
+            </span>
+            <button type="button" class="btn btn-sm btn-white text-xs font-medium rounded-lg shadow-2xs" id="presetSelectAll">
+              <i class="ti ti-checks me-1 text-blue-600"></i> Toàn bộ hệ thống
+            </button>
+            <button type="button" class="btn btn-sm btn-white text-xs font-medium rounded-lg shadow-2xs" id="presetPresentationOnly">
+              <i class="ti ti-layout-grid me-1 text-purple-600"></i> Chỉ gói giao diện & Template
+            </button>
+            <button type="button" class="btn btn-sm btn-white text-xs font-medium rounded-lg shadow-2xs" id="presetContentOnly">
+              <i class="ti ti-file-text me-1 text-emerald-600"></i> Chỉ nội dung (Content)
+            </button>
+          </div>
+
+          <!-- Branch Checkboxes Grid -->
+          <div class="row g-3 mb-4">
+            <!-- 1. Content -->
+            <div class="col-12 col-md-6">
+              <label class="card card-sm h-100 p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary transition select-none">
+                <div class="d-flex align-items-start gap-3">
+                  <input type="checkbox" class="form-check-input mt-1 branch-export-cb" id="cbContent" checked>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <div class="font-bold text-slate-800 dark:text-slate-100 text-sm d-flex align-items-center gap-1.5">
+                        <i class="ti ti-file-text text-emerald-600"></i>
+                        <span>Content (Cây nội dung)</span>
+                      </div>
+                      <span class="badge bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-mono text-[10px]">/root/content</span>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      Toàn bộ các trang web, bài viết, phiên bản ngôn ngữ và cấu hình layout của từng trang.
+                    </div>
+                    <div class="mt-2">
+                      <label for="contentRootPath" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1 d-block">Đường dẫn gốc xuất (Content Root):</label>
+                      <input type="text" id="contentRootPath" class="form-control form-control-sm text-xs font-mono rounded-lg" value="<%= paths.CONTENT %>" placeholder="/root/content">
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- 2. Templates -->
+            <div class="col-12 col-md-6">
+              <label class="card card-sm h-100 p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary transition select-none">
+                <div class="d-flex align-items-start gap-3">
+                  <input type="checkbox" class="form-check-input mt-1 branch-export-cb" id="cbTemplates" checked>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <div class="font-bold text-slate-800 dark:text-slate-100 text-sm d-flex align-items-center gap-1.5">
+                        <i class="ti ti-template text-primary"></i>
+                        <span>Templates (Mẫu định nghĩa)</span>
+                      </div>
+                      <span class="badge bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-mono text-[10px]">/root/templates</span>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                      Bao gồm cấu trúc các mục template, sections, trường động (fields), giá trị chuẩn (Standard Values) và insert options.
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- 3. Layouts -->
+            <div class="col-12 col-md-4">
+              <label class="card card-sm h-100 p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary transition select-none">
+                <div class="d-flex align-items-start gap-3">
+                  <input type="checkbox" class="form-check-input mt-1 branch-export-cb" id="cbLayouts" checked>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <div class="font-bold text-slate-800 dark:text-slate-100 text-sm d-flex align-items-center gap-1.5">
+                        <i class="ti ti-layout-board text-purple-600"></i>
+                        <span>Layouts</span>
+                      </div>
+                      <span class="badge bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 font-mono text-[10px]">Layouts</span>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                      Các định nghĩa Master Layout EJS view và đường dẫn viewPath.
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- 4. Renderings -->
+            <div class="col-12 col-md-4">
+              <label class="card card-sm h-100 p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary transition select-none">
+                <div class="d-flex align-items-start gap-3">
+                  <input type="checkbox" class="form-check-input mt-1 branch-export-cb" id="cbRenderings" checked>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <div class="font-bold text-slate-800 dark:text-slate-100 text-sm d-flex align-items-center gap-1.5">
+                        <i class="ti ti-components text-cyan"></i>
+                        <span>Renderings</span>
+                      </div>
+                      <span class="badge bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 font-mono text-[10px]">Renderings</span>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                      Các component hiển thị, viewPath EJS và liên kết componentTemplate.
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- 5. Placeholders -->
+            <div class="col-12 col-md-4">
+              <label class="card card-sm h-100 p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary transition select-none">
+                <div class="d-flex align-items-start gap-3">
+                  <input type="checkbox" class="form-check-input mt-1 branch-export-cb" id="cbPlaceholders" checked>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <div class="font-bold text-slate-800 dark:text-slate-100 text-sm d-flex align-items-center gap-1.5">
+                        <i class="ti ti-layout-grid-add text-amber-600"></i>
+                        <span>Placeholders</span>
+                      </div>
+                      <span class="badge bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 font-mono text-[10px]">Placeholders</span>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                      Các khoá vùng chứa (Placeholder Settings) và danh mục rendering được phép.
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Export Action Row -->
+          <div class="d-flex align-items-center justify-content-between pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div class="text-xs text-slate-500 dark:text-slate-400">
+              <i class="ti ti-shield-check text-success me-1"></i>
+              Gói xuất định dạng JSON v1.0 có tính tương thích ngược và độc lập môi trường.
+            </div>
+            <% if (permissions.canExport) { %>
+            <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 px-4 py-2 font-semibold rounded-xl shadow-sm" id="btnExecuteExport">
+              <i class="ti ti-download fs-2"></i>
+              <span>Xuất Gói Dữ Liệu JSON</span>
+            </button>
+            <% } else { %>
+            <div class="badge bg-red-50 text-red-600 border border-red-200 p-2 rounded-lg text-xs">
+              Bạn không có quyền thực thi serialization:export
+            </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TAB 2: IMPORT PACKAGE -->
+        <!-- ================================================================= -->
+        <div class="tab-pane" id="tab-import" role="tabpanel">
+          <div class="mb-4">
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">
+              Nhập gói dữ liệu JSON vào hệ thống
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Quy trình nhập thực thi tuần tự 4 bước an toàn: <strong>1. Templates &rarr; 2. Layouts & Placeholders &rarr; 3. Renderings &rarr; 4. Content</strong>.
+            </p>
+          </div>
+
+          <!-- File Upload Dropzone -->
+          <div class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-primary rounded-2xl p-6 text-center transition cursor-pointer bg-slate-50/50 dark:bg-slate-800/30 mb-4" id="dropzoneArea">
+            <input type="file" id="importFileInput" accept=".json,application/json" class="d-none">
+            <div class="w-14 h-14 mx-auto mb-3 bg-cyan-50 dark:bg-cyan-950/50 text-cyan rounded-2xl flex items-center justify-center shadow-2xs">
+              <i class="ti ti-cloud-upload text-3xl"></i>
+            </div>
+            <h4 class="font-bold text-slate-800 dark:text-slate-200 text-sm mb-1">
+              Kéo thả tệp JSON vào đây, hoặc click để chọn tệp
+            </h4>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-0">
+              Chấp nhận tệp tin định dạng <code>.json</code> Treecraft Serialization v1.0
+            </p>
+          </div>
+
+          <!-- Inspection Result & Configuration Box (Hidden initially) -->
+          <div id="inspectorBox" class="d-none">
+            <div class="card bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-5 mb-4">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-b border-slate-200/80 dark:border-slate-700">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="w-10 h-10 rounded-xl bg-primary text-white d-flex align-items-center justify-center font-bold">
+                    <i class="ti ti-file-code fs-2"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-0 text-sm" id="inspectFileName">package.json</h4>
+                    <div class="text-[11px] text-slate-400" id="inspectFileMeta">Phiên bản 1.0 &bull; Xuất lúc: ...</div>
+                  </div>
+                </div>
+                <div class="badge bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-semibold" id="inspectTotalBadge">
+                  0 Items
+                </div>
+              </div>
+
+              <!-- Stats Breakdown -->
+              <div class="row g-2 mb-4">
+                <div class="col-6 col-sm-4 col-md-2">
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 text-center">
+                    <div class="text-[11px] font-semibold text-slate-400">Templates</div>
+                    <div class="text-base font-extrabold text-blue-600" id="statTemplates">0</div>
+                  </div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-2">
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 text-center">
+                    <div class="text-[11px] font-semibold text-slate-400">Layouts</div>
+                    <div class="text-base font-extrabold text-purple-600" id="statLayouts">0</div>
+                  </div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-2">
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 text-center">
+                    <div class="text-[11px] font-semibold text-slate-400">Renderings</div>
+                    <div class="text-base font-extrabold text-cyan" id="statRenderings">0</div>
+                  </div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-2">
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 text-center">
+                    <div class="text-[11px] font-semibold text-slate-400">Placeholders</div>
+                    <div class="text-base font-extrabold text-amber-600" id="statPlaceholders">0</div>
+                  </div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-2">
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 text-center">
+                    <div class="text-[11px] font-semibold text-slate-400">Content</div>
+                    <div class="text-base font-extrabold text-emerald-600" id="statContent">0</div>
+                  </div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-2">
+                  <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 text-center">
+                    <div class="text-[11px] font-semibold text-slate-400">Tổng cộng</div>
+                    <div class="text-base font-extrabold text-slate-900 dark:text-white" id="statTotal">0</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Conflict Resolution Options -->
+              <div class="mb-4">
+                <label class="form-label text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Chế độ xử lý khi trùng lặp đường dẫn (Conflict Mode):
+                </label>
+                <div class="d-flex flex-wrap gap-3">
+                  <label class="form-check form-check-inline cursor-pointer select-none">
+                    <input class="form-check-input" type="radio" name="conflictMode" value="OVERWRITE" checked>
+                    <span class="form-check-label text-xs font-medium text-slate-800 dark:text-slate-200">
+                      <strong>Ghi đè (Overwrite):</strong> Cập nhật dữ liệu vào item hiện tại
+                    </span>
+                  </label>
+                  <label class="form-check form-check-inline cursor-pointer select-none">
+                    <input class="form-check-input" type="radio" name="conflictMode" value="SKIP">
+                    <span class="form-check-label text-xs font-medium text-slate-800 dark:text-slate-200">
+                      <strong>Bỏ qua (Skip):</strong> Giữ nguyên nếu đã tồn tại
+                    </span>
+                  </label>
+                  <label class="form-check form-check-inline cursor-pointer select-none">
+                    <input class="form-check-input" type="radio" name="conflictMode" value="RENAME">
+                    <span class="form-check-label text-xs font-medium text-slate-800 dark:text-slate-200">
+                      <strong>Đổi tên (Rename):</strong> Tạo bản sao với hậu tố " - Copy"
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Import Action Button -->
+              <div class="d-flex align-items-center justify-content-between pt-3 border-t border-slate-200/80 dark:border-slate-700">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCancelFile">
+                  <i class="ti ti-x me-1"></i> Chọn tệp khác
+                </button>
+                <% if (permissions.canImport) { %>
+                <button type="button" class="btn btn-success d-inline-flex align-items-center gap-2 px-4 py-2 font-semibold rounded-xl shadow-sm" id="btnExecuteImport">
+                  <i class="ti ti-database-import fs-2"></i>
+                  <span>Bắt đầu Nhập Gói Dữ Liệu</span>
+                </button>
+                <% } else { %>
+                <div class="badge bg-red-50 text-red-600 border border-red-200 p-2 rounded-lg text-xs">
+                  Bạn không có quyền thực thi serialization:import
+                </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- TOAST NOTIFICATION CONTAINER -->
+<!-- ========================================================================= -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;" id="toastContainer"></div>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT LOGIC -->
+<!-- ========================================================================= -->
+<script>
+(function() {
+  const CSRF_TOKEN = '<%= csrfToken %>';
+
+  // Helper function to render rich Toast notifications
+  function showToast(type, title, message) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const icons = {
+      success: 'ti ti-circle-check text-success',
+      danger: 'ti ti-alert-circle text-danger',
+      warning: 'ti ti-alert-triangle text-warning',
+      info: 'ti ti-info-circle text-primary',
+    };
+
+    const borders = {
+      success: 'border-emerald-200 bg-white dark:bg-slate-900',
+      danger: 'border-red-200 bg-white dark:bg-slate-900',
+      warning: 'border-amber-200 bg-white dark:bg-slate-900',
+      info: 'border-blue-200 bg-white dark:bg-slate-900',
+    };
+
+    const iconClass = icons[type] || icons.info;
+    const borderClass = borders[type] || borders.info;
+    const toastId = 'toast-' + Date.now();
+
+    const toastHtml = `
+      <div id="${toastId}" class="toast show shadow-lg rounded-xl border ${borderClass} mb-2.5 overflow-hidden" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800 py-2 px-3">
+          <i class="${iconClass} fs-3 me-2"></i>
+          <strong class="me-auto text-xs font-bold text-slate-800 dark:text-slate-100">${title}</strong>
+          <small class="text-slate-400 text-[10px]">Vừa xong</small>
+          <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body text-xs text-slate-600 dark:text-slate-300 py-2.5 px-3">
+          ${message}
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', toastHtml);
+
+    const toastElement = document.getElementById(toastId);
+    if (toastElement) {
+      setTimeout(function() {
+        toastElement.classList.remove('show');
+        setTimeout(function() { toastElement.remove(); }, 300);
+      }, 7000);
+
+      const closeBtn = toastElement.querySelector('.btn-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+          toastElement.remove();
+        });
+      }
+    }
+  }
+
+  // =========================================================================
+  // TAB 1: EXPORT LOGIC
+  // =========================================================================
+  const cbContent = document.getElementById('cbContent');
+  const cbTemplates = document.getElementById('cbTemplates');
+  const cbLayouts = document.getElementById('cbLayouts');
+  const cbRenderings = document.getElementById('cbRenderings');
+  const cbPlaceholders = document.getElementById('cbPlaceholders');
+  const contentRootPathInput = document.getElementById('contentRootPath');
+  const btnExecuteExport = document.getElementById('btnExecuteExport');
+
+  // Presets
+  document.getElementById('presetSelectAll')?.addEventListener('click', function() {
+    cbContent.checked = true;
+    cbTemplates.checked = true;
+    cbLayouts.checked = true;
+    cbRenderings.checked = true;
+    cbPlaceholders.checked = true;
+  });
+
+  document.getElementById('presetPresentationOnly')?.addEventListener('click', function() {
+    cbContent.checked = false;
+    cbTemplates.checked = true;
+    cbLayouts.checked = true;
+    cbRenderings.checked = true;
+    cbPlaceholders.checked = true;
+  });
+
+  document.getElementById('presetContentOnly')?.addEventListener('click', function() {
+    cbContent.checked = true;
+    cbTemplates.checked = false;
+    cbLayouts.checked = false;
+    cbRenderings.checked = false;
+    cbPlaceholders.checked = false;
+  });
+
+  // Execute Export
+  btnExecuteExport?.addEventListener('click', async function() {
+    const includeContent = cbContent.checked;
+    const includeTemplates = cbTemplates.checked;
+    const includeLayouts = cbLayouts.checked;
+    const includeRenderings = cbRenderings.checked;
+    const includePlaceholders = cbPlaceholders.checked;
+    const contentRootPath = contentRootPathInput?.value.trim() || '/root/content';
+
+    if (!includeContent && !includeTemplates && !includeLayouts && !includeRenderings && !includePlaceholders) {
+      showToast('danger', 'Lỗi khi xuất gói dữ liệu', 'Vui lòng chọn ít nhất một phân vùng (Content, Templates, Layouts, Renderings hoặc Placeholders) để đóng gói.');
+      return;
+    }
+
+    const originalBtnHtml = btnExecuteExport.innerHTML;
+    btnExecuteExport.disabled = true;
+    btnExecuteExport.innerHTML = '<i class="ti ti-loader animate-spin me-1"></i> Đang đóng gói dữ liệu...';
+
+    try {
+      const response = await fetch('/api/serialization/export-package', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'CSRF-Token': CSRF_TOKEN,
+          'X-CSRF-Token': CSRF_TOKEN,
+        },
+        body: JSON.stringify({
+          includeContent,
+          includeTemplates,
+          includeLayouts,
+          includeRenderings,
+          includePlaceholders,
+          contentRootPath,
+          format: 'json',
+          _csrf: CSRF_TOKEN,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Không thể tạo gói xuất dữ liệu.');
+      }
+
+      // Download JSON file directly via client blob
+      const pkg = data.packageData;
+      const jsonStr = JSON.stringify(pkg, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      a.href = url;
+      a.download = `treecraft-package-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Toast notification with detailed counts
+      const stats = data.stats || {};
+      const detailMsg = `Đã đóng gói thành công <strong>${stats.totalItems} items</strong> (${stats.templatesCount} Templates, ${stats.layoutsCount} Layouts, ${stats.renderingsCount} Renderings, ${stats.placeholdersCount} Placeholders, ${stats.contentCount} Content). Tệp tin đang được tải về máy.`;
+      showToast('success', 'Xuất gói dữ liệu thành công!', detailMsg);
+    } catch (err) {
+      showToast('danger', 'Lỗi xuất dữ liệu', err.message || 'Có lỗi xảy ra khi tạo gói JSON.');
+    } finally {
+      btnExecuteExport.disabled = false;
+      btnExecuteExport.innerHTML = originalBtnHtml;
+    }
+  });
+
+  // =========================================================================
+  // TAB 2: IMPORT LOGIC
+  // =========================================================================
+  const dropzoneArea = document.getElementById('dropzoneArea');
+  const importFileInput = document.getElementById('importFileInput');
+  const inspectorBox = document.getElementById('inspectorBox');
+  const inspectFileName = document.getElementById('inspectFileName');
+  const inspectFileMeta = document.getElementById('inspectFileMeta');
+  const inspectTotalBadge = document.getElementById('inspectTotalBadge');
+  const statTemplates = document.getElementById('statTemplates');
+  const statLayouts = document.getElementById('statLayouts');
+  const statRenderings = document.getElementById('statRenderings');
+  const statPlaceholders = document.getElementById('statPlaceholders');
+  const statContent = document.getElementById('statContent');
+  const statTotal = document.getElementById('statTotal');
+  const btnExecuteImport = document.getElementById('btnExecuteImport');
+  const btnCancelFile = document.getElementById('btnCancelFile');
+
+  let currentParsedPackage = null;
+
+  // Dropzone drag/drop events
+  dropzoneArea?.addEventListener('click', function() {
+    importFileInput.click();
+  });
+
+  dropzoneArea?.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dropzoneArea.classList.add('border-primary', 'bg-blue-50/20');
+  });
+
+  dropzoneArea?.addEventListener('dragleave', function() {
+    dropzoneArea.classList.remove('border-primary', 'bg-blue-50/20');
+  });
+
+  dropzoneArea?.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropzoneArea.classList.remove('border-primary', 'bg-blue-50/20');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelected(e.dataTransfer.files[0]);
+    }
+  });
+
+  importFileInput?.addEventListener('change', function() {
+    if (importFileInput.files && importFileInput.files[0]) {
+      handleFileSelected(importFileInput.files[0]);
+    }
+  });
+
+  btnCancelFile?.addEventListener('click', function() {
+    currentParsedPackage = null;
+    importFileInput.value = '';
+    inspectorBox.classList.add('d-none');
+    dropzoneArea.classList.remove('d-none');
+  });
+
+  function handleFileSelected(file) {
+    if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+      showToast('danger', 'Tệp tin không đúng định dạng', 'Vui lòng chọn một tệp có phần mở rộng .json');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(evt) {
+      try {
+        const jsonContent = JSON.parse(evt.target.result);
+        currentParsedPackage = jsonContent;
+
+        // Inspect file through API
+        const inspectRes = await fetch('/api/serialization/inspect', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'CSRF-Token': CSRF_TOKEN,
+            'X-CSRF-Token': CSRF_TOKEN,
+          },
+          body: JSON.stringify({
+            packageData: jsonContent,
+            _csrf: CSRF_TOKEN,
+          }),
+        });
+
+        const data = await inspectRes.json();
+        if (!inspectRes.ok || !data.success) {
+          throw new Error(data.message || 'Tệp JSON không hợp lệ theo chuẩn Treecraft Serialization.');
+        }
+
+        const insp = data.inspection;
+        const stats = insp.stats || {};
+
+        inspectFileName.textContent = file.name;
+        inspectFileMeta.textContent = `Phiên bản: ${insp.version} • Tạo bởi: ${insp.exportedBy} • Xuất: ${insp.exportedAt ? new Date(insp.exportedAt).toLocaleString('vi-VN') : 'Không rõ'}`;
+        inspectTotalBadge.textContent = `${stats.totalItems} Items`;
+
+        statTemplates.textContent = stats.templatesCount || 0;
+        statLayouts.textContent = stats.layoutsCount || 0;
+        statRenderings.textContent = stats.renderingsCount || 0;
+        statPlaceholders.textContent = stats.placeholdersCount || 0;
+        statContent.textContent = stats.contentCount || 0;
+        statTotal.textContent = stats.totalItems || 0;
+
+        dropzoneArea.classList.add('d-none');
+        inspectorBox.classList.remove('d-none');
+
+        showToast('info', 'Kiểm tra tệp thành công!', `Gói dữ liệu hợp lệ: Phát hiện <strong>${stats.totalItems} items</strong> sẵn sàng nạp.`);
+      } catch (err) {
+        showToast('danger', 'Lỗi kiểm tra tệp tin', err.message || 'Không thể đọc nội dung tệp JSON.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // Execute Import
+  btnExecuteImport?.addEventListener('click', async function() {
+    if (!currentParsedPackage) {
+      showToast('danger', 'Chưa có tệp dữ liệu', 'Vui lòng chọn tệp JSON trước khi thực thi nạp.');
+      return;
+    }
+
+    const conflictModeRadio = document.querySelector('input[name="conflictMode"]:checked');
+    const conflictMode = conflictModeRadio ? conflictModeRadio.value : 'OVERWRITE';
+
+    const originalBtnHtml = btnExecuteImport.innerHTML;
+    btnExecuteImport.disabled = true;
+    btnExecuteImport.innerHTML = '<i class="ti ti-loader animate-spin me-1"></i> Đang nạp dữ liệu tuần tự 4 bước...';
+
+    try {
+      const response = await fetch('/api/serialization/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'CSRF-Token': CSRF_TOKEN,
+          'X-CSRF-Token': CSRF_TOKEN,
+        },
+        body: JSON.stringify({
+          packageData: currentParsedPackage,
+          conflictMode,
+          _csrf: CSRF_TOKEN,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Lỗi khi nhập gói dữ liệu.');
+      }
+
+      const stats = data.stats || {};
+      const successMsg = `Nhập dữ liệu thành công! Tạo mới: <strong>${stats.totalCreated}</strong>, Cập nhật: <strong>${stats.totalUpdated}</strong>, Bỏ qua: <strong>${stats.totalSkipped}</strong>.`;
+      showToast('success', 'Nhập dữ liệu hoàn tất!', successMsg);
+
+      if (Array.isArray(data.warnings) && data.warnings.length > 0) {
+        showToast('warning', 'Cảnh báo phụ thuộc', data.warnings.join('<br/>'));
+      }
+    } catch (err) {
+      showToast('danger', 'Lỗi nhập dữ liệu', err.message || 'Có lỗi xảy ra trong quá trình nạp.');
+    } finally {
+      btnExecuteImport.disabled = false;
+      btnExecuteImport.innerHTML = originalBtnHtml;
+    }
+  });
+})();
+</script>
+

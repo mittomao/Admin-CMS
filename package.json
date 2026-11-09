@@ -26,7 +26,8 @@
     "recyclebin:purge-expired": "node src/scripts/purge-expired-recyclebin.js",
     "audit:prune": "node src/scripts/prune-expired-audit-logs.js",
     "basicauth:disable": "node src/scripts/basicauth-disable.js",
-    "basicauth:add-user": "node src/scripts/basicauth-add-user.js"
+    "basicauth:add-user": "node src/scripts/basicauth-add-user.js",
+    "migrate:phase-11": "node src/scripts/migrate-phase-11-launchpad.js"
   },
   "keywords": [
     "cms",

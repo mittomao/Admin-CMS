@@ -233,6 +233,16 @@ const seedData = async () => {
         sortOrder: 40,
         allowedRoles: [rolesMap['Administrator']],
       },
+      {
+        name: 'Serialization',
+        description: 'Export and import content, templates, layouts, and renderings as JSON packages',
+        icon: 'ti ti-package-export',
+        iconBg: 'cyan',
+        group: 'Control Panel & Maintenance',
+        url: '/admin/serialization',
+        sortOrder: 50,
+        allowedRoles: [rolesMap['Administrator']],
+      },
     ];
 
     for (const appData of appsConfig) {
