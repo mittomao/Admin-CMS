@@ -529,11 +529,18 @@ function openFieldModal(sectionId, fieldData = null) {
   document.getElementById('fieldModalRequired').checked = Boolean(fieldData && fieldData.required);
   document.getElementById('fieldModalSource').value = (fieldData && fieldData.source) || '';
   document.getElementById('fieldModalShared').checked = Boolean(fieldData && fieldData.shared);
+  const unversionedInput = document.getElementById('fieldModalUnversioned');
+  if (unversionedInput) {
+    unversionedInput.checked = Boolean(fieldData && fieldData.unversioned);
+  }
   document.getElementById('fieldModalHelpText').value = (fieldData && fieldData.helpText) || '';
 
   toggleSourceField();
 
-  document.getElementById('fieldModalTitle').textContent = fieldData && fieldData.id ? 'Edit Field' : 'Add Field';
+  const headingEl = document.getElementById('fieldModalHeading');
+  if (headingEl) {
+    headingEl.textContent = fieldData && fieldData.id ? 'Edit Field' : 'Add Field';
+  }
 
   const modal = new window.bootstrap.Modal(modalEl);
   modal.show();
@@ -542,11 +549,18 @@ function openFieldModal(sectionId, fieldData = null) {
 function toggleSourceField() {
   const typeSelect = document.getElementById('fieldModalType');
   const sourceContainer = document.getElementById('fieldSourceContainer');
+  const typeCol = document.getElementById('fieldTypeContainer');
   if (typeSelect && sourceContainer) {
     if (typeSelect.value === 'Droplist') {
       sourceContainer.style.display = 'block';
+      if (typeCol) {
+        typeCol.className = 'col-md-6';
+      }
     } else {
       sourceContainer.style.display = 'none';
+      if (typeCol) {
+        typeCol.className = 'col-12';
+      }
     }
   }
 }
