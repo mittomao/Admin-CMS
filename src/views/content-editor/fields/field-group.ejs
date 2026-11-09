@@ -1,0 +1,74 @@
+<%
+  const style = field.config?.style || 'card';
+  const collapsible = field.config?.collapsible !== false;
+  const isCollapsed = Boolean(field.config?.collapsed);
+  const groupId = 'group-' + field._id;
+%>
+
+<div class="col-12 mb-3 field-group-container" id="field-group-<%= field._id %>" data-field-id="<%= field._id %>" data-field-name="<%= field.name %>">
+  <% if (style === 'accordion') { %>
+    <div class="accordion border border-slate-200 dark:border-slate-700/80 rounded-xl overflow-hidden shadow-2xs">
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header" id="heading-<%= groupId %>">
+          <button class="accordion-button bg-slate-50 dark:bg-slate-800/80 px-4 py-3 text-xs font-bold text-slate-800 dark:text-slate-200 d-flex align-items-center gap-2 <%= isCollapsed ? 'collapsed' : '' %>"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapse-<%= groupId %>"
+                  aria-expanded="<%= isCollapsed ? 'false' : 'true' %>"
+                  aria-controls="collapse-<%= groupId %>">
+            <i class="<%= field.icon || 'ti ti-layout-grid' %> text-primary"></i>
+            <span><%= field.title || field.name %></span>
+            <% if (field.helpText) { %>
+              <span class="text-[11px] font-normal text-slate-400 ms-2">(<%= field.helpText %>)</span>
+            <% } %>
+          </button>
+        </h2>
+        <div id="collapse-<%= groupId %>" 
+             class="accordion-collapse collapse <%= isCollapsed ? '' : 'show' %>" 
+             aria-labelledby="heading-<%= groupId %>">
+          <div class="accordion-body p-4 bg-white dark:bg-slate-900">
+            <div class="row g-2" id="group-fields-<%= field._id %>">
+              <!-- Nested fields will be rendered here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } else if (style === 'borderless') { %>
+    <div class="py-2">
+      <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-b border-slate-200 dark:border-slate-800">
+        <i class="<%= field.icon || 'ti ti-layout-grid' %> text-primary text-sm"></i>
+        <h6 class="text-xs font-bold text-slate-800 dark:text-slate-200 m-0"><%= field.title || field.name %></h6>
+        <% if (field.helpText) { %>
+          <span class="text-[11px] text-slate-400 ms-1">(<%= field.helpText %>)</span>
+        <% } %>
+      </div>
+      <div class="row g-2" id="group-fields-<%= field._id %>"></div>
+    </div>
+  <% } else { %>
+    <!-- Default Card Style -->
+    <div class="card border border-slate-200 dark:border-slate-700/80 shadow-2xs rounded-xl overflow-hidden">
+      <div class="card-header bg-slate-50/90 dark:bg-slate-800/60 px-4 py-2.5 border-b border-slate-200/80 dark:border-slate-700/80 d-flex align-items-center justify-content-between select-none">
+        <div class="d-flex align-items-center gap-2">
+          <i class="<%= field.icon || 'ti ti-layout-grid' %> text-primary text-sm"></i>
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-200"><%= field.title || field.name %></span>
+        </div>
+        <% if (collapsible) { %>
+          <button type="button" 
+                  class="btn btn-ghost-secondary btn-icon btn-sm p-1 rounded-md" 
+                  onclick="const b = document.getElementById('body-<%= groupId %>'); const h = b.classList.toggle('d-none'); this.querySelector('i').className = h ? 'ti ti-chevron-right text-xs' : 'ti ti-chevron-down text-xs';"
+                  title="Thu gọn / Mở rộng">
+            <i class="ti ti-chevron-down text-xs"></i>
+          </button>
+        <% } %>
+      </div>
+      <div class="card-body p-4 bg-white dark:bg-slate-900" id="body-<%= groupId %>">
+        <% if (field.helpText) { %>
+          <div class="form-hint text-muted mb-3"><i class="ti ti-info-circle me-1"></i><%= field.helpText %></div>
+        <% } %>
+        <div class="row g-2" id="group-fields-<%= field._id %>"></div>
+      </div>
+    </div>
+  <% } %>
+</div>
+

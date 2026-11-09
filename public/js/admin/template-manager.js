@@ -539,6 +539,44 @@ function openFieldModal(sectionId, fieldData = null) {
   }
   document.getElementById('fieldModalHelpText').value = (fieldData && fieldData.helpText) || '';
 
+  // Repeater config
+  const subFieldsInput = document.getElementById('fieldModalSubFields');
+  if (subFieldsInput) {
+    const subs = (fieldData && fieldData.config && fieldData.config.subFields) || [];
+    subFieldsInput.value = subs.length > 0 ? JSON.stringify(subs, null, 2) : '';
+  }
+  const minItemsInput = document.getElementById('fieldModalMinItems');
+  if (minItemsInput) {
+    minItemsInput.value = (fieldData && fieldData.config && fieldData.config.minItems) || '';
+  }
+  const maxItemsInput = document.getElementById('fieldModalMaxItems');
+  if (maxItemsInput) {
+    maxItemsInput.value = (fieldData && fieldData.config && fieldData.config.maxItems) || '';
+  }
+
+  // Conditional visibility
+  const dependsInput = document.getElementById('fieldModalDependsOn');
+  const operatorSelect = document.getElementById('fieldModalOperator');
+  const valInput = document.getElementById('fieldModalConditionVal');
+  const visibilityPanel = document.getElementById('visibilityPanel');
+
+  if (dependsInput) {
+    dependsInput.value = (fieldData && fieldData.visibility && fieldData.visibility.dependsOn) || '';
+  }
+  if (operatorSelect) {
+    operatorSelect.value = (fieldData && fieldData.visibility && fieldData.visibility.operator) || 'equals';
+  }
+  if (valInput) {
+    valInput.value = (fieldData && fieldData.visibility && fieldData.visibility.value !== undefined && fieldData.visibility.value !== null) ? fieldData.visibility.value : '';
+  }
+  if (visibilityPanel) {
+    if (fieldData && fieldData.visibility && fieldData.visibility.dependsOn) {
+      visibilityPanel.classList.remove('d-none');
+    } else {
+      visibilityPanel.classList.add('d-none');
+    }
+  }
+
   toggleSourceField();
 
   const headingEl = document.getElementById('fieldModalHeading');
@@ -553,11 +591,14 @@ function openFieldModal(sectionId, fieldData = null) {
 function toggleSourceField() {
   const typeSelect = document.getElementById('fieldModalType');
   const sourceContainer = document.getElementById('fieldSourceContainer');
-  if (typeSelect && sourceContainer) {
-    if (typeSelect.value === 'Droplist') {
-      sourceContainer.style.display = 'block';
-    } else {
-      sourceContainer.style.display = 'none';
+  const repeaterContainer = document.getElementById('fieldRepeaterContainer');
+
+  if (typeSelect) {
+    if (sourceContainer) {
+      sourceContainer.style.display = typeSelect.value === 'Droplist' ? 'block' : 'none';
+    }
+    if (repeaterContainer) {
+      repeaterContainer.style.display = typeSelect.value === 'Repeater' ? 'block' : 'none';
     }
   }
 }
@@ -584,6 +625,38 @@ if (fieldForm) {
         colSpan: Number(document.getElementById('fieldModalColSpan')?.value || 12),
       },
     };
+
+    // Repeater config
+    if (payload.type === 'Repeater') {
+      let subFields = [];
+      try {
+        const rawSubs = document.getElementById('fieldModalSubFields')?.value.trim();
+        if (rawSubs) subFields = JSON.parse(rawSubs);
+      } catch {
+        alert('Cấu trúc subFields JSON không hợp lệ. Vui lòng kiểm tra lại định dạng JSON.');
+        return;
+      }
+      payload.config = {
+        subFields,
+        minItems: Number(document.getElementById('fieldModalMinItems')?.value) || 0,
+        maxItems: Number(document.getElementById('fieldModalMaxItems')?.value) || null,
+      };
+    }
+
+    // Conditional visibility
+    const dependsOn = document.getElementById('fieldModalDependsOn')?.value.trim();
+    if (dependsOn) {
+      let condVal = document.getElementById('fieldModalConditionVal')?.value.trim();
+      if (condVal === 'true') condVal = true;
+      else if (condVal === 'false') condVal = false;
+      payload.visibility = {
+        dependsOn,
+        operator: document.getElementById('fieldModalOperator')?.value || 'equals',
+        value: condVal,
+      };
+    } else {
+      payload.visibility = { dependsOn: '', operator: '', value: null };
+    }
 
     const url = fieldId
       ? `/api/templates/${getActiveTemplateId()}/sections/${secId}/fields/${fieldId}`

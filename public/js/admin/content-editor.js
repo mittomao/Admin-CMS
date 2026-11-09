@@ -896,6 +896,14 @@ function attachItemFormEvents() {
   // Rich Text Editor TinyMCE 6 Integration
   initRichTextEditors(form, { csrfToken: getCsrfToken() });
 
+  // Universal Custom Fields Integration (Repeater & Conditional Visibility)
+  if (window.TreecraftRepeater && window.TreecraftRepeater.initAll) {
+    window.TreecraftRepeater.initAll();
+  }
+  if (window.TreecraftVisibility && window.TreecraftVisibility.evaluateAll) {
+    window.TreecraftVisibility.evaluateAll(form);
+  }
+
   // Upload / Replace Media Asset directly from Item Form
   const replaceBtn = form.querySelector('#btnReplaceMediaAsset');
   const fileInput = form.querySelector('#mediaAssetFileInput');

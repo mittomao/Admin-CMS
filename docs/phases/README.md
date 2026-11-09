@@ -54,6 +54,7 @@ flowchart TD
 | **11** | Serialization (JSON Export/Import 2 Tab & Toast) | **Hoàn thành** | 2, 3, 8 | [`phase-11-extensions.md`](./phase-11-extensions.md) | 2026-11-09 | 2026-11-09 | Trang quản trị Serialization 2 Tab (Export/Import), tùy chọn 5 phân vùng, thứ tự nạp an toàn 4 bước & thông báo Toast chi tiết |
 | **L1** | Quản lý Ngôn ngữ Động (Language Manager) Thay thế Hard-code | **Hoàn thành** | 4, 4.1, 8, 10 | [`phase-L1-language-manager.md`](./phase-L1-language-manager.md) | 2026-11-09 | 2026-11-09 | Chuyển đổi ngôn ngữ thành Item (/root/system/Languages), languageService duy nhất, dynamic prefix & views, check:languages |
 | **F1** | Universal Custom Field System - Nền Tảng Core | **Hoàn thành** | 2, 3, 4, 4.1 | [`phase-F1-custom-fields-core.md`](./phase-F1-custom-fields-core.md) | 2026-11-09 | 2026-11-09 | Field Registry, Universal Form Renderer, 8 trường gốc + 6 trường mở rộng, nâng cấp Template Schema |
+| **F2** | Universal Custom Field System - Động Cơ Phức Hợp | **Hoàn thành** | F1, 2, 3, 4, 4.1 | [`phase-F2-complex-engines.md`](./phase-F2-complex-engines.md) | 2026-11-09 | 2026-11-09 | Repeater Engine kéo thả SortableJS, Field Group Layout, Conditional Visibility Engine reactive |
 | **12** | Hoàn thiện, Bảo mật, E2E SSR Test & Docker | **Chưa bắt đầu** | 0 → 11, L1 | [`phase-12-hardening.md`](./phase-12-hardening.md) | - | - | E2E test luồng Page -> Template -> Presentation -> Publish -> Site Renderer EJS |
 
 ---
