@@ -31,6 +31,11 @@
         <i class="ti ti-rotate-2 text-warning fs-3"></i>
       </button>
     <% } %>
+    <% if (typeof isReadOnly !== 'undefined' && isReadOnly) { %>
+      <span class="badge bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700" style="font-size: 0.65rem;" title="Chỉ đọc (Read-only)">
+        <i class="ti ti-lock me-1"></i>Read-only
+      </span>
+    <% } %>
   </div>
 </div>
 

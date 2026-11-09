@@ -1,0 +1,29 @@
+<% 
+  const iconVal = (typeof value !== 'undefined' && value) ? value : (field.defaultValue || ''); 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="input-group input-group-sm">
+    <span class="input-group-text bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 px-2.5">
+      <i class="<%= iconVal || 'ti ti-icons' %> text-base" id="icon-preview-<%= field._id %>"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control form-control-sm item-field-input font-mono rounded-e-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-xs"
+      name="fields[<%= field.name %>]"
+      value="<%= iconVal %>"
+      placeholder="e.g. ti ti-home, ti ti-user, ti ti-settings"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+      oninput="document.getElementById('icon-preview-<%= field._id %>').className = (this.value.trim() || 'ti ti-icons') + ' text-base';"
+    />
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-hint text-muted mt-1">
+      <i class="ti ti-info-circle me-1"></i><%= field.helpText %>
+    </div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

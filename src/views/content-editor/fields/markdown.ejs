@@ -1,0 +1,31 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  const rows = field.config?.rows || 8;
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="relative">
+    <div class="d-flex align-items-center justify-content-between px-2.5 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 border-b-0 rounded-t-lg text-slate-500 text-xs">
+      <span class="d-flex align-items-center gap-1 font-mono text-[11px]">
+        <i class="ti ti-markdown"></i> Markdown / Source Code
+      </span>
+      <span class="text-[10px] text-slate-400">Hỗ trợ cú pháp Markdown chuẩn</span>
+    </div>
+    <textarea
+      class="form-control form-control-sm item-field-input font-mono rounded-t-none rounded-b-lg border-slate-300 dark:border-slate-700 dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:border-sc-red focus:ring-1 focus:ring-sc-red/20 focus:outline-none"
+      name="fields[<%= field.name %>]"
+      rows="<%= rows %>"
+      placeholder="<%= field.config?.placeholder || 'Nhập nội dung Markdown hoặc code...' %>"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+      style="tab-size: 2;"
+    ><%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '') %></textarea>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-hint text-muted mt-1">
+      <i class="ti ti-info-circle me-1"></i><%= field.helpText %>
+    </div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

@@ -1,0 +1,35 @@
+<% 
+  const colorVal = (typeof value !== 'undefined' && value) ? value : (field.defaultValue || '#000000'); 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  const disabledAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'disabled' : '';
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="input-group input-group-sm">
+    <input
+      type="color"
+      class="form-control form-control-color p-1 rounded-s-lg border-slate-300 dark:border-slate-700 cursor-pointer"
+      value="<%= colorVal.startsWith('#') ? colorVal : '#000000' %>"
+      <%= disabledAttr %>
+      oninput="this.nextElementSibling.value = this.value; this.nextElementSibling.dispatchEvent(new Event('change', { bubbles: true }));"
+      style="width: 44px; height: 34px;"
+    />
+    <input
+      type="text"
+      class="form-control form-control-sm item-field-input font-mono rounded-e-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-xs"
+      name="fields[<%= field.name %>]"
+      value="<%= typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '') %>"
+      placeholder="#000000"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+      oninput="const c = this.previousElementSibling; if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) c.value = this.value;"
+    />
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-hint text-muted mt-1">
+      <i class="ti ti-info-circle me-1"></i><%= field.helpText %>
+    </div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

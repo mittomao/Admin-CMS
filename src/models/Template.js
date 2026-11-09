@@ -70,16 +70,7 @@ const fieldSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: [
-        'Single-Line Text',
-        'Multi-Line Text',
-        'Rich Text',
-        'Checkbox',
-        'Date',
-        'Number',
-        'Droplist',
-        'Image',
-      ],
+      trim: true,
       default: 'Single-Line Text',
     },
     required: {
@@ -107,8 +98,27 @@ const fieldSchema = new mongoose.Schema(
       default: '',
     },
     validation: {
-      type: String,
-      default: '',
+      type: mongoose.Schema.Types.Mixed,
+      default: () => ({}),
+    },
+    config: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: () => ({}),
+    },
+    visibility: {
+      dependsOn: { type: String, default: '' },
+      operator: { type: String, default: '' },
+      value: { type: mongoose.Schema.Types.Mixed, default: null },
+    },
+    permissions: {
+      readRoles: [{ type: String }],
+      writeRoles: [{ type: String }],
+      hiddenRoles: [{ type: String }],
+    },
+    layout: {
+      colSpan: { type: Number, default: 12 },
+      groupName: { type: String, default: '' },
     },
     sortOrder: {
       type: Number,
@@ -222,6 +232,17 @@ const templateSchema = new mongoose.Schema(
             }
           });
         }
+        if (Array.isArray(ret.sections)) {
+          ret.sections.forEach((s) => {
+            if (Array.isArray(s.fields)) {
+              s.fields.forEach((f) => {
+                if (f.config instanceof Map) {
+                  f.config = Object.fromEntries(f.config);
+                }
+              });
+            }
+          });
+        }
         return ret;
       },
     },
@@ -235,6 +256,17 @@ const templateSchema = new mongoose.Schema(
           ret.presentation.renderings.forEach((r) => {
             if (r.parameters instanceof Map) {
               r.parameters = Object.fromEntries(r.parameters);
+            }
+          });
+        }
+        if (Array.isArray(ret.sections)) {
+          ret.sections.forEach((s) => {
+            if (Array.isArray(s.fields)) {
+              s.fields.forEach((f) => {
+                if (f.config instanceof Map) {
+                  f.config = Object.fromEntries(f.config);
+                }
+              });
             }
           });
         }

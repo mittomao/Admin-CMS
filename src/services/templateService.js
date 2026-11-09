@@ -842,7 +842,11 @@ const templateService = {
       shared: Boolean(fieldData.shared),
       unversioned: Boolean(fieldData.unversioned),
       helpText: fieldData.helpText || '',
-      validation: fieldData.validation || '',
+      validation: fieldData.validation || {},
+      config: fieldData.config || {},
+      visibility: fieldData.visibility || { dependsOn: '', operator: '', value: null },
+      permissions: fieldData.permissions || { readRoles: [], writeRoles: [], hiddenRoles: [] },
+      layout: fieldData.layout || { colSpan: 12, groupName: '' },
       sortOrder: lastSortOrder + 10,
     });
 
@@ -890,8 +894,12 @@ const templateService = {
     if (fieldData.source !== undefined) field.source = fieldData.source.trim();
     if (fieldData.shared !== undefined) field.shared = Boolean(fieldData.shared);
     if (fieldData.unversioned !== undefined) field.unversioned = Boolean(fieldData.unversioned);
-    if (fieldData.helpText !== undefined) field.helpText = fieldData.helpText.trim();
-    if (fieldData.validation !== undefined) field.validation = fieldData.validation.trim();
+    if (fieldData.helpText !== undefined) field.helpText = typeof fieldData.helpText === 'string' ? fieldData.helpText.trim() : '';
+    if (fieldData.validation !== undefined) field.validation = fieldData.validation;
+    if (fieldData.config !== undefined) field.config = fieldData.config;
+    if (fieldData.visibility !== undefined) field.visibility = fieldData.visibility;
+    if (fieldData.permissions !== undefined) field.permissions = fieldData.permissions;
+    if (fieldData.layout !== undefined) field.layout = fieldData.layout;
 
     template.updatedBy = userId;
     await template.save();

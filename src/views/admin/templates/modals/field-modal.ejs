@@ -43,22 +43,39 @@
             </div>
 
             <!-- Field Type -->
-            <div class="col-12" id="fieldTypeContainer">
+            <div class="col-md-6" id="fieldTypeContainer">
               <label class="form-label required font-semibold text-slate-700 block mb-1.5" for="fieldModalType">Field Type</label>
               <select class="form-select text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full cursor-pointer" id="fieldModalType" name="type" required>
-                <option value="Single-Line Text">Single-Line Text</option>
-                <option value="Multi-Line Text">Multi-Line Text</option>
-                <option value="Rich Text">Rich Text (HTML WYSIWYG)</option>
-                <option value="Checkbox">Checkbox (Boolean)</option>
-                <option value="Date">Date</option>
-                <option value="Number">Number</option>
-                <option value="Droplist">Droplist (Select)</option>
-                <option value="Image">Image</option>
+                <% 
+                  const registry = (typeof fieldRegistry !== 'undefined' && fieldRegistry) 
+                    ? fieldRegistry 
+                    : require(process.cwd() + '/src/fields').fieldRegistry;
+                  const categories = registry.getCategories();
+                  for (const [catName, fieldsList] of categories.entries()) {
+                %>
+                  <optgroup label="<%= catName %>">
+                    <% fieldsList.forEach(f => { %>
+                      <option value="<%= f.type %>"><%= f.displayName || f.type %></option>
+                    <% }) %>
+                  </optgroup>
+                <% } %>
+              </select>
+            </div>
+
+            <!-- Column Width (Grid Layout) -->
+            <div class="col-md-6" id="fieldColSpanContainer">
+              <label class="form-label font-semibold text-slate-700 block mb-1.5" for="fieldModalColSpan">Column Width (Grid)</label>
+              <select class="form-select text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full cursor-pointer" id="fieldModalColSpan" name="colSpan">
+                <option value="12">Full Width (12 columns - 100%)</option>
+                <option value="6">Half Width (6 columns - 50%)</option>
+                <option value="4">One Third (4 columns - 33.3%)</option>
+                <option value="3">One Fourth (3 columns - 25%)</option>
+                <option value="8">Two Thirds (8 columns - 66.7%)</option>
               </select>
             </div>
 
             <!-- Options Source (only for Droplist) -->
-            <div class="col-md-6" id="fieldSourceContainer" style="display: none;">
+            <div class="col-12" id="fieldSourceContainer" style="display: none;">
               <label class="form-label font-semibold text-slate-700 block mb-1.5" for="fieldModalSource">Options Source (one per line)</label>
               <textarea
                 class="form-control font-mono text-xs rounded-lg border-slate-300 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-150 w-full"

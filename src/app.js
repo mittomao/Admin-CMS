@@ -105,6 +105,7 @@ app.set('layout extractScripts', true);
 app.set('layout extractStyles', true);
 
 const { resolveItemIcon, renderIconHtml, getIconUrl } = require('./config/icons');
+const { fieldRegistry } = require('./fields');
 
 // 7. Global Template Variables & CSRF Token
 app.use(csrfMiddleware.generateToken);
@@ -116,6 +117,7 @@ app.use((req, res, next) => {
   res.locals.resolveItemIcon = resolveItemIcon;
   res.locals.renderIconHtml = renderIconHtml;
   res.locals.getIconUrl = getIconUrl;
+  res.locals.fieldRegistry = fieldRegistry;
   next();
 });
 

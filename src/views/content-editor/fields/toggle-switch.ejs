@@ -1,0 +1,30 @@
+<% 
+  const isChecked = value === true || value === 'true' || value === '1' || value === 'on'; 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'disabled' : '';
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="d-flex align-items-center gap-2 pt-1">
+    <label class="form-check form-switch mb-0 cursor-pointer">
+      <input type="hidden" name="fields[<%= field.name %>]" value="false" />
+      <input
+        type="checkbox"
+        class="form-check-input item-field-input cursor-pointer"
+        name="fields[<%= field.name %>]"
+        value="true"
+        <%= isChecked ? 'checked' : '' %>
+        <%= readOnlyAttr %>
+      />
+      <span class="form-check-label text-xs text-slate-600 dark:text-slate-400 font-medium">
+        <%= isChecked ? (field.config?.activeLabel || 'Bật') : (field.config?.inactiveLabel || 'Tắt') %>
+      </span>
+    </label>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-hint text-muted mt-1">
+      <i class="ti ti-info-circle me-1"></i><%= field.helpText %>
+    </div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

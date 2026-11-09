@@ -455,66 +455,12 @@
                                     class="accordion-collapse collapse <%= sIndex === 0 ? 'show' : '' %>"
                                     aria-labelledby="heading-<%= section._id %>">
                                     <div class="accordion-body p-4 bg-white dark:bg-slate-900">
-                                      <% section.fields.forEach(field=> { %>
-                                        <% const val=field.effectiveValue !==undefined ? field.effectiveValue :
-                                          (itemFields[field._id ? field._id.toString() : '' ] !==undefined ?
-                                          itemFields[field._id.toString()] : itemFields[field.name]); const
-                                          fieldType=field.type; %>
-                                          <% if (field.name==='componentTemplate' ||
-                                            field.source==='/root/templates/Feature/Components' ||
-                                            field.source==='/root/templates/Feature/Components' ) { %>
-                                            <div class="mb-3 field-container" data-field-name="<%= field.name %>"
-                                              data-field-id="<%= field._id %>">
-                                              <%- include('./fields/field-header', { field }) %>
-                                                <div class="input-group">
-                                                  <span class="input-group-text bg-purple-lt text-purple">
-                                                    <i class="ti ti-puzzle"></i>
-                                                  </span>
-                                                  <select class="form-select item-field-input"
-                                                    name="fields[<%= field.name %>]" <%=field.required ? 'required' : ''
-                                                    %>>
-                                                    <option value="">-- Chọn Component Template --</option>
-                                                    <% (typeof componentTemplates !=='undefined' && componentTemplates ?
-                                                      componentTemplates : []).forEach(ct=> { %>
-                                                      <option value="<%= ct._id %>" <%=String(val)===String(ct._id)
-                                                        ? 'selected' : '' %>>
-                                                        <%= ct.displayName || ct.name %> (<%= ct.name %>)
-                                                      </option>
-                                                      <% }) %>
-                                                  </select>
-                                                </div>
-                                                <% if (field.helpText) { %>
-                                                  <div class="form-hint text-muted mt-1"><i
-                                                      class="ti ti-info-circle me-1"></i>
-                                                    <%= field.helpText %>
-                                                  </div>
-                                                  <% } %>
-                                                    <div class="invalid-feedback"></div>
-                                            </div>
-                                            <% } else if (fieldType==='Single-Line Text' ) { %>
-                                              <%- include('./fields/single-line-text', { field, value: val }) %>
-                                                <% } else if (fieldType==='Multi-Line Text' ) { %>
-                                                  <%- include('./fields/multi-line-text', { field, value: val }) %>
-                                                    <% } else if (fieldType==='Rich Text' ) { %>
-                                                      <%- include('./fields/rich-text', { field, value: val }) %>
-                                                        <% } else if (fieldType==='Checkbox' ) { %>
-                                                          <%- include('./fields/checkbox', { field, value: val }) %>
-                                                            <% } else if (fieldType==='Date' ) { %>
-                                                              <%- include('./fields/date', { field, value: val }) %>
-                                                                <% } else if (fieldType==='Number' ) { %>
-                                                                  <%- include('./fields/number', { field, value: val })
-                                                                    %>
-                                                                    <% } else if (fieldType==='Droplist' ) { %>
-                                                                      <%- include('./fields/droplist', { field, value:
-                                                                        val }) %>
-                                                                        <% } else if (fieldType==='Image' ) { %>
-                                                                          <%- include('./fields/image', { field, value:
-                                                                            val }) %>
-                                                                            <% } else { %>
-                                                                              <%- include('./fields/single-line-text', {
-                                                                                field, value: val }) %>
-                                                                                <% } %>
-                                                                                  <% }) %>
+                                      <div class="row g-2">
+                                        <% section.fields.forEach(field => { %>
+                                          <% const val = field.effectiveValue !== undefined ? field.effectiveValue : (itemFields[field._id ? field._id.toString() : ''] !== undefined ? itemFields[field._id.toString()] : itemFields[field.name]); %>
+                                          <%- include('./fields/universal-renderer', { field, value: val, componentTemplates: typeof componentTemplates !== 'undefined' ? componentTemplates : [], user: typeof user !== 'undefined' ? user : null, currentDb: typeof currentDb !== 'undefined' ? currentDb : 'master' }) %>
+                                        <% }) %>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>

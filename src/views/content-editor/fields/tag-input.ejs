@@ -1,0 +1,47 @@
+<% 
+  let tagsArr = [];
+  if (Array.isArray(value)) {
+    tagsArr = value;
+  } else if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      tagsArr = Array.isArray(parsed) ? parsed : value.split(',').map(s => s.trim()).filter(Boolean);
+    } catch(e) {
+      tagsArr = value.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  }
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="input-icon relative">
+    <span class="input-icon-addon">
+      <i class="ti ti-tags text-slate-400"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control form-control-sm item-field-input rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm"
+      name="fields[<%= field.name %>]"
+      value="<%= tagsArr.join(', ') %>"
+      placeholder="<%= field.config?.placeholder || 'Nhập các từ khóa cách nhau bằng dấu phẩy (,)...' %>"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+    />
+  </div>
+  <% if (tagsArr.length > 0) { %>
+    <div class="d-flex flex-wrap gap-1 mt-1.5">
+      <% tagsArr.forEach(tag => { %>
+        <span class="badge bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-normal">
+          #<%= tag %>
+        </span>
+      <% }) %>
+    </div>
+  <% } %>
+  <% if (field.helpText) { %>
+    <div class="form-hint text-muted mt-1">
+      <i class="ti ti-info-circle me-1"></i><%= field.helpText %>
+    </div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

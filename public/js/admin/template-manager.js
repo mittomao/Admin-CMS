@@ -526,6 +526,10 @@ function openFieldModal(sectionId, fieldData = null) {
   document.getElementById('fieldModalName').value = (fieldData && fieldData.name) || '';
   document.getElementById('fieldModalTitle').value = (fieldData && fieldData.title) || '';
   document.getElementById('fieldModalType').value = (fieldData && fieldData.type) || 'Single-Line Text';
+  const colSpanInput = document.getElementById('fieldModalColSpan');
+  if (colSpanInput) {
+    colSpanInput.value = (fieldData && fieldData.layout && fieldData.layout.colSpan) || '12';
+  }
   document.getElementById('fieldModalRequired').checked = Boolean(fieldData && fieldData.required);
   document.getElementById('fieldModalSource').value = (fieldData && fieldData.source) || '';
   document.getElementById('fieldModalShared').checked = Boolean(fieldData && fieldData.shared);
@@ -549,18 +553,11 @@ function openFieldModal(sectionId, fieldData = null) {
 function toggleSourceField() {
   const typeSelect = document.getElementById('fieldModalType');
   const sourceContainer = document.getElementById('fieldSourceContainer');
-  const typeCol = document.getElementById('fieldTypeContainer');
   if (typeSelect && sourceContainer) {
     if (typeSelect.value === 'Droplist') {
       sourceContainer.style.display = 'block';
-      if (typeCol) {
-        typeCol.className = 'col-md-6';
-      }
     } else {
       sourceContainer.style.display = 'none';
-      if (typeCol) {
-        typeCol.className = 'col-12';
-      }
     }
   }
 }
@@ -583,6 +580,9 @@ if (fieldForm) {
       shared: document.getElementById('fieldModalShared').checked,
       unversioned: document.getElementById('fieldModalUnversioned')?.checked || false,
       helpText: document.getElementById('fieldModalHelpText').value,
+      layout: {
+        colSpan: Number(document.getElementById('fieldModalColSpan')?.value || 12),
+      },
     };
 
     const url = fieldId

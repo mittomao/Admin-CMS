@@ -1,0 +1,75 @@
+<%
+  const registry = (typeof fieldRegistry !== 'undefined' && fieldRegistry)
+    ? fieldRegistry
+    : require(process.cwd() + '/src/fields').fieldRegistry;
+  const handler = registry.get(field.type);
+  const viewSlug = (handler && handler.viewSlug) ? handler.viewSlug : 'single-line-text';
+
+  // 1. Kiểm tra quyền Field ACL
+  const userRoles = Array.isArray(typeof user !== 'undefined' && user?.roles)
+    ? user.roles.map(r => r.name || r)
+    : [];
+  const isAdmin = userRoles.includes('Administrator');
+  const perms = field.permissions || {};
+
+  // Hidden: Bị ẩn hoàn toàn đối với user
+  let isHidden = false;
+  if (!isAdmin && perms.hiddenRoles && perms.hiddenRoles.length > 0) {
+    if (perms.hiddenRoles.some(r => userRoles.includes(r))) {
+      isHidden = true;
+    }
+  }
+
+  // Read-only: Không có quyền sửa
+  let isReadOnly = (typeof currentDb !== 'undefined' && currentDb === 'web');
+  if (!isReadOnly && !isAdmin && perms.writeRoles && perms.writeRoles.length > 0) {
+    if (!perms.writeRoles.some(r => userRoles.includes(r))) {
+      isReadOnly = true;
+    }
+  }
+
+  // Layout column span (1..12, mặc định 12)
+  const colSpan = (field.layout && field.layout.colSpan) ? Number(field.layout.colSpan) : 12;
+  const colClass = colSpan >= 12 ? 'col-12' : `col-md-${colSpan}`;
+%>
+
+<% if (!isHidden) { %>
+  <div class="<%= colClass %> field-outer-wrapper"
+       id="field-wrapper-<%= field._id %>"
+       <% if (field.visibility && field.visibility.dependsOn) { %>
+         data-condition-depends="<%= field.visibility.dependsOn %>"
+         data-condition-op="<%= field.visibility.operator %>"
+         data-condition-val="<%= JSON.stringify(field.visibility.value) %>"
+       <% } %>>
+    <% if (field.name === 'componentTemplate') { %>
+      <div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+        <%- include('./field-header', { field }) %>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-purple-lt text-purple">
+            <i class="ti ti-puzzle"></i>
+          </span>
+          <select class="form-select item-field-input" name="fields[<%= field.name %>]" <%= field.required ? 'required' : '' %> <%= isReadOnly ? 'disabled' : '' %>>
+            <option value="">-- Chọn Component Template --</option>
+            <% (typeof componentTemplates !== 'undefined' && componentTemplates ? componentTemplates : []).forEach(ct => { %>
+              <option value="<%= ct._id %>" <%= String(value) === String(ct._id) ? 'selected' : '' %>>
+                <%= ct.displayName || ct.name %> (<%= ct.name %>)
+              </option>
+            <% }) %>
+          </select>
+        </div>
+        <% if (field.helpText) { %>
+          <div class="form-hint text-muted mt-1"><i class="ti ti-info-circle me-1"></i><%= field.helpText %></div>
+        <% } %>
+        <div class="invalid-feedback"></div>
+      </div>
+    <% } else { %>
+      <%- include('./' + viewSlug, { 
+        field, 
+        value: typeof value !== 'undefined' ? value : null, 
+        isReadOnly, 
+        config: field.config || {}, 
+        componentTemplates: typeof componentTemplates !== 'undefined' ? componentTemplates : [] 
+      }) %>
+    <% } %>
+  </div>
+<% } %>

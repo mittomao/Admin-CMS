@@ -1,0 +1,115 @@
+<% 
+  let linkObj = { url: '', text: '', target: '_self', nofollow: false };
+  if (typeof value === 'object' && value !== null) {
+    linkObj = { ...linkObj, ...value };
+  } else if (typeof value === 'string' && value.trim()) {
+    try {
+      const p = JSON.parse(value);
+      if (typeof p === 'object' && p !== null) linkObj = { ...linkObj, ...p };
+      else linkObj.url = value;
+    } catch(e) {
+      linkObj.url = value;
+    }
+  }
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  const disabledAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'disabled' : '';
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="card p-2.5 bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 rounded-xl shadow-2xs">
+    <!-- Hidden input to store JSON payload -->
+    <input type="hidden" class="item-field-input" name="fields[<%= field.name %>]" id="link-payload-<%= field._id %>" value='<%= JSON.stringify(linkObj) %>' />
+    
+    <div class="row g-2">
+      <!-- URL -->
+      <div class="col-md-7">
+        <label class="form-label text-[11px] font-semibold text-slate-500 mb-1">Đường dẫn URL *</label>
+        <div class="input-icon relative">
+          <span class="input-icon-addon">
+            <i class="ti ti-link text-slate-400"></i>
+          </span>
+          <input
+            type="url"
+            class="form-control form-control-sm rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-xs"
+            id="link-url-<%= field._id %>"
+            value="<%= linkObj.url %>"
+            placeholder="https://example.com/..."
+            <%= field.required ? 'required' : '' %>
+            <%= readOnlyAttr %>
+            oninput="updateLinkPayload('<%= field._id %>')"
+          />
+        </div>
+      </div>
+
+      <!-- Link Text -->
+      <div class="col-md-5">
+        <label class="form-label text-[11px] font-semibold text-slate-500 mb-1">Tiêu đề hiển thị (Anchor Text)</label>
+        <input
+          type="text"
+          class="form-control form-control-sm rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-xs"
+          id="link-text-<%= field._id %>"
+          value="<%= linkObj.text %>"
+          placeholder="Xem thêm, Bấm vào đây..."
+          <%= readOnlyAttr %>
+          oninput="updateLinkPayload('<%= field._id %>')"
+        />
+      </div>
+
+      <!-- Target & Nofollow -->
+      <div class="col-12 d-flex align-items-center gap-3 pt-1">
+        <label class="form-check form-check-inline mb-0 cursor-pointer">
+          <input
+            type="checkbox"
+            class="form-check-input cursor-pointer"
+            id="link-blank-<%= field._id %>"
+            <%= linkObj.target === '_blank' ? 'checked' : '' %>
+            <%= disabledAttr %>
+            onchange="updateLinkPayload('<%= field._id %>')"
+          />
+          <span class="form-check-label text-xs text-slate-600 dark:text-slate-400">Mở tab mới (<code>target="_blank"</code>)</span>
+        </label>
+        <label class="form-check form-check-inline mb-0 cursor-pointer">
+          <input
+            type="checkbox"
+            class="form-check-input cursor-pointer"
+            id="link-nofollow-<%= field._id %>"
+            <%= linkObj.nofollow ? 'checked' : '' %>
+            <%= disabledAttr %>
+            onchange="updateLinkPayload('<%= field._id %>')"
+          />
+          <span class="form-check-label text-xs text-slate-600 dark:text-slate-400">Không truyền PageRank (<code>rel="nofollow"</code>)</span>
+        </label>
+      </div>
+    </div>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-hint text-muted mt-1">
+      <i class="ti ti-info-circle me-1"></i><%= field.helpText %>
+    </div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+
+<script>
+  if (typeof window.updateLinkPayload !== 'function') {
+    window.updateLinkPayload = function(fieldId) {
+      const urlInput = document.getElementById('link-url-' + fieldId);
+      const textInput = document.getElementById('link-text-' + fieldId);
+      const blankCheck = document.getElementById('link-blank-' + fieldId);
+      const nofollowCheck = document.getElementById('link-nofollow-' + fieldId);
+      const payloadInput = document.getElementById('link-payload-' + fieldId);
+      if (!payloadInput) return;
+
+      const obj = {
+        url: urlInput ? urlInput.value.trim() : '',
+        text: textInput ? textInput.value.trim() : '',
+        target: (blankCheck && blankCheck.checked) ? '_blank' : '_self',
+        nofollow: Boolean(nofollowCheck && nofollowCheck.checked)
+      };
+      payloadInput.value = JSON.stringify(obj);
+      payloadInput.dispatchEvent(new Event('input', { bubbles: true }));
+      payloadInput.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+  }
+</script>
+

@@ -66,25 +66,7 @@
                             </span>
                           <% } %>
                         </div>
-                        <% if (field.type === 'Single-Line Text') { %>
-                          <%- include('../../../content-editor/fields/single-line-text', { field, value: val }) %>
-                        <% } else if (field.type === 'Multi-Line Text') { %>
-                          <%- include('../../../content-editor/fields/multi-line-text', { field, value: val }) %>
-                        <% } else if (field.type === 'Rich Text') { %>
-                          <%- include('../../../content-editor/fields/rich-text', { field, value: val }) %>
-                        <% } else if (field.type === 'Checkbox') { %>
-                          <%- include('../../../content-editor/fields/checkbox', { field, value: val }) %>
-                        <% } else if (field.type === 'Date') { %>
-                          <%- include('../../../content-editor/fields/date', { field, value: val }) %>
-                        <% } else if (field.type === 'Number') { %>
-                          <%- include('../../../content-editor/fields/number', { field, value: val }) %>
-                        <% } else if (field.type === 'Droplist') { %>
-                          <%- include('../../../content-editor/fields/droplist', { field, value: val }) %>
-                        <% } else if (field.type === 'Image') { %>
-                          <%- include('../../../content-editor/fields/image', { field, value: val }) %>
-                        <% } else { %>
-                          <%- include('../../../content-editor/fields/single-line-text', { field, value: val }) %>
-                        <% } %>
+                        <%- include('../../../content-editor/fields/universal-renderer', { field, value: val }) %>
                       </div>
                     <% }) %>
                   </div>
