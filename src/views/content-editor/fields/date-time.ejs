@@ -1,0 +1,36 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  let formattedVal = '';
+  const rawVal = typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '');
+  if (rawVal) {
+    try {
+      const d = new Date(rawVal);
+      if (!Number.isNaN(d.getTime())) {
+        formattedVal = d.toISOString().slice(0, 16);
+      }
+    } catch {
+      formattedVal = String(rawVal);
+    }
+  }
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="input-icon relative">
+    <span class="input-icon-addon">
+      <i class="ti ti-calendar-time text-slate-400"></i>
+    </span>
+    <input
+      type="datetime-local"
+      class="form-control form-control-sm item-field-input rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm font-mono"
+      name="fields[<%= field.name %>]"
+      value="<%= formattedVal %>"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+    />
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

@@ -1,0 +1,48 @@
+<% 
+  const disabledAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'disabled' : '';
+  const currentVal = typeof value !== 'undefined' && value !== null ? String(value) : String(field.defaultValue || '');
+  
+  let options = [];
+  if (field.config?.options && Array.isArray(field.config.options) && field.config.options.length > 0) {
+    options = field.config.options.map(opt => typeof opt === 'string' ? { label: opt, value: opt } : opt);
+  } else if (field.source) {
+    options = field.source.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+      const parts = line.split('|');
+      return {
+        label: parts[1] ? parts[1].trim() : parts[0].trim(),
+        value: parts[0].trim(),
+      };
+    });
+  }
+  if (options.length === 0) {
+    options = [
+      { label: 'Option 1', value: 'option_1' },
+      { label: 'Option 2', value: 'option_2' },
+    ];
+  }
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="d-flex flex-wrap gap-3 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+    <% options.forEach((opt, idx) => { %>
+      <label class="form-check form-check-inline mb-0 cursor-pointer select-none">
+        <input
+          type="radio"
+          class="form-check-input item-field-input"
+          name="fields[<%= field.name %>]"
+          value="<%= opt.value %>"
+          <%= currentVal === String(opt.value) ? 'checked' : '' %>
+          <%= disabledAttr %>
+        />
+        <span class="form-check-label text-xs text-slate-700 dark:text-slate-300 font-medium">
+          <%= opt.label %>
+        </span>
+      </label>
+    <% }) %>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

@@ -683,7 +683,8 @@ const contentEditorController = {
         expectedUpdatedAt,
         userId,
         langCode,
-        versionNumber
+        versionNumber,
+        { user: user || req.session?.user }
       );
 
       eventBus.emit('item.updated', {

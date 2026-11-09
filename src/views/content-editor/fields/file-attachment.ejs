@@ -1,0 +1,31 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  const currentVal = typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '');
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="input-group input-group-sm rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700">
+    <span class="input-group-text bg-slate-50 dark:bg-slate-800 text-slate-400 border-0">
+      <i class="ti ti-file-upload"></i>
+    </span>
+    <input
+      type="text"
+      class="form-control form-control-sm item-field-input text-xs border-0 dark:bg-slate-800 dark:text-slate-100"
+      name="fields[<%= field.name %>]"
+      value="<%= currentVal %>"
+      placeholder="Select file or paste download URL..."
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+    />
+    <% if (currentVal) { %>
+      <a href="<%= currentVal %>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary border-0" title="Open / Download file">
+        <i class="ti ti-external-link"></i>
+      </a>
+    <% } %>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

@@ -1,0 +1,25 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  const currentVal = typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '');
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="input-icon relative">
+    <span class="input-icon-addon">
+      <i class="ti ti-clock text-slate-400"></i>
+    </span>
+    <input
+      type="time"
+      class="form-control form-control-sm item-field-input rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm font-mono"
+      name="fields[<%= field.name %>]"
+      value="<%= currentVal %>"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+    />
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

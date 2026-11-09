@@ -1,0 +1,66 @@
+<% 
+  const disabledAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'disabled' : '';
+  let selected = [];
+  if (Array.isArray(value)) {
+    selected = value.map(String);
+  } else if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      selected = Array.isArray(parsed) ? parsed.map(String) : value.split(',').map(s => s.trim()).filter(Boolean);
+    } catch {
+      selected = value.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  }
+
+  let options = [];
+  if (field.config?.options && Array.isArray(field.config.options) && field.config.options.length > 0) {
+    options = field.config.options.map(opt => typeof opt === 'string' ? { label: opt, value: opt } : opt);
+  } else if (field.source) {
+    options = field.source.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+      const parts = line.split('|');
+      return {
+        label: parts[1] ? parts[1].trim() : parts[0].trim(),
+        value: parts[0].trim(),
+      };
+    });
+  }
+  if (options.length === 0) {
+    options = [
+      { label: 'Item A', value: 'a' },
+      { label: 'Item B', value: 'b' },
+      { label: 'Item C', value: 'c' },
+    ];
+  }
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <input type="hidden" class="js-checkbox-list-target item-field-input" name="fields[<%= field.name %>]" value="<%= selected.join(',') %>" />
+  <div class="d-flex flex-wrap gap-3 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+    <% options.forEach(opt => { %>
+      <label class="form-check form-check-inline mb-0 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          class="form-check-input js-checkbox-list-item"
+          value="<%= opt.value %>"
+          <%= selected.includes(String(opt.value)) ? 'checked' : '' %>
+          <%= disabledAttr %>
+          onchange="(function(cb){
+            const container = cb.closest('.field-container');
+            const target = container.querySelector('.js-checkbox-list-target');
+            const checked = Array.from(container.querySelectorAll('.js-checkbox-list-item:checked')).map(c => c.value);
+            target.value = checked.join(',');
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+          })(this)"
+        />
+        <span class="form-check-label text-xs text-slate-700 dark:text-slate-300 font-medium">
+          <%= opt.label %>
+        </span>
+      </label>
+    <% }) %>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

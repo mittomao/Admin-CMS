@@ -161,21 +161,27 @@ const templateService = {
 
       if (sec.fields) {
         for (const f of sec.fields) {
-          const fieldKey = f.name.trim().toLowerCase();
+          const rawField = (typeof f.toObject === 'function') ? f.toObject() : f;
+          const fieldKey = (rawField.name || '').trim().toLowerCase();
           // Child field overrides base field if keys match
           currentSection.fields.set(fieldKey, {
-            _id: f._id ? f._id.toString() : new mongoose.Types.ObjectId().toString(),
-            name: f.name.trim(),
-            title: f.title || f.name,
-            type: f.type || 'Single-Line Text',
-            required: Boolean(f.required),
-            defaultValue: f.defaultValue !== undefined ? f.defaultValue : '',
-            source: f.source || '',
-            shared: Boolean(f.shared),
-            unversioned: Boolean(f.unversioned),
-            helpText: f.helpText || '',
-            validation: f.validation || '',
-            sortOrder: f.sortOrder || 100,
+            ...rawField,
+            _id: rawField._id ? rawField._id.toString() : new mongoose.Types.ObjectId().toString(),
+            name: (rawField.name || '').trim(),
+            title: rawField.title || rawField.name,
+            type: rawField.type || 'Single-Line Text',
+            required: Boolean(rawField.required),
+            defaultValue: rawField.defaultValue !== undefined ? rawField.defaultValue : '',
+            source: rawField.source || '',
+            shared: Boolean(rawField.shared),
+            unversioned: Boolean(rawField.unversioned),
+            helpText: rawField.helpText || '',
+            validation: rawField.validation || '',
+            config: rawField.config || {},
+            visibility: rawField.visibility || {},
+            permissions: rawField.permissions || {},
+            layout: rawField.layout || {},
+            sortOrder: rawField.sortOrder || 100,
             origin: {
               templateId: originTpl._id.toString(),
               templateName: originTpl.displayName || originTpl.name,

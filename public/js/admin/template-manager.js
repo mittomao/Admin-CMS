@@ -577,6 +577,22 @@ function openFieldModal(sectionId, fieldData = null) {
     }
   }
 
+  // Permissions (ACL)
+  const writeRolesInput = document.getElementById('fieldModalWriteRoles');
+  const hiddenRolesInput = document.getElementById('fieldModalHiddenRoles');
+  const permissionsPanel = document.getElementById('permissionsPanel');
+  const writeRoles = (fieldData && fieldData.permissions && Array.isArray(fieldData.permissions.writeRoles)) ? fieldData.permissions.writeRoles : [];
+  const hiddenRoles = (fieldData && fieldData.permissions && Array.isArray(fieldData.permissions.hiddenRoles)) ? fieldData.permissions.hiddenRoles : [];
+  if (writeRolesInput) writeRolesInput.value = writeRoles.join(', ');
+  if (hiddenRolesInput) hiddenRolesInput.value = hiddenRoles.join(', ');
+  if (permissionsPanel) {
+    if (writeRoles.length > 0 || hiddenRoles.length > 0) {
+      permissionsPanel.classList.remove('d-none');
+    } else {
+      permissionsPanel.classList.add('d-none');
+    }
+  }
+
   toggleSourceField();
 
   const headingEl = document.getElementById('fieldModalHeading');
@@ -657,6 +673,13 @@ if (fieldForm) {
     } else {
       payload.visibility = { dependsOn: '', operator: '', value: null };
     }
+
+    // Permissions (ACL)
+    const rawWriteRoles = document.getElementById('fieldModalWriteRoles')?.value || '';
+    const rawHiddenRoles = document.getElementById('fieldModalHiddenRoles')?.value || '';
+    const writeRoles = rawWriteRoles.split(',').map((r) => r.trim()).filter(Boolean);
+    const hiddenRoles = rawHiddenRoles.split(',').map((r) => r.trim()).filter(Boolean);
+    payload.permissions = { writeRoles, hiddenRoles };
 
     const url = fieldId
       ? `/api/templates/${getActiveTemplateId()}/sections/${secId}/fields/${fieldId}`

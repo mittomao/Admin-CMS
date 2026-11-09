@@ -55,6 +55,7 @@ flowchart TD
 | **L1** | Quản lý Ngôn ngữ Động (Language Manager) Thay thế Hard-code | **Hoàn thành** | 4, 4.1, 8, 10 | [`phase-L1-language-manager.md`](./phase-L1-language-manager.md) | 2026-11-09 | 2026-11-09 | Chuyển đổi ngôn ngữ thành Item (/root/system/Languages), languageService duy nhất, dynamic prefix & views, check:languages |
 | **F1** | Universal Custom Field System - Nền Tảng Core | **Hoàn thành** | 2, 3, 4, 4.1 | [`phase-F1-custom-fields-core.md`](./phase-F1-custom-fields-core.md) | 2026-11-09 | 2026-11-09 | Field Registry, Universal Form Renderer, 8 trường gốc + 6 trường mở rộng, nâng cấp Template Schema |
 | **F2** | Universal Custom Field System - Động Cơ Phức Hợp | **Hoàn thành** | F1, 2, 3, 4, 4.1 | [`phase-F2-complex-engines.md`](./phase-F2-complex-engines.md) | 2026-11-09 | 2026-11-09 | Repeater Engine kéo thả SortableJS, Field Group Layout, Conditional Visibility Engine reactive |
+| **F3** | Universal Custom Field System - An Toàn & Hoàn Thiện Danh Mục | **Hoàn thành** | F1, F2, 2, 3, 7 | [`phase-F3-hardening-catalog.md`](./phase-F3-hardening-catalog.md) | 2026-11-09 | 2026-11-09 | Field-level ACL (read/write/hidden), hoàn thiện danh mục toàn diện 30+ Field Types (33 types đạt chuẩn) |
 | **12** | Hoàn thiện, Bảo mật, E2E SSR Test & Docker | **Chưa bắt đầu** | 0 → 11, L1 | [`phase-12-hardening.md`](./phase-12-hardening.md) | - | - | E2E test luồng Page -> Template -> Presentation -> Publish -> Site Renderer EJS |
 
 ---

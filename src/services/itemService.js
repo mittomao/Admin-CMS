@@ -824,9 +824,9 @@ const itemService = {
   /**
    * Update item fields with Optimistic Locking and field validation (supports versioning)
    */
-  async updateFields(id, rawFields = {}, expectedUpdatedAt = null, userId = null, langCode = null, versionNumber = null) {
+  async updateFields(id, rawFields = {}, expectedUpdatedAt = null, userId = null, langCode = null, versionNumber = null, { user = null } = {}) {
     if (langCode && versionNumber) {
-      return versionService.updateFields(id, langCode, versionNumber, rawFields, expectedUpdatedAt, { userId });
+      return versionService.updateFields(id, langCode, versionNumber, rawFields, expectedUpdatedAt, { userId, user });
     }
 
     const item = await Item.findOne({ _id: id, deleted: false });

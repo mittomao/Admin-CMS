@@ -1,0 +1,89 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  let geo = { lat: '', lng: '', address: '' };
+  if (value) {
+    if (typeof value === 'object') {
+      geo.lat = value.lat !== null && value.lat !== undefined ? value.lat : '';
+      geo.lng = value.lng !== null && value.lng !== undefined ? value.lng : '';
+      geo.address = value.address || '';
+    } else if (typeof value === 'string' && value.trim()) {
+      try {
+        const parsed = JSON.parse(value);
+        geo.lat = parsed.lat !== null && parsed.lat !== undefined ? parsed.lat : '';
+        geo.lng = parsed.lng !== null && parsed.lng !== undefined ? parsed.lng : '';
+        geo.address = parsed.address || '';
+      } catch {
+        geo.address = value;
+      }
+    }
+  }
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <input type="hidden" class="js-geo-target item-field-input" name="fields[<%= field.name %>]" value="<%= JSON.stringify(geo) %>" />
+  <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+    <div class="row g-2 mb-2">
+      <div class="col-6">
+        <label class="form-label text-[11px] font-semibold text-slate-500 mb-1">Vĩ độ (Latitude)</label>
+        <input
+          type="number"
+          step="any"
+          class="form-control form-control-sm js-geo-lat border-slate-300 dark:border-slate-700 dark:bg-slate-800 font-mono text-xs"
+          placeholder="e.g. 21.0285"
+          value="<%= geo.lat %>"
+          <%= readOnlyAttr %>
+          oninput="(function(inp){
+            const c = inp.closest('.field-container');
+            const target = c.querySelector('.js-geo-target');
+            const lng = c.querySelector('.js-geo-lng').value;
+            const address = c.querySelector('.js-geo-address').value;
+            target.value = JSON.stringify({ lat: inp.value ? Number(inp.value) : null, lng: lng ? Number(lng) : null, address });
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+          })(this)"
+        />
+      </div>
+      <div class="col-6">
+        <label class="form-label text-[11px] font-semibold text-slate-500 mb-1">Kinh độ (Longitude)</label>
+        <input
+          type="number"
+          step="any"
+          class="form-control form-control-sm js-geo-lng border-slate-300 dark:border-slate-700 dark:bg-slate-800 font-mono text-xs"
+          placeholder="e.g. 105.8542"
+          value="<%= geo.lng %>"
+          <%= readOnlyAttr %>
+          oninput="(function(inp){
+            const c = inp.closest('.field-container');
+            const target = c.querySelector('.js-geo-target');
+            const lat = c.querySelector('.js-geo-lat').value;
+            const address = c.querySelector('.js-geo-address').value;
+            target.value = JSON.stringify({ lat: lat ? Number(lat) : null, lng: inp.value ? Number(inp.value) : null, address });
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+          })(this)"
+        />
+      </div>
+    </div>
+    <div>
+      <label class="form-label text-[11px] font-semibold text-slate-500 mb-1">Địa chỉ hiển thị (Address)</label>
+      <input
+        type="text"
+        class="form-control form-control-sm js-geo-address border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-xs"
+        placeholder="e.g. Hoan Kiem, Hanoi, Vietnam"
+        value="<%= geo.address %>"
+        <%= readOnlyAttr %>
+        oninput="(function(inp){
+          const c = inp.closest('.field-container');
+          const target = c.querySelector('.js-geo-target');
+          const lat = c.querySelector('.js-geo-lat').value;
+          const lng = c.querySelector('.js-geo-lng').value;
+          target.value = JSON.stringify({ lat: lat ? Number(lat) : null, lng: lng ? Number(lng) : null, address: inp.value });
+          target.dispatchEvent(new Event('input', { bubbles: true }));
+        })(this)"
+      />
+    </div>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

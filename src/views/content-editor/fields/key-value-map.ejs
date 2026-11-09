@@ -1,0 +1,97 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'disabled' : '';
+  let rows = [];
+  if (Array.isArray(value)) {
+    rows = value;
+  } else if (value && typeof value === 'object') {
+    rows = Object.entries(value).map(([k, v]) => ({ key: k, value: v }));
+  } else if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      rows = Array.isArray(parsed) ? parsed : Object.entries(parsed).map(([k, v]) => ({ key: k, value: v }));
+    } catch {
+      rows = [];
+    }
+  }
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <input type="hidden" class="js-kv-target item-field-input" name="fields[<%= field.name %>]" value="<%= JSON.stringify(rows) %>" />
+  <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+    <div class="js-kv-rows mb-2">
+      <% rows.forEach((r, idx) => { %>
+        <div class="d-flex align-items-center gap-2 mb-1.5 js-kv-row">
+          <input
+            type="text"
+            class="form-control form-control-sm js-kv-key font-mono text-xs border-slate-300 dark:border-slate-700"
+            placeholder="<%= field.config?.keyPlaceholder || 'Khóa (Key)' %>"
+            value="<%= r.key || '' %>"
+            <%= readOnlyAttr %>
+            oninput="(function(inp){
+              const c = inp.closest('.field-container');
+              const rowsEl = Array.from(c.querySelectorAll('.js-kv-row')).map(row => ({
+                key: row.querySelector('.js-kv-key').value.trim(),
+                value: row.querySelector('.js-kv-val').value.trim()
+              })).filter(x => x.key);
+              c.querySelector('.js-kv-target').value = JSON.stringify(rowsEl);
+              c.querySelector('.js-kv-target').dispatchEvent(new Event('input', { bubbles: true }));
+            })(this)"
+          />
+          <input
+            type="text"
+            class="form-control form-control-sm js-kv-val text-xs border-slate-300 dark:border-slate-700"
+            placeholder="<%= field.config?.valuePlaceholder || 'Giá trị (Value)' %>"
+            value="<%= r.value !== undefined ? r.value : '' %>"
+            <%= readOnlyAttr %>
+            oninput="(function(inp){
+              const c = inp.closest('.field-container');
+              const rowsEl = Array.from(c.querySelectorAll('.js-kv-row')).map(row => ({
+                key: row.querySelector('.js-kv-key').value.trim(),
+                value: row.querySelector('.js-kv-val').value.trim()
+              })).filter(x => x.key);
+              c.querySelector('.js-kv-target').value = JSON.stringify(rowsEl);
+              c.querySelector('.js-kv-target').dispatchEvent(new Event('input', { bubbles: true }));
+            })(this)"
+          />
+          <% if (!readOnlyAttr) { %>
+            <button type="button" class="btn btn-icon btn-sm btn-ghost-danger shrink-0" title="Xóa dòng"
+              onclick="(function(btn){
+                const c = btn.closest('.field-container');
+                btn.closest('.js-kv-row').remove();
+                const rowsEl = Array.from(c.querySelectorAll('.js-kv-row')).map(row => ({
+                  key: row.querySelector('.js-kv-key').value.trim(),
+                  value: row.querySelector('.js-kv-val').value.trim()
+                })).filter(x => x.key);
+                c.querySelector('.js-kv-target').value = JSON.stringify(rowsEl);
+                c.querySelector('.js-kv-target').dispatchEvent(new Event('input', { bubbles: true }));
+              })(this)">
+              <i class="ti ti-trash"></i>
+            </button>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+    <% if (!readOnlyAttr) { %>
+      <button type="button" class="btn btn-sm btn-outline-secondary w-full text-xs"
+        onclick="(function(btn){
+          const c = btn.closest('.field-container');
+          const rowsContainer = c.querySelector('.js-kv-rows');
+          const row = document.createElement('div');
+          row.className = 'd-flex align-items-center gap-2 mb-1.5 js-kv-row';
+          row.innerHTML = `
+            <input type=&quot;text&quot; class=&quot;form-control form-control-sm js-kv-key font-mono text-xs border-slate-300 dark:border-slate-700&quot; placeholder=&quot;Khóa (Key)&quot; oninput=&quot;(function(inp){ const c = inp.closest('.field-container'); const rowsEl = Array.from(c.querySelectorAll('.js-kv-row')).map(row => ({ key: row.querySelector('.js-kv-key').value.trim(), value: row.querySelector('.js-kv-val').value.trim() })).filter(x => x.key); c.querySelector('.js-kv-target').value = JSON.stringify(rowsEl); c.querySelector('.js-kv-target').dispatchEvent(new Event('input', { bubbles: true })); })(this)&quot; />
+            <input type=&quot;text&quot; class=&quot;form-control form-control-sm js-kv-val text-xs border-slate-300 dark:border-slate-700&quot; placeholder=&quot;Giá trị (Value)&quot; oninput=&quot;(function(inp){ const c = inp.closest('.field-container'); const rowsEl = Array.from(c.querySelectorAll('.js-kv-row')).map(row => ({ key: row.querySelector('.js-kv-key').value.trim(), value: row.querySelector('.js-kv-val').value.trim() })).filter(x => x.key); c.querySelector('.js-kv-target').value = JSON.stringify(rowsEl); c.querySelector('.js-kv-target').dispatchEvent(new Event('input', { bubbles: true })); })(this)&quot; />
+            <button type=&quot;button&quot; class=&quot;btn btn-icon btn-sm btn-ghost-danger shrink-0&quot; onclick=&quot;(function(btn){ const c = btn.closest('.field-container'); btn.closest('.js-kv-row').remove(); const rowsEl = Array.from(c.querySelectorAll('.js-kv-row')).map(row => ({ key: row.querySelector('.js-kv-key').value.trim(), value: row.querySelector('.js-kv-val').value.trim() })).filter(x => x.key); c.querySelector('.js-kv-target').value = JSON.stringify(rowsEl); c.querySelector('.js-kv-target').dispatchEvent(new Event('input', { bubbles: true })); })(this)&quot;><i class=&quot;ti ti-trash&quot;></i></button>
+          `;
+          rowsContainer.appendChild(row);
+        })(this)">
+        <i class="ti ti-plus me-1"></i>Thêm thuộc tính
+      </button>
+    <% } %>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

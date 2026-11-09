@@ -1,0 +1,46 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  let displayVal = '';
+  if (value) {
+    if (typeof value === 'object') {
+      try { displayVal = JSON.stringify(value, null, 2); } catch { displayVal = ''; }
+    } else {
+      displayVal = String(value);
+    }
+  } else if (field.defaultValue) {
+    displayVal = typeof field.defaultValue === 'object' ? JSON.stringify(field.defaultValue, null, 2) : String(field.defaultValue);
+  }
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="relative rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700 bg-slate-900">
+    <div class="d-flex align-items-center justify-content-between px-2.5 py-1.5 bg-slate-800 text-slate-300 text-[11px] border-b border-slate-700">
+      <span class="font-mono"><i class="ti ti-code me-1"></i>JSON</span>
+      <% if (!readOnlyAttr) { %>
+        <button type="button" class="btn btn-xs btn-ghost-secondary py-0 px-1 text-[11px] text-slate-300 hover:text-white"
+          onclick="(function(btn){
+            try {
+              const ta = btn.closest('.field-container').querySelector('textarea');
+              ta.value = JSON.stringify(JSON.parse(ta.value), null, 2);
+            } catch(e) {
+              alert('JSON không hợp lệ: ' + e.message);
+            }
+          })(this)">
+          <i class="ti ti-align-left me-0.5"></i>Format
+        </button>
+      <% } %>
+    </div>
+    <textarea
+      rows="5"
+      class="form-control font-mono text-xs p-2.5 bg-slate-900 text-emerald-400 border-0 focus:ring-0 rounded-none w-full"
+      name="fields[<%= field.name %>]"
+      placeholder="<%= field.config?.placeholder || '{\n  &quot;key&quot;: &quot;value&quot;\n}' %>"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>><%= displayVal %></textarea>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

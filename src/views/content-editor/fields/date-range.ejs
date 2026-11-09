@@ -1,0 +1,68 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  let fromVal = '';
+  let toVal = '';
+  if (value) {
+    if (typeof value === 'object') {
+      fromVal = value.from || '';
+      toVal = value.to || '';
+    } else if (typeof value === 'string' && value.trim()) {
+      try {
+        const parsed = JSON.parse(value);
+        fromVal = parsed.from || '';
+        toVal = parsed.to || '';
+      } catch {
+        const parts = value.split(' to ');
+        fromVal = parts[0]?.trim() || '';
+        toVal = parts[1]?.trim() || '';
+      }
+    }
+  }
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <input type="hidden" class="js-daterange-target item-field-input" name="fields[<%= field.name %>]" value="<%= JSON.stringify({ from: fromVal, to: toVal }) %>" />
+  <div class="row g-2">
+    <div class="col-6">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-slate-50 dark:bg-slate-800 text-slate-500 text-xs">Từ:</span>
+        <input
+          type="date"
+          class="form-control form-control-sm js-daterange-from border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-xs font-mono"
+          value="<%= fromVal %>"
+          <%= readOnlyAttr %>
+          onchange="(function(inp){
+            const c = inp.closest('.field-container');
+            const target = c.querySelector('.js-daterange-target');
+            const to = c.querySelector('.js-daterange-to').value;
+            target.value = JSON.stringify({ from: inp.value, to });
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+          })(this)"
+        />
+      </div>
+    </div>
+    <div class="col-6">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-slate-50 dark:bg-slate-800 text-slate-500 text-xs">Đến:</span>
+        <input
+          type="date"
+          class="form-control form-control-sm js-daterange-to border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-xs font-mono"
+          value="<%= toVal %>"
+          <%= readOnlyAttr %>
+          onchange="(function(inp){
+            const c = inp.closest('.field-container');
+            const target = c.querySelector('.js-daterange-target');
+            const from = c.querySelector('.js-daterange-from').value;
+            target.value = JSON.stringify({ from, to: inp.value });
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+          })(this)"
+        />
+      </div>
+    </div>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

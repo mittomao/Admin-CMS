@@ -638,7 +638,7 @@ const versionService = {
    * Splits input values into shared, unversioned, and versioned fields based on Template flags.
    * Handles optimistic locking (409 Conflict).
    */
-  async updateFields(itemId, langCode = 'vi', versionNumber = 1, fieldsData = {}, expectedUpdatedAt = null, { userId = null } = {}) {
+  async updateFields(itemId, langCode = 'vi', versionNumber = 1, fieldsData = {}, expectedUpdatedAt = null, { userId = null, user = null } = {}) {
     if (!itemId || !mongoose.Types.ObjectId.isValid(itemId)) {
       throw new ValidationError('ID Item không hợp lệ.');
     }
@@ -707,6 +707,9 @@ const versionService = {
     if (!versionEntry.fields) versionEntry.fields = new Map();
     if (!item.fields) item.fields = new Map();
 
+    const userRoles = Array.isArray(user?.roles) ? user.roles.map(r => r.name || r) : [];
+    const isAdmin = userRoles.includes('Administrator');
+
     // 4. Process each submitted field
     for (const [key, rawValue] of Object.entries(fieldsData)) {
       const fieldDef = fieldMap.get(key);
@@ -714,8 +717,18 @@ const versionService = {
       const fieldType = fieldDef ? fieldDef.type : 'Single-Line Text';
       const handler = getFieldHandler(fieldType);
 
+      // Field ACL enforcement (writeRoles check)
+      if (fieldDef && fieldDef.permissions) {
+        const perms = fieldDef.permissions;
+        if (!isAdmin && perms.writeRoles && perms.writeRoles.length > 0) {
+          if (!perms.writeRoles.some(r => userRoles.includes(r))) {
+            continue; // Skip field without write permission
+          }
+        }
+      }
+
       // Sanitize / clean value
-      const cleanedValue = handler && handler.sanitize ? handler.sanitize(rawValue) : rawValue;
+      const cleanedValue = handler && handler.sanitize ? handler.sanitize(rawValue, fieldDef) : rawValue;
 
       if (fieldDef && fieldDef.shared) {
         // Cấp 1: Shared field

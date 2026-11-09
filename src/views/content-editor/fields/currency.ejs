@@ -1,0 +1,32 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  const currentVal = typeof value !== 'undefined' && value !== null ? value : (field.defaultValue !== undefined ? field.defaultValue : '');
+  const symbol = field.config?.symbol || '$';
+  const code = field.config?.currencyCode || 'USD';
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="input-group input-group-sm rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700">
+    <span class="input-group-text bg-slate-50 dark:bg-slate-800 text-slate-500 font-semibold text-xs border-0">
+      <%= symbol %>
+    </span>
+    <input
+      type="number"
+      step="any"
+      class="form-control form-control-sm item-field-input text-end font-mono text-xs border-0 dark:bg-slate-800 dark:text-slate-100"
+      name="fields[<%= field.name %>]"
+      value="<%= currentVal %>"
+      placeholder="0.00"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+    />
+    <span class="input-group-text bg-slate-50 dark:bg-slate-800 text-slate-400 text-[11px] border-0">
+      <%= code %>
+    </span>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

@@ -1,0 +1,31 @@
+<% 
+  const disabledAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'disabled' : '';
+  const min = field.config?.min ?? 0;
+  const max = field.config?.max ?? 100;
+  const step = field.config?.step ?? 1;
+  const currentVal = typeof value !== 'undefined' && value !== null && value !== '' ? Number(value) : (field.defaultValue !== undefined ? Number(field.defaultValue) : min);
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="d-flex align-items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+    <input
+      type="range"
+      min="<%= min %>"
+      max="<%= max %>"
+      step="<%= step %>"
+      class="form-range flex-grow-1 cursor-pointer"
+      name="fields[<%= field.name %>]"
+      value="<%= currentVal %>"
+      <%= disabledAttr %>
+      oninput="document.getElementById('range-val-<%= field._id %>').textContent = this.value"
+    />
+    <span class="badge bg-primary text-white font-mono px-2 py-1 text-xs rounded-md shadow-2xs" id="range-val-<%= field._id %>">
+      <%= currentVal %>
+    </span>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

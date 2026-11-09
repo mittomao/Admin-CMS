@@ -1,0 +1,27 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'readonly' : '';
+  const currentVal = typeof value !== 'undefined' && value !== null ? value : (field.defaultValue || '');
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <div class="input-group input-group-sm rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700">
+    <span class="input-group-text bg-slate-50 dark:bg-slate-800 text-slate-500 font-mono text-xs border-0">
+      <i class="ti ti-link me-1"></i>/
+    </span>
+    <input
+      type="text"
+      class="form-control form-control-sm item-field-input font-mono text-xs border-0 dark:bg-slate-800 dark:text-slate-100"
+      name="fields[<%= field.name %>]"
+      value="<%= currentVal %>"
+      placeholder="<%= field.config?.placeholder || 'url-slug-example' %>"
+      <%= field.required ? 'required' : '' %>
+      <%= readOnlyAttr %>
+      oninput="this.value = this.value.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^\w-]+/g, '')"
+    />
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+

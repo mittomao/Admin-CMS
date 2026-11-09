@@ -1,0 +1,73 @@
+<% 
+  const readOnlyAttr = (typeof isReadOnly !== 'undefined' && isReadOnly) ? 'disabled' : '';
+  let items = [];
+  if (Array.isArray(value)) {
+    items = value;
+  } else if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      items = Array.isArray(parsed) ? parsed : value.split(',').map(s => s.trim()).filter(Boolean);
+    } catch {
+      items = value.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  }
+%>
+<div class="mb-3 field-container" data-field-name="<%= field.name %>" data-field-id="<%= field._id %>">
+  <%- include('./field-header', { field }) %>
+  <input type="hidden" class="js-gallery-target item-field-input" name="fields[<%= field.name %>]" value="<%= JSON.stringify(items) %>" />
+  <div class="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+    <div class="d-flex flex-wrap gap-2.5 js-gallery-grid mb-2">
+      <% items.forEach((itemUrl, idx) => { %>
+        <div class="relative group rounded-lg overflow-hidden border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 shadow-2xs" style="width: 80px; height: 80px;">
+          <img src="<%= itemUrl %>" class="w-full h-full object-cover" onerror="this.src='/images/placeholder.svg'" />
+          <% if (!readOnlyAttr) { %>
+            <button type="button" class="btn btn-icon btn-xs btn-danger absolute top-1 right-1 opacity-80 group-hover:opacity-100 transition-opacity"
+              onclick="(function(btn){
+                const c = btn.closest('.field-container');
+                btn.closest('.relative').remove();
+                const imgs = Array.from(c.querySelectorAll('.js-gallery-grid img')).map(i => i.src);
+                c.querySelector('.js-gallery-target').value = JSON.stringify(imgs);
+                c.querySelector('.js-gallery-target').dispatchEvent(new Event('input', { bubbles: true }));
+              })(this)">
+              <i class="ti ti-trash text-[10px]"></i>
+            </button>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+    <% if (!readOnlyAttr) { %>
+      <div class="input-group input-group-sm">
+        <input type="text" class="form-control form-control-sm text-xs js-gallery-new-url rounded-s-lg border-slate-300 dark:border-slate-700" placeholder="Paste image URL..." />
+        <button type="button" class="btn btn-sm btn-outline-primary rounded-e-lg"
+          onclick="(function(btn){
+            const c = btn.closest('.field-container');
+            const inp = c.querySelector('.js-gallery-new-url');
+            const url = inp.value.trim();
+            if (!url) return;
+            const target = c.querySelector('.js-gallery-target');
+            let list = [];
+            try { list = JSON.parse(target.value) || []; } catch { list = []; }
+            list.push(url);
+            target.value = JSON.stringify(list);
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+            inp.value = '';
+            // Render new thumb
+            const grid = c.querySelector('.js-gallery-grid');
+            const div = document.createElement('div');
+            div.className = 'relative group rounded-lg overflow-hidden border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 shadow-2xs';
+            div.style.width = '80px';
+            div.style.height = '80px';
+            div.innerHTML = `<img src=&quot;${url}&quot; class=&quot;w-full h-full object-cover&quot; /><button type=&quot;button&quot; class=&quot;btn btn-icon btn-xs btn-danger absolute top-1 right-1&quot; onclick=&quot;this.closest('.relative').remove();&quot;><i class=&quot;ti ti-trash text-[10px]&quot;></i></button>`;
+            grid.appendChild(div);
+          })(this)">
+          <i class="ti ti-plus me-1"></i>Add
+        </button>
+      </div>
+    <% } %>
+  </div>
+  <% if (field.helpText) { %>
+    <div class="form-text text-slate-500 text-xs mt-1"><%= field.helpText %></div>
+  <% } %>
+  <div class="invalid-feedback text-xs mt-1"></div>
+</div>
+
