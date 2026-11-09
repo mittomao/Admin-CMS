@@ -88,12 +88,26 @@ function isIpInAllowlist(clientIp, allowlist = []) {
 }
 
 /**
- * Render 401 Unauthorized HTML Page
+ * Render 401 Unauthorized Response (JSON for API, HTML for Admin pages)
  */
-async function send401(res, realm) {
+async function send401(res, realm, req = null) {
   res.setHeader('WWW-Authenticate', `Basic realm="${realm}", charset="UTF-8"`);
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.status(401);
+
+  const isApi =
+    req &&
+    (req.path?.startsWith('/api') ||
+      req.originalUrl?.startsWith('/api') ||
+      Boolean(req.xhr) ||
+      Boolean(req.headers?.accept?.includes('application/json')));
+
+  if (isApi) {
+    return res.json({
+      success: false,
+      message: 'Authentication Required (Basic Auth for Admin API)',
+    });
+  }
 
   try {
     const viewPath = path.resolve(VIEWS_SITE_DIR, 'errors/401.ejs');
@@ -103,7 +117,7 @@ async function send401(res, realm) {
 
     if (fileToRender) {
       const html = await ejs.renderFile(fileToRender, {
-        title: '401 - Yêu Cầu Xác Thực',
+        title: '401 - Yêu Cầu Xác Thực Quản Trị',
         realm,
         lang: 'vi',
       });
@@ -114,24 +128,28 @@ async function send401(res, realm) {
     logger.warn(`[basicAuthMiddleware] Failed to render 401 view: ${err.message}`);
   }
 
-  // Fallback simple HTML
+  // Fallback simple HTML with Admin CMS branding
   const fallbackHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>401 - Yêu Cầu Xác Thực (Basic Auth)</title>
+  <title>401 - Yêu Cầu Xác Thực Quản Trị (Basic Auth)</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f8fafc; color: #1e293b; }
-    .card { max-width: 460px; padding: 2.5rem; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); text-align: center; }
-    h1 { font-size: 1.25rem; font-weight: 700; color: #b91c1c; margin-top: 0; margin-bottom: 0.75rem; }
-    p { font-size: 0.875rem; color: #64748b; line-height: 1.6; margin-bottom: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #0f172a; color: #f8fafc; }
+    .card { max-width: 480px; padding: 2.5rem; background: #1e293b; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; }
+    h1 { font-size: 1.25rem; font-weight: 700; color: #f87171; margin-top: 0; margin-bottom: 0.75rem; }
+    p { font-size: 0.875rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: #334155; color: #38bdf8; margin-bottom: 1rem; }
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; text-decoration: none; background: #0284c7; color: #ffffff; cursor: pointer; border: none; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>401 - Yêu Cầu Xác Thực</h1>
-    <p>Trang web này đang được bảo vệ. Vui lòng tải lại trang và nhập thông tin tài khoản hợp lệ để tiếp tục.</p>
+    <div class="badge">HTTP Basic Authentication &bull; RFC 7617</div>
+    <h1>401 - Yêu Cầu Xác Thực Quản Trị</h1>
+    <p>Phân vùng quản trị <strong>Treecraft CMS</strong> đang được bảo vệ. Vui lòng tải lại trang và đăng nhập bằng tài khoản Basic Auth hợp lệ.</p>
+    <button onclick="location.reload()" class="btn">Thử lại</button>
   </div>
 </body>
 </html>`;
@@ -144,32 +162,34 @@ async function send401(res, realm) {
  * Basic Auth Middleware Factory / Handler
  */
 const basicAuthMiddleware = async (req, res, next) => {
-  // 1. Never intercept internal / administrative / health endpoints
-  const p = req.path.toLowerCase();
-  if (
-    p.startsWith('/admin') ||
-    p.startsWith('/api') ||
-    p === '/health'
-  ) {
+  // 1. Only intercept Admin CMS (/admin)
+  // Public website (/, /:slug, /media/file/..., /site/...) and APIs are NEVER intercepted.
+  const p = (req.originalUrl || req.url || req.path || '').toLowerCase().split('?')[0];
+  if (!p.startsWith('/admin')) {
     return next();
   }
 
-  // 2. Emergency Override Check: If BASIC_AUTH_ENABLED=false in env, completely bypass
+  // 2. Health check endpoint is always exempt
+  if (p === '/health') {
+    return next();
+  }
+
+  // 3. Emergency Override Check: If BASIC_AUTH_ENABLED=false in env, completely bypass
   if (process.env.BASIC_AUTH_ENABLED === 'false' || env.BASIC_AUTH_ENABLED === 'false') {
     return next();
   }
 
   try {
-    // 3. Retrieve configuration
+    // 4. Retrieve configuration
     const configData = await basicAuthService.getConfig({ sanitize: false });
     if (!configData.enabled) {
       return next();
     }
 
-    const realm = configData.realm || 'Treecraft';
+    const realm = configData.realm || 'Treecraft Admin Access';
 
-    // 4. Path exclusion check
-    const excludePaths = configData.excludePaths || ['/health', '/robots.txt'];
+    // 5. Path exclusion check
+    const excludePaths = configData.excludePaths || ['/health'];
     const isExcluded = excludePaths.some((ex) => {
       const cleanEx = ex.toLowerCase();
       return p === cleanEx || p.startsWith(cleanEx.endsWith('/') ? cleanEx : `${cleanEx}/`);
@@ -179,21 +199,21 @@ const basicAuthMiddleware = async (req, res, next) => {
       return next();
     }
 
-    // 5. IP allowlist check
+    // 6. IP allowlist check
     const clientIp = getClientIp(req);
     if (isIpInAllowlist(clientIp, configData.ipAllowlist)) {
       return next();
     }
 
-    // 6. Inspect Authorization header
+    // 7. Inspect Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-      return send401(res, realm);
+      return send401(res, realm, req);
     }
 
     // Header security checks
     if (authHeader.length > 512 || !authHeader.toLowerCase().startsWith('basic ')) {
-      return send401(res, realm);
+      return send401(res, realm, req);
     }
 
     const base64Credentials = authHeader.substring(6).trim();
@@ -201,19 +221,19 @@ const basicAuthMiddleware = async (req, res, next) => {
     try {
       credentialsText = Buffer.from(base64Credentials, 'base64').toString('utf8');
     } catch {
-      return send401(res, realm);
+      return send401(res, realm, req);
     }
 
     const colonIndex = credentialsText.indexOf(':');
     if (colonIndex === -1) {
-      return send401(res, realm);
+      return send401(res, realm, req);
     }
 
     const username = credentialsText.substring(0, colonIndex);
     const password = credentialsText.substring(colonIndex + 1);
 
     if (!username) {
-      return send401(res, realm);
+      return send401(res, realm, req);
     }
 
     // 7. Brute-force rate limiting check
@@ -249,12 +269,13 @@ const basicAuthMiddleware = async (req, res, next) => {
         rateEntry.lockedUntil = now + RATE_LIMIT_LOCKOUT_MS;
       }
 
-      return send401(res, realm);
+      return send401(res, realm, req);
     }
 
     // 9. Authentication successful
     rateLimitStore.delete(rateLimitKey);
     req.basicAuth = { username: username.toLowerCase() };
+    res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
 
     // Prevent CDN and public caches from storing authenticated HTML
     const originalSetHeader = res.setHeader.bind(res);

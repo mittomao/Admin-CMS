@@ -36,8 +36,8 @@ class BasicAuthService {
   getDefaultConfig() {
     return {
       enabled: false,
-      realm: env.BASIC_AUTH_REALM || branding.PROJECT_NAME,
-      excludePaths: ['/health', '/robots.txt'],
+      realm: env.BASIC_AUTH_REALM || `${branding.PROJECT_NAME} Admin Access`,
+      excludePaths: ['/health'],
       ipAllowlist: [],
       users: [],
     };

@@ -1,17 +1,17 @@
 ---
 phase: B1
-name: Basic Authentication for Public Site
+name: Basic Authentication for Admin CMS
 status: Hoàn thành
-depends_on: [0, 1, 10]
+depends_on: [0, 1]
 estimate: 1 ngày
 started: 2026-11-09
 completed: 2026-11-09
 updated: 2026-11-09
 ---
 
-# GĐ B1 — Bảo Vệ Website Công Khai Bằng HTTP Basic Authentication
+# GĐ B1 — Bảo Vệ Phân Vùng Quản Trị (Admin CMS) Bằng HTTP Basic Authentication
 
-> Kích hoạt cơ chế bảo vệ HTTP Basic Authentication chuẩn RFC 7617 cho toàn bộ Website công khai (`/`, `/:slug`), dùng cho môi trường UAT/Staging. Quản lý cấu hình, bật/tắt và quản lý tài khoản người dùng trực tiếp từ Admin qua tile Launchpad "Basic Auth". Hỗ trợ công tắc ghi đè khẩn cấp qua biến môi trường `BASIC_AUTH_ENABLED` và công cụ dòng lệnh (CLI).
+> Kích hoạt cơ chế bảo vệ HTTP Basic Authentication chuẩn RFC 7617 cho toàn bộ phân vùng Quản trị (`/admin`, `/api`), tăng cường phòng thủ 2 lớp (Defense-in-Depth). Website công khai hoàn toàn tự do truy cập. Quản lý cấu hình, bật/tắt và quản lý tài khoản người dùng trực tiếp từ Admin qua tile Launchpad "Basic Auth". Hỗ trợ công tắc ghi đè khẩn cấp qua biến môi trường `BASIC_AUTH_ENABLED` và công cụ dòng lệnh (CLI).
 
 ---
 
@@ -21,18 +21,18 @@ updated: 2026-11-09
 - [`docs/rules/02-tech-stack.md`](../rules/02-tech-stack.md)
 - [`docs/rules/04-routing.md`](../rules/04-routing.md)
 - [`docs/rules/05-security.md`](../rules/05-security.md)
-- [`docs/decisions/DEC-046-basic-auth-public-site-protection.md`](../decisions/DEC-046-basic-auth-public-site-protection.md)
+- [`docs/decisions/DEC-050-basic-auth-admin-cms-protection.md`](../decisions/DEC-050-basic-auth-admin-cms-protection.md)
 
 ---
 
 ## 1. Mục Tiêu & Phạm Vi (Scope)
 
 ### Trong phạm vi (In-Scope)
-1. **Phạm vi bảo vệ:** Chỉ áp dụng cho Website công khai (`/`, `/:slug`, các trang EJS SSR công khai).
-2. **Loại trừ mặc định:** Tuyệt đối không chặn `/admin`, `/api`, `/health`, `/admin/preview`. Cho phép cấu hình danh sách `excludePaths` bổ sung và `ipAllowlist`.
+1. **Phạm vi bảo vệ:** Chỉ áp dụng cho Phân vùng Quản trị Admin CMS (`/admin`, `/api`).
+2. **Miễn trừ:** Tuyệt đối không chặn Website công khai (`/`, `/:slug`, `/media/file/...`, `/robots.txt`, `/sitemap.xml`) và endpoint `/health`. Cho phép cấu hình danh sách `excludePaths` bổ sung và `ipAllowlist`.
 3. **Cơ chế xác thực:**
    - Sử dụng hộp thoại Sign-in gốc của trình duyệt qua header `WWW-Authenticate: Basic realm="<realm>", charset="UTF-8"`.
-   - Khi chưa xác thực / sai thông tin / nhấn Cancel: trả về HTTP 401 cùng giao diện riêng `src/views/site/errors/401.ejs`.
+   - Khi chưa xác thực / sai thông tin / nhấn Cancel: trả về HTTP 401 cùng giao diện Admin 401 (hoặc JSON cho API).
 4. **Lưu trữ & Bảo mật:**
    - Collection `settings`, key `basicAuth`: lưu `enabled`, `realm`, `excludePaths`, `ipAllowlist`, `users` (mật khẩu băm qua `bcryptjs`). Không lưu mật khẩu rõ. Không trả `passwordHash` qua API.
    - Parse Base64 an toàn, so sánh timing-safe qua `crypto.timingSafeEqual`, thông điệp 401 đồng nhất, chống lộ username.

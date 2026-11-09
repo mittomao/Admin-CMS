@@ -7,7 +7,6 @@ const { NotFoundError } = require('../../utils/errors');
 const logger = require('../../utils/logger');
 const env = require('../../config/env');
 const branding = require('../../config/branding');
-const basicAuthService = require('../../services/basicAuthService');
 
 const VIEWS_SITE_DIR = path.resolve(__dirname, '../../views/site');
 
@@ -123,22 +122,6 @@ class SiteController {
    * Serve dynamic robots.txt
    */
   async getRobotsTxt(req, res) {
-    try {
-      const basicAuthConfig = await basicAuthService.getConfig({ sanitize: false });
-      if (basicAuthConfig.enabled) {
-        const content = [
-          'User-agent: *',
-          'Disallow: /',
-        ].join('\n');
-
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-store, private');
-        return res.send(content);
-      }
-    } catch (err) {
-      logger.warn(`[SiteController] Error checking Basic Auth for robots.txt: ${err.message}`);
-    }
-
     const host = req.get('host') || 'localhost:4000';
     const protocol = req.protocol || 'http';
     const content = [

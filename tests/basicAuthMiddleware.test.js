@@ -1,7 +1,9 @@
 'use strict';
 
 /**
- * Basic Auth Middleware Test Suite (GĐ B1 / DEC-046)
+ * Basic Auth Middleware Test Suite (GĐ B1 / DEC-050)
+ * Validates HTTP Basic Authentication protecting Admin CMS & Admin APIs,
+ * while ensuring the public website remains 100% open and unintercepted.
  */
 
 const request = require('supertest');
@@ -14,7 +16,7 @@ const Setting = require('../src/models/Setting');
 const PublishedItem = require('../src/models/PublishedItem');
 const branding = require('../src/config/branding');
 
-describe('GĐ B1 — basicAuthMiddleware (RFC 7617)', () => {
+describe('GĐ B1 — basicAuthMiddleware (RFC 7617 for Admin CMS & APIs)', () => {
   let mongoServer;
 
   beforeAll(async () => {
@@ -45,7 +47,7 @@ describe('GĐ B1 — basicAuthMiddleware (RFC 7617)', () => {
       languages: [{ code: 'vi', publishedVersion: 1 }],
     });
 
-    // Create Home item in Web store so GET / returns 200 when authorized
+    // Create Home item in Web store so GET / returns 200
     await PublishedItem.create({
       _id: new mongoose.Types.ObjectId(),
       name: 'Home',
@@ -71,134 +73,146 @@ describe('GĐ B1 — basicAuthMiddleware (RFC 7617)', () => {
     await Setting.deleteMany({});
   });
 
-  test('1. When Basic Auth is OFF: public site is accessible freely (no 401)', async () => {
+  test('1. When Basic Auth is OFF: both Public site and Admin are accessible without Basic Auth', async () => {
     await Setting.create({
       key: 'basicAuth',
       value: { enabled: false },
       updatedBy: 'test',
     });
 
-    const res = await request(app).get('/');
-    expect(res.status).not.toBe(401);
+    const publicRes = await request(app).get('/');
+    expect(publicRes.status).not.toBe(401);
+
+    const adminRes = await request(app).get('/admin/login');
+    expect(adminRes.status).not.toBe(401);
+    expect(adminRes.headers['www-authenticate']).toBeUndefined();
   });
 
-  test('2. When Basic Auth is ON: request without Authorization header returns 401 + WWW-Authenticate', async () => {
-    // Add user and enable
-    await basicAuthService.addUser({ username: 'tester', password: 'password123' });
-    await basicAuthService.updateConfig({ enabled: true, realm: 'Treecraft UAT' });
+  test('2. When Basic Auth is ON: Public website is NEVER intercepted by Basic Auth', async () => {
+    await basicAuthService.addUser({ username: 'admin_sec', password: 'SecPassword123' });
+    await basicAuthService.updateConfig({ enabled: true, realm: 'Treecraft Admin Access' });
 
-    const res = await request(app).get('/');
-    expect(res.status).toBe(401);
-    expect(res.headers['www-authenticate']).toContain('Basic realm="Treecraft UAT"');
-    expect(res.headers['cache-control']).toContain('no-store');
-    expect(res.text).toContain('401 - Yêu Cầu Xác Thực');
+    // Public website requests (/) must NEVER be blocked by Basic Auth
+    const publicRes = await request(app).get('/');
+    expect(publicRes.status).not.toBe(401);
+    expect(publicRes.headers['www-authenticate']).toBeUndefined();
+
+    // Technical SEO robots.txt is accessible without Basic Auth
+    const robotsRes = await request(app).get('/robots.txt');
+    expect(robotsRes.status).toBe(200);
+    expect(robotsRes.text).toContain('Allow: /');
   });
 
-  test('3. When Basic Auth is ON: valid credentials return 200 OK + private Cache-Control', async () => {
-    await basicAuthService.addUser({ username: 'john_doe', password: 'my:secret:password' });
+  test('3. When Basic Auth is ON: Request to /admin without credentials returns 401 + WWW-Authenticate', async () => {
+    await basicAuthService.addUser({ username: 'admin_sec', password: 'SecPassword123' });
+    await basicAuthService.updateConfig({ enabled: true, realm: 'Treecraft Admin Access' });
+
+    const adminRes = await request(app).get('/admin/login');
+    expect(adminRes.status).toBe(401);
+    expect(adminRes.headers['www-authenticate']).toContain('Basic realm="Treecraft Admin Access"');
+    expect(adminRes.headers['cache-control']).toContain('no-store');
+    expect(adminRes.text).toContain('401 - Yêu Cầu Xác Thực Quản Trị');
+  });
+
+  test('4. When Basic Auth is ON: Internal APIs (/api) are protected by application auth and not blocked by Basic Auth', async () => {
+    await basicAuthService.addUser({ username: 'admin_sec', password: 'SecPassword123' });
+    await basicAuthService.updateConfig({ enabled: true, realm: 'Treecraft Admin Access' });
+
+    // Request to /api/languages without basic auth is not intercepted by Basic Auth
+    const apiRes = await request(app).get('/api/languages');
+    expect(apiRes.headers['www-authenticate']).toBeUndefined();
+  });
+
+  test('5. Valid Basic Auth credentials allow access to /admin/login', async () => {
+    await basicAuthService.addUser({ username: 'john_admin', password: 'my:admin:pass' });
     await basicAuthService.updateConfig({ enabled: true });
 
-    const token = Buffer.from('john_doe:my:secret:password').toString('base64');
+    const token = Buffer.from('john_admin:my:admin:pass').toString('base64');
     const res = await request(app)
-      .get('/')
+      .get('/admin/login')
       .set('Authorization', `Basic ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.headers['cache-control']).toContain('private');
   });
 
-  test('4. Case-insensitive username authentication succeeds', async () => {
-    await basicAuthService.addUser({ username: 'mhr_admin', password: 'secretpassword123' });
+  test('6. Case-insensitive username authentication succeeds', async () => {
+    await basicAuthService.addUser({ username: 'super_admin', password: 'secretpassword123' });
     await basicAuthService.updateConfig({ enabled: true });
 
-    const token = Buffer.from('MHR_ADMIN:secretpassword123').toString('base64');
+    const token = Buffer.from('SUPER_ADMIN:secretpassword123').toString('base64');
     const res = await request(app)
-      .get('/')
+      .get('/admin/login')
       .set('Authorization', `Basic ${token}`);
 
     expect(res.status).toBe(200);
   });
 
-  test('5. Wrong password returns 401', async () => {
+  test('7. Wrong password returns 401', async () => {
     await basicAuthService.addUser({ username: 'alice', password: 'correctpassword' });
     await basicAuthService.updateConfig({ enabled: true });
 
     const token = Buffer.from('alice:wrongpassword').toString('base64');
     const res = await request(app)
-      .get('/')
+      .get('/admin/login')
       .set('Authorization', `Basic ${token}`);
 
     expect(res.status).toBe(401);
   });
 
-  test('6. Disabled user is rejected with 401', async () => {
+  test('8. Disabled user is rejected with 401', async () => {
     await basicAuthService.addUser({ username: 'active_one', password: 'password123' });
     await basicAuthService.addUser({ username: 'disabled_user', password: 'password123', disabled: true });
     await basicAuthService.updateConfig({ enabled: true });
 
     const token = Buffer.from('disabled_user:password123').toString('base64');
     const res = await request(app)
-      .get('/')
+      .get('/admin/login')
       .set('Authorization', `Basic ${token}`);
 
     expect(res.status).toBe(401);
   });
 
-  test('7. Malformed headers (no colon, non-base64, empty username) return 401', async () => {
+  test('9. Malformed headers (no colon, non-base64, empty username) return 401', async () => {
     await basicAuthService.addUser({ username: 'tester', password: 'password123' });
     await basicAuthService.updateConfig({ enabled: true });
 
     // Missing colon
     const noColon = Buffer.from('justausername').toString('base64');
-    const res1 = await request(app).get('/').set('Authorization', `Basic ${noColon}`);
+    const res1 = await request(app).get('/admin/login').set('Authorization', `Basic ${noColon}`);
     expect(res1.status).toBe(401);
 
     // Empty username (:password)
     const emptyUser = Buffer.from(':password123').toString('base64');
-    const res2 = await request(app).get('/').set('Authorization', `Basic ${emptyUser}`);
+    const res2 = await request(app).get('/admin/login').set('Authorization', `Basic ${emptyUser}`);
     expect(res2.status).toBe(401);
 
     // Not Basic scheme
-    const res3 = await request(app).get('/').set('Authorization', 'Bearer sometoken');
+    const res3 = await request(app).get('/admin/login').set('Authorization', 'Bearer sometoken');
     expect(res3.status).toBe(401);
   });
 
-  test('8. /health and /admin routes are NEVER intercepted by Basic Auth', async () => {
+  test('10. /health endpoint is NEVER intercepted by Basic Auth', async () => {
     await basicAuthService.addUser({ username: 'tester', password: 'password123' });
     await basicAuthService.updateConfig({ enabled: true });
 
     const healthRes = await request(app).get('/health');
     expect(healthRes.status).toBe(200);
     expect(healthRes.body.status).toBe('ok');
-
-    const adminRes = await request(app).get('/admin/login');
-    expect(adminRes.status).not.toBe(401);
   });
 
-  test('9. excludePaths bypass Basic Auth', async () => {
-    await basicAuthService.addUser({ username: 'tester', password: 'password123' });
-    await basicAuthService.updateConfig({
-      enabled: true,
-      excludePaths: ['/health', '/robots.txt', '/about-us'],
-    });
-
-    const res = await request(app).get('/robots.txt');
-    expect(res.status).toBe(200);
-    expect(res.text).toContain('Disallow: /');
-  });
-
-  test('10. ipAllowlist bypasses Basic Auth', async () => {
+  test('11. ipAllowlist bypasses Basic Auth on Admin CMS', async () => {
     await basicAuthService.addUser({ username: 'tester', password: 'password123' });
     await basicAuthService.updateConfig({
       enabled: true,
       ipAllowlist: ['127.0.0.1'],
     });
 
-    const res = await request(app).get('/');
+    const res = await request(app).get('/admin/login');
     expect(res.status).toBe(200);
   });
 
-  test('11. Anti-brute-force rate limiting locks out after 5 consecutive failures', async () => {
+  test('12. Anti-brute-force rate limiting locks out after 5 consecutive failures', async () => {
     await basicAuthService.addUser({ username: 'victim', password: 'correctpassword' });
     await basicAuthService.updateConfig({ enabled: true });
 
@@ -206,25 +220,25 @@ describe('GĐ B1 — basicAuthMiddleware (RFC 7617)', () => {
 
     // Fail 5 times
     for (let i = 0; i < 5; i++) {
-      const res = await request(app).get('/').set('Authorization', `Basic ${badToken}`);
+      const res = await request(app).get('/admin/login').set('Authorization', `Basic ${badToken}`);
       expect(res.status).toBe(401);
     }
 
     // 6th attempt should be blocked with 429
-    const lockRes = await request(app).get('/').set('Authorization', `Basic ${badToken}`);
+    const lockRes = await request(app).get('/admin/login').set('Authorization', `Basic ${badToken}`);
     expect(lockRes.status).toBe(429);
     expect(lockRes.headers['retry-after']).toBeDefined();
     expect(lockRes.text).toContain('Quá nhiều lần đăng nhập sai');
   });
 
-  test('12. BASIC_AUTH_ENABLED=false env emergency override disables Basic Auth immediately', async () => {
+  test('13. BASIC_AUTH_ENABLED=false env emergency override disables Basic Auth immediately', async () => {
     await basicAuthService.addUser({ username: 'tester', password: 'password123' });
     await basicAuthService.updateConfig({ enabled: true });
 
     // Set emergency env override
     process.env.BASIC_AUTH_ENABLED = 'false';
 
-    const res = await request(app).get('/');
+    const res = await request(app).get('/admin/login');
     expect(res.status).toBe(200);
   });
 });

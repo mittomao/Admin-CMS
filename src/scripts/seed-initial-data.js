@@ -225,7 +225,7 @@ const seedData = async () => {
       },
       {
         name: 'Basic Auth',
-        description: 'Protect public website with HTTP Basic Authentication',
+        description: 'Bảo vệ phân vùng quản trị Admin CMS bằng xác thực HTTP Basic Auth',
         icon: 'ti ti-door-enter',
         iconBg: 'cyan',
         group: 'Control Panel & Maintenance',

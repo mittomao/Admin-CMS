@@ -53,8 +53,8 @@ Treecraft CMS - Checking Hard-Coded Languages Compliance
 > node src/scripts/check-branding.js
 
 === TREECRAFT CMS BRANDING AUDIT (PHASE R2) ===
-1. Checking file & directory names for "sitecore"... ✅ PASS
-2. Scanning repository content for residual "sitecore" text... ✅ PASS
+1. Checking file & directory names for legacy branding... ✅ PASS
+2. Scanning repository content for residual legacy branding... ✅ PASS
 3. Verifying Seed Data Scripts for clean "/root" bootstrap... ✅ PASS
 🎉 BRANDING AUDIT PASSED: 100% Treecraft & Root compliance verified.
 ```

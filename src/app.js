@@ -139,6 +139,9 @@ app.get([
   '/admin/content-editor/media/file/:id'
 ], (req, res, next) => mediaController.serveFile(req, res, next));
 
+// 8. Basic Auth Perimeter Defense for Admin CMS (GĐ B1 / DEC-050)
+app.use('/admin', basicAuthMiddleware);
+
 app.use('/admin', authRoutes);
 app.get('/admin/preview', requireAuth, (req, res, next) => contentEditorController.previewItem(req, res, next));
 app.use('/admin/launchpad', launchpadRoutes);
@@ -170,8 +173,7 @@ app.use('/api/audit', apiAuditRoutes);
 app.use('/api/basic-auth', apiBasicAuthRoutes);
 app.use('/api/serialization', apiSerializationRoutes);
 
-// 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10) & Basic Auth (GĐ B1)
-app.use(basicAuthMiddleware);
+// 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10)
 app.use('/', siteRoutes);
 
 // 11. Error Handling

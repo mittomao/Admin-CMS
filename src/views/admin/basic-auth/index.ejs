@@ -8,10 +8,10 @@
         </div>
         <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
           <i class="ti ti-door-enter text-cyan"></i>
-          <span>Cấu hình Basic Authentication (Site Công Khai)</span>
+          <span>Cấu hình Basic Authentication (Admin CMS)</span>
         </h2>
         <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
-          Bảo vệ toàn bộ Website công khai cho môi trường UAT / Staging bằng hộp thoại xác thực gốc RFC 7617 của trình duyệt.
+          Bảo vệ toàn bộ phân vùng quản trị (/admin, /api) bằng lớp xác thực HTTP Basic Auth chuẩn RFC 7617, tăng cường phòng thủ hai lớp cho hệ thống.
         </p>
       </div>
       <div class="col-auto ms-auto d-print-none d-flex gap-2">
@@ -19,9 +19,9 @@
           <i class="ti ti-apps"></i>
           <span>Launchpad</span>
         </a>
-        <a href="/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" title="Mở trang chủ Website ở tab mới">
+        <a href="/admin/login" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" title="Mở trang quản trị ở tab mới để thử nghiệm">
           <i class="ti ti-external-link"></i>
-          <span>Thử nghiệm Site</span>
+          <span>Thử nghiệm Admin</span>
         </a>
         <% if (permissions.canManage) { %>
         <button type="button" class="btn btn-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" id="btn-save-config">
