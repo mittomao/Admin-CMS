@@ -155,7 +155,7 @@ function initContentTree() {
       if (rootNode) {
         rootNode.setExpanded(true).done(() => {
           if (currentItemId) {
-            activateNodeById(currentItemId);
+            navigateToItem(currentItemId, false);
           } else {
             rootNode.setActive(true);
           }
@@ -181,6 +181,7 @@ function initContentTree() {
 
       currentItemId = node.key;
       updateRibbonContext(node);
+      updateWorkspaceBreadcrumbs(node);
 
       // Auto-expand node on click if it has children and is collapsed
       if (node.isLazy() && !node.isExpanded()) {
@@ -197,13 +198,105 @@ function initContentTree() {
   });
 }
 
-function activateNodeById(id) {
-  if (!treeInstance || !id) return;
-  const node = treeInstance.getNodeByKey(id);
-  if (node) {
-    node.setActive(true);
-    node.makeVisible();
+function updateWorkspaceBreadcrumbs(node) {
+  const breadcrumbEl = document.getElementById('workspaceBreadcrumb');
+  if (!breadcrumbEl || !node) return;
+  const trail = node.getParentList ? node.getParentList(false, true) : [];
+  if (!trail || trail.length === 0) {
+    breadcrumbEl.innerHTML = `<li class="breadcrumb-item active fw-bold text-slate-900 dark:text-white" aria-current="page">${node.title || node.key}</li>`;
+    return;
   }
+  const html = trail
+    .map((item, idx) => {
+      const isLast = idx === trail.length - 1;
+      if (isLast) {
+        return `<li class="breadcrumb-item active fw-bold text-slate-900 dark:text-white" aria-current="page">${item.title}</li>`;
+      }
+      return `<li class="breadcrumb-item"><a href="#" class="breadcrumb-jump-link text-slate-500 hover:text-sc-red dark:text-slate-400 dark:hover:text-sc-red text-decoration-none transition-colors duration-150" data-item-id="${item.key}">${item.title}</a></li>`;
+    })
+    .join('');
+  breadcrumbEl.innerHTML = html;
+}
+
+/**
+ * Navigate to an item in the tree and workspace, expanding lazy parent branches if needed
+ * @param {string} targetId Item ID or Template ID
+ * @param {boolean} triggerEvents Whether to trigger activate events (set false on initial SSR load)
+ */
+async function navigateToItem(targetId, triggerEvents = true) {
+  if (!targetId) return;
+
+  // 1. If treeInstance is not ready, fall back to direct workspace loading
+  if (!treeInstance) {
+    if (triggerEvents) {
+      loadItemWorkspace(targetId, currentViewMode);
+    }
+    return;
+  }
+
+  // 2. Check if the node is already loaded in the tree
+  const existingNode = treeInstance.getNodeByKey(targetId);
+  if (existingNode) {
+    if (triggerEvents) {
+      existingNode.setActive(true);
+    } else {
+      existingNode.setActive(true, { noEvents: true });
+    }
+    existingNode.makeVisible();
+    return;
+  }
+
+  // 3. Node is not yet loaded in tree (lazy unloaded). Fetch ancestor key path from backend
+  try {
+    const res = await fetch(`/api/items/resolve-path?id=${encodeURIComponent(targetId)}&db=${encodeURIComponent(currentDb)}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      if (triggerEvents) {
+        loadItemWorkspace(targetId, currentViewMode);
+      }
+      return;
+    }
+
+    const item = data.data || data;
+    const ancestors = Array.isArray(item.ancestors) ? item.ancestors : [];
+    const trail = [...ancestors, item._id || item.id || targetId].map((x) =>
+      (x && x._id ? x._id : x).toString()
+    );
+    const keyPath = '/' + trail.join('/');
+
+    if (typeof treeInstance.loadKeyPath === 'function') {
+      treeInstance.loadKeyPath(keyPath, (node, status) => {
+        if (status === 'ok' && node) {
+          if (triggerEvents) {
+            node.setActive(true);
+          } else {
+            node.setActive(true, { noEvents: true });
+          }
+          node.makeVisible();
+        } else if (status === 'error') {
+          console.warn('Failed to load key path in tree:', keyPath);
+          if (triggerEvents) {
+            loadItemWorkspace(targetId, currentViewMode);
+          }
+        }
+      });
+    } else {
+      if (triggerEvents) {
+        loadItemWorkspace(targetId, currentViewMode);
+      }
+    }
+  } catch (err) {
+    console.error('Error navigating to item in tree:', err);
+    if (triggerEvents) {
+      loadItemWorkspace(targetId, currentViewMode);
+    }
+  }
+}
+
+function activateNodeById(id) {
+  return navigateToItem(id, true);
 }
 
 function updateTreeStatus(text) {
@@ -1239,6 +1332,18 @@ function initWorkspaceEvents() {
       e.preventDefault();
       const targetId = link.getAttribute('data-item-id');
       if (targetId) activateNodeById(targetId);
+    }
+  });
+
+  // Quick Info link navigation (Template link, Created from source item, etc.)
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('.sc-quick-info-link[data-template-id], .sc-quick-info-link[data-source-id]');
+    if (link) {
+      e.preventDefault();
+      const targetId = link.getAttribute('data-template-id') || link.getAttribute('data-source-id');
+      if (targetId) {
+        navigateToItem(targetId, true);
+      }
     }
   });
 
@@ -2550,11 +2655,31 @@ async function runPreflightCheck() {
     const res = await resp.json();
 
     if (res.success && res.data && res.data.warningsCount > 0) {
-      if (warningContainer) warningContainer.classList.remove('d-none');
-      if (warningTitle) warningTitle.textContent = `Phát hiện ${res.data.warningsCount} cảnh báo cần lưu ý`;
+      const allBypass = res.data.warnings.every((w) => w.adminBypass);
+      if (warningContainer) {
+        warningContainer.classList.remove('d-none');
+        const alertBox = warningContainer.querySelector('.alert');
+        if (alertBox) {
+          if (allBypass) {
+            alertBox.className = 'alert alert-info text-xs mb-0 d-flex gap-2.5 align-items-start';
+          } else {
+            alertBox.className = 'alert alert-warning text-xs mb-0 d-flex gap-2.5 align-items-start';
+          }
+        }
+      }
+      if (warningTitle) {
+        warningTitle.textContent = allBypass
+          ? `Lưu ý xuất bản đặc quyền Administrator (${res.data.warningsCount} mục)`
+          : `Phát hiện ${res.data.warningsCount} cảnh báo cần lưu ý`;
+      }
       if (warningList) {
         warningList.innerHTML = res.data.warnings
-          .map((w) => `<li><strong>${w.type}:</strong> ${w.message}</li>`)
+          .map((w) => {
+            const badge = w.adminBypass
+              ? '<span class="badge bg-purple-100 text-purple-700 me-1 font-mono">Admin Bypass</span> '
+              : '';
+            return `<li>${badge}<strong>${w.type}:</strong> ${w.message}</li>`;
+          })
           .join('');
       }
     } else {
@@ -2732,4 +2857,7 @@ window.runPreflightCheck = runPreflightCheck;
 window.executePublishModalAction = executePublishModalAction;
 window.openCeUnpublishModal = openCeUnpublishModal;
 window.submitUnpublishAction = submitUnpublishAction;
+window.activateNodeById = activateNodeById;
+window.activateTreeNodeById = activateNodeById;
+window.navigateToItem = navigateToItem;
 

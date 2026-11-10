@@ -44,6 +44,9 @@ class PublishService {
       (await PublishedItem.find({}, { _id: 1 }).lean()).map((p) => p._id.toString())
     );
 
+    const aclService = require('./aclService');
+    const isAdmin = options.user && (aclService.isAdministrator(options.user) || options.user.isAdmin === true);
+
     for (const it of itemsToInspect) {
       // 1. Check workflow final status
       const stateInfo = await workflowService.getState(it, options.lang || 'vi');
@@ -53,8 +56,11 @@ class PublishService {
           itemId: it._id,
           path: it.path,
           name: it.name,
-          message: `Item đang ở trạng thái "${stateInfo.state.name}" (chưa phê duyệt cuối cùng).`,
+          message: isAdmin
+            ? `Item đang ở trạng thái "${stateInfo.state.name}" nhưng sẽ được xuất bản trực tiếp do bạn có quyền Administrator.`
+            : `Item đang ở trạng thái "${stateInfo.state.name}" (chưa phê duyệt cuối cùng).`,
           state: stateInfo.state.name,
+          adminBypass: Boolean(isAdmin),
         });
       }
 
@@ -102,8 +108,12 @@ class PublishService {
 
   /**
    * Determine if a version is eligible for publishing
+   * @param {object} item
+   * @param {string} langCode
+   * @param {number|string} version
+   * @param {object|null} user
    */
-  async isVersionPublishable(item, langCode, version) {
+  async isVersionPublishable(item, langCode, version, user = null) {
     let ver = null;
     if (typeof item?.getVersion === 'function') {
       ver = item.getVersion(langCode, version);
@@ -135,14 +145,29 @@ class PublishService {
     const stateInfo = await workflowService.getState(item, langCode, version);
     if (stateInfo) {
       if (!stateInfo.isFinal) {
+        const aclService = require('./aclService');
+        const isAdmin = user && (aclService.isAdministrator(user) || user.isAdmin === true);
+        if (!isAdmin) {
+          return {
+            publishable: false,
+            reason: `Workflow state "${stateInfo.state.name}" is not final. Only approved items can be published.`,
+          };
+        }
         return {
-          publishable: false,
-          reason: `Workflow state "${stateInfo.state.name}" is not final. Only approved items can be published.`,
+          publishable: true,
+          state: stateInfo?.state?.name || null,
+          adminBypass: true,
+          workflowStateInfo: stateInfo,
         };
       }
     }
 
-    return { publishable: true, state: stateInfo?.state?.name || null };
+    return {
+      publishable: true,
+      state: stateInfo?.state?.name || null,
+      adminBypass: false,
+      workflowStateInfo: stateInfo,
+    };
   }
 
   /**
@@ -254,15 +279,59 @@ class PublishService {
       const sortedVersions = [...langEntry.versions].sort((a, b) => b.version - a.version);
 
       let eligibleVer = null;
+      let bypassInfo = null;
       for (const ver of sortedVersions) {
-        const check = await this.isVersionPublishable(item, code, ver.version);
+        const check = await this.isVersionPublishable(item, code, ver.version, user);
         if (check.publishable) {
           eligibleVer = ver;
+          if (check.adminBypass) {
+            bypassInfo = check.workflowStateInfo;
+          }
           break;
         }
       }
 
       if (eligibleVer) {
+        // If Admin bypassed a non-final workflow state, auto-promote version on Master to Final (Approved)
+        if (bypassInfo && bypassInfo.workflow && Array.isArray(bypassInfo.workflow.states)) {
+          const finalState = bypassInfo.workflow.states.find((s) => s.isFinal);
+          if (finalState) {
+            try {
+              await Item.updateOne(
+                { _id: item._id, 'languages.code': code, 'languages.versions.version': eligibleVer.version },
+                {
+                  $set: {
+                    'languages.$[lang].versions.$[ver].workflowState': finalState._id,
+                    'languages.$[lang].versions.$[ver].updatedBy': user?._id || null,
+                    'languages.$[lang].versions.$[ver].updatedAt': new Date(),
+                    updatedBy: user?._id || null,
+                    updatedAt: new Date(),
+                  },
+                },
+                { arrayFilters: [{ 'lang.code': code }, { 'ver.version': eligibleVer.version }] }
+              );
+
+              // Record in WorkflowHistory
+              const WorkflowHistory = require('../models/WorkflowHistory');
+              const fromState = bypassInfo.state;
+              await WorkflowHistory.create({
+                itemId: item._id,
+                lang: code,
+                version: parseInt(eligibleVer.version, 10),
+                fromState: fromState ? { _id: fromState._id, name: fromState.name, displayName: fromState.displayName || fromState.name } : null,
+                toState: { _id: finalState._id, name: finalState.name, displayName: finalState.displayName || finalState.name },
+                command: { name: 'admin-publish-bypass', displayName: 'Admin Direct Publish' },
+                comment: 'Tự động phê duyệt khi Quản trị viên (Administrator) xuất bản trực tiếp sang Web.',
+                user: user?._id || null,
+                username: user?.username || user?.fullName || 'Administrator',
+                at: new Date(),
+              });
+            } catch (err) {
+              logger.error(`[PublishService] Error auto-promoting master workflow state: ${err.message}`);
+            }
+          }
+        }
+
         // Resolve final layout for this (lang, version)
         let finalLayout = { layoutId: null, renderings: [] };
         if (Array.isArray(item.presentation?.final)) {
@@ -358,7 +427,17 @@ class PublishService {
     const languages = options.languages && options.languages.length > 0 ? options.languages : [defLang.code];
     const includeSubitems = options.includeSubitems !== false;
     const includeRelated = options.includeRelated !== false;
-    const user = options.user || null;
+    let user = options.user || null;
+
+    if (user && typeof user === 'object' && !user.roles && user.isAdmin === undefined && (user._id || user.id)) {
+      const User = require('../models/User');
+      const loaded = await User.findById(user._id || user.id).populate('roles').lean();
+      if (loaded) user = loaded;
+    } else if (typeof user === 'string' || (user && user.constructor && user.constructor.name === 'ObjectId')) {
+      const User = require('../models/User');
+      const loaded = await User.findById(user).populate('roles').lean();
+      if (loaded) user = loaded;
+    }
 
     logger.info(`[PublishService] Starting ${mode} Publish for item ${rootItemId || 'SITE'} (Langs: ${languages.join(',')})`);
 
@@ -623,13 +702,20 @@ class PublishService {
 
       logger.info(`[PublishJob Runner] Acquired lock for Job ${job._id} (Mode: ${job.mode})`);
 
+      // Populate createdBy user to ensure admin privileges are retained during background execution
+      let publishingUser = null;
+      if (job.createdBy) {
+        const User = require('../models/User');
+        publishingUser = await User.findById(job.createdBy).populate('roles').lean();
+      }
+
       // Run publish
       const result = await this.publishItem(job.rootItemId, {
         mode: job.mode,
         languages: job.languages,
         includeSubitems: job.includeSubitems,
         includeRelated: job.includeRelated,
-        user: job.createdBy,
+        user: publishingUser || job.createdBy,
       });
 
       // Update Job status

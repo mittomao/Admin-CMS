@@ -552,6 +552,23 @@ const contentEditorController = {
         item = await itemService.getByPath(rawPath, currentDb);
       } else if (rawId) {
         item = await itemService.getById(rawId, currentDb);
+        if (!item && currentDb === 'master' && mongoose.Types.ObjectId.isValid(rawId)) {
+          const tpl = await Template.findById(rawId).lean();
+          if (tpl) {
+            if (tpl.path) {
+              item = await itemService.getByPath(tpl.path, currentDb);
+            }
+            if (!item) {
+              item = {
+                _id: tpl._id,
+                name: tpl.name,
+                displayName: tpl.displayName || tpl.name,
+                path: tpl.path || `/root/templates/${tpl.name}`,
+                ancestors: [],
+              };
+            }
+          }
+        }
       } else {
         return res.status(400).json({
           success: false,

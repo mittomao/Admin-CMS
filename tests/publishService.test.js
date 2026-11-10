@@ -4,6 +4,7 @@ const Item = require('../src/models/Item');
 const PublishedItem = require('../src/models/PublishedItem');
 const Template = require('../src/models/Template');
 const Workflow = require('../src/models/Workflow');
+const WorkflowHistory = require('../src/models/WorkflowHistory');
 const PublishHistory = require('../src/models/PublishHistory');
 const publishService = require('../src/services/publishService');
 const webItemService = require('../src/services/webItemService');
@@ -18,6 +19,7 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
   let datasourceItem;
   let pageItem;
   let adminUser;
+  let authorUser;
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
@@ -34,6 +36,7 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
     await PublishedItem.deleteMany({});
     await Template.deleteMany({});
     await Workflow.deleteMany({});
+    await WorkflowHistory.deleteMany({});
     await PublishHistory.deleteMany({});
 
     sampleWorkflow = await workflowService.ensureDefaultWorkflow();
@@ -42,6 +45,14 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
       _id: new mongoose.Types.ObjectId(),
       username: 'admin',
       roles: ['Administrator'],
+      isAdmin: true,
+    };
+
+    authorUser = {
+      _id: new mongoose.Types.ObjectId(),
+      username: 'author',
+      roles: ['Author'],
+      isAdmin: false,
     };
 
     pageTemplate = await Template.create({
@@ -148,9 +159,29 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
     expect(webRendering).not.toBeNull();
   });
 
-  test('Unpublished or Draft items should be skipped by publishService', async () => {
+  test('Unpublished or Draft items should be skipped for regular (non-admin) author', async () => {
     // Set workflow state back to Draft
     const draftState = sampleWorkflow.states.find((s) => s.isInitial);
+    pageItem.languages[0].versions[0].workflowState = draftState._id;
+    await pageItem.save();
+
+    const result = await publishService.publishItem(pageItem._id, {
+      mode: 'Item',
+      includeSubitems: false,
+      includeRelated: false,
+      languages: ['vi'],
+      user: authorUser,
+    });
+
+    expect(result.totalItemsPublished).toBe(0);
+    const webDoc = await PublishedItem.findById(pageItem._id);
+    expect(webDoc).toBeNull();
+  });
+
+  test('Administrator should bypass workflow and publish Draft items directly to Web, updating master state to Approved', async () => {
+    // Set workflow state to Draft
+    const draftState = sampleWorkflow.states.find((s) => s.isInitial);
+    const finalState = sampleWorkflow.states.find((s) => s.isFinal);
     pageItem.languages[0].versions[0].workflowState = draftState._id;
     await pageItem.save();
 
@@ -162,9 +193,25 @@ describe('publishService & webItemService - Master to Web Publishing', () => {
       user: adminUser,
     });
 
-    expect(result.totalItemsPublished).toBe(0);
+    expect(result.success).toBe(true);
+    expect(result.totalItemsPublished).toBe(1);
+
+    // Verify item is published on Web
     const webDoc = await PublishedItem.findById(pageItem._id);
-    expect(webDoc).toBeNull();
+    expect(webDoc).not.toBeNull();
+    expect(webDoc.name).toBe('Home');
+
+    // Verify master item workflow state was auto-promoted to Final (Approved)
+    const updatedMaster = await Item.findById(pageItem._id);
+    expect(updatedMaster.languages[0].versions[0].workflowState.toString()).toBe(finalState._id.toString());
+
+    // Verify WorkflowHistory contains bypass audit record
+    const history = await WorkflowHistory.findOne({
+      itemId: pageItem._id,
+      'command.name': 'admin-publish-bypass',
+    });
+    expect(history).not.toBeNull();
+    expect(history.username).toBe('admin');
   });
 
   test('unpublishItem should remove item from items_web and emit event', async () => {

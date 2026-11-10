@@ -182,6 +182,9 @@
         if (targetId && typeof window.activateTreeNodeById === 'function') {
           e.preventDefault();
           window.activateTreeNodeById(targetId);
+        } else if (targetId && typeof window.navigateToItem === 'function') {
+          e.preventDefault();
+          window.navigateToItem(targetId, true);
         }
       });
     });

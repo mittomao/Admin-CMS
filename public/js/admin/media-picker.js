@@ -21,25 +21,24 @@ function updateFooterSummary(asset) {
     const isImg =
       asset.fileDetails?.mimeType?.startsWith('image/') ||
       /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(asset.displayName || asset.name);
-    const thumbUrl = asset.thumbnailUrl || asset.secure_url || asset.url || `/media/file/${asset._id}?thumb=1`;
-    const thumbHtml = isImg
-      ? `<img src="${thumbUrl}" alt="" class="picker-selected-thumb" onerror="this.onerror=null; this.src='${asset.secure_url || asset.url || ''}'" />`
-      : `<span class="picker-selected-icon">📄</span>`;
 
     const dims = asset.fileDetails?.dimensions;
     const dimsStr = dims && dims.width && dims.height ? ` • ${dims.width}x${dims.height}` : '';
     const sizeStr = browserInstance ? browserInstance.formatBytes(asset.fileDetails?.fileSize || 0) : '';
+    const iconClass = isImg ? 'ti ti-photo text-primary' : 'ti ti-file-text text-secondary';
 
+    summaryEl.className = 'picker-selected-summary js-picker-selected-summary text-xs text-slate-600 font-medium flex items-center gap-2 overflow-hidden';
     summaryEl.innerHTML = `
-      ${thumbHtml}
-      <div class="d-flex flex-column" style="line-height: 1.2;">
-        <span class="fw-semibold text-truncate" style="max-width: 320px;">${asset.displayName || asset.name}</span>
-        <span class="text-muted small">${sizeStr}${dimsStr}</span>
+      <i class="${iconClass} text-base shrink-0"></i>
+      <div class="flex items-center gap-1.5 overflow-hidden text-truncate" style="max-width: 480px;">
+        <span class="fw-semibold text-slate-800 text-truncate" title="${asset.displayName || asset.name}">${asset.displayName || asset.name}</span>
+        <span class="text-slate-400 font-mono text-[11px] shrink-0">(${sizeStr}${dimsStr})</span>
       </div>
     `;
     confirmBtn.disabled = false;
   } else {
-    summaryEl.innerHTML = '<span class="text-muted">No asset selected</span>';
+    summaryEl.className = 'picker-selected-summary js-picker-selected-summary text-xs text-slate-600 font-medium';
+    summaryEl.innerHTML = '<span class="text-muted text-slate-400 italic">No asset selected</span>';
     confirmBtn.disabled = true;
   }
 }

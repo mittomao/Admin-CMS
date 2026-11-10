@@ -108,6 +108,7 @@ const publishManagerController = {
       const result = await publishService.preflightCheck(rootItemId, {
         includeSubitems: includeSubitems === 'true' || includeSubitems === true,
         lang: lang || 'vi',
+        user: req.user,
       });
 
       res.json({ success: true, data: result });

@@ -27,8 +27,13 @@
             <div class="font-bold text-slate-800" id="pubDialogItemName">Item: -</div>
             <div class="text-slate-500 font-mono" id="pubDialogItemPath">/root/...</div>
           </div>
-          <div>
+          <div class="d-flex align-items-center gap-1.5">
             <span class="badge bg-indigo-100 text-indigo-700 font-mono" id="pubDialogItemState">State: -</span>
+            <% if (typeof user !== 'undefined' && user && (user.isAdmin || (user.roleNames && user.roleNames.some(r => r.toLowerCase() === 'administrator')) || (Array.isArray(user.roles) && user.roles.some(r => (r.name || r).toLowerCase() === 'administrator')))) { %>
+              <span class="badge bg-purple-50 text-purple-700 border border-purple-200 font-mono" title="Tài khoản Quản trị viên có toàn quyền xuất bản trực tiếp sang Web mà không bị chặn bởi Workflow">
+                <i class="ti ti-shield-check me-0.5"></i> Admin Bypass Workflow
+              </span>
+            <% } %>
           </div>
         </div>
 
