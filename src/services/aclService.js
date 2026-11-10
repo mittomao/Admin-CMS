@@ -515,7 +515,15 @@ class AclService {
       case ACTIONS.SERIALIZATION_EXPORT:
       case ACTIONS.SERIALIZATION_IMPORT:
       case ACTIONS.LANGUAGE_MANAGE:
+      case ACTIONS.BACKUP_RESTORE:
+      case ACTIONS.BACKUP_DELETE:
+      case ACTIONS.MAINTENANCE_MANAGE:
         return false; // Only Administrator
+
+      case ACTIONS.BACKUP_READ:
+      case ACTIONS.BACKUP_CREATE:
+      case ACTIONS.BACKUP_DOWNLOAD:
+        return isDeveloper;
 
       case ACTIONS.LANGUAGE_READ:
         return true; // All authenticated users can read languages (e.g. for dropdowns)

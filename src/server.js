@@ -2,6 +2,7 @@ const http = require('http');
 const app = require('./app');
 const env = require('./config/env');
 const { connectDB, disconnectDB } = require('./config/db');
+const backupService = require('./services/backupService');
 const logger = require('./utils/logger');
 
 let server;
@@ -13,6 +14,9 @@ const startServer = async () => {
 
     // 2. Start HTTP Server
     server = http.createServer(app);
+
+    // 3. Start background backup scheduler (DEC-051)
+    backupService.startScheduler();
 
     server.listen(env.PORT, () => {
       logger.info('====================================================');
@@ -31,6 +35,7 @@ const startServer = async () => {
 // Graceful Shutdown Handler
 const gracefulShutdown = async (signal) => {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
+  backupService.stopScheduler();
   if (server) {
     server.close(async () => {
       logger.info('HTTP server closed.');

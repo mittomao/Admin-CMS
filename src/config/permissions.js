@@ -84,6 +84,14 @@ const ACTIONS = {
   // Language Manager Operations (GĐ L1)
   LANGUAGE_READ: 'language:read',
   LANGUAGE_MANAGE: 'language:manage',
+
+  // Backup & Restore Operations (GĐ K1)
+  BACKUP_READ: 'backup:read',
+  BACKUP_CREATE: 'backup:create',
+  BACKUP_RESTORE: 'backup:restore',
+  BACKUP_DELETE: 'backup:delete',
+  BACKUP_DOWNLOAD: 'backup:download',
+  MAINTENANCE_MANAGE: 'maintenance:manage',
 };
 
 /**

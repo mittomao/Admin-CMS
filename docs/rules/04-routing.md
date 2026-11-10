@@ -56,6 +56,16 @@ flowchart TD
   - `GET /api/databases/diff`: Danh sách đối soát chi tiết các item Missing, Changed, Orphan.
   - `GET /api/items/publish-status-batch`: Tính toán huy hiệu trạng thái xuất bản theo lô cho Fancytree.
   - `GET /admin/basic-auth`, `GET /api/basic-auth`, `PUT /api/basic-auth`: Màn hình và API cấu hình HTTP Basic Auth bảo vệ site công khai (GĐ B1 / DEC-046).
+  - `GET /admin/backups`: Màn hình quản trị Sao lưu & Phục hồi cơ sở dữ liệu (GĐ K1 / DEC-051).
+  - `GET /api/backups`: Danh sách bản sao lưu kèm trạng thái toàn vẹn SHA-256.
+  - `POST /api/backups`: Khởi tạo bản sao lưu cơ sở dữ liệu thủ công.
+  - `GET /api/backups/:id`: Xem chi tiết manifest và manifest media Cloudinary.
+  - `POST /api/backups/:id/verify`: Kiểm tra toàn vẹn băm SHA-256 từng file.
+  - `GET /api/backups/:id/download`: Tải xuống tệp nén tar.gz bản sao lưu dạng stream.
+  - `POST /api/backups/:id/restore`: Khôi phục cơ sở dữ liệu (`target-db` hoặc `in-place` có `pre-restore`, `--dry-run`).
+  - `DELETE /api/backups/:id`: Xóa bản sao lưu với ràng buộc bảo vệ retention.
+  - `POST /api/backups/prune`: Dọn dẹp bản sao lưu cũ theo chính sách retention.
+  - `POST /api/backups/maintenance`: Bật/tắt Chế độ Bảo trì (HTTP 503) hệ thống.
   - Mọi route Content Editor và API Item đều hỗ trợ tham số `?db=master|web` (chế độ Web là chỉ đọc).
 
 ### 4. Public Site Renderer Routes (`/`, `/:slug`, `/:lang/:slug`)

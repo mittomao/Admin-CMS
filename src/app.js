@@ -44,12 +44,15 @@ const apiBasicAuthRoutes = require('./routes/api/basicAuthRoutes');
 const adminSerializationRoutes = require('./routes/admin/serializationRoutes');
 const apiSerializationRoutes = require('./routes/api/serializationRoutes');
 const adminLanguageRoutes = require('./routes/admin/languageRoutes');
+const adminBackupRoutes = require('./routes/admin/backupRoutes');
+const apiBackupRoutes = require('./routes/api/backupRoutes');
 const siteRoutes = require('./routes/site/siteRoutes');
 const mediaController = require('./controllers/admin/mediaController');
 const contentEditorController = require('./controllers/admin/contentEditorController');
 const { requireAuth } = require('./middlewares/authMiddleware');
 const csrfMiddleware = require('./middlewares/csrfMiddleware');
 const basicAuthMiddleware = require('./middlewares/basicAuthMiddleware');
+const maintenanceMiddleware = require('./middlewares/maintenanceMiddleware');
 
 const app = express();
 if (env.TRUST_PROXY) {
@@ -133,6 +136,9 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Maintenance Mode Middleware (DEC-051 / GĐ K1)
+app.use(maintenanceMiddleware);
+
 // 9. Admin App & API Routes
 // Public media file serving (kèm alias phòng thủ cho các client gửi relative URL)
 app.get([
@@ -161,6 +167,7 @@ app.use('/admin/audit-log', adminAuditRoutes);
 app.use('/admin/basic-auth', adminBasicAuthRoutes);
 app.use('/admin/serialization', adminSerializationRoutes);
 app.use('/admin/languages', adminLanguageRoutes);
+app.use('/admin/backups', adminBackupRoutes);
 app.use('/api/presentation', apiPresentationRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);
@@ -174,6 +181,7 @@ app.use('/api/recycle-bin', apiRecycleBinRoutes);
 app.use('/api/audit', apiAuditRoutes);
 app.use('/api/basic-auth', apiBasicAuthRoutes);
 app.use('/api/serialization', apiSerializationRoutes);
+app.use('/api/backups', apiBackupRoutes);
 
 // 10. Public Site Renderer (100% Server-Side EJS - DEC-031 / GĐ 10)
 app.use('/', siteRoutes);

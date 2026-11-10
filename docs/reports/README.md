@@ -21,4 +21,5 @@ Mỗi file báo cáo hoàn thành một giai đoạn phải tuân theo cấu tr�
 - [`phase-05-report.md`](./phase-05-report.md) - **Hoàn thành** (2026-11-03) - Thư viện Đa phương tiện & Trình soạn thảo Văn bản (Media Library & Rich Text)
 - [`phase-06-report.md`](./phase-06-report.md) - **Hoàn thành** (2026-11-04) - Quản trị Headless Presentation (Layout, Rendering, Placeholders & Presentation Details)
 - [`phase-L1-report.md`](./phase-L1-report.md) - **Hoàn thành** (2026-11-09) - Quản lý Ngôn ngữ Động (Language Manager) Thay thế Hard-code
+- [`phase-K1-report.md`](./phase-K1-report.md) - **Hoàn thành** (2026-11-10) - Sao lưu & Phục hồi Cơ sở dữ liệu (Database Backup & Restore)
 

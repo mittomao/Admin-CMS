@@ -175,6 +175,15 @@ const defaultFallbackApps = [
     url: '/admin/serialization',
     isStub: false,
   },
+  {
+    name: 'Backup & Restore',
+    description: 'Sao lưu và phục hồi cơ sở dữ liệu MongoDB Master/Web an toàn',
+    icon: 'ti ti-database-export',
+    iconBg: 'indigo',
+    group: 'Control Panel & Maintenance',
+    url: '/admin/backups',
+    isStub: false,
+  },
 ];
 
 const getLaunchpad = async (req, res) => {

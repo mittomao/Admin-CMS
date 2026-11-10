@@ -255,6 +255,16 @@ const seedData = async () => {
         sortOrder: 50,
         allowedRoles: [rolesMap['Administrator']],
       },
+      {
+        name: 'Backup & Restore',
+        description: 'Sao lưu và phục hồi cơ sở dữ liệu MongoDB Master/Web an toàn',
+        icon: 'ti ti-database-export',
+        iconBg: 'indigo',
+        group: 'Control Panel & Maintenance',
+        url: '/admin/backups',
+        sortOrder: 55,
+        allowedRoles: [rolesMap['Administrator']],
+      },
     ];
 
     for (const appData of appsConfig) {

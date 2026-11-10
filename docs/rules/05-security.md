@@ -87,4 +87,32 @@ Tầng `aclService.js` cung cấp hàm chuẩn kiểm tra quyền của user tr�
 - **Quyền hạn quản trị:** Toàn bộ quyền xem và thay đổi cấu hình Basic Auth được kiểm soát qua `canPerform(user, null, 'basicauth:read')` và `canPerform(user, null, 'basicauth:manage')`. Không kiểm tra cứng role name.
 - **Gỡ khoá khẩn cấp:** Hỗ trợ biến môi trường `BASIC_AUTH_ENABLED=false` và các lệnh CLI cứu hộ (`npm run basicauth:disable`, `npm run basicauth:add-user -- <username>`).
 
+---
+
+## 7. Bảo mật Sao lưu & Phục hồi Cơ sở Dữ liệu (Backup & Restore - GĐ K1 / DEC-051)
+- **Chống tấn công Path Traversal:**
+  - `backupId` chỉ chấp nhận ký tự an toàn theo biểu thức chính quy `^[a-zA-Z0-9_-]+$`. Mọi chuỗi chứa `..`, `/`, `\` hoặc ký tự đặc biệt đều bị từ chối với lỗi 400 ValidationError.
+  - Phân giải đường dẫn luôn đi qua `path.resolve` và kiểm tra nghiêm ngặt `resolvedPath.startsWith(path.resolve(baseDir))`.
+- **Mã hóa dữ liệu lưu trữ (Encryption at Rest):**
+  - Hỗ trợ mã hóa đối xứng **AES-256-GCM** với khóa dẫn xuất từ biến môi trường `BACKUP_ENCRYPTION_KEY`.
+  - Khóa bí mật tuyệt đối không bao giờ được lưu kèm theo archive sao lưu hoặc manifest.
+- **Chữ ký toàn vẹn dữ liệu (Integrity Check):**
+  - Mọi tệp dữ liệu được tính mã băm **SHA-256** và lưu trữ trong `manifest.json`.
+  - Chức năng Verify kiểm tra toàn vẹn băm trước khi cho phép giải nén hoặc khôi phục.
+- **Phân quyền truy cập tập trung qua `canPerform`:**
+  - `backup:read`: Xem danh sách, chi tiết manifest và kiểm tra toàn vẹn (Administrator, Developer).
+  - `backup:create`: Tạo bản sao lưu mới (Administrator, Developer).
+  - `backup:download`: Tải luồng file archive đã ký hoặc mã hóa (Administrator, Developer).
+  - `backup:restore`: Khôi phục cơ sở dữ liệu (chỉ Administrator).
+  - `backup:delete`: Xóa bản sao lưu (chỉ Administrator).
+  - `maintenance:manage`: Bật/tắt chế độ bảo trì (chỉ Administrator).
+- **Ràng buộc an toàn khôi phục đè (In-Place Restore Guard):**
+  - Bắt buộc hệ thống phải ở Chế độ Bảo trì (HTTP 503 cho site công khai, khóa thao tác ghi trên admin).
+  - Tự động tạo bản sao lưu an toàn `pre-restore` và kiểm tra toàn vẹn thành công trước khi ghi đè.
+  - Người dùng bắt buộc phải gõ chính xác tên database đích hiện tại để xác nhận.
+- **Quy tắc vàng về dọn dẹp (Retention Golden Rule):**
+  - Tuyệt đối không bao giờ xóa bản sao lưu duy nhất còn lại của hệ thống.
+  - Không bao giờ xóa bản sao lưu `pre-restore` gần nhất.
+
+
 

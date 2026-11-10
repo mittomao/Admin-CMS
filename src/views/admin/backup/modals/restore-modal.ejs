@@ -1,0 +1,164 @@
+<!-- Modal Phục Hồi Dữ Liệu (Restore Wizard) -->
+<div class="modal modal-blur fade" id="modal-restore-backup" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-slate-50 dark:bg-slate-800">
+        <h5 class="modal-title font-semibold d-flex align-items-center gap-2">
+          <i class="ti ti-rotate text-danger"></i>
+          <span>Trình Hướng Dẫn Phục Hồi Cơ Sở Dữ Liệu</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-4">
+        <form id="form-restore-backup">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="backupId" id="restore-backup-id" value="">
+
+          <!-- Backup Summary Banner -->
+          <div class="card bg-slate-50 dark:bg-slate-800/80 border-0 mb-4 p-3 rounded-xl">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="text-xs text-slate-400 font-semibold text-uppercase">Bản sao lưu được chọn</div>
+                <div class="font-mono font-bold text-slate-800 dark:text-slate-100 text-sm mt-0.5" id="restore-summary-id">--</div>
+              </div>
+              <div class="text-end">
+                <span class="badge bg-blue-lt font-mono" id="restore-summary-size">-- KB</span>
+                <span class="badge bg-indigo-lt" id="restore-summary-type">full</span>
+              </div>
+            </div>
+            <div class="text-xs text-slate-500 mt-2" id="restore-summary-note"></div>
+          </div>
+
+          <!-- Mode Selection -->
+          <div class="mb-4">
+            <label class="form-label font-semibold">1. Chọn phương thức khôi phục</label>
+            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
+              <label class="form-selectgroup-item flex-fill">
+                <input type="radio" name="mode" value="target-db" class="form-selectgroup-input" checked id="mode-target-db">
+                <div class="form-selectgroup-label d-flex align-items-center p-3 text-start">
+                  <div class="me-3">
+                    <span class="form-selectgroup-check"></span>
+                  </div>
+                  <div>
+                    <div class="font-semibold text-slate-800 dark:text-slate-100 d-flex align-items-center gap-2">
+                      <span>Khôi phục sang Database Mới (An toàn - Khuyến nghị)</span>
+                      <span class="badge bg-green-lt text-xs">Recommended</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-0.5">Khôi phục toàn bộ dữ liệu vào một database riêng biệt để kiểm tra, đối chiếu hoặc kết xuất mà không ảnh hưởng database đang chạy.</div>
+                  </div>
+                </div>
+              </label>
+
+              <label class="form-selectgroup-item flex-fill">
+                <input type="radio" name="mode" value="in-place" class="form-selectgroup-input" id="mode-in-place">
+                <div class="form-selectgroup-label d-flex align-items-center p-3 text-start border-danger-subtle">
+                  <div class="me-3">
+                    <span class="form-selectgroup-check"></span>
+                  </div>
+                  <div>
+                    <div class="font-semibold text-danger d-flex align-items-center gap-2">
+                      <i class="ti ti-alert-triangle"></i>
+                      <span>Khôi phục ĐÈ TRỰC TIẾP Database Đang Chạy (In-Place)</span>
+                      <span class="badge bg-danger-lt text-xs">Rủi ro cao</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-0.5">Thay thế toàn bộ dữ liệu hiện tại bằng dữ liệu của bản sao lưu. Yêu cầu Chế độ Bảo trì và tự động tạo bản sao lưu an toàn pre-restore trước khi chạy.</div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Target DB Options -->
+          <div id="section-target-db" class="mb-4">
+            <label class="form-label font-medium required">Tên Database đích mới</label>
+            <div class="input-group">
+              <input type="text" class="form-control font-mono" name="targetDb" id="restore-target-db-name" placeholder="Ví dụ: admin_cms_preview_test" pattern="^[a-zA-Z0-9_-]+$">
+            </div>
+            <div class="form-text text-xs text-slate-500">Chỉ dùng chữ cái, chữ số, gạch nối hoặc gạch dưới.</div>
+          </div>
+
+          <!-- In-Place Options -->
+          <div id="section-in-place" class="mb-4 d-none">
+            <div class="alert alert-danger p-3 rounded-xl border-0 mb-3">
+              <div class="d-flex gap-2">
+                <i class="ti ti-shield-alert fs-2 text-danger"></i>
+                <div class="text-xs">
+                  <strong class="font-semibold">CẢNH BÁO BẢO VỆ DỮ LIỆU:</strong>
+                  Thao tác này sẽ ghi đè và thay thế cơ sở dữ liệu <code class="text-danger font-bold"><%= currentDb %></code>.
+                  Toàn bộ phiên làm việc (sessions) sẽ bị hủy và người dùng phải đăng nhập lại sau khi khôi phục xong.
+                </div>
+              </div>
+            </div>
+
+            <!-- Maintenance Check -->
+            <div class="card p-3 mb-3 bg-slate-50 dark:bg-slate-800 border-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="font-semibold text-xs text-slate-700 dark:text-slate-300">Trạng thái Chế độ Bảo trì:</div>
+                  <div class="text-xs mt-0.5" id="restore-maintenance-status">
+                    <% if (isMaintenance) { %>
+                    <span class="badge bg-success-lt"><i class="ti ti-check me-1"></i>Đang bật (Đủ điều kiện phục hồi)</span>
+                    <% } else { %>
+                    <span class="badge bg-danger-lt"><i class="ti ti-x me-1"></i>Đang tắt (Bắt buộc phải bật trước khi tiếp tục)</span>
+                    <% } %>
+                  </div>
+                </div>
+                <% if (!isMaintenance) { %>
+                <button type="button" class="btn btn-outline-warning btn-sm text-xs" id="btn-quick-enable-maintenance">
+                  <i class="ti ti-tool me-1"></i>Bật Chế độ Bảo trì ngay
+                </button>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Confirm DB Name -->
+            <div class="mb-3">
+              <label class="form-label font-medium text-danger required">Xác nhận bằng cách gõ lại chính xác tên Database đích:</label>
+              <input type="text" class="form-control font-mono border-danger-subtle" name="confirmDbName" id="restore-confirm-db" placeholder="<%= currentDb %>" autocomplete="off">
+              <div class="form-text text-xs text-slate-500">Bạn phải gõ chính xác <code class="font-bold"><%= currentDb %></code> để hệ thống mở khóa nút khôi phục.</div>
+            </div>
+          </div>
+
+          <!-- Dry Run Results Box -->
+          <div id="dry-run-results" class="mb-4 d-none">
+            <div class="card border border-info-subtle bg-blue-50/50 dark:bg-slate-800/80 p-3 rounded-xl">
+              <h6 class="font-semibold text-xs text-blue-900 dark:text-blue-300 d-flex align-items-center gap-1.5 mb-2">
+                <i class="ti ti-list-check"></i>
+                <span>Kết Quả Kiểm Tra Mô Phỏng (Dry-Run Preview)</span>
+              </h6>
+              <div class="text-xs text-slate-600 dark:text-slate-300 mb-2" id="dry-run-summary-text"></div>
+              <div class="table-responsive max-h-48 overflow-y-auto" id="dry-run-table-wrap">
+                <table class="table table-sm table-vcenter text-xs font-mono mb-0">
+                  <thead>
+                    <tr>
+                      <th>Collection</th>
+                      <th class="text-end">Số bản ghi</th>
+                      <th class="text-end">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dry-run-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-outline-info text-xs d-flex align-items-center gap-1.5" id="btn-run-dry-run">
+          <i class="ti ti-eye"></i>
+          <span>Kiểm tra mô phỏng (Dry Run)</span>
+        </button>
+
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary text-xs" data-bs-dismiss="modal">Hủy bỏ</button>
+          <button type="button" class="btn btn-danger text-xs d-flex align-items-center gap-1.5" id="btn-submit-restore" disabled>
+            <i class="ti ti-refresh"></i>
+            <span>Bắt đầu Khôi Phục</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

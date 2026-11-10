@@ -29,7 +29,15 @@
     "audit:prune": "node src/scripts/prune-expired-audit-logs.js",
     "basicauth:disable": "node src/scripts/basicauth-disable.js",
     "basicauth:add-user": "node src/scripts/basicauth-add-user.js",
-    "migrate:phase-11": "node src/scripts/migrate-phase-11-launchpad.js"
+    "migrate:phase-11": "node src/scripts/migrate-phase-11-launchpad.js",
+    "backup:create": "node src/scripts/backup-cli.js create",
+    "backup:list": "node src/scripts/backup-cli.js list",
+    "backup:verify": "node src/scripts/backup-cli.js verify",
+    "backup:restore": "node src/scripts/backup-cli.js restore",
+    "backup:prune": "node src/scripts/backup-cli.js prune",
+    "maintenance:on": "node src/scripts/maintenance-cli.js on",
+    "maintenance:off": "node src/scripts/maintenance-cli.js off",
+    "maintenance:status": "node src/scripts/maintenance-cli.js status"
   },
   "keywords": [
     "cms",

@@ -1,0 +1,60 @@
+<!-- Modal Tạo Bản Sao Lưu Mới -->
+<div class="modal modal-blur fade" id="modal-create-backup" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-slate-50 dark:bg-slate-800">
+        <h5 class="modal-title font-semibold d-flex align-items-center gap-2">
+          <i class="ti ti-database-export text-primary"></i>
+          <span>Tạo Bản Sao Lưu Cơ Sở Dữ Liệu</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-4">
+        <form id="form-create-backup">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <div class="mb-3">
+            <label class="form-label font-medium required">Ghi chú bản sao lưu</label>
+            <input type="text" class="form-control" name="note" id="backup-note" placeholder="Ví dụ: Sao lưu định kỳ trước khi phát hành v1.2" required maxlength="255">
+            <div class="form-text text-xs text-slate-500">Giúp định danh và tra cứu lại mục đích của bản sao lưu này.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label font-medium">Động cơ sao lưu (Engine)</label>
+            <select class="form-select" name="engine" id="backup-engine">
+              <% if (canMongodump) { %>
+              <option value="mongodump" selected>mongodump (Khuyến nghị - Tốc độ cao, nén trực tiếp)</option>
+              <option value="ndjson">NDJSON Stream (Fallback - Stream từng collection giữ kiểu BSON)</option>
+              <% } else { %>
+              <option value="ndjson" selected>NDJSON Stream (Fallback - Máy chủ chưa cài mongodump)</option>
+              <% } %>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="excludeAuditLogs" id="backup-exclude-audit" value="true">
+              <span class="form-check-label font-medium">Loại trừ nhật ký kiểm toán (auditLogs)</span>
+            </label>
+            <div class="form-text text-xs text-slate-500">Giảm thiểu kích thước file sao lưu nếu hệ thống có lượng audit log lớn.</div>
+          </div>
+
+          <div class="p-3 bg-blue-50 dark:bg-slate-800/60 rounded-lg text-xs text-blue-800 dark:text-blue-300 d-flex gap-2">
+            <i class="ti ti-info-circle fs-3 mt-0.5"></i>
+            <div>
+              <strong>Cơ chế an toàn:</strong> Bản sao lưu sẽ tự động tách biệt Master và Web, sao lưu đầy đủ manifest metadata của Media Cloudinary và mã hóa AES-256-GCM nếu có khóa bí mật trong môi trường.
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary text-xs" data-bs-dismiss="modal">Hủy bỏ</button>
+        <button type="button" class="btn btn-primary text-xs d-flex align-items-center gap-1.5" id="btn-submit-create-backup">
+          <i class="ti ti-play"></i>
+          <span>Bắt đầu Sao Lưu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,78 @@
+<!-- Modal Chi Tiết Bản Sao Lưu (Manifest & Media Inspect) -->
+<div class="modal modal-blur fade" id="modal-backup-details" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-slate-50 dark:bg-slate-800">
+        <h5 class="modal-title font-semibold d-flex align-items-center gap-2">
+          <i class="ti ti-file-text text-primary"></i>
+          <span>Chi Tiết Bản Sao Lưu (Manifest Info)</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-4">
+        <div id="details-loading" class="text-center py-4">
+          <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+          <span class="ms-2 text-xs text-slate-500">Đang đọc thông tin manifest...</span>
+        </div>
+
+        <div id="details-content" class="d-none">
+          <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+              <div class="card p-3 bg-slate-50 dark:bg-slate-800/60 border-0 rounded-xl">
+                <div class="text-xs text-slate-400 font-semibold text-uppercase">Mã Backup ID</div>
+                <div class="font-mono font-bold text-sm text-slate-800 dark:text-slate-100 mt-1" id="det-backup-id"></div>
+                <div class="text-xs text-slate-500 mt-2">
+                  Thời điểm tạo: <span class="font-medium text-slate-700 dark:text-slate-300" id="det-created-at"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="card p-3 bg-slate-50 dark:bg-slate-800/60 border-0 rounded-xl">
+                <div class="text-xs text-slate-400 font-semibold text-uppercase">Cấu hình kỹ thuật</div>
+                <div class="d-flex gap-2 flex-wrap mt-1">
+                  <span class="badge bg-blue-lt" id="det-engine">mongodump</span>
+                  <span class="badge bg-indigo-lt" id="det-encrypted">Mã hóa AES-256</span>
+                  <span class="badge bg-teal-lt" id="det-size">0 KB</span>
+                </div>
+                <div class="text-xs text-slate-500 mt-2">
+                  Người thực hiện: <span class="font-medium text-slate-700 dark:text-slate-300" id="det-user">admin</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <h6 class="font-semibold text-xs text-slate-600 dark:text-slate-300 text-uppercase">Collections sao lưu</h6>
+            <div class="table-responsive max-h-48 overflow-y-auto border rounded-lg">
+              <table class="table table-sm table-vcenter text-xs font-mono mb-0">
+                <thead>
+                  <tr>
+                    <th>Collection</th>
+                    <th class="text-end">Số bản ghi</th>
+                    <th class="text-end">Mã băm SHA-256</th>
+                  </tr>
+                </thead>
+                <tbody id="det-collections-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <h6 class="font-semibold text-xs text-slate-600 dark:text-slate-300 text-uppercase">Manifest Tài sản Media Cloudinary</h6>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-xs text-slate-600 dark:text-slate-300 d-flex justify-content-between align-items-center">
+              <div>
+                Tổng số asset metadata được sao lưu: <strong id="det-media-count">0</strong>
+              </div>
+              <span class="badge bg-purple-lt">Cloudinary Manifest</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary text-xs" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+

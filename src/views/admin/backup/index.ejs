@@ -1,0 +1,292 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Treecraft Quản trị Hệ thống &bull; GĐ K1
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-database-export text-indigo"></i>
+          <span>Quản lý Sao lưu & Phục hồi Cơ sở Dữ liệu (Backup & Restore)</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Bảo vệ và khôi phục an toàn toàn bộ dữ liệu MongoDB Master & Web, manifest metadata Cloudinary, cơ chế mã hóa AES-256-GCM và chế độ bảo trì HTTP 503.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/launchpad" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-apps"></i>
+          <span>Launchpad</span>
+        </a>
+
+        <% if (permissions.canManageMaintenance) { %>
+        <button type="button" class="btn <%= isMaintenance ? 'btn-warning' : 'btn-outline-warning' %> d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" id="btn-toggle-maintenance-global" data-is-maintenance="<%= isMaintenance %>">
+          <i class="ti ti-tool"></i>
+          <span><%= isMaintenance ? 'Tắt Chế Độ Bảo Trì' : 'Bật Chế Độ Bảo Trì' %></span>
+        </button>
+        <% } %>
+
+        <% if (permissions.canDelete) { %>
+        <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" data-bs-toggle="modal" data-bs-target="#modal-backup-settings">
+          <i class="ti ti-settings"></i>
+          <span>Lưu Trữ & Dọn Dẹp</span>
+        </button>
+        <% } %>
+
+        <% if (permissions.canCreate) { %>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs" data-bs-toggle="modal" data-bs-target="#modal-create-backup">
+          <i class="ti ti-plus"></i>
+          <span>Tạo Bản Sao Lưu</span>
+        </button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Maintenance Mode Active Banner -->
+  <% if (isMaintenance) { %>
+  <div class="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-4 rounded-xl border-0 shadow-sm" role="alert">
+    <div class="d-flex align-items-center gap-2">
+      <i class="ti ti-alert-triangle fs-2 text-warning"></i>
+      <div>
+        <h4 class="alert-title font-semibold mb-0">Hệ thống đang hoạt động trong Chế độ Bảo trì (Maintenance Mode)</h4>
+        <div class="text-xs text-secondary mt-0.5">
+          Website công khai đang trả về mã <strong>HTTP 503 Service Unavailable</strong>. Các thao tác ghi trên Admin CMS bị tạm khóa để đảm bảo an toàn phục hồi cơ sở dữ liệu.
+        </div>
+      </div>
+    </div>
+    <% if (permissions.canManageMaintenance) { %>
+    <button type="button" class="btn btn-sm btn-outline-dark text-xs" id="btn-quick-disable-maintenance">
+      Tắt Bảo Trì Ngay
+    </button>
+    <% } %>
+  </div>
+  <% } %>
+
+  <!-- Metrics Overview Cards -->
+  <div class="row row-cards mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm border-0 shadow-2xs rounded-xl">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="bg-indigo-lt avatar rounded-lg">
+                <i class="ti ti-folders fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-bold text-slate-700 dark:text-slate-200 fs-3">
+                <%= backups.length %>
+              </div>
+              <div class="text-xs text-slate-400 font-medium">Tổng bản sao lưu</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm border-0 shadow-2xs rounded-xl">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="bg-cyan-lt avatar rounded-lg">
+                <i class="ti ti-database fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-bold font-mono text-slate-700 dark:text-slate-200 fs-4 truncate" title="<%= currentDb %>">
+                <%= currentDb %>
+              </div>
+              <div class="text-xs text-slate-400 font-medium">Database hiện tại</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm border-0 shadow-2xs rounded-xl">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="bg-green-lt avatar rounded-lg">
+                <i class="ti ti-cpu fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-semibold text-slate-700 dark:text-slate-200 text-xs">
+                <%= canMongodump ? 'mongodump (Native Gzip)' : 'NDJSON BSON Stream' %>
+              </div>
+              <div class="text-xs text-slate-400 font-medium">Động cơ sao lưu</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm border-0 shadow-2xs rounded-xl">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="<%= isMaintenance ? 'bg-warning-lt' : 'bg-slate-lt' %> avatar rounded-lg">
+                <i class="ti ti-tool fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-semibold text-xs <%= isMaintenance ? 'text-warning font-bold' : 'text-slate-600 dark:text-slate-300' %>">
+                <%= isMaintenance ? 'BẬT (Khóa ghi - 503)' : 'TẮT (Bình thường)' %>
+              </div>
+              <div class="text-xs text-slate-400 font-medium">Chế độ bảo trì</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backups Table Card -->
+  <div class="card border-0 shadow-2xs rounded-xl overflow-hidden">
+    <div class="card-header bg-slate-50 dark:bg-slate-800/80 d-flex justify-content-between align-items-center py-3">
+      <h3 class="card-title font-semibold text-sm d-flex align-items-center gap-2 mb-0">
+        <i class="ti ti-list text-slate-400"></i>
+        <span>Danh Sách Bản Sao Lưu Cơ Sở Dữ Liệu</span>
+      </h3>
+      <span class="badge bg-secondary-lt text-xs"><%= backups.length %> bản ghi</span>
+    </div>
+
+    <% if (backups.length === 0) { %>
+    <div class="empty py-5">
+      <div class="empty-icon text-slate-300">
+        <i class="ti ti-database-off fs-1"></i>
+      </div>
+      <p class="empty-title font-semibold text-slate-700 dark:text-slate-200">Chưa có bản sao lưu nào</p>
+      <p class="empty-subtitle text-slate-400 text-xs">
+        Hệ thống chưa tạo bản sao lưu dữ liệu nào. Hãy nhấn "Tạo Bản Sao Lưu" để lưu trữ an toàn cơ sở dữ liệu ngay bây giờ.
+      </p>
+      <% if (permissions.canCreate) { %>
+      <div class="empty-action">
+        <button type="button" class="btn btn-primary text-xs" data-bs-toggle="modal" data-bs-target="#modal-create-backup">
+          <i class="ti ti-plus me-1"></i>Tạo bản sao lưu đầu tiên
+        </button>
+      </div>
+      <% } %>
+    </div>
+    <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-vcenter table-hover card-table text-xs">
+        <thead>
+          <tr>
+            <th>Bản Sao Lưu (ID / Thời Điểm)</th>
+            <th>Loại</th>
+            <th>Kích Thước</th>
+            <th>Động Cơ</th>
+            <th>Mã Hóa</th>
+            <th>Toàn Vẹn (SHA-256)</th>
+            <th>Người Tạo & Ghi Chú</th>
+            <th class="text-end">Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% backups.forEach(function(b) { 
+            const m = b.manifest || {};
+            const created = m.createdAt ? new Date(m.createdAt).toLocaleString('vi-VN') : 'N/A';
+            const sizeKb = b.sizeBytes ? (b.sizeBytes / 1024).toFixed(1) : '0';
+            const sizeMb = b.sizeBytes ? (b.sizeBytes / (1024 * 1024)).toFixed(2) : '0';
+            const displaySize = Number(sizeMb) >= 1 ? `${sizeMb} MB` : `${sizeKb} KB`;
+          %>
+          <tr id="row-<%= b.backupId %>">
+            <td>
+              <div class="font-mono font-bold text-slate-800 dark:text-slate-100">
+                <%= b.backupId %>
+              </div>
+              <div class="text-slate-400 text-2xs mt-0.5">
+                <i class="ti ti-clock me-1"></i><%= created %>
+              </div>
+            </td>
+            <td>
+              <% if (m.type === 'pre-restore') { %>
+              <span class="badge bg-purple-lt">pre-restore</span>
+              <% } else { %>
+              <span class="badge bg-blue-lt"><%= m.type || 'full' %></span>
+              <% } %>
+            </td>
+            <td class="font-mono font-medium text-slate-600 dark:text-slate-300">
+              <%= displaySize %>
+            </td>
+            <td>
+              <span class="badge bg-slate-lt font-mono text-2xs"><%= m.engine || 'mongodump' %></span>
+            </td>
+            <td>
+              <% if (m.isEncrypted) { %>
+              <span class="badge bg-indigo-lt d-inline-flex align-items-center gap-1" title="Mã hóa AES-256-GCM">
+                <i class="ti ti-lock"></i>AES-256
+              </span>
+              <% } else { %>
+              <span class="text-slate-400 text-2xs">Không mã hóa</span>
+              <% } %>
+            </td>
+            <td>
+              <span class="badge bg-success-lt d-inline-flex align-items-center gap-1" id="verify-badge-<%= b.backupId %>">
+                <i class="ti ti-shield-check"></i>Đã ký băm
+              </span>
+            </td>
+            <td>
+              <div class="text-slate-700 dark:text-slate-200 font-medium">
+                <%= m.initiatedBy || 'system' %>
+              </div>
+              <% if (m.note) { %>
+              <div class="text-slate-400 text-2xs truncate max-w-xs" title="<%= m.note %>">
+                <%= m.note %>
+              </div>
+              <% } %>
+            </td>
+            <td class="text-end">
+              <div class="btn-list justify-content-end">
+                <button type="button" class="btn btn-outline-secondary btn-icon btn-sm rounded-lg btn-verify" data-id="<%= b.backupId %>" title="Kiểm tra toàn vẹn SHA-256">
+                  <i class="ti ti-shield-check"></i>
+                </button>
+
+                <button type="button" class="btn btn-outline-secondary btn-icon btn-sm rounded-lg btn-details" data-id="<%= b.backupId %>" title="Xem chi tiết manifest">
+                  <i class="ti ti-info-circle"></i>
+                </button>
+
+                <% if (permissions.canDownload) { %>
+                <a href="/api/backups/<%= b.backupId %>/download" class="btn btn-outline-primary btn-icon btn-sm rounded-lg" title="Tải xuống tệp nén .tar.gz">
+                  <i class="ti ti-download"></i>
+                </a>
+                <% } %>
+
+                <% if (permissions.canRestore) { %>
+                <button type="button" class="btn btn-outline-danger btn-icon btn-sm rounded-lg btn-open-restore" data-id="<%= b.backupId %>" data-type="<%= m.type || 'full' %>" data-size="<%= displaySize %>" data-note="<%= m.note || '' %>" title="Khôi phục cơ sở dữ liệu">
+                  <i class="ti ti-rotate"></i>
+                </button>
+                <% } %>
+
+                <% if (permissions.canDelete) { %>
+                <button type="button" class="btn btn-outline-secondary btn-icon btn-sm rounded-lg btn-delete-backup" data-id="<%= b.backupId %>" title="Xóa bản sao lưu">
+                  <i class="ti ti-trash"></i>
+                </button>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Modals -->
+<%- include('./modals/create-modal') %>
+<%- include('./modals/restore-modal') %>
+<%- include('./modals/details-modal') %>
+<%- include('./modals/settings-modal') %>
+
+<!-- Client JS Handler -->
+<script src="/js/admin/backup-manager.js"></script>
+

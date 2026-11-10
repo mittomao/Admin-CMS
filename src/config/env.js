@@ -43,6 +43,14 @@ const env = {
   BASIC_AUTH_ENABLED: process.env.BASIC_AUTH_ENABLED, // 'false' overrides DB to disable
   BASIC_AUTH_REALM: process.env.BASIC_AUTH_REALM || branding.PROJECT_NAME,
   TRUST_PROXY: process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1',
+  // Backup & Restore Configuration (GĐ K1)
+  BACKUP_DIR: path.resolve(process.env.BACKUP_DIR || path.join(process.cwd(), 'storage', 'backups')),
+  BACKUP_ENCRYPTION_KEY: process.env.BACKUP_ENCRYPTION_KEY || '',
+  BACKUP_RETENTION_COUNT: parseInt(process.env.BACKUP_RETENTION_COUNT || '7', 10),
+  BACKUP_RETENTION_DAYS: parseInt(process.env.BACKUP_RETENTION_DAYS || '30', 10),
+  MONGODUMP_PATH: process.env.MONGODUMP_PATH || 'mongodump',
+  MONGORESTORE_PATH: process.env.MONGORESTORE_PATH || 'mongorestore',
+  MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true' || process.env.MAINTENANCE_MODE === '1',
   isDev: (process.env.NODE_ENV || 'development') === 'development',
   isProd: process.env.NODE_ENV === 'production',
 };

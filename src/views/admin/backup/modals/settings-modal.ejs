@@ -1,0 +1,58 @@
+<!-- Modal Cấu hình Lưu Trữ & Dọn Dẹp (Retention & Prune) -->
+<div class="modal modal-blur fade" id="modal-backup-settings" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-slate-50 dark:bg-slate-800">
+        <h5 class="modal-title font-semibold d-flex align-items-center gap-2">
+          <i class="ti ti-settings text-primary"></i>
+          <span>Chính Sách Lưu Trữ & Dọn Dẹp (Retention Policy)</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-4">
+        <div class="p-3 bg-blue-50 dark:bg-slate-800/60 rounded-xl mb-3 text-xs text-blue-900 dark:text-blue-200">
+          <strong>Chính sách lưu trữ tự động:</strong>
+          <ul class="mb-0 ps-3 mt-1">
+            <li>Giữ lại tối thiểu: <strong><%= retentionCount %> bản sao lưu mới nhất</strong></li>
+            <li>Thời gian lưu trữ: <strong><%= retentionDays %> ngày</strong></li>
+            <li>Quy tắc vàng: <strong>Tuyệt đối không bao giờ xóa bản sao lưu duy nhất còn lại</strong></li>
+            <li>Tự động bỏ qua các bản sao lưu an toàn pre-restore gần nhất.</li>
+          </ul>
+        </div>
+
+        <form id="form-prune-backups">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <div class="mb-3">
+            <label class="form-label font-medium">Số bản mới nhất giữ lại (Retention Count)</label>
+            <input type="number" class="form-control" name="retentionCount" id="prune-count" value="<%= retentionCount %>" min="1" max="100">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label font-medium">Số ngày lưu trữ tối đa (Retention Days)</label>
+            <input type="number" class="form-control" name="retentionDays" id="prune-days" value="<%= retentionDays %>" min="1" max="365">
+          </div>
+
+          <!-- Prune Preview Results -->
+          <div id="prune-preview-box" class="d-none p-3 bg-amber-50 dark:bg-slate-800/80 rounded-xl border border-amber-200 mb-3 text-xs">
+            <div class="font-semibold text-amber-800 dark:text-amber-400 mb-1" id="prune-preview-title">Kết quả mô phỏng:</div>
+            <div id="prune-preview-body" class="text-slate-600 dark:text-slate-300"></div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-outline-secondary text-xs" id="btn-prune-dry-run">
+          <i class="ti ti-eye me-1"></i>Kiểm tra mô phỏng
+        </button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary text-xs" data-bs-dismiss="modal">Đóng</button>
+          <button type="button" class="btn btn-warning text-xs d-flex align-items-center gap-1.5" id="btn-submit-prune">
+            <i class="ti ti-trash"></i>
+            <span>Thực hiện Dọn Dẹp Ngay</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

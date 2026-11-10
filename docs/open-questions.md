@@ -394,5 +394,84 @@ Tài liệu này lưu trữ danh sách 10 câu hỏi kỹ thuật / nghiệp v�
 - **Lựa chọn B:** Yêu cầu kịch bản đổi tên thư mục và remote origin.
 - **Lý do đề xuất:** Tránh xung đột đường dẫn workspace hiện tại của IDE và terminal runner.
 
+---
+
+# CÂU HỎI KỸ THUẬT GIAI ĐOẠN K1 (DATABASE BACKUP & RESTORE)
+
+Tài liệu này lưu trữ danh sách 8 câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho **Giai đoạn K1: Sao lưu & Phục hồi Cơ sở dữ liệu (Database Backup & Restore)**, kèm theo đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Máy chủ có sẵn công cụ `mongodump` / `mongorestore` không, hay sử dụng động cơ fallback NDJSON?
+- **Trạng thái:** Đã xác minh & có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-051: Kiến Trúc Sao Lưu & Phục Hồi Cơ Sở Dữ Liệu Toàn Diện](decisions/DEC-051-database-backup-and-restore-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Ưu tiên sử dụng `mongodump` và `mongorestore` nhị phân.** Đã kiểm tra thực tế: máy chủ hiện đã có sẵn tại `/opt/homebrew/bin/mongodump` và `/opt/homebrew/bin/mongorestore` (phiên bản 100.16.1). Đồng thời, hệ thống vẫn cài đặt sẵn động cơ dự phòng (Fallback Engine) trích xuất luồng NDJSON tương thích BSON qua Mongo Driver để phòng trường hợp triển khai trên môi trường container tối giản không có tiện ích CLI.
+- **Lựa chọn B:** Chỉ sử dụng duy nhất fallback NDJSON và bỏ qua mongodump.
+- **Lý do đề xuất:** Sử dụng tiện ích nhị phân chính chủ của MongoDB mang lại tốc độ vượt trội, tiết kiệm tối đa CPU/RAM và bảo đảm tính tương thích nhị phân 100%.
+
+---
+
+### 2. Mô hình triển khai MongoDB là Replica Set hay Standalone?
+- **Trạng thái:** Đã xác minh & có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-051](decisions/DEC-051-database-backup-and-restore-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Hệ thống đang kết nối MongoDB Atlas dạng Replica Set (`ReplicaSetWithPrimary`).** Tận dụng tính năng đọc snapshot nhất quán (`secondaryPreferred`) hoặc Mongo Client Session với Causal Consistency để sao lưu an toàn mà không gây áp lực ghi lên nút Primary.
+- **Lựa chọn B:** Coi như Standalone và sao lưu không có session.
+- **Lý do đề xuất:** Tận dụng đúng năng lực kiến trúc hiện tại của cơ sở dữ liệu trên cloud để tạo ra các bản sao lưu đạt tính nhất quán giao dịch (Point-in-Time consistency).
+
+---
+
+### 3. Có kích hoạt mã hóa bản sao lưu (AES-256-GCM) mặc định không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-051](decisions/DEC-051-database-backup-and-restore-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Bật mã hóa mặc định bằng thuật toán AES-256-GCM** với khóa 256-bit cấu hình qua biến môi trường `BACKUP_ENCRYPTION_KEY`. Khóa tuyệt đối không lưu kèm trong tệp sao lưu. Nếu hệ thống chưa cấu hình biến môi trường này, sẽ hiển thị cảnh báo bảo mật rõ ràng khi tạo bản sao lưu ở dạng thô không mã hóa.
+- **Lựa chọn B:** Không mã hóa bản sao lưu để tiết kiệm CPU.
+- **Lý do đề xuất:** Bản sao lưu chứa dữ liệu nhạy cảm của tổ chức (hash mật khẩu người dùng, cấu hình Basic Auth, log kiểm toán). Mã hóa là yêu cầu bắt buộc theo tiêu chuẩn bảo mật dữ liệu cấp doanh nghiệp.
+
+---
+
+### 4. Tài nguyên Cloudinary Media: Chỉ lưu manifest metadata hay sao chép tệp nhị phân?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038](decisions/DEC-038-cloudinary-media-item-unification.md), [DEC-051](decisions/DEC-051-database-backup-and-restore-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Chỉ sao lưu bản lược kê `media-manifest.json` (`publicId`, `assetId`, `format`, `bytes`, `etag`, `url`), tuyệt đối không tải về hay sao chép file nhị phân của Cloudinary.** Khi phục hồi (Restore), hệ thống sẽ đối chiếu manifest này với Cloudinary API và xuất báo cáo danh sách tài nguyên bị thiếu (nếu có).
+- **Lựa chọn B:** Tải toàn bộ file ảnh/video từ Cloudinary về lưu kèm trong gói backup.
+- **Lý do đề xuất:** Cloudinary là hạ tầng đám mây lưu trữ chuyên dụng có sẵn SLA và cơ chế dự phòng dữ liệu riêng. Việc tải về toàn bộ media sẽ làm gói backup phình to hàng Gigabytes, làm chậm quá trình sao lưu và gây quá tải băng thông mạng.
+
+---
+
+### 5. Có loại trừ `audit_logs` và `publish_histories` theo mặc định để giảm dung lượng không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-045](decisions/DEC-045-audit-log-event-bus-and-retention.md), [DEC-051](decisions/DEC-051-database-backup-and-restore-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Mặc định KHÔNG loại trừ (sao lưu toàn bộ cả Audit Log và Publish History để đảm bảo khả năng truy vết pháp lý và lịch sử).** Tuy nhiên, trên giao diện web và tham số dòng lệnh CLI cung cấp tùy chọn checkbox `--exclude-audit` để quản trị viên chủ động bỏ qua nếu chỉ muốn tạo bản sao lưu nghiệp vụ siêu nhẹ.
+- **Lựa chọn B:** Mặc định luôn luôn loại trừ `audit_logs`.
+- **Lý do đề xuất:** Bản sao lưu chuẩn Disaster Recovery cần khôi phục trọn vẹn toàn bộ ngữ cảnh hệ thống, bao gồm cả lịch sử kiểm toán để phục vụ điều tra nguyên nhân sự cố sau thảm họa.
+
+---
+
+### 6. Chính sách lưu giữ (Retention Policy) và lập lịch định kỳ mặc định là bao nhiêu?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-051](decisions/DEC-051-database-backup-and-restore-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Duy trì mặc định 7 bản sao lưu gần nhất (`BACKUP_RETENTION_COUNT=7`) kết hợp thời hạn 30 ngày (`BACKUP_RETENTION_DAYS=30`). Bộ lập lịch nội bộ tự động kích hoạt tạo backup vào lúc 02:00 sáng hàng ngày.** Tuyệt đối áp dụng Quy tắc Vàng: Không bao giờ xóa bản sao lưu duy nhất còn lại và không xóa bản `pre-restore` gần nhất.
+- **Lựa chọn B:** Lưu trữ không giới hạn hoặc chỉ giữ đúng 1 bản gần nhất.
+- **Lý do đề xuất:** 7 bản gần nhất cho phép quay lui (rollback) về bất kỳ ngày nào trong tuần trước mà vẫn kiểm soát tốt dung lượng ổ cứng máy chủ.
+
+---
+
+### 7. Có cho phép Tải về (Download) gói sao lưu trực tiếp qua giao diện web không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-051](decisions/DEC-051-database-backup-and-restore-architecture.md), [05-security.md](rules/05-security.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có cho phép, nhưng có hàng rào bảo mật nghiêm ngặt:** Phục vụ tệp tin qua luồng stream trực tiếp (không giải nén ra thư mục tạm), yêu cầu quyền chuyên biệt `backup:download`, và **chỉ cho phép tải về đối với các bản sao lưu đã được mã hóa AES-256-GCM** (nếu bản sao lưu không mã hóa, yêu cầu quản trị viên nhập mật khẩu xác nhận cấp 2).
+- **Lựa chọn B:** Cấm hoàn toàn tải về qua giao diện web, chỉ cho phép sao chép tệp qua SCP/SSH server.
+- **Lý do đề xuất:** Tải về qua giao diện giúp đội ngũ vận hành lưu trữ bản backup offline hoặc chuyển sang môi trường kiểm thử nhanh chóng mà vẫn bảo đảm an toàn dữ liệu nhờ mã hóa.
+
+---
+
+### 8. Thao tác phục hồi đè trực tiếp (`--in-place`) có cho phép thực hiện qua giao diện web không, hay chỉ cho phép qua CLI?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-051](decisions/DEC-051-database-backup-and-restore-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Ở phiên bản đầu tiên (v1.0), giao diện Web CHỈ CHO PHÉP phục hồi sang cơ sở dữ liệu mới (`--target-db <tên-mới>`) để đối chiếu an toàn.** Thao tác ghi đè trực tiếp (`--in-place`) tiềm ẩn rủi ro phá hủy hệ thống nên **chỉ cho phép thực thi thông qua công cụ dòng lệnh CLI** khi quản trị viên có quyền truy cập trực tiếp máy chủ, đảm bảo có sự giám sát kỹ thuật tuyệt đối.
+- **Lựa chọn B:** Cho phép nút bấm Restore in-place ngay trên giao diện web.
+- **Lý do đề xuất:** Giảm thiểu tối đa nguy cơ thảm họa do click nhầm trên trình duyệt hoặc bị tấn công tài khoản quản trị viên. Khôi phục sang DB mới trên web vừa an toàn, vừa cho phép so sánh dữ liệu qua ứng dụng Database Switcher & Diff (GĐ 8.1) trước khi quyết định chuyển đổi.
+
+
 
 
