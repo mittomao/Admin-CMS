@@ -150,6 +150,16 @@
         </div>
       </div>
 
+      <!-- Environment Badge (DEC-052) -->
+      <% if (typeof envBadge !== 'undefined' && envBadge) { %>
+        <span class="badge d-inline-flex align-items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full shadow-2xs"
+              style="background-color: <%= envBadge.bgHex %>; color: <%= envBadge.textHex %>; border: 1px solid <%= envBadge.borderHex %>;"
+              title="Môi trường: <%= envBadge.label %> | DB: <%= typeof dbName !== 'undefined' ? dbName : 'admin_cms' %>">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background-color: <%= envBadge.textHex %>; opacity: 0.9;"></span>
+          <span class="font-mono"><%= envBadge.label %></span>
+        </span>
+      <% } %>
+
       <!-- Theme Switcher (Dark / Light Mode) -->
       <a href="javascript:void(0);"
         class="nav-link px-2 text-muted rounded-2 transition-all duration-150 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sc-red/30"

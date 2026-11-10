@@ -1,6 +1,7 @@
 const http = require('http');
 const app = require('./app');
 const env = require('./config/env');
+const dbGuard = require('./config/dbGuard');
 const { connectDB, disconnectDB } = require('./config/db');
 const backupService = require('./services/backupService');
 const logger = require('./utils/logger');
@@ -9,7 +10,16 @@ let server;
 
 const startServer = async () => {
   try {
-    // 1. Initialize Database Connection
+    // In Banner nhận diện môi trường và cấu hình
+    dbGuard.printStartupBanner({
+      appEnv: env.APP_ENV,
+      uri: env.MONGO_URI,
+      port: env.PORT,
+      dbName: dbGuard.extractDatabaseName(env.MONGO_URI),
+      cloudinaryFolder: env.CLOUDINARY_ROOT_FOLDER,
+    });
+
+    // 1. Initialize Database Connection with dbGuard verification
     await connectDB();
 
     // 2. Start HTTP Server

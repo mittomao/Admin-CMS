@@ -1,0 +1,46 @@
+services:
+  mongo:
+    image: mongo:8.0
+    container_name: treecraft-mongo-dev
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      # Bind strictly to local loopback interface for maximum security
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - treecraft-mongo-dev-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --port 27017 --eval \"db.adminCommand('ping')\" || exit 1"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  mongo-init:
+    image: mongo:8.0
+    container_name: treecraft-mongo-dev-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: >
+      mongosh --host mongo:27017 --eval '
+        try {
+          const status = rs.status();
+          if (status.ok === 1) {
+            console.log("[Treecraft Docker] Replica set rs0 is already active.");
+          }
+        } catch (err) {
+          console.log("[Treecraft Docker] Initializing replica set rs0 for single-node local MongoDB...");
+          const res = rs.initiate({
+            _id: "rs0",
+            members: [{ _id: 0, host: "127.0.0.1:27017" }]
+          });
+          console.log("[Treecraft Docker] rs.initiate result:", JSON.stringify(res));
+        }
+      '
+    restart: "no"
+
+volumes:
+  treecraft-mongo-dev-data:
+    name: treecraft-mongo-dev-data
+

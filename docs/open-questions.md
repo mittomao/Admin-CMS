@@ -472,6 +472,87 @@ Tài liệu này lưu trữ danh sách 8 câu hỏi kỹ thuật / nghiệp vụ
 - **Lựa chọn B:** Cho phép nút bấm Restore in-place ngay trên giao diện web.
 - **Lý do đề xuất:** Giảm thiểu tối đa nguy cơ thảm họa do click nhầm trên trình duyệt hoặc bị tấn công tài khoản quản trị viên. Khôi phục sang DB mới trên web vừa an toàn, vừa cho phép so sánh dữ liệu qua ứng dụng Database Switcher & Diff (GĐ 8.1) trước khi quyết định chuyển đổi.
 
+---
+
+# CÂU HỎI CẦN XÁC NHẬN CHO GIAI ĐOẠN E1 (TÁCH MÔI TRƯỜNG DATABASE & CHỐT CHẶN AN TOÀN)
+
+Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho yêu cầu: **Tách môi trường Database (Local / Cloud) và Chốt chặn An toàn (GĐ E1)**, kèm theo đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Dữ liệu hiện trên cloud là Production hay Staging?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Coi database cloud hiện tại là `production` và chỉ gán fingerprint lần đầu sau khi có xác nhận tường minh của người dùng.** Khi triển khai GĐ E1, một script chuyên dụng `src/scripts/init-fingerprint.js` sẽ chạy tương tác, yêu cầu người dùng xác nhận gắn nhãn `production` cho cluster cloud hiện tại.
+- **Lựa chọn B:** Tự động gán nhãn `staging` cho cloud.
+- **Lý do đề xuất:** Coi cloud là production là phương án an toàn nhất theo nguyên tắc phòng vệ tối đa (Defensive Design), kích hoạt ngay mọi chốt chặn cấm phá hoại.
+
+---
+
+### 2. Có thiết lập `staging` riêng biệt trên Cloud ngay bây giờ không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Chuẩn bị đầy đủ kiến trúc 3 môi trường và tệp mẫu `.env.staging.example`, nhưng trước mắt vận hành thực tế 2 môi trường chính: `development` (Local Docker) và `production` (Atlas Cloud).** Môi trường `staging` sẽ kích hoạt ngay khi người dùng có cụm cluster/database staging riêng.
+- **Lựa chọn B:** Bắt buộc tạo ngay cluster staging trên cloud.
+- **Lý do đề xuất:** Giúp tiến độ GĐ E1 tập trung dứt điểm vào mục tiêu quan trọng nhất: cô lập an toàn môi trường dev local và bảo vệ cloud production, tránh phát sinh chi phí hoặc thao tác hạ tầng cloud chưa cần thiết.
+
+---
+
+### 3. Phiên bản MongoDB Docker Local nên dùng image nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md), [E1-baseline.md](reports/E1-baseline.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Sử dụng chính xác Docker image `mongo:8.0` (khớp hoàn toàn với phiên bản MongoDB Atlas Cloud v8.0.37 hiện tại).**
+- **Lựa chọn B:** Dùng `mongo:latest` hoặc `mongo:7.0`.
+- **Lý do đề xuất:** Đồng nhất tuyệt đối phiên bản engine giữa Local và Cloud giúp triệt tiêu các lỗi tương thích về cú pháp truy vấn, aggregation pipeline và cơ chế chỉ mục.
+
+---
+
+### 4. Docker MongoDB Local có cần chạy chế độ Replica Set đơn nút không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có. Cấu hình Docker Compose khởi chạy replica set đơn nút (`--replSet rs0`) và tự động khởi tạo bằng một container init `rs.initiate()`.**
+- **Lựa chọn B:** Chạy standalone thông thường.
+- **Lý do đề xuất:** Mặc dù code hiện tại chưa dùng transactions, việc chạy replica set đơn nút giả lập 100% môi trường Atlas, hỗ trợ sẵn sàng cho MongoDB Change Streams và `mongodump --oplog` của GĐ K1 mà không tốn thêm tài nguyên máy.
+
+---
+
+### 5. Cloudinary: Phân định thư mục theo môi trường hay dùng tài khoản khác nhau?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038](decisions/DEC-038-cloudinary-media-item-unification.md), [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Dùng chung Cloudinary account nhưng tách biệt thư mục gốc qua biến `CLOUDINARY_ROOT_FOLDER`:**
+  - `development` &rarr; `AdminCMS-dev`
+  - `staging` &rarr; `AdminCMS-uat`
+  - `production` &rarr; `AdminCMS`
+- **Lựa chọn B:** Bắt buộc đăng ký tài khoản Cloudinary riêng biệt cho dev.
+- **Lý do đề xuất:** Đơn giản hóa cấu hình cho lập trình viên, chỉ cần đổi giá trị folder là toàn bộ media tải lên khi dev hoàn toàn tách biệt, không bao giờ ghi đè lên tài nguyên production.
+
+---
+
+### 6. Có triển khai công cụ Clone dữ liệu 1 chiều `db:clone-from-remote` kèm `--anonymize` không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có triển khai. Lệnh `npm run db:clone-from-remote -- --env production|staging` chỉ kéo 1 chiều từ Remote về Local, có bước xác nhận tương tác, loại trừ `sessions`, tự động che email (`***@treecraft.local`), đặt lại mật khẩu của toàn bộ tài khoản về `adminpass123`, xóa hash Basic Auth và tự gán fingerprint `development`.**
+- **Lựa chọn B:** Không làm tool clone, để lập trình viên tự copy qua mongodump.
+- **Lý do đề xuất:** Tiết kiệm thời gian cho dev khi cần tái hiện bug với dữ liệu thật, đồng thời tuân thủ nghiêm ngặt bảo mật dữ liệu khách hàng (GDPR / An ninh mạng).
+
+---
+
+### 7. Phương thức chạy MongoDB Local trên máy lập trình viên: Docker Compose hay cài Native?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Ưu tiên Docker Compose (`docker-compose.dev.yml`).** Lập trình viên chỉ cần gõ `npm run db:up` là toàn bộ cơ sở dữ liệu local tự động chạy ngầm với volume bền vững. Nếu máy nào không có Docker, cung cấp hướng dẫn cài MongoDB Community và chỉ cần trỏ URI về `mongodb://127.0.0.1:27017/admin_cms`.
+- **Lựa chọn B:** Bắt buộc cài native Homebrew / Service trên máy.
+- **Lý do đề xuất:** Docker bảo đảm môi trường cô lập, dễ reset và không làm rác máy chủ/máy dev.
+
+---
+
+### 8. Xử lý trường hợp Staging và Production cùng nằm trên một MongoDB Cluster như thế nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Khuyến nghị Staging và Production nằm trên 2 project/cluster Atlas khác nhau. Trường hợp bắt buộc dùng chung cluster, `dbGuard` bắt buộc kiểm tra trường `settings.environmentFingerprint.appEnv` khớp chính xác `staging` hoặc `production` mới cho phép tiến trình chạy.**
+- **Lựa chọn B:** Đổi tên database trên staging thành `admin_cms_staging`.
+- **Lý do đề xuất:** Phù hợp với nguyên tắc bất biến "giữ nguyên tên database ở mọi môi trường" do người dùng đặt ra, kiểm soát tính an toàn qua fingerprint cấp dữ liệu.
+
 
 
 

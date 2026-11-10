@@ -768,8 +768,15 @@ module.exports = { seedPresentationData };
 
 if (require.main === module) {
   const env = require('../config/env');
+  const dbGuard = require('../config/dbGuard');
   const mongoUri = env.MONGO_URI;
   const isDryRun = process.argv.includes('--dry-run');
+
+  dbGuard.assertSafeFor('destructive', {
+    uri: mongoUri,
+    appEnv: env.APP_ENV,
+    scriptName: 'seed-presentation-data',
+  });
 
   logger.warn('========================================================================');
   logger.warn('[CẢNH BÁO SAO LƯU DỮ LIỆU]: Trước khi chạy seed trên production/staging:');

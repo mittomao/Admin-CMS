@@ -111,9 +111,13 @@ const { resolveItemIcon, renderIconHtml, getIconUrl } = require('./config/icons'
 const { fieldRegistry } = require('./fields');
 
 // 7. Global Template Variables & CSRF Token
+const dbGuard = require('./config/dbGuard');
 app.use(csrfMiddleware.generateToken);
 app.use((req, res, next) => {
   res.locals.appName = env.APP_NAME;
+  res.locals.appEnv = env.APP_ENV;
+  res.locals.envBadge = dbGuard.getEnvironmentBadge(env.APP_ENV);
+  res.locals.dbName = dbGuard.extractDatabaseName(env.MONGO_URI);
   res.locals.currentPath = req.path;
   res.locals.flashMessages = [];
   res.locals.user = req.session && req.session.user ? req.session.user : null;

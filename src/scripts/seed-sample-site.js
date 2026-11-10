@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const { connectDB } = require('../config/database');
+const env = require('../config/env');
+const dbGuard = require('../config/dbGuard');
+const { connectDB } = require('../config/db');
 const branding = require('../config/branding');
 const Template = require('../models/Template');
 const Item = require('../models/Item');
@@ -7,6 +9,12 @@ const PublishedItem = require('../models/PublishedItem');
 
 async function seedSampleSite() {
   console.log('=== KHỞI TẠO DỮ LIỆU MẪU SAMPLE WEBSITE (GĐ 10) ===');
+
+  dbGuard.assertSafeFor('destructive', {
+    uri: env.MONGO_URI,
+    appEnv: env.APP_ENV,
+    scriptName: 'seed-sample-site',
+  });
 
   await connectDB();
 

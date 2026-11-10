@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const env = require('../config/env');
+const dbGuard = require('../config/dbGuard');
 const logger = require('../utils/logger');
 const User = require('../models/User');
 const Role = require('../models/Role');
@@ -13,6 +14,13 @@ const getMaskedUri = (uri) => (uri ? uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:*
 
 const seedData = async () => {
   try {
+    // Chốt chặn dbGuard: Ngăn chặn seed vào môi trường Remote/Production
+    dbGuard.assertSafeFor('destructive', {
+      uri: env.MONGO_URI,
+      appEnv: env.APP_ENV,
+      scriptName: 'seed-initial-data',
+    });
+
     logger.info(`Connecting to MongoDB at [${getMaskedUri(env.MONGO_URI)}]...`);
     await mongoose.connect(env.MONGO_URI, {
       serverSelectionTimeoutMS: 15000,

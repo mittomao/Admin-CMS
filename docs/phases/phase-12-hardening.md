@@ -2,7 +2,7 @@
 phase: 12
 name: Hoàn thiện, Bảo mật, Hiệu năng, E2E SSR Test, Tài liệu & Docker
 status: Chưa bắt đầu
-depends_on: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+depends_on: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, K1, E1]
 estimate: 3 ngày làm việc
 started: null
 completed: null
@@ -37,7 +37,7 @@ Kiểm thử toàn diện hệ thống (Unit / Integration / E2E SSR Test), tố
     6. Xác nhận HTML trả về hiển thị chuẩn xác layout `HomeLayout`, đúng các component theo thứ tự trong placeholder `maincontent`, hiển thị đúng dữ liệu đã biên tập và SEO tags (`<title>`, `<meta description>`).
   - Rà soát bảo mật: kiểm tra escape EJS, chống NoSQL Injection, kiểm tra CSRF token toàn bộ forms, bảo vệ HTTP headers với Helmet, bảo vệ an toàn `viewPath` (chặn path traversal, whitelist `src/views/site/`).
   - Tối ưu hóa hiệu năng: kiểm tra execution plan MongoDB (`explain()`), bảo đảm 100% các câu truy vấn cây, template và presentation đều sử dụng index tối ưu; kiểm tra cơ chế render cache hit/miss và invalidation sau khi publish.
-  - Container hóa: Viết `Dockerfile` và `docker-compose.yml` (bao gồm App Node.js và MongoDB sẵn sàng chạy chỉ với 1 lệnh).
+  - Container hóa & Triển khai: Viết `Dockerfile` và cấu hình CI/CD hoàn thiện (Lưu ý: Môi trường MongoDB local Docker và tách môi trường database đã được hoàn tất độc lập trong GĐ E1).
   - Tài liệu: `README.md` hoàn chỉnh hướng dẫn cài đặt, cấu hình, kiến trúc và vận hành.
 - **Không làm:** Chưa triển khai hạ tầng Kubernetes phân tán.
 

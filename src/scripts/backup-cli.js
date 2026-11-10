@@ -12,6 +12,8 @@
  */
 
 const { connectDB, disconnectDB } = require('../config/db');
+const env = require('../config/env');
+const dbGuard = require('../config/dbGuard');
 const backupService = require('../services/backupService');
 const logger = require('../utils/logger');
 
@@ -145,6 +147,15 @@ Commands:
 
         const mode = parsed.mode || 'target-db';
         const isDryRun = Boolean(parsed['dry-run']);
+
+        if (!isDryRun) {
+          dbGuard.assertSafeFor(mode === 'in-place' ? 'destructive' : 'restore', {
+            uri: env.MONGO_URI,
+            appEnv: env.APP_ENV,
+            scriptName: `backup-cli restore --mode ${mode}`,
+            confirmedRemote: Boolean(parsed['confirm-remote'] || process.env.CONFIRM_REMOTE_ACTION === 'true'),
+          });
+        }
 
         console.log(`[CLI] Bắt đầu tiến trình khôi phục bản ${backupId}...`);
         console.log(`   - Chế độ:    ${mode}`);
