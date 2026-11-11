@@ -117,6 +117,8 @@ const env = {
   MONGODUMP_PATH: process.env.MONGODUMP_PATH || 'mongodump',
   MONGORESTORE_PATH: process.env.MONGORESTORE_PATH || 'mongorestore',
   MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true' || process.env.MAINTENANCE_MODE === '1',
+  // Serialization Directory (DEC-054 - defaults to "Serialization" directly in repo root)
+  SERIALIZATION_DIR: process.env.SERIALIZATION_DIR || 'Serialization',
   isDev: appEnv === 'development',
   isStaging: appEnv === 'staging',
   isProd: appEnv === 'production',

@@ -1,0 +1,13 @@
+_id: 6aeaccf1b200083aee58705e
+name: Placeholders
+displayName: Placeholders
+path: /root/layout/Placeholders
+template:
+  id: 6aeaccf0b200083aee587033
+  name: Placeholder Folder
+  path: /root/templates/System/Placeholder Folder
+parentId: 6aea24d7fb85fae7f0a409a8
+sortOrder: 200
+icon: folder
+sharedFields: {}
+languages: []

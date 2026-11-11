@@ -1,0 +1,24 @@
+_id: 6aeaf46de620d879bafc23d2
+name: common
+displayName: Common
+path: /root/templates/common
+template:
+  id: 6ae95cc6b1e541e051fd413e
+  name: Folder
+  path: /root/templates/common/Folder
+parentId: 6ae95cc6b1e541e051fd416b
+parentPath: /root/templates
+sortOrder: 100
+icon: folder
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields: {}
+        neverPublish: false
+        note: Initial version
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

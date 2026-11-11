@@ -1,0 +1,17 @@
+_id: 6aeaccf2b200083aee58707e
+name: maincontent
+displayName: Main Content
+path: /root/layout/Placeholders/maincontent
+template:
+  id: 6aeaccf0b200083aee587041
+  name: Placeholder
+  path: /root/templates/System/Placeholder
+parentId: 6aeaccf1b200083aee58705e
+parentPath: /root/layout/Placeholders
+sortOrder: 200
+icon: placeholder
+sharedFields:
+  description: Nội dung chính giữa trang web
+  allowedRenderings: 6aeaccf1b200083aee58706a,6aeaccf1b200083aee58706f,6aeaccf1b200083aee587074
+  placeholderKey: maincontent
+languages: []

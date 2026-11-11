@@ -1,0 +1,24 @@
+_id: 6aeae251248055b9172f8601
+name: Components
+displayName: Components
+path: /root/templates/Feature/Components
+template:
+  id: 6aeae250248055b9172f85e7
+  name: Template Folder
+  path: /root/templates/System/Template Folder
+parentId: 6aeae251248055b9172f85fa
+parentPath: /root/templates/Feature
+sortOrder: 100
+icon: folder
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields: {}
+        neverPublish: false
+        note: ''
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

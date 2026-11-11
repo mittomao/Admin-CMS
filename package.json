@@ -44,7 +44,12 @@
     "backup:prune": "node src/scripts/backup-cli.js prune",
     "maintenance:on": "node src/scripts/maintenance-cli.js on",
     "maintenance:off": "node src/scripts/maintenance-cli.js off",
-    "maintenance:status": "node src/scripts/maintenance-cli.js status"
+    "maintenance:status": "node src/scripts/maintenance-cli.js status",
+    "serialize:section": "node src/scripts/serialize-section-cli.js",
+    "serialize:diff": "node src/scripts/serialize-section-cli.js diff",
+    "serialize:reserialize": "node src/scripts/serialize-section-cli.js reserialize",
+    "serialize:sync": "node src/scripts/serialize-section-cli.js sync",
+    "serialize:migrate-layout": "node src/scripts/migrate-serialization-layout.js"
   },
   "keywords": [
     "cms",
@@ -67,6 +72,7 @@
     "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.19.0",
     "helmet": "^8.0.0",
+    "js-yaml": "^5.5.0",
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",

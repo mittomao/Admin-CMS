@@ -85,6 +85,12 @@
             <span>Nhập Gói (Import Package)</span>
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link font-bold d-inline-flex align-items-center gap-2 rounded-t-xl" data-bs-toggle="tab" data-bs-target="#tab-yaml-sync" role="tab" aria-selected="false">
+            <i class="ti ti-refresh text-cyan fs-2"></i>
+            <span>YAML Sync</span>
+          </button>
+        </li>
       </ul>
     </div>
 
@@ -378,6 +384,54 @@
                 </div>
                 <% } %>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TAB 3: YAML SYNC (GĐ 11-Y2) -->
+        <!-- ================================================================= -->
+        <div class="tab-pane" id="tab-yaml-sync" role="tabpanel">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">
+                Đồng bộ dữ liệu YAML theo từng Section (YAML Sync)
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mb-0">
+                Xuất (Reserialize) hoặc Nhập (Sync) độc lập từng nhánh cây dữ liệu phân cấp, không làm ảnh hưởng đến toàn bộ hệ thống.
+              </p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5 text-xs font-semibold rounded-lg shadow-2xs" id="btnRefreshYamlStatus">
+              <i class="ti ti-refresh"></i>
+              <span>Làm mới trạng thái</span>
+            </button>
+          </div>
+
+          <!-- Section Toolbar (Select All & Batch Actions) -->
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+            <label class="form-check form-check-inline mb-0 cursor-pointer select-none">
+              <input class="form-check-input" type="checkbox" id="cbSelectAllYamlSections">
+              <span class="form-check-label text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Chọn tất cả các sections
+              </span>
+            </label>
+            <div class="d-flex align-items-center gap-2">
+              <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 text-xs font-semibold rounded-lg shadow-2xs" id="btnReserializeSelected">
+                <i class="ti ti-upload"></i>
+                <span>Reserialize selected</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1.5 text-xs font-semibold rounded-lg shadow-2xs" id="btnSyncSelected">
+                <i class="ti ti-download"></i>
+                <span>Sync selected</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sections List Container (Rendered dynamically by serialization-yaml-sync.js) -->
+          <div id="yamlSectionsList">
+            <div class="text-center py-8">
+              <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+              <div class="text-xs text-slate-400">Đang tải danh sách các sections...</div>
             </div>
           </div>
         </div>
@@ -719,4 +773,8 @@
   });
 })();
 </script>
+
+<!-- YAML Sync Modal & Client Logic (GĐ 11-Y2) -->
+<%- include('./partials/yaml-sync-modal') %>
+<script src="/js/admin/serialization-yaml-sync.js"></script>
 

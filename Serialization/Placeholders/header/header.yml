@@ -1,0 +1,17 @@
+_id: 6aeaccf2b200083aee587079
+name: header
+displayName: Header
+path: /root/layout/Placeholders/header
+template:
+  id: 6aeaccf0b200083aee587041
+  name: Placeholder
+  path: /root/templates/System/Placeholder
+parentId: 6aeaccf1b200083aee58705e
+parentPath: /root/layout/Placeholders
+sortOrder: 100
+icon: placeholder
+sharedFields:
+  description: Phần đầu trang web
+  allowedRenderings: ''
+  placeholderKey: header
+languages: []

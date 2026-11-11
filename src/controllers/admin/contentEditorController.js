@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const itemService = require('../../services/itemService');
 const aclService = require('../../services/aclService');
 const templateService = require('../../services/templateService');

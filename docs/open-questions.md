@@ -553,6 +553,134 @@ Tài liệu này lưu trữ danh sách các câu hỏi kỹ thuật / nghiệp v
 - **Lựa chọn B:** Đổi tên database trên staging thành `admin_cms_staging`.
 - **Lý do đề xuất:** Phù hợp với nguyên tắc bất biến "giữ nguyên tên database ở mọi môi trường" do người dùng đặt ra, kiểm soát tính an toàn qua fingerprint cấp dữ liệu.
 
+---
+
+# CÂU HỎI KỸ THUẬT GIAI ĐOẠN 11-Y2 (TAB "YAML SYNC" THEO TỪNG SECTION TRÊN TRANG SERIALIZATION)
+
+Danh sách 6 câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho **Giai đoạn 11-Y2: Tab "YAML Sync" Theo Từng Section**, kèm theo đề xuất mặc định của Tech Lead:
+
+---
+
+### 1. Chế độ đồng bộ mặc định (Default Sync Mode): Content là `createOnly`, ba section còn lại (Template, Layout, Rendering) là `overwrite`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-053](decisions/DEC-053-section-based-yaml-serialization-and-sync.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.**
+  - Nhánh `Content`: Mặc định là `createOnly` (chỉ tạo mới các item chưa có, tuyệt đối không ghi đè lên các trang/bài viết đang được biên tập viên chỉnh sửa trong database). Nếu người dùng cố ý chuyển sang `overwrite`, modal hiển thị cảnh báo đỏ nổi bật và yêu cầu xác nhận.
+  - Ba nhánh kỹ thuật (`Template`, `Layout`, `Rendering`): Mặc định là `overwrite` để cập nhật cấu trúc schema, viewPath và component definition từ repo mã nguồn sang database.
+- **Lựa chọn B:** Đặt tất cả 4 section đều có mode mặc định là `overwrite` hoặc đều là `createOnly`.
+- **Lý do đề xuất:** Đây là quy tắc an toàn cốt lõi kinh điển (chuẩn Sitecore Unicorn), bảo vệ dữ liệu nội dung của biên tập viên không bị ghi đè ngoài ý muốn khi dev chạy sync, đồng thời đảm bảo mã nguồn layout/template luôn được cập nhật mới nhất.
+
+---
+
+### 2. Section Layout có bao gồm cả hai nhánh con `Layouts` và `Placeholders` không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-053](decisions/DEC-053-section-based-yaml-serialization-and-sync.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Section Layout gom chung cả hai nhánh con:
+  - `ROOT_PATH/layout/Layouts` &rarr; lưu tại `items/layout/Layouts/`
+  - `ROOT_PATH/layout/Placeholders` &rarr; lưu tại `items/layout/Placeholders/`
+- **Lựa chọn B:** Tách riêng thành 2 section độc lập: Section "Layouts" và Section "Placeholders" (thành 5 section thay vì 4).
+- **Lý do đề xuất:** Giữ đúng cấu trúc 4 section chuẩn hóa theo yêu cầu, đồng thời Layout và Placeholder có sự gắn kết chặt chẽ trong kiến trúc Presentation của Treecraft (Layout chứa Placeholder, Placeholder chứa Rendering).
+
+---
+
+### 3. Section Template có serialize nhánh `System` (`ROOT_PATH/templates/System`) mặc định không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-053](decisions/DEC-053-section-based-yaml-serialization-and-sync.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Không serialize System templates mặc định.**
+  - Chỉ serialize các template do dự án định nghĩa (`Feature`, `Foundation`, `Project`).
+  - Nhánh `System` templates là các mẫu cấu trúc hệ thống nền tảng (Item, Template, Section, Field, Media, Language...) được khởi tạo cố định bởi seed/migration script, không nên đưa vào vòng đời serialize hằng ngày của lập trình viên.
+  - Cung cấp cờ cấu hình `includeSystemTemplates: false` trong `src/config/serializationSections.js` để có thể bật khi thật sự cần thiết.
+- **Lựa chọn B:** Luôn serialize toàn bộ kể cả `System` templates.
+- **Lý do đề xuất:** Giảm thiểu rác thư mục, giữ diff Git gọn gàng và tránh rủi ro ghi đè sai lệch các template hệ thống cốt lõi.
+
+---
+
+### 4. Có bổ sung nút thao tác hàng loạt "Reserialize selected" và "Sync selected" không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-053](decisions/DEC-053-section-based-yaml-serialization-and-sync.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.**
+  - Checkbox tổng "Chọn tất cả" và 2 nút hành động hàng loạt: "Reserialize selected" và "Sync selected".
+  - Khi thực thi "Sync selected", hệ thống **tự động sắp xếp thứ tự thực thi theo đồ thị phụ thuộc**: `Template` &rarr; `Layout` &rarr; `Rendering` &rarr; `Content`.
+- **Lựa chọn B:** Chỉ cho phép bấm Reserialize / Sync đơn lẻ từng section một.
+- **Lý do đề xuất:** Nâng cao trải nghiệm lập trình viên (Developer Experience). Khi dev kéo code mới về, chỉ cần 1 cú click "Sync selected" là toàn bộ hệ thống được đồng bộ an toàn theo đúng thứ tự phụ thuộc.
+
+---
+
+### 5. Cố định 4 section hay cho phép người dùng cấu hình section tùy chỉnh?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-053](decisions/DEC-053-section-based-yaml-serialization-and-sync.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Cố định 4 section cốt lõi trong `src/config/serializationSections.js`.** Không phát triển tính năng cấu hình section động do người dùng tự thêm/sửa/xóa trên giao diện trong giai đoạn này.
+- **Lựa chọn B:** Xây dựng trình quản lý thêm bớt Section động lưu trong database.
+- **Lý do đề xuất:** Giữ phạm vi gọn gàng theo yêu cầu ("Làm gọn, không thêm tính năng ngoài phạm vi"), đảm bảo tính ổn định và kiểm soát chặt chẽ quan hệ phụ thuộc kỹ thuật.
+
+---
+
+### 6. Thư viện phân tích/xuất YAML và cách nạp Tailwind CSS:
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-053](decisions/DEC-053-section-based-yaml-serialization-and-sync.md)
+- **Khảo sát & Đề xuất:**
+  - **Thư viện YAML:** Trong `package.json` hiện chưa có thư viện YAML. Đề xuất xin phép người dùng cài đặt thư viện `js-yaml` (`^4.1.0`) - thư viện parse/dump YAML chuẩn công nghiệp của Node.js, hỗ trợ cấu hình `noCompatMode: true`, `sortKeys: true` (deterministic) và an toàn tuyệt đối khi vô hiệu hóa custom tags / aliases.
+  - **Cách nạp Tailwind:** Dự án hiện đang dùng **Tailwind CLI build ra file tĩnh** (`npm run build:css:admin` &rarr; `public/css/tailwind-admin.css`). Do đó, giao diện Tab mới sẽ dùng **100% class Tailwind và Tabler hiện có**, dùng đúng token CSS trong `src/styles/tokens/theme-tokens.js`, không thêm thư viện CSS mới và không cần thay đổi cấu hình Tailwind.
+
+---
+
+# CÂU HỎI KỸ THUẬT GIAI ĐOẠN 11-Y3 (SERIALIZE FIELD DEFINITION CỦA TEMPLATE)
+
+Tài liệu này lưu trữ danh sách 5 câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho **Giai đoạn 11-Y3: Serialize Field Definition Của Template**, kèm theo chẩn đoán hiện trạng và đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Field nhúng trong file template hay mỗi field một file?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-055: Serialize Field Definition Của Template Vào YAML](decisions/DEC-055-template-field-definition-yaml-serialization.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Nhúng toàn bộ Sections và Fields vào cùng một file YAML của Template.**
+- **Lựa chọn B:** Mỗi Field hoặc Section tách ra một file YAML riêng biệt.
+- **Lý do đề xuất:** 
+  - Một Template là một đơn vị logic hoàn chỉnh (Schema Definition).
+  - Nhúng sections và fields trong cùng file giúp lập trình viên theo dõi toàn bộ cấu trúc của template trên 1 màn hình; khi thêm/sửa/xoá field, lệnh `git diff` chỉ hiển thị biến động trực tiếp trên file template đó.
+  - Tách mỗi field thành 1 file sẽ sinh ra hàng trăm file nhỏ phân mảnh, làm chậm tốc độ I/O đĩa và tăng độ phức tạp khi giải quyết cây thư mục.
+
+---
+
+### 2. Standard Values có nằm chung file template không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-055: Serialize Field Definition Của Template Vào YAML](decisions/DEC-055-template-field-definition-yaml-serialization.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có, Standard Values nằm chung trong file template**, ánh xạ theo `fieldId` và kèm chú thích `name` để người đọc diff dễ hiểu.
+- **Lựa chọn B:** Tách Standard Values thành file riêng hoặc không serialize.
+- **Lý do đề xuất:** Standard Values là thuộc tính nội tại của Template, quy định giá trị mặc định khi tạo mới Item. Để chung file bảo đảm tính nguyên khối khi sync sang môi trường mới (Staging/Production).
+
+---
+
+### 3. Xoá field khi Sync chỉ khi bật tuỳ chọn + xác nhận?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-055: Serialize Field Definition Của Template Vào YAML](decisions/DEC-055-template-field-definition-yaml-serialization.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Có, mặc định KHÔNG xoá.**
+  - Nếu một field có trong Database nhưng không xuất hiện trong file YAML, hệ thống mặc định giữ nguyên field trong DB và chỉ phát cảnh báo *"Field sẽ bị gỡ"*.
+  - Chỉ thực hiện xoá field khi người dùng bật cờ tuỳ chọn `deleteMissingFields: true` và bấm xác nhận trong modal cảnh báo.
+  - Việc xoá field khỏi định nghĩa template **không xoá dữ liệu đã có trong các Item** (tuân thủ nguyên tắc Safe Schema của GĐ 3), nhưng Dry-Run phải thống kê và **cảnh báo số Item đang có dữ liệu** của field đó.
+- **Lựa chọn B:** Tự động xoá field trong DB nếu trong YAML không có.
+- **Lý do đề xuất:** Bảo vệ an toàn dữ liệu, chống mất mát schema vô ý do xung đột branch Git hoặc file YAML cũ.
+
+---
+
+### 4. YAML template hiện đã có phần nào của field chưa? (Chẩn đoán hiện trạng)
+- **Kết quả chẩn đoán:** **Hiện tại HOÀN TOÀN CHƯA CÓ bất kỳ phần nào của field hay section.**
+  - File YAML của template hiện tại chỉ chứa các thuộc tính của một `Item` thông thường (`_id`, `name`, `displayName`, `path`, `icon`, `languages`).
+  - Hoàn toàn thiếu: `sections`, `fields`, `baseTemplates`, `insertOptions`, `standardValues`, `presentation`.
+  - Nguyên nhân: Serializer cũ chỉ truy vấn bảng `Item` (`items_master`) mà không kết hợp dữ liệu schema từ collection `templates`.
+- **Giải pháp:** Cập nhật `yamlItemSerializer.js` và `yamlSectionService.js` để khi reserialize section `template`, hệ thống sẽ nạp schema từ collection `templates` và nhúng đầy đủ các mảng `sections`, `fields`, `baseTemplates`, `insertOptions`, `standardValues`.
+
+---
+
+### 5. Có serialize cả template `System` không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-053](decisions/DEC-053-section-based-yaml-serialization-and-sync.md), [DEC-055](decisions/DEC-055-template-field-definition-yaml-serialization.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Không serialize các template trong nhánh `/root/templates/System`** (như đã chốt trong DEC-053 và cấu hình `includeSystemTemplates: false`).
+- **Lựa chọn B:** Xuất toàn bộ cả các system template.
+- **Lý do đề xuất:** Các template hệ thống (`/root/templates/System/*`) là bất biến và được khởi tạo tự động bởi hệ thống (`src/scripts/sync-system-templates.js`). Không đưa vào YAML hằng ngày để tránh rác diff và nguy cơ ghi đè schema hệ thống.
+
+
+
 
 
 

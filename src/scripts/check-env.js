@@ -74,6 +74,7 @@ function runCheckEnv() {
   console.log(`   - Tên database đích   : ${dbName}`);
   console.log(`   - Loại máy chủ DB      : ${hostType.toUpperCase()}`);
   console.log(`   - Kết nối MongoDB     : ${maskedUri}`);
+  console.log(`   - Thư mục Serialization: ${effectiveConfig.SERIALIZATION_DIR || 'Serialization'}`);
 
   // Kiểm tra quy tắc an toàn
   if (appEnv === 'development' && hostType === 'remote') {

@@ -13,5 +13,9 @@ router.get('/export-item', serializationController.exportItem);
 router.post('/inspect', csrfMiddleware.verifyToken, serializationController.inspect);
 router.post('/import', csrfMiddleware.verifyToken, serializationController.importPackage);
 
+// GĐ 11-Y2: Section-based YAML sync routes
+const sectionRoutes = require('./serializationSectionRoutes');
+router.use('/sections', sectionRoutes);
+
 module.exports = router;
 

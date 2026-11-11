@@ -1,0 +1,199 @@
+<!-- Modal Xác Nhận & Tiến Trình YAML Sync / Reserialize (GĐ 11-Y2) -->
+<div class="modal modal-blur fade" id="yamlSyncModal" tabindex="-1" role="dialog" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content shadow-2xl rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900">
+      
+      <!-- Modal Header -->
+      <div class="modal-header bg-slate-50/80 dark:bg-slate-800/80 px-4 py-3 border-b border-slate-200/80 dark:border-slate-700">
+        <div class="d-flex align-items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 text-cyan d-flex align-items-center justify-center font-bold" id="yamlModalIconBox">
+            <i class="ti ti-refresh fs-2" id="yamlModalIcon"></i>
+          </div>
+          <div>
+            <h4 class="modal-title font-bold text-slate-900 dark:text-white text-sm mb-0" id="yamlModalTitle">
+              Xác Nhận Thao Tác YAML Sync
+            </h4>
+            <div class="text-[11px] text-slate-400" id="yamlModalSubtitle">
+              Hướng dữ liệu: DB &rarr; YAML
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="yamlModalCloseBtn"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body p-4 text-xs text-slate-600 dark:text-slate-300">
+        
+        <!-- Metadata Badges Row -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+          <span class="badge bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 font-mono text-[10px]" id="yamlBadgeSection">
+            Section: content
+          </span>
+          <span class="badge bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-mono text-[10px]" id="yamlBadgeFolder">
+            Thư mục: items/content/
+          </span>
+          <span class="badge bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-mono text-[10px]" id="yamlBadgeDb">
+            DB: Master
+          </span>
+        </div>
+
+        <!-- Sync Configuration Panel (Hidden for Reserialize) -->
+        <div id="yamlSyncConfigBox" class="mb-3 d-none">
+          <label class="form-label text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+            Chế độ đồng bộ (Sync Mode):
+          </label>
+          <div class="d-flex flex-wrap gap-3 mb-2">
+            <label class="form-check form-check-inline cursor-pointer select-none">
+              <input class="form-check-input" type="radio" name="yamlModalSyncMode" value="createOnly" id="yamlModeCreateOnly">
+              <span class="form-check-label text-xs font-medium text-slate-800 dark:text-slate-200">
+                <strong>Chỉ tạo mới (createOnly):</strong> Không ghi đè item đã có trong DB (Khuyến nghị cho Content)
+              </span>
+            </label>
+            <label class="form-check form-check-inline cursor-pointer select-none">
+              <input class="form-check-input" type="radio" name="yamlModalSyncMode" value="overwrite" id="yamlModeOverwrite">
+              <span class="form-check-label text-xs font-medium text-slate-800 dark:text-slate-200">
+                <strong>Ghi đè (overwrite):</strong> Cập nhật fields, ngôn ngữ, presentation vào item hiện tại
+              </span>
+            </label>
+          </div>
+
+          <!-- Overwrite Content Warning Alert -->
+          <div class="alert alert-warning border-amber-200 bg-amber-50/80 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 p-2.5 rounded-xl d-none mb-2" id="yamlContentOverwriteWarning">
+            <i class="ti ti-alert-triangle me-1"></i>
+            <strong>Cảnh báo:</strong> Bạn đang chọn chế độ <em>Ghi đè</em> cho Content. Dữ liệu các bài viết đang được biên tập viên sửa đổi có thể bị ghi đè bởi tệp tin YAML!
+          </div>
+
+          <!-- Optional Delete Missing -->
+          <div class="form-check mb-0">
+            <input class="form-check-input cursor-pointer" type="checkbox" id="yamlModalDeleteMissing">
+            <label class="form-check-label text-xs text-slate-600 dark:text-slate-400 select-none cursor-pointer" for="yamlModalDeleteMissing">
+              Xóa các item trong DB nếu không còn tồn tại trong tệp YAML (Chỉ áp dụng khi thật sự cần dọn sạch)
+            </label>
+          </div>
+
+          <!-- Optional Delete Missing Fields (DEC-055 for Template) -->
+          <div class="form-check mt-1 mb-0 d-none" id="yamlModalDeleteMissingFieldsContainer">
+            <input class="form-check-input cursor-pointer" type="checkbox" id="yamlModalDeleteMissingFields">
+            <label class="form-check-label text-xs text-slate-600 dark:text-slate-400 select-none cursor-pointer" for="yamlModalDeleteMissingFields">
+              Xóa trường (fields) khỏi Template nếu không có trong YAML (Mặc định: giữ nguyên)
+            </label>
+          </div>
+        </div>
+
+        <!-- Reserialize Options Panel (Hidden for Sync) -->
+        <div id="yamlReserializeConfigBox" class="mb-3 d-none">
+          <div class="form-check">
+            <input class="form-check-input cursor-pointer" type="checkbox" id="yamlModalPruneOrphans">
+            <label class="form-check-label text-xs text-slate-700 dark:text-slate-300 select-none cursor-pointer" for="yamlModalPruneOrphans">
+              <strong>Dọn tệp mồ côi (Prune Orphans):</strong> Tự động xóa các file YAML trong thư mục nếu item tương ứng đã bị xóa trong Database
+            </label>
+          </div>
+        </div>
+
+        <!-- Dry Run Preview Result Box -->
+        <div id="yamlDryRunBox" class="mb-3 d-none">
+          <div class="card p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="font-bold text-slate-800 dark:text-slate-100 text-xs d-flex align-items-center gap-1">
+                <i class="ti ti-eye text-primary"></i>
+                <span>Kết quả Xem trước (Dry-Run Preview)</span>
+              </span>
+              <span class="badge bg-emerald-50 text-emerald-700 font-mono text-[10px]" id="yamlDryRunStatusBadge">Hợp lệ</span>
+            </div>
+
+            <!-- Stats Counts -->
+            <div class="row g-2 text-center mb-2">
+              <div class="col-3">
+                <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
+                  <div class="text-[10px] text-slate-400">Tạo mới</div>
+                  <div class="font-bold text-emerald-600 text-sm" id="dryStatCreate">0</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
+                  <div class="text-[10px] text-slate-400">Cập nhật</div>
+                  <div class="font-bold text-blue-600 text-sm" id="dryStatUpdate">0</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
+                  <div class="text-[10px] text-slate-400">Giữ nguyên</div>
+                  <div class="font-bold text-slate-500 text-sm" id="dryStatSkip">0</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
+                  <div class="text-[10px] text-slate-400">Tổng files</div>
+                  <div class="font-bold text-slate-800 dark:text-slate-200 text-sm" id="dryStatTotal">0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dry Run Alerts (Warnings / Missing dependencies / Errors) -->
+            <div id="yamlDryRunAlerts" class="d-none"></div>
+
+            <!-- Field Diffs Table (DEC-055) -->
+            <div id="yamlDryRunFieldDiffs" class="d-none mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+              <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5 d-flex align-items-center gap-1">
+                <i class="ti ti-table text-primary"></i>
+                <span>Chi tiết thay đổi Trường Template (Field Diffs):</span>
+              </div>
+              <div class="table-responsive max-h-44 overflow-y-auto border border-slate-200/80 dark:border-slate-700 rounded-lg">
+                <table class="table table-sm table-vcenter text-[11px] mb-0">
+                  <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    <tr>
+                      <th class="py-1">Template</th>
+                      <th class="py-1">Trường</th>
+                      <th class="py-1">Thao tác</th>
+                      <th class="py-1">Chi tiết</th>
+                      <th class="py-1 text-center">Item data</th>
+                    </tr>
+                  </thead>
+                  <tbody id="yamlFieldDiffsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar Box (Shown while executing job) -->
+        <div id="yamlProgressBox" class="mb-3 d-none">
+          <div class="d-flex justify-content-between text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+            <span id="yamlProgressLabel">Đang xử lý dữ liệu...</span>
+            <span id="yamlProgressPercent">100%</span>
+          </div>
+          <div class="progress progress-sm rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="yamlProgressBar" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- Live Terminal Log Box -->
+        <div id="yamlTerminalLogBox" class="rounded-xl bg-slate-900 p-3 font-mono text-[11px] text-emerald-400 max-h-40 overflow-y-auto mb-2 d-none">
+          <div id="yamlTerminalLogLines"></div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer bg-slate-50/80 dark:bg-slate-800/80 p-3 border-t border-slate-200/80 dark:border-slate-700 d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary btn-sm rounded-lg" data-bs-dismiss="modal" id="yamlModalCancelBtn">
+          Đóng
+        </button>
+        <div class="d-flex gap-2">
+          <!-- Button Dry Run (Only for Sync) -->
+          <button type="button" class="btn btn-outline-primary btn-sm rounded-lg d-inline-flex align-items-center gap-1.5" id="yamlModalDryRunBtn">
+            <i class="ti ti-eye"></i>
+            <span>Chạy Xem Trước (Dry-Run)</span>
+          </button>
+          <!-- Button Execute -->
+          <button type="button" class="btn btn-primary btn-sm rounded-lg d-inline-flex align-items-center gap-1.5" id="yamlModalExecuteBtn">
+            <i class="ti ti-player-play"></i>
+            <span id="yamlModalExecuteBtnText">Bắt đầu Thực Hiện</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+

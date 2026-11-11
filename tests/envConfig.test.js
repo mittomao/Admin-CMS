@@ -14,9 +14,10 @@ describe('Cấu hình Môi trường env.js (Phase E1 - Base .env Layering)', ()
 
     invalidEnvs.forEach((badEnv) => {
       expect(() => {
-        execSync(`APP_ENV=${badEnv} node -e "require('./src/config/env')"`, {
+        execSync(`node -e "require('./src/config/env')"`, {
           encoding: 'utf8',
           stdio: 'pipe',
+          env: { ...process.env, APP_ENV: badEnv },
         });
       }).toThrow(/Giá trị APP_ENV=.*không hợp lệ/);
     });
@@ -27,10 +28,11 @@ describe('Cấu hình Môi trường env.js (Phase E1 - Base .env Layering)', ()
 
     validEnvs.forEach((validEnv) => {
       const output = execSync(
-        `APP_ENV=${validEnv} node -e "const env = require('./src/config/env'); console.log(env.APP_ENV);"`,
+        `node -e "const env = require('./src/config/env'); console.log(env.APP_ENV);"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',
+          env: { ...process.env, APP_ENV: validEnv },
         }
       );
       expect(output.trim()).toBe(validEnv);
@@ -39,10 +41,11 @@ describe('Cấu hình Môi trường env.js (Phase E1 - Base .env Layering)', ()
 
   it('ưu tiên biến có sẵn trong process.env hơn giá trị trong file cấu hình', () => {
     const output = execSync(
-      `APP_ENV=development PORT=9999 node -e "const env = require('./src/config/env'); console.log(env.PORT);"`,
+      `node -e "const env = require('./src/config/env'); console.log(env.PORT);"`,
       {
         encoding: 'utf8',
         stdio: 'pipe',
+        env: { ...process.env, APP_ENV: 'development', PORT: '9999' },
       }
     );
     expect(output.trim()).toBe('9999');
@@ -55,10 +58,11 @@ describe('Cấu hình Môi trường env.js (Phase E1 - Base .env Layering)', ()
 
     try {
       const output = execSync(
-        `APP_ENV=staging ALLOW_REMOTE_DB_IN_DEV=true node -e "const env = require('./src/config/env'); console.log(env.PORT, env.BASIC_AUTH_ENABLED);"`,
+        `node -e "const env = require('./src/config/env'); console.log(env.PORT, env.BASIC_AUTH_ENABLED);"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',
+          env: { ...process.env, APP_ENV: 'staging', ALLOW_REMOTE_DB_IN_DEV: 'true' },
         }
       );
       expect(output.trim()).toBe('8888 true');

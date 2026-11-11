@@ -39,6 +39,7 @@ const COMPATIBLE_TYPE_TRANSITIONS = {
 const templateService = {
   ConflictError,
   ValidationError,
+  COMPATIBLE_TYPE_TRANSITIONS,
 
   /**
    * Clear in-memory resolved template and effective template caches
