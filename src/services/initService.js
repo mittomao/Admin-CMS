@@ -564,7 +564,110 @@ async function step4_MigrateAndSeedCore(targetDir, options = {}) {
     await syncSystem.syncSystemTemplates({ quiet: true });
   }
 
-  // 4.4 Seed Presentation System Items (Layout, Rendering, Placeholders root items)
+  // 4.4 Khởi tạo Root Node (/root) và các nhánh hệ thống cấp 1
+  const Item = require('../models/Item');
+  const Template = require('../models/Template');
+  const branding = require('../config/branding');
+
+  const folderTemplate = await Template.findOne({ name: 'Folder' });
+  const folderTemplateId = folderTemplate ? folderTemplate._id : null;
+
+  let rootNode = await Item.findOne({ path: branding.PATHS.ROOT });
+  if (!rootNode) {
+    rootNode = await Item.create({
+      name: branding.ROOT_NAME || 'root',
+      displayName: branding.ROOT_NAME || 'root',
+      templateId: folderTemplateId,
+      parentId: null,
+      ancestors: [],
+      path: branding.PATHS.ROOT,
+      sortOrder: 10,
+      isSystem: true,
+      fields: {},
+      sharedFields: {},
+      languages: [
+        {
+          code: 'vi',
+          unversionedFields: {},
+          versions: [{ version: 1, fields: {}, note: 'Root initialization' }],
+        },
+      ],
+    });
+  }
+
+  const branches = [
+    { name: 'content', displayName: 'Content', sortOrder: 100 },
+    { name: 'layout', displayName: 'Layout', sortOrder: 200 },
+    { name: 'media library', displayName: 'Media Library', sortOrder: 300 },
+    { name: 'templates', displayName: 'Templates', sortOrder: 400 },
+    { name: 'system', displayName: 'System', sortOrder: 500 },
+  ];
+
+  for (const b of branches) {
+    const bPath = `${branding.PATHS.ROOT}/${b.name}`;
+    let branchItem = await Item.findOne({ path: bPath });
+    if (!branchItem) {
+      await Item.create({
+        name: b.name,
+        displayName: b.displayName,
+        templateId: folderTemplateId,
+        parentId: rootNode._id,
+        ancestors: [rootNode._id],
+        path: bPath,
+        sortOrder: b.sortOrder,
+        isSystem: true,
+        fields: {},
+        sharedFields: {},
+        languages: [
+          {
+            code: 'vi',
+            unversionedFields: {},
+            versions: [{ version: 1, fields: {}, note: `${b.displayName} initialization` }],
+          },
+        ],
+      });
+    }
+  }
+
+  // 4.5 Seed Launchpad Apps
+  const LaunchpadApp = require('../models/LaunchpadApp');
+  const appsConfig = [
+    {
+      name: 'Content Editor',
+      description: 'Soạn thảo và điều hướng cây nội dung đa ngôn ngữ',
+      icon: 'ti ti-edit',
+      iconBg: 'blue',
+      group: 'Content & Media',
+      url: `/admin/content-editor?path=${encodeURIComponent(branding.PATHS.CONTENT || '/root/content')}`,
+      sortOrder: 10,
+      allowedRoles: [],
+    },
+    {
+      name: 'Media Library',
+      description: 'Quản lý tài nguyên media hình ảnh và tài liệu',
+      icon: 'ti ti-photo',
+      iconBg: 'indigo',
+      group: 'Content & Media',
+      url: '/admin/media',
+      sortOrder: 20,
+      allowedRoles: [],
+    },
+    {
+      name: 'Template Manager',
+      description: 'Thiết kế template, section và trường động',
+      icon: 'ti ti-layout-grid',
+      iconBg: 'red',
+      group: 'Control Panel & Maintenance',
+      url: `/admin/content-editor?path=${encodeURIComponent(branding.PATHS.TEMPLATES || '/root/templates')}`,
+      sortOrder: 10,
+      allowedRoles: [],
+    },
+  ];
+  for (const app of appsConfig) {
+    await LaunchpadApp.findOneAndUpdate({ name: app.name }, { $setOnInsert: app }, { upsert: true, new: true });
+  }
+
+  // 4.6 Seed Presentation System Items (Layout, Rendering, Placeholders root items)
   const { seedPresentationData } = require('../scripts/seed-presentation-data');
   await seedPresentationData();
 
