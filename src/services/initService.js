@@ -753,10 +753,11 @@ async function step8_RunDoctorAndPrintSummary(targetDir, adminCreds, options = {
   }
 
   console.log(`\n👉 Các bước tiếp theo:`);
-  console.log(`   1. Di chuyển vào thư mục dự án: cd ${path.relative(process.cwd(), targetDir) || '.'}`);
-  console.log(`   2. Khởi chạy máy chủ phát triển: node core/bin/treecraft.js dev`);
-  console.log(`   3. Truy cập website công khai:  http://localhost:3000/`);
-  console.log(`   4. Đăng nhập trang quản trị:    http://localhost:3000/admin`);
+  console.log(`   1. Khởi chạy máy chủ phát triển (tại thư mục gốc repo):`);
+  console.log(`      node core/bin/treecraft.js dev`);
+  console.log(`      (Hoặc nếu đang đứng trong thư mục site/: node ../core/bin/treecraft.js dev)`);
+  console.log(`   2. Truy cập website công khai:  http://localhost:3000/`);
+  console.log(`   3. Đăng nhập trang quản trị:    http://localhost:3000/admin`);
   console.log(`\n⚠️  LƯU Ý QUẢN TRỊ MÃ NGUỒN GIT:`);
   console.log(`   - Hãy commit toàn bộ thư mục site/ vào kho mã nguồn của bạn.`);
   console.log(`   - TUYỆT ĐỐI KHÔNG commit các file chứa mật khẩu bí mật: .env, .env.development\n`);
