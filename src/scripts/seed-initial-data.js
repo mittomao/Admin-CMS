@@ -12,20 +12,23 @@ const branding = require('../config/branding');
 
 const getMaskedUri = (uri) => (uri ? uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@') : '');
 
-const seedData = async () => {
+const seedData = async (options = {}) => {
   try {
+    const activeUri = options.mongoUri || process.env.MONGO_URI || env.MONGO_URI;
     // Chốt chặn dbGuard: Ngăn chặn seed vào môi trường Remote/Production
     dbGuard.assertSafeFor('destructive', {
-      uri: env.MONGO_URI,
-      appEnv: env.APP_ENV,
+      uri: activeUri,
+      appEnv: env.APP_ENV || 'development',
       scriptName: 'seed-initial-data',
     });
 
-    logger.info(`Connecting to MongoDB at [${getMaskedUri(env.MONGO_URI)}]...`);
-    await mongoose.connect(env.MONGO_URI, {
-      serverSelectionTimeoutMS: 15000,
-    });
-    logger.info('Connected to MongoDB.');
+    if (mongoose.connection.readyState === 0) {
+      logger.info(`Connecting to MongoDB at [${getMaskedUri(activeUri)}]...`);
+      await mongoose.connect(activeUri, {
+        serverSelectionTimeoutMS: 15000,
+      });
+      logger.info('Connected to MongoDB.');
+    }
 
     // 1. Seed Roles
     const rolesConfig = [
@@ -64,22 +67,25 @@ const seedData = async () => {
     }
 
     // 2. Seed Default Admin User
-    const adminUsername = 'admin';
-    let adminUser = await User.findOne({ username: adminUsername });
-    if (!adminUser) {
-      const passwordHash = await User.hashPassword('admin123');
-      adminUser = await User.create({
-        username: adminUsername,
-        email: 'admin@treecraft.local',
-        passwordHash,
-        fullName: 'System Administrator',
-        avatar: '/img/default-avatar.png',
-        roles: [rolesMap['Administrator']],
-        isActive: true,
-      });
-      logger.info('Created default Admin user: admin / admin123');
-    } else {
-      logger.info('Admin user already exists.');
+    let adminUser = null;
+    if (!options.skipAdmin) {
+      const adminUsername = options.adminUsername || 'admin';
+      adminUser = await User.findOne({ username: adminUsername });
+      if (!adminUser) {
+        const passwordHash = await User.hashPassword('admin123');
+        adminUser = await User.create({
+          username: adminUsername,
+          email: `${adminUsername}@treecraft.local`,
+          passwordHash,
+          fullName: 'System Administrator',
+          avatar: '/img/default-avatar.png',
+          roles: [rolesMap['Administrator']],
+          isActive: true,
+        });
+        logger.info(`Created default Admin user: ${adminUsername} / admin123`);
+      } else {
+        logger.info('Admin user already exists.');
+      }
     }
 
     // 3. Seed Default Author User
@@ -622,7 +628,7 @@ const seedData = async () => {
               {
                 version: 1,
                 fields: {},
-                createdBy: adminUser._id,
+                createdBy: adminUser ? adminUser._id : null,
                 note: 'Phiên bản khởi tạo tiếng Việt',
               },
             ],
@@ -632,7 +638,7 @@ const seedData = async () => {
           shared: { devices: [] },
           final: [],
         },
-        createdBy: adminUser._id,
+        createdBy: adminUser ? adminUser._id : null,
       });
       logger.info(`Created Root node: ${branding.PATHS.ROOT}`);
     }
@@ -671,7 +677,7 @@ const seedData = async () => {
                 {
                   version: 1,
                   fields: {},
-                  createdBy: adminUser._id,
+                  createdBy: adminUser ? adminUser._id : null,
                   note: 'Phiên bản khởi tạo tiếng Việt',
                 },
               ],
@@ -681,7 +687,7 @@ const seedData = async () => {
             shared: { devices: [] },
             final: [],
           },
-          createdBy: adminUser._id,
+          createdBy: adminUser ? adminUser._id : null,
         });
         logger.info(`Created Branch node: ${bPath}`);
       }
@@ -722,7 +728,7 @@ const seedData = async () => {
                   isFeatured: true,
                   publishDate: new Date().toISOString().split('T')[0],
                 },
-                createdBy: adminUser._id,
+                createdBy: adminUser ? adminUser._id : null,
                 note: 'Phiên bản khởi tạo tiếng Việt',
               },
             ],
@@ -740,7 +746,7 @@ const seedData = async () => {
                   isFeatured: true,
                   publishDate: new Date().toISOString().split('T')[0],
                 },
-                createdBy: adminUser._id,
+                createdBy: adminUser ? adminUser._id : null,
                 note: 'Initial Seed Version',
               },
             ],
@@ -750,7 +756,7 @@ const seedData = async () => {
           shared: { devices: [] },
           final: [],
         },
-        createdBy: adminUser._id,
+        createdBy: adminUser ? adminUser._id : null,
       });
       logger.info(`Created Sample Page node: ${homePath}`);
     }
@@ -776,7 +782,7 @@ const seedData = async () => {
           sortOrder: 100,
           fields: {},
           sharedFields: {},
-          createdBy: adminUser._id
+          createdBy: adminUser ? adminUser._id : null
         });
         logger.info('Created Media Library subfolder Item: Banners');
       }
@@ -794,7 +800,7 @@ const seedData = async () => {
           sortOrder: 200,
           fields: {},
           sharedFields: {},
-          createdBy: adminUser._id
+          createdBy: adminUser ? adminUser._id : null
         });
         logger.info('Created Media Library subfolder Item: Editor Uploads');
       }
@@ -805,11 +811,17 @@ const seedData = async () => {
     await seedPresentationData();
 
     logger.info('Seed completed successfully!');
-    await mongoose.disconnect();
-    process.exit(0);
+    if (require.main === module) {
+      await mongoose.disconnect();
+      process.exit(0);
+    }
+    return true;
   } catch (error) {
     logger.error(`Seed error: ${error.message}`);
-    process.exit(1);
+    if (require.main === module) {
+      process.exit(1);
+    }
+    throw error;
   }
 };
 

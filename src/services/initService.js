@@ -496,6 +496,16 @@ async function step3_BootstrapLocalMongo(targetDir, options = {}) {
     scriptName: 'treecraft-init',
   });
 
+  process.env.MONGO_URI = mongoUri;
+  process.env.APP_ENV = 'development';
+  try {
+    const env = require('../config/env');
+    env.MONGO_URI = mongoUri;
+    env.APP_ENV = 'development';
+  } catch (_e) {
+    // env config will pick up process.env
+  }
+
   try {
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
@@ -509,6 +519,13 @@ async function step3_BootstrapLocalMongo(targetDir, options = {}) {
       try {
         await mongoose.connect(fallbackUri, { serverSelectionTimeoutMS: 5000 });
         console.log('  ✅ [Bước 3/8] Kết nối MongoDB thành công (Standalone mode).');
+        process.env.MONGO_URI = fallbackUri;
+        try {
+          const env = require('../config/env');
+          env.MONGO_URI = fallbackUri;
+        } catch (_e) {
+          // ignore
+        }
         return { connected: true, uri: fallbackUri };
       } catch {
         throw new Error(
@@ -536,140 +553,8 @@ async function step4_MigrateAndSeedCore(targetDir, options = {}) {
     return;
   }
 
-  // 4.1 Seed Roles
-  const Role = require('../models/Role');
-  const rolesConfig = [
-    { name: 'Administrator', description: 'Toàn quyền quản trị hệ thống CMS', isSystem: true },
-    { name: 'Author', description: 'Quyền biên soạn nội dung', isSystem: true },
-    { name: 'Editor', description: 'Quyền phê duyệt và xuất bản', isSystem: true },
-    { name: 'Approver', description: 'Quyền duyệt quy trình xuất bản', isSystem: true },
-  ];
-  for (const r of rolesConfig) {
-    await Role.findOneAndUpdate({ name: r.name }, { $setOnInsert: r }, { upsert: true, new: true });
-  }
-
-  // 4.2 Seed Default Languages (vi, en)
-  const Language = require('../models/Language');
-  const defaultLangs = [
-    { code: 'vi', name: 'Tiếng Việt', nativeName: 'Tiếng Việt', isDefault: true, isEnabled: true, direction: 'ltr', sortOrder: 1 },
-    { code: 'en', name: 'English', nativeName: 'English', isDefault: false, isEnabled: true, direction: 'ltr', sortOrder: 2 },
-  ];
-  for (const l of defaultLangs) {
-    await Language.findOneAndUpdate({ code: l.code }, { $setOnInsert: l }, { upsert: true, new: true });
-  }
-
-  // 4.3 Đồng bộ System Templates từ Core
-  const syncSystem = require('../scripts/sync-system-templates');
-  if (typeof syncSystem.syncSystemTemplates === 'function') {
-    await syncSystem.syncSystemTemplates({ quiet: true });
-  }
-
-  // 4.4 Khởi tạo Root Node (/root) và các nhánh hệ thống cấp 1
-  const Item = require('../models/Item');
-  const Template = require('../models/Template');
-  const branding = require('../config/branding');
-
-  const folderTemplate = await Template.findOne({ name: 'Folder' });
-  const folderTemplateId = folderTemplate ? folderTemplate._id : null;
-
-  let rootNode = await Item.findOne({ path: branding.PATHS.ROOT });
-  if (!rootNode) {
-    rootNode = await Item.create({
-      name: branding.ROOT_NAME || 'root',
-      displayName: branding.ROOT_NAME || 'root',
-      templateId: folderTemplateId,
-      parentId: null,
-      ancestors: [],
-      path: branding.PATHS.ROOT,
-      sortOrder: 10,
-      isSystem: true,
-      fields: {},
-      sharedFields: {},
-      languages: [
-        {
-          code: 'vi',
-          unversionedFields: {},
-          versions: [{ version: 1, fields: {}, note: 'Root initialization' }],
-        },
-      ],
-    });
-  }
-
-  const branches = [
-    { name: 'content', displayName: 'Content', sortOrder: 100 },
-    { name: 'layout', displayName: 'Layout', sortOrder: 200 },
-    { name: 'media library', displayName: 'Media Library', sortOrder: 300 },
-    { name: 'templates', displayName: 'Templates', sortOrder: 400 },
-    { name: 'system', displayName: 'System', sortOrder: 500 },
-  ];
-
-  for (const b of branches) {
-    const bPath = `${branding.PATHS.ROOT}/${b.name}`;
-    let branchItem = await Item.findOne({ path: bPath });
-    if (!branchItem) {
-      await Item.create({
-        name: b.name,
-        displayName: b.displayName,
-        templateId: folderTemplateId,
-        parentId: rootNode._id,
-        ancestors: [rootNode._id],
-        path: bPath,
-        sortOrder: b.sortOrder,
-        isSystem: true,
-        fields: {},
-        sharedFields: {},
-        languages: [
-          {
-            code: 'vi',
-            unversionedFields: {},
-            versions: [{ version: 1, fields: {}, note: `${b.displayName} initialization` }],
-          },
-        ],
-      });
-    }
-  }
-
-  // 4.5 Seed Launchpad Apps
-  const LaunchpadApp = require('../models/LaunchpadApp');
-  const appsConfig = [
-    {
-      name: 'Content Editor',
-      description: 'Soạn thảo và điều hướng cây nội dung đa ngôn ngữ',
-      icon: 'ti ti-edit',
-      iconBg: 'blue',
-      group: 'Content & Media',
-      url: `/admin/content-editor?path=${encodeURIComponent(branding.PATHS.CONTENT || '/root/content')}`,
-      sortOrder: 10,
-      allowedRoles: [],
-    },
-    {
-      name: 'Media Library',
-      description: 'Quản lý tài nguyên media hình ảnh và tài liệu',
-      icon: 'ti ti-photo',
-      iconBg: 'indigo',
-      group: 'Content & Media',
-      url: '/admin/media',
-      sortOrder: 20,
-      allowedRoles: [],
-    },
-    {
-      name: 'Template Manager',
-      description: 'Thiết kế template, section và trường động',
-      icon: 'ti ti-layout-grid',
-      iconBg: 'red',
-      group: 'Control Panel & Maintenance',
-      url: `/admin/content-editor?path=${encodeURIComponent(branding.PATHS.TEMPLATES || '/root/templates')}`,
-      sortOrder: 10,
-      allowedRoles: [],
-    },
-  ];
-  for (const app of appsConfig) {
-    await LaunchpadApp.findOneAndUpdate({ name: app.name }, { $setOnInsert: app }, { upsert: true, new: true });
-  }
-
-  // 4.6 Seed Presentation System Items (Layout, Rendering, Placeholders root items)
-  const { seedPresentationData } = require('../scripts/seed-presentation-data');
-  await seedPresentationData();
+  const seedData = require('../scripts/seed-initial-data');
+  await seedData({ skipAdmin: true });
 
   console.log('  ✅ [Bước 4/8] Nạp dữ liệu nền tảng hệ thống hoàn tất.');
 }
