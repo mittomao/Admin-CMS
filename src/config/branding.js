@@ -1,49 +1,97 @@
 'use strict';
 
 /**
- * Treecraft CMS - Branding & System Path Constants (DEC-043 / Phase R1)
- * Single Source of Truth for brand naming and tree root path.
+ * Treecraft CMS - Branding & System Path Constants (DEC-043 / DEC-056)
+ * Facade Adapter: Đọc cấu hình từ sitePaths.getSiteConfig(), giữ nguyên 100% chữ ký export
+ * để đảm bảo tương thích hoàn toàn với tất cả các module đang import.
  */
 
-const ROOT_NAME = 'root';
-const ROOT_PATH = `/${ROOT_NAME}`;
+const sitePaths = require('./sitePaths');
 
-module.exports = {
+function getConfig() {
+  try {
+    return sitePaths.getSiteConfig() || {};
+  } catch {
+    return {
+      projectName: 'Treecraft',
+      rootName: 'root',
+      rootPath: '/root',
+      cloudinaryRootFolder: 'AdminCMS',
+    };
+  }
+}
+
+const branding = {
   // Brand Identity
-  PROJECT_NAME: 'Treecraft',
-  PROJECT_TITLE: 'Treecraft CMS',
-  PROJECT_DESCRIPTION: 'Treecraft - Hierarchical XM Content Management System',
+  get PROJECT_NAME() {
+    return getConfig().projectName || 'Treecraft';
+  },
+  get PROJECT_TITLE() {
+    return `${this.PROJECT_NAME} CMS`;
+  },
+  get PROJECT_DESCRIPTION() {
+    return `${this.PROJECT_NAME} - Hierarchical XM Content Management System`;
+  },
   DEFAULT_DOMAIN: 'treecraft',
   SESSION_COOKIE_NAME: 'treecraft_session_id',
 
   // Tree Root
-  ROOT_NAME,
-  ROOT_PATH,
+  get ROOT_NAME() {
+    return getConfig().rootName || 'root';
+  },
+  get ROOT_PATH() {
+    return `/${this.ROOT_NAME}`;
+  },
 
-  // Standard Tree Branches
-  PATHS: {
-    ROOT: ROOT_PATH,
-    CONTENT: `${ROOT_PATH}/content`,
-    LAYOUT: `${ROOT_PATH}/layout`,
-    LAYOUTS: `${ROOT_PATH}/layout/Layouts`,
-    PLACEHOLDERS: `${ROOT_PATH}/layout/Placeholders`,
-    RENDERINGS: `${ROOT_PATH}/layout/Renderings`,
-    DEVICES: `${ROOT_PATH}/layout/Devices`,
-    PLACEHOLDER_SETTINGS: `${ROOT_PATH}/layout/Placeholder Settings`,
-    TEMPLATES: `${ROOT_PATH}/templates`,
-    FEATURE_TEMPLATES: `${ROOT_PATH}/templates/Feature`,
-    FEATURE_COMPONENTS: `${ROOT_PATH}/templates/Feature/Components`,
-    PROJECT_TEMPLATES: `${ROOT_PATH}/templates/Project`,
-    PROJECT_PAGES: `${ROOT_PATH}/templates/Project/Pages`,
-    SYSTEM_TEMPLATES: `${ROOT_PATH}/templates/System`,
-    COMMON_TEMPLATES: `${ROOT_PATH}/templates/Common`,
-    MEDIA: `${ROOT_PATH}/media library`,
-    SYSTEM: `${ROOT_PATH}/system`,
-    SYSTEM_LANGUAGES: `${ROOT_PATH}/system/Languages`,
-    START_ITEM: `${ROOT_PATH}/content/Home`,
-    HOME: `${ROOT_PATH}/content/Home`,
+  // Standard Tree Branches (Dynamic Getters dựa trên ROOT_PATH)
+  get PATHS() {
+    const root = this.ROOT_PATH;
+    return {
+      ROOT: root,
+      CONTENT: `${root}/content`,
+      LAYOUT: `${root}/layout`,
+      LAYOUTS: `${root}/layout/Layouts`,
+      PLACEHOLDERS: `${root}/layout/Placeholders`,
+      RENDERINGS: `${root}/layout/Renderings`,
+      DEVICES: `${root}/layout/Devices`,
+      PLACEHOLDER_SETTINGS: `${root}/layout/Placeholder Settings`,
+      TEMPLATES: `${root}/templates`,
+      FEATURE_TEMPLATES: `${root}/templates/Feature`,
+      FEATURE_COMPONENTS: `${root}/templates/Feature/Components`,
+      PROJECT_TEMPLATES: `${root}/templates/Project`,
+      PROJECT_PAGES: `${root}/templates/Project/Pages`,
+      SYSTEM_TEMPLATES: `${root}/templates/System`,
+      COMMON_TEMPLATES: `${root}/templates/Common`,
+      MEDIA: `${root}/media library`,
+      SYSTEM: `${root}/system`,
+      SYSTEM_LANGUAGES: `${root}/system/Languages`,
+      START_ITEM: `${root}/content/Home`,
+      HOME: `${root}/content/Home`,
+    };
   },
 
   // Storage
-  CLOUDINARY_DEFAULT_ROOT: 'AdminCMS',
+  get CLOUDINARY_DEFAULT_ROOT() {
+    const cfg = getConfig();
+    if (typeof cfg.cloudinaryRootFolder === 'string') {
+      return cfg.cloudinaryRootFolder;
+    }
+    if (cfg.cloudinaryRootFolder && typeof cfg.cloudinaryRootFolder === 'object') {
+      return cfg.cloudinaryRootFolder.development || cfg.cloudinaryRootFolder.production || 'AdminCMS';
+    }
+    return 'AdminCMS';
+  },
+
+  getBranding() {
+    return {
+      projectName: this.PROJECT_NAME,
+      projectTitle: this.PROJECT_TITLE,
+      projectDescription: this.PROJECT_DESCRIPTION,
+      rootName: this.ROOT_NAME,
+      rootPath: this.ROOT_PATH,
+      paths: this.PATHS,
+    };
+  },
 };
+
+module.exports = branding;

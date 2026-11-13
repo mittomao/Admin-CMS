@@ -1,0 +1,13 @@
+{
+  "name": "treecraft-starter-corporate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Treecraft Site Starter - Corporate Template",
+  "scripts": {
+    "dev": "treecraft dev",
+    "start": "treecraft start",
+    "doctor": "treecraft doctor",
+    "sync": "treecraft sync",
+    "backup": "treecraft backup"
+  }
+}

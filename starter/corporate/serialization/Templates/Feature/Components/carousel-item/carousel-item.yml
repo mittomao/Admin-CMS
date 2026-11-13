@@ -1,0 +1,81 @@
+_id: 6aeae6ac0951c55f2b989c1a
+name: carousel-item
+displayName: Carousel Item
+path: /root/templates/Feature/Components/carousel-item
+template:
+  id: 6aeae250248055b9172f85eb
+  name: Template
+  path: /root/templates/System/Template
+parentId: 6aeae251248055b9172f8601
+parentPath: /root/templates/Feature/Components
+sortOrder: 200
+icon: template
+isSystem: false
+baseTemplates: []
+insertOptions: []
+sections:
+  - id: 6aeae6cd0951c55f2b989c42
+    name: Carousel Item Settings
+    sortOrder: 10
+    fields:
+      - id: 6aeae6e40951c55f2b989c49
+        name: title
+        title: title
+        type: singleLineText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 10
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+      - id: 6aeae6f40951c55f2b989c51
+        name: description
+        title: description
+        type: singleLineText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 20
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+      - id: 6aeae70c0951c55f2b989c5a
+        name: link
+        title: link
+        type: singleLineText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 30
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+standardValues: {}
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields: {}
+        neverPublish: false
+        note: Initial version
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

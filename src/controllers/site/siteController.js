@@ -7,8 +7,7 @@ const { NotFoundError } = require('../../utils/errors');
 const logger = require('../../utils/logger');
 const env = require('../../config/env');
 const branding = require('../../config/branding');
-
-const VIEWS_SITE_DIR = path.resolve(__dirname, '../../views/site');
+const sitePaths = require('../../config/sitePaths');
 
 class SiteController {
   /**
@@ -76,22 +75,36 @@ class SiteController {
    */
   async render404(req, res, message = 'Trang bạn yêu cầu không tồn tại hoặc đã bị gỡ bỏ.') {
     try {
-      const viewPath = path.resolve(VIEWS_SITE_DIR, 'errors/404.ejs');
-      const fallbackPath = path.resolve(VIEWS_SITE_DIR, '404.ejs');
-      const fileToRender = require('fs').existsSync(viewPath) ? viewPath : fallbackPath;
+      const viewsDir = sitePaths.getViewsDir();
+      const viewPath = path.resolve(viewsDir, 'errors/404.ejs');
+      const fallbackPath = path.resolve(viewsDir, '404.ejs');
+      const coreFallbackPath = path.resolve(sitePaths.getCoreAdminViewsDir(), 'errors/404.ejs');
 
-      const html = await ejs.renderFile(fileToRender, {
-        title: '404 - Trang Không Tồn Tại',
-        message,
-        url: req.path,
-        lang: 'vi',
-      });
+      let fileToRender = null;
+      if (require('fs').existsSync(viewPath)) {
+        fileToRender = viewPath;
+      } else if (require('fs').existsSync(fallbackPath)) {
+        fileToRender = fallbackPath;
+      } else if (require('fs').existsSync(coreFallbackPath)) {
+        fileToRender = coreFallbackPath;
+      }
 
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(404).send(html);
+      if (fileToRender) {
+        const html = await ejs.renderFile(fileToRender, {
+          title: '404 - Trang Không Tồn Tại',
+          message,
+          url: req.path,
+          lang: 'vi',
+        });
+
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(404).send(html);
+      }
     } catch {
-      return res.status(404).send('<h1>404 - Trang Không Tồn Tại</h1><p>Nội dung này không tồn tại trên hệ thống.</p>');
+      // Fallback below
     }
+
+    return res.status(404).send('<h1>404 - Trang Không Tồn Tại</h1><p>Nội dung này không tồn tại trên hệ thống.</p>');
   }
 
   /**
@@ -99,9 +112,19 @@ class SiteController {
    */
   async render500(req, res, err) {
     try {
-      const viewPath = path.resolve(VIEWS_SITE_DIR, 'errors/500.ejs');
+      const viewsDir = sitePaths.getViewsDir();
+      const viewPath = path.resolve(viewsDir, 'errors/500.ejs');
+      const coreFallbackPath = path.resolve(sitePaths.getCoreAdminViewsDir(), 'errors/500.ejs');
+
+      let fileToRender = null;
       if (require('fs').existsSync(viewPath)) {
-        const html = await ejs.renderFile(viewPath, {
+        fileToRender = viewPath;
+      } else if (require('fs').existsSync(coreFallbackPath)) {
+        fileToRender = coreFallbackPath;
+      }
+
+      if (fileToRender) {
+        const html = await ejs.renderFile(fileToRender, {
           title: '500 - Lỗi Máy Chủ Nội Bộ',
           message: 'Hệ thống đang gặp sự cố tạm thời khi xử lý yêu cầu của bạn.',
           error: env.isDev ? err : null,

@@ -7,6 +7,7 @@ const Template = require('../models/Template');
 const languageService = require('./languageService');
 const logger = require('../utils/logger');
 const branding = require('../config/branding');
+const sitePaths = require('../config/sitePaths');
 
 const uuidv4 = () => randomUUID();
 
@@ -70,17 +71,19 @@ const presentationService = {
       throw new ValidationError('viewPath bắt buộc phải có phần mở rộng là ".ejs".');
     }
 
-    // 3. Whitelist thư mục gốc: phải nằm dưới site/ (tương ứng src/views/site/)
+    // 3. Whitelist thư mục gốc: cho phép cả 'components/...' và legacy 'site/components/...' (DEC-056)
     const cleanPath = normalized.startsWith('/') ? normalized.substring(1) : normalized;
-    if (!cleanPath.startsWith('site/')) {
-      throw new ValidationError('viewPath bắt buộc phải nằm trong thư mục whitelist "site/" (ví dụ: site/layouts/... hoặc site/components/...).');
-    }
+    const relativeToViews = cleanPath.startsWith('site/') ? cleanPath.substring(5) : cleanPath;
 
-    // 4. Kiểm tra file tồn tại trên đĩa nếu được yêu cầu
+    // 4. Kiểm tra file tồn tại trên đĩa nếu được yêu cầu (kiểm tra trong site views)
     if (checkFileExists) {
-      const fullPath = path.join(process.cwd(), 'src', 'views', cleanPath);
-      if (!fs.existsSync(fullPath)) {
-        logger.warn(`[validateViewPath] Tệp view vật lý chưa tồn tại trên đĩa: ${fullPath}`);
+      try {
+        const fullPath = path.join(sitePaths.getViewsDir(), relativeToViews);
+        if (!fs.existsSync(fullPath)) {
+          logger.warn(`[validateViewPath] Tệp view vật lý chưa tồn tại trong site views: ${fullPath}`);
+        }
+      } catch {
+        // Nếu chưa khởi tạo site directory thì bỏ qua cảnh báo
       }
     }
 

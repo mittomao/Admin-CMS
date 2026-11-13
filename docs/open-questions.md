@@ -679,6 +679,83 @@ Tài liệu này lưu trữ danh sách 5 câu hỏi kỹ thuật / nghiệp vụ
 - **Lựa chọn B:** Xuất toàn bộ cả các system template.
 - **Lý do đề xuất:** Các template hệ thống (`/root/templates/System/*`) là bất biến và được khởi tạo tự động bởi hệ thống (`src/scripts/sync-system-templates.js`). Không đưa vào YAML hằng ngày để tránh rác diff và nguy cơ ghi đè schema hệ thống.
 
+---
+
+## CÁC CÂU HỎI CHO GIAI ĐOẠN S1 (CORE / SITE SPLIT) VÀ S2 (TREECRAFT INIT)
+
+### 6. Phương thức phân phối Core cho các dự án con (Git Submodule vs Git Clone ghim commit/tag)?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md)
+- **Lựa chọn A (Đề xuất mặc định):** Hỗ trợ linh hoạt cả Git Submodule hoặc Git Clone ghim commit/tag. Mã nguồn Core thiết kế không phụ thuộc vị trí ổ đĩa (thông qua `sitePaths.js`), sẵn sàng chuyển thành package private `@treecraft/core` trong `node_modules` khi đưa lên npm registry mà không cần sửa đổi bất kỳ dòng mã nào.
+- **Lựa chọn B:** Chỉ hỗ trợ duy nhất Git Submodule.
+- **Lý do đề xuất:** Đảm bảo tính linh hoạt tối đa cho đội ngũ phát triển hiện tại đồng thời mở đường cho tương lai đóng gói package chuẩn.
+
+---
+
+### 7. Thứ tự ưu tiên phân giải `SITE_DIR` và vị trí mặc định của thư mục `site/`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md)
+- **Lựa chọn A (Đề xuất mặc định):** Thứ tự phân giải 4 bước: (1) Tham số CLI `--site <path>` → (2) Biến môi trường `TREECRAFT_SITE_DIR` → (3) Tìm ngược từ `process.cwd()` lên các thư mục cha cho đến khi thấy `site.config.js` → (4) Thư mục `site/` nằm đồng cấp (sibling) với `core/`. Nếu không tìm thấy, throw error rõ ràng kèm gợi ý chạy `treecraft init`.
+- **Lựa chọn B:** Bắt buộc luôn phải truyền cờ `--site` trong mọi câu lệnh.
+- **Lý do đề xuất:** Trải nghiệm lập trình viên (DX) mượt mà, tự động nhận diện site khi đứng ở thư mục dự án mà không cần gõ lặp lại cờ `--site`.
+
+---
+
+### 8. Vị trí và cơ chế nạp biến môi trường (`.env*`) của dự án?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-052](decisions/DEC-052-environment-database-separation-and-dbguard.md), [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md)
+- **Lựa chọn A (Đề xuất mặc định):** Toàn bộ file môi trường (`.env`, `.env.development`, `.env.staging`, `.env.production`, `.env.example`) nằm trọn vẹn trong thư mục `site/`. Thư mục `core/` không chứa file env nào của dự án. `sitePaths.getEnvPath()` phụ trách nạp file theo `APP_ENV`.
+- **Lựa chọn B:** Giữ file `.env` ở thư mục gốc bao ngoài cả `core/` và `site/`.
+- **Lý do đề xuất:** Đảm bảo ranh giới sạch sẽ: mỗi site sở hữu toàn bộ cấu hình môi trường và bí mật của chính nó; core hoàn toàn độc lập và stateless.
+
+---
+
+### 9. Quy ước đặt tên Scope và Package cho Core trên Private NPM Registry?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md)
+- **Lựa chọn A (Đề xuất mặc định):** Đặt tên package là `@treecraft/core`. Khai báo `"bin": { "treecraft": "./bin/treecraft.js" }` và trường `"files"` trong `package.json` của core bao gồm `["src", "bin", "starter", "migrations"]`.
+- **Lựa chọn B:** Đặt tên không scope là `treecraft-cms-core`.
+- **Lý do đề xuất:** Chuẩn hóa theo namespace tổ chức `@treecraft/`, dễ mở rộng thêm các package vệ tinh sau này (ví dụ `@treecraft/cli`, `@treecraft/plugin-seo`).
+
+---
+
+### 10. Đường dẫn URL phục vụ tài nguyên tĩnh của Site (`/site/...` vs `/...`)?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md)
+- **Lựa chọn A (Đề xuất mặc định):** Phục vụ `site/public/` song song tại prefix `/site/` (cho CSS, JS, hình ảnh) và tại gốc `/` (cho các file chuẩn như `favicon.ico`, `robots.txt`). Tài nguyên tĩnh của Admin CMS core chuyển sang phục vụ riêng tại `/admin-assets/`.
+- **Lựa chọn B:** Đổi toàn bộ static site về gốc `/` và bỏ hẳn prefix `/site/`.
+- **Lý do đề xuất:** Giữ nguyên prefix `/site/` giúp không làm vỡ các đường link tĩnh đang được hardcode trong các template EJS và database hiện có.
+
+---
+
+### 11. Kế hoạch chuyển đổi cho dự án hiện tại (Migration) và các dự án mới (`treecraft init`)?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md)
+- **Lựa chọn A (Đề xuất mặc định):** Tách bạch 2 luồng:
+  - Với dự án hiện tại: Viết script di chuyển (migration script) tự động trích xuất các view site, public site, serialization sang `site/`, tạo `site.config.js`, và chuyển repo hiện tại thành cấu trúc song song `core/` + `site/`.
+  - Với các dự án mới trong tương lai: Sử dụng lệnh CLI `treecraft init <path> --starter corporate`.
+- **Lựa chọn B:** Bắt buộc dự án hiện tại phải xóa DB và chạy `treecraft init` lại từ đầu.
+- **Lý do đề xuất:** Bảo toàn 100% dữ liệu phát triển hiện có của dự án và không làm gián đoạn tiến độ các giai đoạn tiếp theo.
+
+---
+
+### 12. Bộ Starter Template mẫu ban đầu?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md)
+- **Lựa chọn A (Đề xuất mặc định):** Khởi tạo bộ mẫu `corporate` đặt tại `core/starter/corporate/`, đóng gói đầy đủ: Layout (`HomeLayout`), Components (`HeroBanner`, `Introduction`, `ImageText`), Partials (`Header`, `Footer`), Errors (`401`, `404`, `500`, `503`), CSS Tailwind compiled, file cấu hình mẫu `site.config.js`, và dữ liệu YAML serialization của trang chủ Home và trang About Us.
+- **Lựa chọn B:** Chỉ tạo một starter rỗng hoàn toàn (empty starter) không có component nào.
+- **Lý do đề xuất:** Cung cấp sẵn một website chạy được ngay sau khi `init`, giúp người dùng dễ dàng nắm bắt cách tổ chức component và template của Treecraft.
+
+---
+
+### 13. Cơ chế kiểm soát tính bất biến của Core: Cảnh báo (Warn) hay Chặn thực thi (Block) khi Core bị sửa đổi?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md)
+- **Lựa chọn A (Đề xuất mặc định):** Ở giai đoạn hiện tại (Local / Dev), lệnh `treecraft doctor` sẽ phát cảnh báo màu vàng (WARN) nếu phát hiện các file trong `core/` bị sửa đổi hoặc thiếu tính toàn vẹn (thông qua so khớp hash / git status). Không chặn cứng (BLOCK) để tránh cản trở việc hotfix, và chỉ kích hoạt chế độ chặn cứng khi chạy ở môi trường `production`.
+- **Lựa chọn B:** Chặn cứng ngay lập tức không cho server khởi động nếu core bị thay đổi.
+- **Lý do đề xuất:** Cân bằng giữa tính kỷ luật kiến trúc và sự linh hoạt trong quá trình thử nghiệm phát triển.
+
+
 
 
 

@@ -1,7 +1,7 @@
 <%
   const registry = (typeof fieldRegistry !== 'undefined' && fieldRegistry)
     ? fieldRegistry
-    : require(process.cwd() + '/src/fields').fieldRegistry;
+    : require('../../../fields').fieldRegistry;
   const handler = registry.get(field.type);
   const viewSlug = (handler && handler.viewSlug) ? handler.viewSlug : 'single-line-text';
 

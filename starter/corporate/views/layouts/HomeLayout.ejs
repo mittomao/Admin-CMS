@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= typeof direction !== 'undefined' ? direction : 'ltr' %>" class="h-full">
+<head>
+  <%- await include('../partials/head') %>
+</head>
+<body class="min-h-full flex flex-col font-sans text-slate-800 bg-white antialiased">
+  <%- await include('../partials/header') %>
+
+  <% if (typeof placeholder === 'function') { %>
+    <div class="site-header-custom-slot">
+      <%- await placeholder('header') %>
+    </div>
+  <% } %>
+
+  <main class="flex-1 w-full">
+    <% if (typeof placeholder === 'function') { %>
+      <%- await placeholder('maincontent') %>
+    <% } %>
+  </main>
+
+  <% if (typeof placeholder === 'function') { %>
+    <div class="site-footer-custom-slot">
+      <%- await placeholder('footer') %>
+    </div>
+  <% } %>
+
+  <%- await include('../partials/footer') %>
+</body>
+</html>

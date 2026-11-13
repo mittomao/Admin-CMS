@@ -1,0 +1,58 @@
+<header class="bg-slate-900 text-white shadow-md sticky top-0 z-40 transition-colors">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <a href="/" class="flex items-center gap-2.5 text-white hover:text-red-400 transition-colors">
+        <span class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center font-bold text-white shadow-sm"><i class="ti ti-trees text-lg"></i></span>
+        <span class="font-bold text-lg tracking-tight">Treecraft</span>
+      </a>
+
+      <!-- Dynamic navigation links from published children -->
+      <% const nav = navItems(); %>
+      <nav class="hidden md:flex items-center gap-4 text-sm font-medium text-slate-300">
+        <a href="/" class="hover:text-white transition-colors <%= (item && (item.path === '/root/content/Home')) ? 'text-white font-semibold underline underline-offset-4 decoration-red-500' : '' %>">
+          Trang chủ
+        </a>
+        <% if (Array.isArray(nav) && nav.length > 0) { %>
+          <% nav.forEach(n => { %>
+            <a href="<%= n.url %>" class="hover:text-white transition-colors <%= (item && item.path === n.path) ? 'text-white font-semibold underline underline-offset-4 decoration-red-500' : '' %>">
+              <%= n.displayName %>
+            </a>
+          <% }) %>
+        <% } else { %>
+          <a href="/about-us" class="hover:text-white transition-colors <%= (item && item.path && item.path.toLowerCase().includes('about')) ? 'text-white font-semibold underline underline-offset-4 decoration-red-500' : '' %>">
+            Về chúng tôi
+          </a>
+        <% } %>
+      </nav>
+    </div>
+
+    <!-- Header Right Actions & Language Switcher -->
+    <div class="flex items-center gap-3">
+      <% if (typeof availableLanguages !== 'undefined' && Array.isArray(availableLanguages) && availableLanguages.length > 0) { %>
+        <div class="flex items-center rounded-lg border border-slate-700 bg-slate-800 text-xs font-semibold overflow-hidden">
+          <% availableLanguages.forEach(al => { %>
+            <% const isCurrent = (lang && lang.toLowerCase() === al.code.toLowerCase()); %>
+            <% const targetUrl = isCurrent ? '#' : (al.isDefault ? '/' : `/${al.urlPrefix || al.code}/`); %>
+            <a href="<%= targetUrl %>" class="px-2.5 py-1 uppercase transition-colors <%= isCurrent ? 'bg-red-600 text-white font-bold' : 'text-slate-400 hover:text-white' %>" title="<%= al.displayName %>">
+              <%= al.code %>
+            </a>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="flex items-center rounded-lg border border-slate-700 bg-slate-800 text-xs font-semibold overflow-hidden">
+          <a href="<%= (lang === 'vi') ? '#' : '/' %>" class="px-2.5 py-1 <%= (lang === 'vi') ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white' %>">
+            VI
+          </a>
+          <a href="<%= (lang === 'en') ? '#' : '/en/' %>" class="px-2.5 py-1 <%= (lang === 'en') ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white' %>">
+            EN
+          </a>
+        </div>
+      <% } %>
+
+      <a href="/admin/login" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+        Quản trị CMS
+      </a>
+    </div>
+  </div>
+</header>
+

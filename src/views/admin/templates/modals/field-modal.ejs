@@ -49,7 +49,7 @@
                 <% 
                   const registry = (typeof fieldRegistry !== 'undefined' && fieldRegistry) 
                     ? fieldRegistry 
-                    : require(process.cwd() + '/src/fields').fieldRegistry;
+                    : require('../../../../fields').fieldRegistry;
                   const categories = registry.getCategories();
                   for (const [catName, fieldsList] of categories.entries()) {
                 %>

@@ -9,37 +9,49 @@
 const path = require('path');
 const fs = require('fs');
 const { getSection } = require('./serializationSections');
-
-const PROJECT_ROOT = path.resolve(__dirname, '../../');
-const DEFAULT_SERIALIZATION_DIR = path.join(PROJECT_ROOT, 'Serialization');
-
-// Forbidden directory roots that can never be set as SERIALIZATION_DIR or written to
-const FORBIDDEN_DIRS = [
-  path.join(PROJECT_ROOT, 'src'),
-  path.join(PROJECT_ROOT, 'public'),
-  path.join(PROJECT_ROOT, '.git'),
-  path.join(PROJECT_ROOT, 'node_modules'),
-  path.join(PROJECT_ROOT, 'storage/backups'),
-  path.join(PROJECT_ROOT, 'data/backups'),
-];
+const sitePaths = require('./sitePaths');
 
 // Forbidden characters in Windows file/directory names (excluding path separators and drive colon)
 const WINDOWS_INVALID_CHAR_REGEX = /[<>:"|?*]/;
 
 /**
- * Get the base serialization directory
+ * Get the base serialization directory (DEC-056: Defaults to SITE_DIR/serialization)
  * @returns {string} Absolute path to SERIALIZATION_DIR
  */
 function getSerializationDir() {
   const envDir = process.env.SERIALIZATION_DIR;
-  const resolvedDir = envDir ? path.resolve(PROJECT_ROOT, envDir) : DEFAULT_SERIALIZATION_DIR;
-
-  // Security check: cannot be project root or system root
-  if (resolvedDir === PROJECT_ROOT || resolvedDir === path.parse(resolvedDir).root) {
-    throw new Error(`[serializationPaths] SERIALIZATION_DIR cannot be root or project root: ${resolvedDir}`);
+  let resolvedDir;
+  try {
+    resolvedDir = envDir ? path.resolve(sitePaths.getSiteDir(), envDir) : sitePaths.getSerializationDir();
+  } catch {
+    resolvedDir = envDir ? path.resolve(sitePaths.getCoreDir(), envDir) : path.join(sitePaths.getCoreDir(), 'Serialization');
   }
 
-  for (const forbidden of FORBIDDEN_DIRS) {
+  const coreDir = sitePaths.getCoreDir();
+  let siteDir = null;
+  try {
+    siteDir = sitePaths.getSiteDir();
+  } catch {}
+
+  // Security check: cannot be core root or system root
+  if (resolvedDir === coreDir || (siteDir && resolvedDir === siteDir) || resolvedDir === path.parse(resolvedDir).root) {
+    throw new Error(`[serializationPaths] SERIALIZATION_DIR cannot be system root, core root, or site root: ${resolvedDir}`);
+  }
+
+  // Chặn tuyệt đối ghi vào core, hoặc các thư mục cấm
+  const forbiddenDirs = [
+    path.join(coreDir, 'src'),
+    path.join(coreDir, '.git'),
+    path.join(coreDir, 'node_modules'),
+  ];
+  if (siteDir && siteDir !== coreDir) {
+    forbiddenDirs.push(coreDir); // Nếu site tách biệt thì cấm 100% core
+    forbiddenDirs.push(path.join(siteDir, 'public'));
+    forbiddenDirs.push(path.join(siteDir, 'views'));
+    forbiddenDirs.push(path.join(siteDir, 'backups'));
+  }
+
+  for (const forbidden of forbiddenDirs) {
     if (resolvedDir === forbidden || resolvedDir.startsWith(forbidden + path.sep)) {
       throw new Error(`[serializationPaths] SERIALIZATION_DIR cannot be inside forbidden directory: ${resolvedDir}`);
     }

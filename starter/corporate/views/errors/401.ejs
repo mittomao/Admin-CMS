@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : '401 - Yêu Cầu Xác Thực' %> | Treecraft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site/css/tailwind.css">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="h-full bg-slate-50 flex items-center justify-center p-4 text-slate-800 antialiased">
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-center">
+    <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-inner">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+      </svg>
+    </div>
+    <span class="text-xs font-bold uppercase tracking-wider text-amber-600">401 - Authentication Required</span>
+    <h1 class="text-2xl font-extrabold text-slate-900 mt-2 mb-3">Yêu Cầu Xác Thực</h1>
+    <p class="text-sm text-slate-500 mb-6 leading-relaxed">
+      Trang web này đang được bảo vệ bởi xác thực Basic Authentication. Bạn cần nhập tên đăng nhập và mật khẩu hợp lệ để xem nội dung.
+    </p>
+    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600 mb-6 font-mono">
+      Khu vực: <span class="font-bold text-slate-800"><%= typeof realm !== 'undefined' ? realm : 'Treecraft' %></span>
+    </div>
+    <button onclick="window.location.reload();" class="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow transition duration-200 cursor-pointer">
+      Tải lại trang để Đăng nhập
+    </button>
+  </div>
+</body>
+</html>
+

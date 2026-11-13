@@ -1,5 +1,8 @@
+const path = require('path');
+const fs = require('fs');
 const maintenanceService = require('../services/maintenanceService');
 const branding = require('../config/branding');
+const sitePaths = require('../config/sitePaths');
 
 /**
  * Middleware handling Maintenance Mode:
@@ -40,7 +43,16 @@ async function maintenanceMiddleware(req, res, next) {
     if (!isAdminOrApi) {
       res.setHeader('Retry-After', '300');
       res.status(503);
-      return res.render('site/errors/503', {
+      const site503 = path.resolve(sitePaths.getViewsDir(), 'errors/503.ejs');
+      if (fs.existsSync(site503)) {
+        return res.render(site503, {
+          title: `Hệ thống đang bảo trì - ${branding.PROJECT_NAME}`,
+          branding,
+          retryAfterSeconds: 300,
+          layout: false,
+        });
+      }
+      return res.render('admin/errors/503', {
         title: `Hệ thống đang bảo trì - ${branding.PROJECT_NAME}`,
         branding,
         retryAfterSeconds: 300,

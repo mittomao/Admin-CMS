@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 
 const env = require('./config/env');
+const sitePaths = require('./config/sitePaths');
 const logger = require('./utils/logger');
 const { getConnectionStatus } = require('./config/db');
 const configureSession = require('./config/session');
@@ -96,12 +97,34 @@ app.use(cookieParser());
 // 4. Session Configuration
 app.use(configureSession());
 
-// 5. Static Files
-app.use(express.static(path.join(__dirname, '../public')));
+// 5. Static Files (DEC-056: Phân tách Core Admin Static & Site Static)
+app.use('/admin-assets', express.static(sitePaths.getCoreAdminPublicDir()));
+app.use(express.static(sitePaths.getCoreAdminPublicDir()));
+
+app.use('/site', (req, res, next) => {
+  try {
+    express.static(sitePaths.getPublicDir())(req, res, next);
+  } catch {
+    next();
+  }
+});
+app.use((req, res, next) => {
+  try {
+    express.static(sitePaths.getPublicDir())(req, res, next);
+  } catch {
+    next();
+  }
+});
 
 // 6. Template Engine (EJS + Express Layouts)
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+const viewDirs = [path.join(__dirname, 'views')];
+try {
+  viewDirs.push(sitePaths.getViewsDir());
+} catch {
+  // Bỏ qua nếu chưa cấu hình site directory
+}
+app.set('views', viewDirs);
 app.use(expressLayouts);
 app.set('layout', 'layouts/shell');
 app.set('layout extractScripts', true);
@@ -125,6 +148,7 @@ app.use((req, res, next) => {
   res.locals.renderIconHtml = renderIconHtml;
   res.locals.getIconUrl = getIconUrl;
   res.locals.fieldRegistry = fieldRegistry;
+  res.locals.sitePaths = sitePaths;
   next();
 });
 

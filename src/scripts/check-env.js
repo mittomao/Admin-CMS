@@ -15,8 +15,11 @@ function runCheckEnv() {
   console.log('  TREECRAFT CMS - KIỂM TRA CẤU HÌNH MÔI TRƯỜNG');
   console.log('============================================================\n');
 
-  const rootDir = process.cwd();
-  const examplePath = path.join(rootDir, '.env.example');
+  const sitePaths = require('../config/sitePaths');
+  const siteDir = sitePaths.getSiteDir();
+  const examplePath = fs.existsSync(path.join(siteDir, '.env.example'))
+    ? path.join(siteDir, '.env.example')
+    : path.join(sitePaths.getCoreDir(), '.env.example');
 
   // 1. Kiểm tra sự tồn tại của file mẫu duy nhất .env.example
   if (!fs.existsSync(examplePath)) {
@@ -30,10 +33,10 @@ function runCheckEnv() {
   console.log(`📋 Tổng số khóa cấu hình định nghĩa trong .env.example: ${exampleKeys.length} khóa.`);
 
   // 2. Kiểm tra file cấu hình chính .env
-  const mainEnvPath = path.join(rootDir, '.env');
+  const mainEnvPath = sitePaths.getEnvPath();
   if (!fs.existsSync(mainEnvPath)) {
-    console.error('❌ Chưa có file cấu hình chính ".env".');
-    console.error('   Vui lòng tạo file này bằng lệnh: cp .env.example .env');
+    console.error(`❌ Chưa có file cấu hình chính ".env" tại: ${mainEnvPath}`);
+    console.error('   Vui lòng tạo file này từ .env.example');
     process.exit(1);
   }
   console.log('✅ Tìm thấy file cấu hình chính: .env');
@@ -44,7 +47,7 @@ function runCheckEnv() {
   // 3. Kiểm tra xem có file ghi đè theo môi trường không (.env.${APP_ENV})
   const appEnv = (process.env.APP_ENV || mainConfig.APP_ENV || 'development').trim();
   const overrideFile = `.env.${appEnv}`;
-  const overridePath = path.join(rootDir, overrideFile);
+  const overridePath = sitePaths.getEnvPath(appEnv);
 
   if (fs.existsSync(overridePath)) {
     console.log(`ℹ️ Phát hiện file ghi đè môi trường: "${overrideFile}". Áp dụng layer override...`);

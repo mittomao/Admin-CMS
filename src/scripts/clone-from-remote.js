@@ -13,6 +13,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const dbGuard = require('../config/dbGuard');
+const sitePaths = require('../config/sitePaths');
 
 // Danh sách collection mặc định loại trừ khi clone
 const EXCLUDED_COLLECTIONS = ['sessions', 'rate_limits', 'cache'];
@@ -55,12 +56,12 @@ async function cloneFromRemote() {
 
   // 1. Xác định URI nguồn (từ CLI flag, từ file chỉ định, từ .env.<env>, hoặc fallback từ .env cũ)
   let sourceEnvFile = customSourceFile || `.env.${sourceEnv}`;
-  let sourceEnvPath = path.resolve(process.cwd(), sourceEnvFile);
+  let sourceEnvPath = customSourceFile ? path.resolve(sitePaths.getSiteDir(), customSourceFile) : sitePaths.getEnvPath(sourceEnv);
 
   if (!sourceUri) {
     if (!fs.existsSync(sourceEnvPath)) {
       // Kiểm tra xem có file .env cũ chứa URI Cloud không
-      const legacyPath = path.resolve(process.cwd(), '.env');
+      const legacyPath = sitePaths.getEnvPath();
       if (fs.existsSync(legacyPath)) {
         const legacyConfig = dotenv.parse(fs.readFileSync(legacyPath, 'utf8'));
         if (legacyConfig.MONGO_URI && dbGuard.classifyHost(legacyConfig.MONGO_URI) === 'remote') {
@@ -91,9 +92,9 @@ async function cloneFromRemote() {
   }
 
   // 2. Đọc cấu hình đích từ .env.development
-  const devEnvPath = path.resolve(process.cwd(), '.env.development');
+  const devEnvPath = sitePaths.getEnvPath('development');
   if (!fs.existsSync(devEnvPath)) {
-    console.error(`❌ Không tìm thấy file cấu hình đích ".env.development".`);
+    console.error(`❌ Không tìm thấy file cấu hình đích ".env.development" tại: ${devEnvPath}`);
     process.exit(1);
   }
 

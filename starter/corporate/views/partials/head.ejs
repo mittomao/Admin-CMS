@@ -1,0 +1,26 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= (fields && (fields.PageTitle || fields.HeroTitle || fields.Title)) || (item && (item.displayName || item.name)) || 'Treecraft Website' %></title>
+<% if (fields && fields.MetaDescription) { %>
+  <meta name="description" content="<%= fields.MetaDescription %>">
+<% } %>
+<link rel="canonical" href="<%= site.host ? 'http://' + site.host + (item && item.path ? item.path.replace(/^\/root\/content\/Home/i, '') || '/' : '/') : '/' %>">
+
+<!-- Open Graph SEO -->
+<meta property="og:title" content="<%= (fields && (fields.PageTitle || fields.HeroTitle || fields.Title)) || (item && (item.displayName || item.name)) || 'Treecraft Website' %>">
+<% if (fields && fields.MetaDescription) { %>
+  <meta property="og:description" content="<%= fields.MetaDescription %>">
+<% } %>
+<% if (fields && (fields.OgImage || fields.BackgroundImage || fields.Image)) { %>
+  <meta property="og:image" content="<%= imageUrl(fields.OgImage || fields.BackgroundImage || fields.Image) %>">
+<% } %>
+<meta property="og:type" content="website">
+
+<!-- Google Font: Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Modern Tailwind CSS for Site -->
+<link rel="stylesheet" href="/site/css/tailwind.css">
+

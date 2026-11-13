@@ -12,12 +12,11 @@ const logger = require('../utils/logger');
 const env = require('../config/env');
 const branding = require('../config/branding');
 const languageService = require('./languageService');
-
-const VIEWS_SITE_DIR = path.resolve(__dirname, '../views/site');
+const sitePaths = require('../config/sitePaths');
 
 class SiteRenderer {
-  constructor() {
-    this.viewsSiteDir = VIEWS_SITE_DIR;
+  get viewsSiteDir() {
+    return sitePaths.getViewsDir();
   }
 
   /**

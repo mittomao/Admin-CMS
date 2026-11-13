@@ -104,7 +104,7 @@ async function runAudit() {
 
   let seedViolations = 0;
   for (const sf of seedFiles) {
-    const fullPath = path.join(process.cwd(), sf);
+    const fullPath = path.resolve(__dirname, '../../', sf);
     if (!fs.existsSync(fullPath)) continue;
     const content = fs.readFileSync(fullPath, 'utf8');
     if (content.toLowerCase().includes('sitecore')) {

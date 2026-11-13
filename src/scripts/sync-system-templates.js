@@ -9,7 +9,8 @@
 
 const path = require('path');
 const mongoose = require('mongoose');
-require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+const sitePaths = require('../config/sitePaths');
+require('dotenv').config({ path: sitePaths.getEnvPath() });
 
 const Template = require('../models/Template');
 const Item = require('../models/Item');

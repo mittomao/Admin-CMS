@@ -3,9 +3,22 @@
   "version": "1.0.0",
   "description": "Treecraft - Hierarchical XM Content Management System",
   "main": "src/server.js",
+  "bin": {
+    "treecraft": "./bin/treecraft.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "starter",
+    "public",
+    "tailwind.admin.config.js"
+  ],
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "init": "node bin/treecraft.js init",
+    "start": "node bin/treecraft.js start",
+    "dev": "nodemon bin/treecraft.js dev",
+    "doctor": "node bin/treecraft.js doctor",
+    "where": "node bin/treecraft.js where",
     "build:css:site": "tailwindcss -c ./tailwind.site.config.js -i ./src/styles/site/main.css -o ./public/site/css/tailwind.css --minify",
     "build:css:admin": "tailwindcss -c ./tailwind.admin.config.js -i ./src/styles/admin/main.css -o ./public/css/tailwind-admin.css --minify",
     "build:css": "npm run build:css:site && npm run build:css:admin",
@@ -31,6 +44,7 @@
     "migrate": "node src/scripts/migrate-to-versions-languages.js",
     "migrate:field-ids": "node src/scripts/migrate-to-field-ids.js",
     "migrate:languages": "node src/scripts/migrate-languages-to-items.js",
+    "migrate:viewpaths": "node src/scripts/migrate-site-viewpaths.js",
     "migrate:phase-09": "node src/scripts/migrate-phase-09-recycle-bin.js",
     "recyclebin:purge-expired": "node src/scripts/purge-expired-recyclebin.js",
     "audit:prune": "node src/scripts/prune-expired-audit-logs.js",

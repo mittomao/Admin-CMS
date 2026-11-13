@@ -12,8 +12,7 @@ const basicAuthService = require('../services/basicAuthService');
 const env = require('../config/env');
 const logger = require('../utils/logger');
 const { getClientIp } = require('../utils/requestHelper');
-
-const VIEWS_SITE_DIR = path.resolve(__dirname, '../views/site');
+const sitePaths = require('../config/sitePaths');
 
 // In-Memory Brute-Force Rate Limiter Store: Map<key, { attempts, firstAttemptAt, lockedUntil }>
 const rateLimitStore = new Map();
@@ -110,10 +109,19 @@ async function send401(res, realm, req = null) {
   }
 
   try {
-    const viewPath = path.resolve(VIEWS_SITE_DIR, 'errors/401.ejs');
-    const fallbackPath = path.resolve(VIEWS_SITE_DIR, '401.ejs');
+    const viewsDir = sitePaths.getViewsDir();
+    const viewPath = path.resolve(viewsDir, 'errors/401.ejs');
+    const fallbackPath = path.resolve(viewsDir, '401.ejs');
+    const coreFallbackPath = path.resolve(sitePaths.getCoreAdminViewsDir(), 'errors/401.ejs');
     const fs = require('fs');
-    const fileToRender = fs.existsSync(viewPath) ? viewPath : (fs.existsSync(fallbackPath) ? fallbackPath : null);
+    let fileToRender = null;
+    if (fs.existsSync(viewPath)) {
+      fileToRender = viewPath;
+    } else if (fs.existsSync(fallbackPath)) {
+      fileToRender = fallbackPath;
+    } else if (fs.existsSync(coreFallbackPath)) {
+      fileToRender = coreFallbackPath;
+    }
 
     if (fileToRender) {
       const html = await ejs.renderFile(fileToRender, {
