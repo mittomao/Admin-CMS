@@ -45,6 +45,7 @@ class AuthService {
       })),
       roleNames: user.roles.map((r) => r.name),
       isAdmin: user.roles.some((r) => r.name.toLowerCase() === 'administrator'),
+      mustChangePassword: Boolean(user.mustChangePassword),
     };
 
     return { user: sessionUser };

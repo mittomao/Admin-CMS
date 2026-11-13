@@ -34,7 +34,9 @@ function getSerializationDir() {
   let siteDir = null;
   try {
     siteDir = sitePaths.getSiteDir();
-  } catch {}
+  } catch (_ignored) {
+    // Thư mục site có thể chưa được cấu hình
+  }
 
   // Security check: cannot be core root or system root
   if (resolvedDir === coreDir || (siteDir && resolvedDir === siteDir) || resolvedDir === path.parse(resolvedDir).root) {

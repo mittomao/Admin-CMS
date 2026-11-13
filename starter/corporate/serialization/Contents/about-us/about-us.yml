@@ -1,0 +1,52 @@
+_id: 6aeaccf2b200083aee5870b2
+name: about-us
+displayName: Về Chúng Tôi
+path: /root/content/about-us
+template:
+  id: 6aeb2ff1bd626a030bd90d48
+  name: about-us-page-template
+  path: /root/templates/Project/Pages/about-us-page-template
+parentId: 6aea24d8fb85fae7f0a4099d
+parentPath: /root/content
+sortOrder: 200
+icon: ti ti-info-circle
+isSystem: false
+sharedFields: {}
+presentation:
+  shared:
+    layoutId: 6aeaccf1b200083aee587065
+    renderings:
+      - uid: d01a2b3c4d5e6f7a8b9c0d2a
+        renderingId: 6aeaccf1b200083aee58706f
+        placeholderKey: maincontent
+        sortOrder: 100
+      - uid: d01a2b3c4d5e6f7a8b9c0d2b
+        renderingId: 6aeaccf1b200083aee587074
+        placeholderKey: maincontent
+        sortOrder: 200
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - version: 1
+        fields:
+          PageTitle: "Về Chúng Tôi | Giới Thiệu Treecraft"
+          Title: "Về Chúng Tôi"
+          IntroHeading: "Sứ Mệnh Xây Dựng Nền Tảng CMS Hiện Đại"
+          IntroBody: "<p>Chúng tôi phát triển hệ thống quản trị nội dung linh hoạt, chuẩn phân cấp Treecraft và hoàn toàn tự chủ trong hệ sinh thái Node.js.</p>"
+          Body: "<p>Nền tảng giúp doanh nghiệp kết xuất trang web với tốc độ cao, độ trễ tối thiểu, hỗ trợ đa ngôn ngữ và tối ưu hóa SEO tối đa.</p>"
+          MetaDescription: "Tìm hiểu về đội ngũ phát triển và sứ mệnh của giải pháp Treecraft Monolith CMS."
+        note: "Initial corporate sample about-us"
+  - code: en
+    unversionedFields: {}
+    versions:
+      - version: 1
+        fields:
+          PageTitle: "About Us | Treecraft Introduction"
+          Title: "About Us"
+          IntroHeading: "Mission to Build Modern CMS Platform"
+          IntroBody: "<p>We develop a flexible, hierarchical Treecraft-standard content management system entirely self-hosted in the Node.js ecosystem.</p>"
+          Body: "<p>The platform enables high-speed rendering with minimal latency, multi-language support, and SEO optimization.</p>"
+          MetaDescription: "Learn about the team and mission of Treecraft Monolith CMS."
+        note: "Initial english sample about-us"
+

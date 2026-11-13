@@ -1,31 +1,38 @@
 #!/usr/bin/env node
-'use strict';
 
 /**
- * Treecraft CLI Entrypoint (DEC-056)
- * Quản trị và khởi chạy hệ thống Treecraft Core & Site
+ * Treecraft CMS CLI Binary (v1.0.0)
+ * Điểm vào dòng lệnh duy nhất của hệ sinh thái Treecraft
+ * Hỗ trợ các lệnh: init, start, dev, where, doctor, db:up, db:down, db:status, seed, migrate
  */
 
 const path = require('path');
 const fs = require('fs');
+const { spawnSync } = require('child_process');
+const sitePaths = require('../src/config/sitePaths');
 
-// Phân tích tham số dòng lệnh
-const args = process.argv.slice(2);
-const command = args[0] || 'help';
+const rawArgs = process.argv.slice(2);
 
-// Xử lý cờ --site nếu có trước khi nạp các module khác
-for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--site' && i + 1 < args.length) {
-    process.env.TREECRAFT_SITE_DIR = path.resolve(args[i + 1]);
-    break;
-  }
-  if (args[i].startsWith('--site=')) {
-    process.env.TREECRAFT_SITE_DIR = path.resolve(args[i].slice(7));
-    break;
+// Trích xuất cờ toàn cục --site trước khi điều hướng lệnh
+let explicitSiteDir = null;
+const filteredArgs = [];
+for (let i = 0; i < rawArgs.length; i++) {
+  const arg = rawArgs[i];
+  if (arg === '--site' && i + 1 < rawArgs.length) {
+    explicitSiteDir = rawArgs[++i];
+  } else if (arg.startsWith('--site=')) {
+    explicitSiteDir = arg.slice(7);
+  } else {
+    filteredArgs.push(arg);
   }
 }
 
-const sitePaths = require('../src/config/sitePaths');
+if (explicitSiteDir) {
+  sitePaths.setSiteDir(explicitSiteDir);
+}
+
+const command = filteredArgs[0] || 'help';
+const args = filteredArgs;
 
 async function handleWhere() {
   console.log('\n============================================================');
@@ -40,7 +47,7 @@ async function handleWhere() {
     console.log(`Serialization   : ${sitePaths.getSerializationDir()}`);
     console.log(`Backups Dir     : ${sitePaths.getBackupsDir()}`);
     console.log(`Env File        : ${sitePaths.getEnvPath()}`);
-    
+
     const cfg = sitePaths.getSiteConfig();
     console.log(`Project Name    : ${cfg.projectName}`);
     console.log(`Root Name       : ${cfg.rootName} (${cfg.rootPath})`);
@@ -73,7 +80,10 @@ async function handleDoctor() {
   // 1. Kiểm tra Core
   const coreDir = sitePaths.getCoreDir();
   report('Thư mục Core tồn tại', fs.existsSync(coreDir), `(${coreDir})`);
-  report('Thư mục Core có src/ và views/', fs.existsSync(path.join(coreDir, 'src')) && fs.existsSync(sitePaths.getCoreAdminViewsDir()));
+  report(
+    'Thư mục Core có src/ và views/',
+    fs.existsSync(path.join(coreDir, 'src')) && fs.existsSync(sitePaths.getCoreAdminViewsDir())
+  );
   report('Thư mục Starter mẫu corporate', fs.existsSync(sitePaths.getStarterDir('corporate')));
 
   // 2. Kiểm tra Site
@@ -125,6 +135,11 @@ async function handleInit() {
   let defaultLanguage = 'vi';
   let force = false;
   let skipDb = false;
+  let dbUri = null;
+  let adminUser = 'admin';
+  let noSample = false;
+  let noPublish = false;
+  let dryRun = false;
 
   const remainingArgs = args.slice(1);
   for (let i = 0; i < remainingArgs.length; i++) {
@@ -149,10 +164,24 @@ async function handleInit() {
       defaultLanguage = remainingArgs[++i];
     } else if (a.startsWith('--lang=')) {
       defaultLanguage = a.slice(7);
+    } else if (a === '--db-uri' && i + 1 < remainingArgs.length) {
+      dbUri = remainingArgs[++i];
+    } else if (a.startsWith('--db-uri=')) {
+      dbUri = a.slice(9);
+    } else if (a === '--admin-user' && i + 1 < remainingArgs.length) {
+      adminUser = remainingArgs[++i];
+    } else if (a.startsWith('--admin-user=')) {
+      adminUser = a.slice(13);
     } else if (a === '--force' || a === '-f') {
       force = true;
     } else if (a === '--skip-db') {
       skipDb = true;
+    } else if (a === '--no-sample') {
+      noSample = true;
+    } else if (a === '--no-publish') {
+      noPublish = true;
+    } else if (a === '--dry-run') {
+      dryRun = true;
     } else if (!a.startsWith('-')) {
       targetDir = a;
     }
@@ -168,10 +197,41 @@ async function handleInit() {
       defaultLanguage,
       force,
       skipDb,
+      dbUri,
+      adminUser,
+      noSample,
+      noPublish,
+      dryRun,
     });
   } catch (err) {
     console.error(`\n❌ [treecraft init] Khởi tạo thất bại: ${err.message}\n`);
     process.exit(1);
+  }
+}
+
+function handleDbCommand(subCommand) {
+  let siteDir = null;
+  try {
+    siteDir = sitePaths.getSiteDir();
+  } catch {
+    siteDir = path.resolve('./site');
+  }
+
+  const composeFile = path.join(siteDir, 'docker-compose.dev.yml');
+  if (!fs.existsSync(composeFile)) {
+    console.error(`❌ [Treecraft CLI] Không tìm thấy file docker-compose.dev.yml tại: ${composeFile}`);
+    console.error(`   Vui lòng khởi tạo site trước bằng lệnh: treecraft init`);
+    process.exit(1);
+  }
+
+  console.log(`\n🐳 [Treecraft Docker] Thực thi "docker compose ${subCommand.join(' ')}" cho Site tại: ${siteDir}`);
+  const result = spawnSync('docker', ['compose', '-f', composeFile, ...subCommand], {
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+
+  if (result.status !== 0) {
+    process.exit(result.status || 1);
   }
 }
 
@@ -196,19 +256,35 @@ async function handleMigrate() {
   }
 }
 
+async function handleSeed() {
+  console.log('\n[Treecraft CLI] Bắt đầu khởi tạo dữ liệu mặc định (Seed Data) cho Site...');
+  try {
+    const seedData = require('../src/scripts/seed-initial-data');
+    await seedData();
+  } catch (err) {
+    console.error(`\n❌ [Treecraft CLI] Lỗi khi seed database: ${err.message}`);
+    process.exit(1);
+  }
+}
+
 function handleHelp() {
   console.log(`
 Treecraft CMS CLI (v1.0.0)
 Sử dụng: treecraft <lệnh> [tùy chọn]
 
 Các lệnh khả dụng:
-  init [thư_mục]      Khởi tạo thư mục dự án site mới từ starter mẫu (mặc định: corporate)
-                      Tùy chọn: --starter <tên>, --name <tên_site>, --db-prefix <prefix>,
-                                --lang <vi|en>, --force, --skip-db
-  start               Khởi động ứng dụng Treecraft Web & Admin Server
-  dev                 Khởi động server ở chế độ phát triển (development)
+  init [thư_mục]      Khởi tạo thư mục dự án site mới một bước từ starter mẫu (mặc định: corporate)
+                      Tùy chọn: --name <tên_site>, --db-prefix <prefix>, --lang <vi|en>,
+                                --db-uri <uri>, --admin-user <user>, --force, --skip-db,
+                                --no-sample, --no-publish, --dry-run
+  start               Khởi động ứng dụng Treecraft Web & Admin Server (Production)
+  dev                 Khởi động server ở chế độ phát triển (Development)
   where               Hiển thị chi tiết đường dẫn Core và Site đang nạp
   doctor              Chẩn đoán tính toàn vẹn giữa Core và Site
+  db:up               Khởi động container Docker MongoDB của site (up -d)
+  db:down             Dừng container Docker MongoDB của site (down)
+  db:status           Xem trạng thái container Docker MongoDB của site (ps)
+  seed                Khởi tạo dữ liệu cơ bản cho DB local (Users, Roles, Admin)
   migrate             Chạy các migration hệ thống cần thiết
   help                Hiển thị trợ giúp này
 
@@ -235,6 +311,18 @@ switch (command.toLowerCase()) {
   case 'doctor':
     handleDoctor();
     break;
+  case 'db:up':
+    handleDbCommand(['up', '-d']);
+    break;
+  case 'db:down':
+    handleDbCommand(['down']);
+    break;
+  case 'db:status':
+    handleDbCommand(['ps']);
+    break;
+  case 'seed':
+    handleSeed();
+    break;
   case 'migrate':
     handleMigrate();
     break;
@@ -248,4 +336,3 @@ switch (command.toLowerCase()) {
     handleHelp();
     process.exit(1);
 }
-

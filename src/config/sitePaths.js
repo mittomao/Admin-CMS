@@ -319,6 +319,7 @@ module.exports = {
   setSiteDir,
   resetCache,
   getSiteConfigPath,
+  getSiteConfigFile: getSiteConfigPath,
   getSiteConfig,
   getViewsDir,
   getPublicDir,

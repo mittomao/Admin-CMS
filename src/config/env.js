@@ -78,7 +78,7 @@ const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
 if (missingVars.length > 0) {
   throw new Error(
     `[Config Error] Thiếu các biến môi trường bắt buộc: ${missingVars.join(', ')}. ` +
-    `Vui lòng kiểm tra file .env hoặc ${overrideEnvFile}.`
+    `Vui lòng kiểm tra file .env hoặc ${overrideEnvPath}.`
   );
 }
 

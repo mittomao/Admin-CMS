@@ -27,6 +27,8 @@ describe('GĐ S1: Tách Core và Site (DEC-056)', () => {
 
   beforeAll(async () => {
     realSiteDir = path.join(os.tmpdir(), `treecraft-test-site-${Date.now()}`);
+    fs.mkdirSync(realSiteDir, { recursive: true });
+    fs.mkdirSync(path.join(realSiteDir, '.git'), { recursive: true });
     await initSite({
       targetDir: realSiteDir,
       name: 'Corporate Test Site',

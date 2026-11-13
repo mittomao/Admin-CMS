@@ -1,0 +1,22 @@
+_id: 6aea24d8fb85fae7f0a4099d
+name: content
+displayName: Content
+path: /root/content
+template:
+  id: 6aea24d7fb85fae7f0a40974
+  name: Folder
+  path: /root/templates/System/Folder
+parentId: 6aea24d7fb85fae7f0a40960
+parentPath: /root
+sortOrder: 100
+icon: folder
+isSystem: true
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - version: 1
+        fields: {}
+        note: Root content folder
+

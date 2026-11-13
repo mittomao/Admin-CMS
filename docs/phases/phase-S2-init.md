@@ -1,6 +1,6 @@
 ---
 phase: S2
-name: Lệnh Khởi Tạo Dự Án Mới (treecraft init)
+name: Lệnh Khởi Tạo Dự Án Mới Một Bước (treecraft init - One-Step Bootstrap)
 depends_on: [S1]
 status: Hoàn thành
 start_date: 2026-11-13
@@ -8,107 +8,141 @@ end_date: 2026-11-13
 lead: Senior Software Architect / Tech Lead
 ---
 
-# GIAI ĐOẠN S2: LỆNH KHỞI TẠO DỰ ÁN MỚI (`treecraft init`)
+# GIAI ĐOẠN S2: LỆNH KHỞI TẠO DỰ ÁN MỚI MỘT BƯỚC (`treecraft init` LÀM LẠI)
 
 ## 1. MỤC TIÊU & TỔNG QUAN
-Cung cấp lệnh CLI `treecraft init` (được gọi từ `core/bin/treecraft.js` hoặc alias npm) giúp người dùng và nhà phát triển khởi tạo một thư mục `site/` hoàn chỉnh từ một Starter Template (mặc định là `corporate`) một cách nhanh chóng, chuẩn xác và không cần can thiệp thủ công.
-Lệnh này thay thế hoàn toàn cho logic `seed:sample` cũ, thiết lập cấu trúc thư mục dự án độc lập, sinh file cấu hình `site.config.js`, các file môi trường `.env*`, nạp cấu trúc cây dữ liệu và serialization ban đầu vào cơ sở dữ liệu.
+Cung cấp lệnh CLI `treecraft init` chạy một bước duy nhất ("One-Step Bootstrap") trên một repository mới (với Core tích hợp qua Git Submodule: `git submodule add <core> core`).
+Chỉ với một câu lệnh:
+```bash
+node core/bin/treecraft.js init
+```
+Hệ thống tự động thực thi tuần tự và hoàn tất trọn vẹn:
+1. Kiểm tra tiền điều kiện (Node.js, Git repo, Core hợp lệ, Docker/Mongo local).
+2. Tạo khung thư mục `site/` từ starter `corporate` (views, public, serialization, config, .env.development, package.json, .gitignore).
+3. Tự động dựng MongoDB local qua Docker (`site/docker-compose.dev.yml`) hoặc kết nối Mongo local đang chạy.
+4. Migrate và nạp dữ liệu hệ thống (System Templates, Roles, Ngôn ngữ, System root items).
+5. Đồng bộ toàn bộ serialization YAML (`Templates → Layouts → Placeholders → Renderings → Contents`) với kiểm tra dry-run ngầm trước khi ghi thật.
+6. Sinh tài khoản Admin với mật khẩu ngẫu nhiên an toàn, chỉ in 1 lần duy nhất ra console và bắt buộc đổi ở lần đăng nhập đầu tiên.
+7. Tự động xuất bản (publish) nội dung mẫu sang Web Database để route `/` và `/about-us` hoạt động ngay lập tức.
+8. Kiểm tra cuối (mini doctor) và in bảng hướng dẫn các bước tiếp theo (`treecraft start`, URL `/admin`, lưu ý git commit).
+
+Toàn bộ quy trình có tính **Idempotent** (chạy lại an toàn, bổ sung phần thiếu mà không ghi đè dữ liệu đã chỉnh sửa), dừng ngay khi gặp lỗi ở bất kỳ bước nào kèm hướng dẫn khắc phục cụ thể.
 
 ---
 
 ## 2. BẢNG SO SÁNH HIỆN TRẠNG, THAY ĐỔI VÀ RỦI RO
 
-| Hạng mục | Hiện trạng (Trước S2) | Sau khi có lệnh `treecraft init` | Rủi ro & Giải pháp phòng ngừa |
+| Hạng mục | Hiện trạng (S2 cũ) | Sau khi làm lại S2 (One-Step Bootstrap) | Rủi ro & Giải pháp phòng ngừa |
 |:---|:---|:---|:---|
-| **Khởi tạo dự án mới** | Clone toàn bộ repo monolith, phải xóa bớt code/view cũ thủ công. | Chạy lệnh `treecraft init <tên_site> --starter corporate`. Sinh ngay thư mục `site/` hoàn chỉnh. | Rủi ro ghi đè thư mục đang có dữ liệu. Giải pháp: Kiểm tra thư mục đích, chặn ghi đè trừ khi có cờ `--force`. |
-| **Cấu hình ban đầu** | Sửa file `.env` và `branding.js` trực tiếp trong mã nguồn core. | CLI hỏi đáp tương tác (Interactive Prompts) hoặc nhận cờ để tự động sinh `site.config.js` và `.env*`. | Rủi ro cấu hình sai tên DB gây xung đột. Giải pháp: Validate tên DB, kiểm tra kết nối qua `dbGuard`. |
-| **Dữ liệu mẫu (Sample Data)** | Script `src/scripts/seed-sample-site.js` ghi trực tiếp vào DB dựa trên view trong core. | Nạp dữ liệu từ Starter thông qua cơ chế YAML Sync của Serialization. Không can thiệp DB bằng code cứng. | Rủi ro lỗi tham chiếu UUID template. Giải pháp: Đồng bộ theo thứ tự chuẩn: Template → Layout/Rendering → Content. |
-| **Script thực thi của dự án** | Phụ thuộc vào `package.json` đồ sộ của core. | `site/package.json` tối giản chỉ chứa các lệnh cơ bản: `npm start`, `npm run dev`, `npm run sync`. | Rủi ro không tìm thấy binary của core. Giải pháp: Script trỏ tương đối hoặc qua npm link / dependency. |
+| **Trải nghiệm khởi tạo** | Phải chạy `init`, sau đó chạy `seed`, cấu hình Mongo thủ công. | Đúng **1 lệnh duy nhất** `node core/bin/treecraft.js init`, mọi thứ từ file đến DB và dữ liệu mẫu sẵn sàng 100%. | Rủi ro: Docker/Mongo chưa bật. Giải pháp: Tự bật Docker Compose hoặc dùng Mongo local; thiếu thì in hướng dẫn cài đặt theo từng OS rồi dừng. |
+| **Cơ sở dữ liệu** | Phụ thuộc Docker Compose ở thư mục Core. | Sinh riêng `site/docker-compose.dev.yml` cho dự án site, hỗ trợ `treecraft db:up\|db:down\|db:status`. | Rủi ro: Xung đột port 27017. Giải pháp: Kiểm tra kết nối trước, nếu có sẵn Mongo local thì tái sử dụng; hỗ trợ `--db-uri`. |
+| **Bảo mật Admin** | Mật khẩu cố định `admin123`. | Sinh mật khẩu ngẫu nhiên mạnh (16 ký tự), chỉ in 1 lần ra console, bắt buộc đổi mật khẩu ở lần đăng nhập đầu (`mustChangePassword: true`). | Rủi ro: Mật khẩu bị lọt vào log/file. Giải pháp: Tuyệt đối không ghi ra file log, .env hay tài liệu markdown. |
+| **Tính Idempotent** | Gặp lỗi khi chạy lại trên thư mục đã có. | Tự động chuyển sang chế độ bổ sung (Incremental Mode): không ghi đè cấu trúc hay nội dung đã sửa, bù đắp phần thiếu. | Rủi ro: Ghi đè file người dùng. Giải pháp: Chỉ ghi file chưa có; hỗ trợ `--dry-run` để duyệt trước. |
+| **Độ sẵn sàng của Website** | Chạy server xong trang chủ bị lỗi nếu chưa publish. | Tự động publish nhánh `/root/content` sang Web DB; website `/` và `/about-us` trả về HTTP 200 ngay sau khi chạy `start`. | Rủi ro: Publish lỗi do thiếu rendering. Giải pháp: Sync serialization nghiêm ngặt theo đúng thứ tự topo trước khi publish. |
 
 ---
 
 ## 3. CHECKLIST CÔNG VIỆC CHI TIẾT (TASKS)
 
-- [x] **Task S2.1: Thiết kế Luồng Tương tác của Lệnh `treecraft init`**
-  - [x] Thiết kế tham số CLI:
-    - `treecraft init [targetDir]`: Đường dẫn thư mục cần tạo site (mặc định là `./site`).
-    - `--starter <name>`: Chọn starter mẫu (mặc định: `corporate`).
-    - `--name <projectName>`: Tên hiển thị của dự án (ví dụ: "My Corporate Site").
-    - `--root <rootName>`: Tên của node gốc (mặc định: "root").
-    - `--db-prefix <prefix>`: Tiền tố tên MongoDB (ví dụ: `treecraft_corporate`).
-    - `--lang <defaultLang>`: Ngôn ngữ mặc định (mặc định: `vi`).
-    - `--force`: Ghi đè nếu thư mục đích đã tồn tại.
-    - `--skip-db`: Chỉ tạo khung thư mục và file, bỏ qua bước khởi tạo cơ sở dữ liệu ban đầu.
-  - [x] Hỗ trợ chế độ hỏi đáp tương tác (Interactive Prompt) nếu người dùng chạy lệnh không kèm tham số.
+- [x] **Task S2.1: Triển khai Bước 1 — Kiểm Tra Tiền Điều Kiện (Preflight Checks)**
+  - [x] Kiểm tra Node.js phiên bản >= 20.0.0.
+  - [x] Kiểm tra đang nằm trong một Git repository (`.git` tồn tại).
+  - [x] Xác thực thư mục `core/` hợp lệ (đọc `coreApiVersion` hoặc `package.json` của Core).
+  - [x] Kiểm tra trạng thái thư mục `site/`: Chưa có thì tạo mới, đã có thì kích hoạt chế độ bổ sung (Incremental).
+  - [x] Kiểm tra tính sẵn sàng của Docker daemon hoặc MongoDB local:
+    - [x] Nếu không có cả hai: In bảng hướng dẫn cài đặt cho macOS (`brew`), Windows (`docker desktop`), Linux (`apt/systemctl`) rồi dừng lại.
+    - [x] Tuyệt đối không tự ý cài đặt phần mềm hệ thống.
 
-- [x] **Task S2.2: Triển khai Động cơ Tạo Khung Thư mục (Scaffolding Engine)**
-  - [x] Sao chép nguyên vẹn cây thư mục từ `core/starter/<starter_name>/` sang thư mục đích:
-    - `views/` (layouts, components, partials, errors)
-    - `public/` (css, js, images)
-    - `serialization/` (Templates, Layouts, Renderings, Placeholders, Contents)
-    - Tạo thư mục rỗng `backups/` và `extensions/` kèm file `.gitkeep`.
-  - [x] Thiết lập quyền hạn (permissions) chuẩn xác cho các file và thư mục được tạo ra.
+- [x] **Task S2.2: Triển khai Bước 2 — Khởi Tạo Khung Thư Mục `site/` Từ Starter `corporate`**
+  - [x] Tạo file `site.config.js`: Tên dự án mặc định lấy theo tên thư mục repository/cha, hỗ trợ ghi đè qua `--name`.
+  - [x] Sinh file `.env.development`:
+    - [x] MongoDB local URI: `mongodb://127.0.0.1:27017/${dbPrefix}_master?replicaSet=rs0`
+    - [x] `MONGO_URI_WEB=mongodb://127.0.0.1:27017/${dbPrefix}_web?replicaSet=rs0`
+    - [x] Khóa bí mật `SESSION_SECRET` và `BACKUP_ENCRYPTION_KEY` ngẫu nhiên 32 bytes Hex.
+    - [x] `CLOUDINARY_ROOT_FOLDER=${dbPrefix}_dev`.
+    - [x] Để trống khoá Cloudinary kèm cảnh báo rõ ràng.
+  - [x] Sao chép `.env.staging.example` và `.env.production.example`.
+  - [x] Sao chép toàn bộ `views/`, `public/`, `serialization/` (bao gồm `Contents/` mẫu) từ `starter/corporate/`.
+  - [x] Tạo file `site/package.json` tối thiểu và file `site/.gitignore` chuẩn.
+  - [x] Không ghi đè các file đã tồn tại nếu đang chạy ở chế độ bổ sung.
 
-- [x] **Task S2.3: Sinh File Cấu hình `site.config.js` Động**
-  - [x] Dựa trên thông tin đầu vào, render file `site.config.js` tuân thủ 100% schema đã định nghĩa ở GĐ S1:
-    - Gán `projectName`, `rootName`, `defaultLanguage`, `languages`.
-    - Sinh tên database theo chuẩn E1: `mongoDbMaster: "${dbPrefix}_master"`, `mongoDbWeb: "${dbPrefix}_web"`.
-    - Ghi nhận `starter: "corporate"` và `requiresCore: "^1.0.0"`.
-  - [x] Đảm bảo định dạng code rõ ràng, có chú thích chi tiết cho từng trường cấu hình.
+- [x] **Task S2.3: Triển khai Bước 3 — Dựng Cơ Sở Dữ Liệu MongoDB Local Cho Site**
+  - [x] Tạo template `starter/corporate/docker-compose.dev.yml` và copy sang `site/docker-compose.dev.yml`:
+    - [x] Image `mongo:8.0` (hoặc `mongo:7.0`).
+    - [x] Single-node replica set `rs0` tự động `rs.initiate()`.
+    - [x] Volume có tên: `${dbPrefix}_mongodb_data`.
+    - [x] Chỉ bind loopback interface `127.0.0.1:27017:27017`.
+    - [x] Healthcheck và cơ chế chờ container sẵn sàng với timeout (45 giây).
+  - [x] Khởi động container: `docker compose -f site/docker-compose.dev.yml up -d`.
+  - [x] Nếu Docker vắng mặt nhưng cổng 27017 đã có MongoDB local đang chạy thì tự động dùng MongoDB local đó.
+  - [x] Hỗ trợ cờ `--db-uri <uri>` để chỉ định MongoDB URI local khác; `--skip-db` để bỏ qua.
 
-- [x] **Task S2.4: Sinh Các File Môi trường `.env*` và `.env.example`**
-  - [x] Tạo file `site/.env.example` chuẩn hóa theo chuẩn GĐ E1.
-  - [x] Tạo file `site/.env` (hoặc `.env.development`) với các giá trị cấu hình khởi tạo (PORT, MONGODB_URI local, CLOUDINARY credentials trống để người dùng điền).
-  - [x] Tự động sinh `SESSION_SECRET` và `BACKUP_ENCRYPTION_KEY` ngẫu nhiên có độ dài chuẩn cryptographic (32 bytes Hex) để đảm bảo an toàn ngay từ đầu.
+- [x] **Task S2.4: Triển khai Bước 4 — Migrate & Nạp Dữ Liệu Nền Tảng (Core Seed)**
+  - [x] Nạp các Roles hệ thống: `Administrator`, `Author`, `Editor`, `Approver`.
+  - [x] Nạp ngôn ngữ mặc định (`vi`, `en`).
+  - [x] Nạp System Templates từ Core (`/root/templates/System`).
+  - [x] Khởi tạo các nhánh phân cấp hệ thống gốc (`/root`, `/root/content`, `/root/templates`, `/root/layouts`, `/root/renderings`, `/root/placeholders`, `/root/media-library`, `/root/system`).
+  - [x] Nạp ứng dụng Launchpad tiêu chuẩn.
 
-- [x] **Task S2.5: Khởi tạo Cơ sở Dữ liệu Ban đầu (Starter Sync Engine)**
-  - [x] Khởi tạo kết nối MongoDB tới database mới của site.
-  - [x] Chạy các migration nền tảng của core (khởi tạo Users, Roles, Languages, System Templates).
-  - [x] Kích hoạt đồng bộ serialization từ `site/serialization/` để nạp các Templates, Layouts, Renderings và trang mẫu ban đầu (Home, About Us).
-  - [x] Thiết lập tài khoản quản trị mặc định (`admin` / mật khẩu khởi tạo an toàn).
+- [x] **Task S2.5: Triển khai Bước 5 — Đồng Bộ Serialization YAML Theo Thứ Tự Chuẩn**
+  - [x] Bổ sung thư mục `starter/corporate/serialization/Contents/` chứa 2 trang mẫu: `home.yml` và `about-us.yml`.
+  - [x] Thứ tự đồng bộ bắt buộc: `Templates → Layouts → Placeholders → Renderings → Contents`.
+  - [x] Cơ chế Dry-run ngầm trước: Kiểm tra cú pháp YAML, dừng ngay nếu lỗi và in `file:dòng:lỗi`.
+  - [x] Ghi thật vào database: Chế độ `overwrite` cho 4 section cấu trúc, chế độ `createOnly` cho section `Contents`.
+  - [x] Kiểm tra phụ thuộc và cảnh báo nếu thiếu media Cloudinary (không dừng chương trình).
+  - [x] Hỗ trợ cờ `--no-sample` để bỏ qua sync `Contents`.
 
-- [x] **Task S2.6: Sinh `site/package.json` và Hướng dẫn Vận hành**
-  - [x] Tạo `site/package.json` nhẹ gọn với các script thuận tiện:
-    ```json
-    {
-      "name": "my-site",
-      "version": "1.0.0",
-      "private": true,
-      "scripts": {
-        "dev": "treecraft dev",
-        "start": "treecraft start",
-        "doctor": "treecraft doctor",
-        "sync": "treecraft sync",
-        "backup": "treecraft backup"
-      }
-    }
-    ```
-  - [x] Tạo file `site/README.md` tóm tắt hướng dẫn phát triển cho lập trình viên dự án.
+- [x] **Task S2.6: Triển khai Bước 6 — Sinh Tài Khoản Quản Trị Viên An Toàn**
+  - [x] Bổ sung trường `mustChangePassword: { type: Boolean, default: false }` vào `User` model.
+  - [x] Sinh mật khẩu ngẫu nhiên mạnh (16 ký tự an toàn).
+  - [x] **Chỉ in mật khẩu 1 lần duy nhất ra màn hình console** trong khung viền nổi bật; không ghi vào file log hay markdown.
+  - [x] Gán cờ `mustChangePassword: true` cho User admin; cập nhật Auth logic yêu cầu đổi mật khẩu ở lần đăng nhập đầu.
+  - [x] Hỗ trợ cờ `--admin-user <tên>` (mặc định: `admin`).
 
-- [x] **Task S2.7: Xây dựng Bộ Kiểm tra Tính Toàn Vẹn `treecraft doctor`**
-  - [x] Kiểm tra kết nối giữa Core và Site:
-    - Tìm thấy `site.config.js` hợp lệ.
-    - Kiểm tra `requiresCore` có tương thích với phiên bản Core đang chạy không.
-    - Kiểm tra sự tồn tại của các thư mục bắt buộc: `views/`, `public/`, `serialization/`, `backups/`.
-    - Kiểm tra cấu hình database trong `.env` và xác thực qua `dbGuard`.
-  - [x] In báo cáo định dạng trực quan (màu xanh cho đạt, màu đỏ kèm hướng dẫn khắc phục cho lỗi).
+- [x] **Task S2.7: Triển khai Bước 7 — Xuất Bản Nội Dung Mẫu (Automatic Publish)**
+  - [x] Trừ khi có cờ `--no-sample` hoặc `--no-publish`:
+  - [x] Kích hoạt `publishService.publishItem` để xuất bản toàn bộ nhánh `/root/content` (Home và About Us) sang Web DB (`PublishedItem`).
+  - [x] Đảm bảo route `/` và `/about-us` sẵn sàng trả về HTTP 200.
 
-- [x] **Task S2.8: Soạn Thảo Tài Liệu Hướng Dẫn `docs/guides/core-and-site.md`**
-  - [x] Biên soạn tài liệu chi tiết bằng tiếng Việt theo chuẩn 7 mục bắt buộc:
-    1. Mục đích / Khi nào sử dụng lệnh `treecraft init`.
-    2. Điều kiện tiên quyết (Node.js, MongoDB, core).
-    3. Các bước thực hiện đánh số kèm lệnh copy-paste (Windows CMD/PowerShell, Linux, macOS).
-    4. Kết quả mong đợi trên màn hình và cấu trúc thư mục sinh ra.
-    5. Cách kiểm tra thành công (chạy `treecraft doctor`, truy cập `/admin` và `/`).
-    6. Các lỗi thường gặp và cách xử lý (sai tên DB, thiếu quyền ghi, port bị chiếm).
-    7. Cảnh báo và rủi ro (lưu ý bảo mật file `.env`, không sửa mã nguồn trong `core/`).
+- [x] **Task S2.8: Triển khai Bước 8 — Kiểm Tra Cuối (Mini Doctor) & In Bảng Hướng Dẫn**
+  - [x] Kiểm tra kết nối cả hai DB Master và Web.
+  - [x] Đếm số item theo từng section trong hệ thống.
+  - [x] Kiểm tra sự tồn tại của file view EJS ứng với `viewPath` của Layout và Rendering.
+  - [x] Kiểm tra route `/` resolve được về Home Item.
+  - [x] In bảng tóm tắt trạng thái và các bước tiếp theo (`treecraft start`, URL `/admin`, lưu ý git commit).
+
+- [x] **Task S2.9: Bổ Sung Các Lệnh Phụ Trợ & Hỗ Trợ Idempotent / Dry-Run**
+  - [x] Thêm các lệnh: `treecraft db:up`, `treecraft db:down`, `treecraft db:status`.
+  - [x] Hỗ trợ cờ `--dry-run`: Liệt kê mọi việc sẽ làm mà không thay đổi bất kỳ file hay DB nào.
+  - [x] Chặn starter khác: Từ chối nếu `site.config.js` khai báo `starter` khác ngoài `corporate`.
+
+- [x] **Task S2.10: Cập Nhật Tài Liệu Hướng Dẫn `docs/guides/core-and-site.md`**
+  - [x] Cập nhật toàn diện tài liệu theo đúng mẫu 7 mục:
+    - [x] 1. Mục đích / Khi nào sử dụng.
+    - [x] 2. Điều kiện trước (Node.js, Docker/Mongo).
+    - [x] 3. Các bước thực hiện đánh số kèm lệnh copy-paste (Windows CMD/PowerShell, Linux, macOS).
+    - [x] 4. Kết quả mong đợi trên màn hình và cấu trúc thư mục sinh ra.
+    - [x] 5. Cách kiểm tra thành công (doctor, truy cập `/admin` và `/`).
+    - [x] 6. Các lỗi thường gặp và cách xử lý (port bị chiếm, Docker chưa chạy, thiếu Git repo).
+    - [x] 7. Cảnh báo và rủi ro (bảo mật file `.env`, mật khẩu admin, cấm sửa mã nguồn `core/`).
+
+- [x] **Task S2.11: Xây Dựng Bộ Kiểm Thử Toàn Diện (Jest Tests)**
+  - [x] Test kiểm tra tiền điều kiện (dừng đúng khi thiếu Node, thiếu repo, thiếu Docker/Mongo).
+  - [x] Test chạy lại an toàn không ghi đè (Idempotent).
+  - [x] Test cờ `--dry-run` không ghi file và DB.
+  - [x] Test đồng bộ serialization theo đúng thứ tự topo và dừng khi YAML lỗi.
+  - [x] Test mật khẩu admin không lọt vào log, cờ `mustChangePassword: true`.
+  - [x] Test publish mẫu làm cho `/` và `/about-us` trả về 200.
+  - [x] Test từ chối khi starter không phải `corporate`.
+  - [x] Test E2E: Khởi tạo từ repo trống + core → init → start → kiểm tra `/`, `/about-us`, `/admin`.
 
 ---
 
-## 4. DEFINITION OF DONE (DOD) CHO GIAI ĐOẠN S2
-1. **Lệnh `treecraft init` Hoạt Động Trơn Tru:** Chạy `treecraft init` sinh ra một thư mục `site/` hoàn chỉnh, hợp lệ, có đầy đủ cấu hình và tài nguyên starter.
-2. **Khởi động Thành công Dự án Mới:** Chạy `treecraft start` trỏ vào thư mục site vừa khởi tạo, website công khai hiển thị đầy đủ giao diện trang chủ mẫu tại `/`, trang Admin CMS truy cập bình thường tại `/admin`.
-3. **Core Bất Biến 100%:** Trong suốt quá trình chạy `treecraft init`, không có bất kỳ file nào trong thư mục `core/` bị thay đổi, ghi đè hoặc sinh mới.
-4. **Báo cáo Doctor Xanh 100%:** Lệnh `treecraft doctor` chạy trên site mới báo cáo tất cả các chỉ số đều đạt chuẩn (PASSED).
-5. **Tài liệu Hướng dẫn Hoàn thiện:** File `docs/guides/core-and-site.md` đã sẵn sàng, đầy đủ 7 mục theo quy định.
-
+## 4. DEFINITION OF DONE (DOD) CHO GIAI ĐOẠN S2 (LÀM LẠI)
+1. **Một Lệnh Duy Nhất Hoàn Tất:** Chạy `node core/bin/treecraft.js init` trên một repository mới hoàn tất trọn vẹn 8 bước mà không cần thêm bất kỳ thao tác thủ công nào.
+2. **Khởi Động Thành Công Ngay Lập Tức:** Chạy `treecraft start` hoặc `npm start`, website công khai trả về HTTP 200 tại `/` và `/about-us`, giao diện Admin CMS đăng nhập được tại `/admin` bằng mật khẩu ngẫu nhiên đã in.
+3. **Bảo Mật Cao Cấp:** Mật khẩu admin không ghi ra log/file, admin bắt buộc phải đổi mật khẩu ở lần đăng nhập đầu tiên.
+4. **Core Bất Biến 100%:** Quá trình `init` không tạo hay sửa bất kỳ file nào trong thư mục `core/`.
+5. **Idempotent & Xử Lý Lỗi Tường Minh:** Chạy lại nhiều lần không sinh lỗi, không ghi đè; lỗi ở bước nào dừng tại đó kèm hướng dẫn xử lý rõ ràng.
+6. **Bộ Lệnh Phụ Trợ Đầy Đủ:** Các lệnh `db:up`, `db:down`, `db:status`, `doctor`, `where`, `start`, `dev` hoạt động ổn định trên cả macOS, Linux, Windows.
+7. **Tài Liệu & Test Đầy Đủ:** `docs/guides/core-and-site.md` đủ 7 mục; 100% test Jest vượt qua; ESLint không có lỗi; tuyệt đối không commit git theo quy tắc.

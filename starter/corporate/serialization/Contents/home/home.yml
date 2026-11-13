@@ -1,0 +1,52 @@
+_id: 6aeaccf2b200083aee5870b1
+name: home
+displayName: Trang Chủ
+path: /root/content/home
+template:
+  id: 6aeaccf2b200083aee58709e
+  name: Home
+  path: /root/templates/Project/Pages/Home
+parentId: 6aea24d8fb85fae7f0a4099d
+parentPath: /root/content
+sortOrder: 100
+icon: ti ti-home
+isSystem: false
+sharedFields: {}
+presentation:
+  shared:
+    layoutId: 6aeaccf1b200083aee587065
+    renderings:
+      - uid: c01a2b3c4d5e6f7a8b9c0d1e
+        renderingId: 6aeaccf1b200083aee58706a
+        placeholderKey: maincontent
+        sortOrder: 100
+      - uid: c01a2b3c4d5e6f7a8b9c0d1f
+        renderingId: 6aeaccf1b200083aee58706f
+        placeholderKey: maincontent
+        sortOrder: 200
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - version: 1
+        fields:
+          PageTitle: "Trang Chủ | Treecraft Experience Platform"
+          HeroTitle: "Trải Nghiệm Quản Trị Nội Dung Đỉnh Cao"
+          HeroDescription: "<p>Hệ thống Monolithic CMS kết xuất <strong>100% Server-Side EJS</strong> cực nhanh, an toàn và tối ưu hóa SEO vượt trội.</p>"
+          IntroHeading: "Chào Mừng Đến Với Hệ Thống Treecraft Monolith"
+          IntroBody: "<p>Treecraft tách biệt hoàn hảo giữa không gian soạn thảo biên tập viên (Master Store) và hạ tầng phân phối công khai siêu tốc (Web Store). Mọi trang web được dựng từ các thành phần linh hoạt, phân cấp và có khả năng mở rộng không giới hạn.</p>"
+          MetaDescription: "Trang chủ website chính thức chạy trên Treecraft CMS Node.js Monolith kết xuất SSR EJS."
+        note: "Initial corporate sample home"
+  - code: en
+    unversionedFields: {}
+    versions:
+      - version: 1
+        fields:
+          PageTitle: "Home | Treecraft Experience Platform"
+          HeroTitle: "Ultimate Enterprise Content Management"
+          HeroDescription: "<p>High-performance Monolithic CMS rendered <strong>100% Server-Side with EJS</strong>, secure, and SEO optimized.</p>"
+          IntroHeading: "Welcome to Treecraft Monolith Architecture"
+          IntroBody: "<p>Treecraft decouples authoring environments (Master Store) from blazing-fast delivery environments (Web Store). Pages are composed of flexible, reusable rendering components.</p>"
+          MetaDescription: "Official homepage running on Treecraft Monolithic CMS."
+        note: "Initial english sample home"
+

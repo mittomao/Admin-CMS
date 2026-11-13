@@ -40,89 +40,152 @@ my-project/
 
 ---
 
-## 2. LỆNH `treecraft init` (KHỞI TẠO DỰ ÁN MỚI)
+## 2. LỆNH `treecraft init` (KHỞI TẠO DỰ ÁN MỚI MỘT BƯỚC — ONE-STEP BOOTSTRAP)
 
 ### (1) Mục đích / Khi nào sử dụng
-Sử dụng khi bạn muốn tạo một dự án website mới từ một Starter Template có sẵn (mặc định là `corporate`). Lệnh này tự động tạo cấu trúc thư mục `site/` hoàn chỉnh, sinh file cấu hình `site.config.js`, các file môi trường `.env*` với khóa bí mật bảo mật ngẫu nhiên, sinh `package.json` tối giản và nạp dữ liệu serialization ban đầu.
+Sử dụng khi bạn muốn tạo một dự án website mới trong một repository riêng biệt với Core được tích hợp qua Git Submodule (`git submodule add <core-repo> core`). 
+Lệnh này thực hiện cơ chế **"One-Step Bootstrap"** hoàn toàn tự động qua 8 bước:
+1. Kiểm tra tiền điều kiện (Node.js >= 20, Git repo, Core hợp lệ, Docker/MongoDB).
+2. Tạo khung thư mục `site/` từ starter `corporate` (`site.config.js`, `.env.development`, `views/`, `public/`, `serialization/`, `package.json`, `.gitignore`, `docker-compose.dev.yml`).
+3. Dựng MongoDB local qua Docker (`site/docker-compose.dev.yml`) hoặc kết nối Mongo local đang chạy.
+4. Migrate & Seed dữ liệu nền tảng hệ thống (System Templates, Roles, Ngôn ngữ, System root items).
+5. Đồng bộ toàn bộ serialization YAML (`Templates → Layouts → Placeholders → Renderings → Contents`) với kiểm tra dry-run ngầm trước khi ghi thật.
+6. Sinh tài khoản Admin với mật khẩu ngẫu nhiên an toàn, chỉ in 1 lần duy nhất ra màn hình và bắt buộc đổi ở lần đăng nhập đầu tiên (`mustChangePassword: true`).
+7. Tự động xuất bản (publish) trang Home và About Us sang Web Database để route `/` và `/about-us` hoạt động ngay lập tức.
+8. Kiểm tra cuối (mini doctor) và in bảng hướng dẫn vận hành chi tiết.
+
+Lệnh có tính **Idempotent** (chạy lại an toàn không ghi đè dữ liệu đã tùy biến) và hỗ trợ cờ `--dry-run` để kiểm tra trước.
 
 ### (2) Điều kiện trước
-- Node.js phiên bản 20+ LTS hoặc 22+.
-- Có quyền truy cập vào binary Core (`core/bin/treecraft.js` hoặc package `treecraft`).
-- Đã cài đặt MongoDB (Docker local MongoDB) nếu muốn tự động đồng bộ schema DB lúc init.
+- **Node.js:** Phiên bản `v20.0.0 LTS` trở lên (khuyên dùng v20 hoặc v22).
+- **Git:** Đã khởi tạo Git repository tại thư mục dự án (`git init`) và đã kéo Core qua submodule (`git submodule add <core-url> core`).
+- **Cơ sở dữ liệu:** Đã cài đặt một trong hai:
+  - **Docker Desktop** (khuyên dùng): Docker daemon đang chạy.
+  - **MongoDB local** độc lập: Đang lắng nghe trên cổng mặc định `27017`.
+  *(Nếu thiếu cả hai, lệnh init sẽ in bảng hướng dẫn cài đặt theo từng hệ điều hành rồi dừng lại; hệ thống không tự ý cài đặt phần mềm ngoài)*.
 
 ### (3) Các bước thực hiện đánh số với lệnh copy được
 
-#### Bước 1: Mở terminal tại thư mục bạn muốn đặt dự án
+#### Bước 1: Mở terminal tại thư mục gốc repository dự án của bạn
 
-#### Bước 2: Chạy lệnh khởi tạo
+#### Bước 2: Chạy lệnh khởi tạo một bước
 
 - **macOS / Linux:**
   ```bash
-  # Khởi tạo site mặc định tại ./site từ starter corporate:
-  node bin/treecraft.js init ./site --name "My Corporate Portal"
+  # Khởi tạo mặc định một bước đầy đủ:
+  node core/bin/treecraft.js init
 
-  # Khởi tạo dự án vào một thư mục bất kỳ kèm prefix database riêng:
-  node bin/treecraft.js init /path/to/my-new-site --name "Alpha Corp" --db-prefix "alpha_corp"
+  # Tùy biến tên website và tiền tố database:
+  node core/bin/treecraft.js init --name "Celphones Portal" --db-prefix "celphones"
 
-  # Bỏ qua bước kết nối DB (chỉ tạo khung thư mục và file cấu hình):
-  node bin/treecraft.js init ./site --name "My Site" --skip-db
+  # Chỉ định tài khoản admin riêng:
+  node core/bin/treecraft.js init --name "Alpha Corp" --admin-user "superadmin"
+
+  # Chạy thử nghiệm an toàn không ghi đĩa/DB (Dry-Run):
+  node core/bin/treecraft.js init --dry-run
+
+  # Bỏ qua nạp nội dung mẫu (chỉ nạp cấu trúc):
+  node core/bin/treecraft.js init --no-sample
+
+  # Bỏ qua bước kết nối cơ sở dữ liệu:
+  node core/bin/treecraft.js init --skip-db
   ```
 
-- **Windows (PowerShell / Command Prompt):**
+- **Windows (PowerShell):**
   ```powershell
-  # PowerShell:
-  node .\bin\treecraft.js init .\site --name "My Corporate Portal"
+  # Khởi tạo mặc định:
+  node .\core\bin\treecraft.js init
 
-  # CMD:
-  node bin\treecraft.js init .\site --name "My Corporate Portal"
+  # Tùy biến tên dự án:
+  node .\core\bin\treecraft.js init --name "Celphones Portal" --db-prefix "celphones"
+  ```
+
+- **Windows (Command Prompt / CMD):**
+  ```cmd
+  node core\bin\treecraft.js init --name "Celphones Portal" --db-prefix "celphones"
   ```
 
 ### (4) Kết quả mong đợi
-Terminal hiển thị tiến trình tạo khung thư mục và thông báo thành công:
+Màn hình console hiển thị tiến trình 8 bước với biểu tượng trạng thái rõ ràng, kết thúc bằng bảng tóm tắt và hộp mật khẩu Admin bảo mật:
 ```text
-🚀 [treecraft init] Đang khởi tạo dự án mới: "My Corporate Portal"...
-📁 Thư mục đích: /path/to/my-project/site
-📦 Starter mẫu : corporate
-  ├── Sao chép views EJS...
-  ├── Sao chép tài nguyên tĩnh public/...
-  ├── Sao chép dữ liệu đồng bộ serialization/...
-  ├── Sinh file cấu hình site.config.js...
-  ├── Sinh file cấu hình môi trường (.env, .env.development, .env.example)...
-  ├── Sinh package.json cho dự án Site...
-  ├── Sinh tài liệu hướng dẫn README.md...
+🚀 [treecraft init] Bắt đầu khởi tạo dự án: "Celphones Portal"...
+📁 Thư mục đích : /path/to/my-project/site
+📦 Starter mẫu  : corporate
+
+  🔍 [Bước 1/8] Kiểm tra tiền điều kiện hệ thống (Preflight Checks)...
+  ✅ [Bước 1/8] Tiền điều kiện hợp lệ (Node.js, Git, Core, Docker/Mongo).
+  📁 [Bước 2/8] Khởi tạo khung thư mục site/ từ starter corporate ...
+  ✅ [Bước 2/8] Khung thư mục và tệp cấu hình đã sẵn sàng.
+  🐳 [Bước 3/8] Thiết lập cơ sở dữ liệu MongoDB Local...
+  ✅ [Bước 3/8] Kết nối MongoDB thành công.
+  🌱 [Bước 4/8] Khởi tạo dữ liệu nền tảng hệ thống (Core Migration & Seeds)...
+  ✅ [Bước 4/8] Nạp dữ liệu nền tảng hệ thống hoàn tất.
+  📦 [Bước 5/8] Đồng bộ hóa Serialization YAML (Templates → Layouts → Placeholders → Renderings → Contents)...
+  ✅ [Bước 5/8] Đồng bộ cấu trúc và nội dung mẫu hoàn tất.
+  🔑 [Bước 6/8] Thiết lập tài khoản quản trị viên Admin...
+  🚀 [Bước 7/8] Xuất bản (Publish) nội dung mẫu sang Web Store...
+  ✅ [Bước 7/8] Đã xuất bản trang Home và About Us sang Web DB.
+  🩺 [Bước 8/8] Kiểm tra chẩn đoán tính toàn vẹn (Mini Doctor)...
 
 ============================================================
-🎉 KHỞI TẠO DỰ ÁN SITE THÀNH CÔNG: "My Corporate Portal"!
+🎉 KHỞI TẠO DỰ ÁN SITE THÀNH CÔNG: "Celphones Portal"!
 ============================================================
+📊 Thống kê tài nguyên đã nạp vào CMS:
+   - Templates   : 12 mục
+   - Layouts     : 2 mục
+   - Renderings  : 5 mục
+   - Contents    : 3 mục (Home, About Us)
 
-Các bước tiếp theo:
-  1. Di chuyển vào thư mục dự án: cd site
-  2. Kiểm tra tính toàn vẹn:      treecraft doctor --site ./site
-  3. Khởi động server:            treecraft dev --site ./site
+┌────────────────────────────────────────────────────────────┐
+│ 🔐 TÀI KHOẢN QUẢN TRỊ VIÊN CMS (CHỈ HIỂN THỊ MỘT LẦN)      │
+│ Tên đăng nhập: admin                                       │
+│ Mật khẩu     : k9Ax7M2pL9qW4zRt                            │
+│ Lưu ý        : Bạn bắt buộc phải đổi mật khẩu ở lần đăng   │
+│                nhập đầu tiên tại: /admin                   │
+└────────────────────────────────────────────────────────────┘
+
+👉 Các bước tiếp theo:
+   1. Di chuyển vào thư mục dự án: cd site
+   2. Khởi chạy máy chủ phát triển: node core/bin/treecraft.js dev
+   3. Truy cập website công khai:  http://localhost:3000/
+   4. Đăng nhập trang quản trị:    http://localhost:3000/admin
+
+⚠️  LƯU Ý QUẢN TRỊ MÃ NGUỒN GIT:
+   - Hãy commit toàn bộ thư mục site/ vào kho mã nguồn của bạn.
+   - TUYỆT ĐỐI KHÔNG commit các file chứa mật khẩu bí mật: .env, .env.development
 ```
 
 ### (5) Cách kiểm tra thành công
-1. Chạy lệnh chẩn đoán `treecraft doctor`:
-   ```bash
-   node bin/treecraft.js doctor --site ./site
-   ```
-   Kết quả phải hiển thị `10 bài kiểm tra đạt, 0 bài kiểm tra thất bại`.
-2. Kiểm tra các file đã được sinh đầy đủ:
-   - `site/site.config.js` chứa đúng `projectName`, `rootName: "root"`, tên DB.
-   - `site/.env.development` chứa `SESSION_SECRET` và `BACKUP_ENCRYPTION_KEY` 64 ký tự hex.
-   - `site/views/layouts/HomeLayout.ejs` đã có sẵn.
+1. **Kiểm tra Website Công Khai:**
+   - Chạy lệnh: `node core/bin/treecraft.js dev`
+   - Mở trình duyệt truy cập: `http://localhost:3000/` và `http://localhost:3000/about-us`.
+   - Cả hai trang đều phải tải nhanh và trả về mã HTTP 200.
+2. **Kiểm tra Trang Quản Trị (Admin CMS):**
+   - Mở trình duyệt truy cập: `http://localhost:3000/admin`.
+   - Đăng nhập bằng tài khoản `admin` và mật khẩu ngẫu nhiên vừa được in ra.
+   - Xác nhận hệ thống yêu cầu đổi mật khẩu ở lần đăng nhập đầu tiên.
+3. **Kiểm tra Chẩn Đoán Tính Toàn Vẹn:**
+   - Chạy lệnh: `node core/bin/treecraft.js doctor`
+   - Kết quả phải đạt 10/10 bài kiểm tra (10 PASSED, 0 FAILED).
 
 ### (6) Lỗi thường gặp và cách xử lý
-- **Lỗi `Thư mục đích "..." đã tồn tại và không rỗng`:**
-  - *Nguyên nhân:* Thư mục đích đã có chứa file từ trước, hệ thống chặn ghi đè để bảo vệ dữ liệu.
-  - *Cách xử lý:* Thêm cờ `--force` nếu bạn chắc chắn muốn ghi đè: `node bin/treecraft.js init ./site --force`.
-- **Lỗi `Không tìm thấy Starter Template "..."`:**
-  - *Nguyên nhân:* Tên starter truyền qua cờ `--starter` không tồn tại trong thư mục `core/starter/`.
-  - *Cách xử lý:* Dùng starter mặc định `--starter corporate`.
+- **Lỗi `[Preflight Error] Thư mục hiện tại không nằm trong một Git repository`:**
+  - *Nguyên nhân:* Thư mục dự án chưa khởi tạo Git.
+  - *Cách xử lý:* Chạy lệnh `git init` tại thư mục dự án rồi chạy lại lệnh `init`.
+- **Lỗi `[Preflight Error] Không tìm thấy Docker hoặc dịch vụ MongoDB local đang hoạt động`:**
+  - *Nguyên nhân:* Docker daemon chưa được bật và máy tính chưa chạy MongoDB.
+  - *Cách xử lý:* Bật ứng dụng Docker Desktop trên máy tính của bạn, hoặc khởi động service MongoDB local (`brew services start mongodb-community` trên macOS hoặc `sudo systemctl start mongod` trên Linux).
+- **Lỗi `Starter "..." không được hỗ trợ`:**
+  - *Nguyên nhân:* Cung cấp tên starter khác ngoài starter chuẩn `corporate`.
+  - *Cách xử lý:* Bỏ cờ `--starter` để sử dụng mặc định starter `corporate`.
+- **Lỗi xung đột cổng 27017:**
+  - *Nguyên nhân:* Một container MongoDB của dự án khác đang chiếm cổng 27017.
+  - *Cách xử lý:* Chạy lệnh `treecraft db:down` ở thư mục dự án cũ, hoặc truyền cờ `--db-uri <uri>` để trỏ tới database khác.
 
 ### (7) Cảnh báo và rủi ro
-- Tuyệt đối không lưu mật khẩu hoặc secret key vào `site.config.js`; các thông tin này phải nằm trong file `site/.env` hoặc `site/.env.development`.
-- Không chỉnh sửa file bên trong `core/`; mọi tùy biến giao diện và template đều thực hiện trong thư mục `site/`.
+- **Bảo Mật Mật Khẩu Admin:** Mật khẩu ngẫu nhiên chỉ xuất hiện duy nhất 1 lần trên màn hình console khi chạy lệnh `init`. Hãy lưu lại ngay và đổi mật khẩu khi đăng nhập lần đầu. Mật khẩu không bao giờ được ghi ra bất kỳ file log nào.
+- **Bảo Vệ Biến Môi Trường:** Thư mục `site/.gitignore` đã tự động chặn các file `.env` và `.env.*`. Tuyệt đối không xóa bỏ quy tắc này hoặc đưa file `.env.development` lên kho mã nguồn Git công khai.
+- **Tính Bất Biến Của Core:** Không bao giờ sửa đổi code trong thư mục `core/`. Mọi mã nguồn EJS, CSS, script và dữ liệu riêng phải đặt hoàn toàn trong thư mục `site/`.
 
 ---
 

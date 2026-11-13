@@ -65,7 +65,7 @@ flowchart TD
 | **K1** | Sao Lưu & Phục Hồi Database (Backup & Restore) | **Hoàn thành** | 0, 1, 5.1, 7, 8, 8.1, 9, 10, 11 | [`phase-K1-backup-restore.md`](./phase-K1-backup-restore.md) | 2026-11-10 | 2026-11-10 | Dual-Engine mongodump/NDJSON, AES-256-GCM, SHA-256, Safe Restore 2 modes, Chế độ bảo trì 503, Retention & Scheduler, DEC-051 |
 | **E1** | Tách Môi Trường Database (Local / Cloud) & dbGuard | **Hoàn thành** | 0, 1, 5.1, 7, 8, 8.1, 9, 10, 11, K1 | [`phase-E1-environments.md`](./phase-E1-environments.md) | 2026-11-10 | 2026-11-10 | Tách Mongo local Docker cho dev, cloud cho staging/prod, dbGuard chốt chặn an toàn, DB test tạm _tmp_*, DEC-052 |
 | **S1** | Tách Core và Site (Core Đọc Từ Site) | **Hoàn thành** | 0 → 11, L1, F1-F3, K1, E1 | [`phase-S1-core-site-split.md`](./phase-S1-core-site-split.md) | 2026-11-13 | 2026-11-13 | Tách core bất biến và site dự án, sitePaths, site.config.js, core read-only, CLI treecraft, DEC-056 |
-| **S2** | Lệnh Khởi Tạo Dự Án Mới (treecraft init) | **Hoàn thành** | S1 | [`phase-S2-init.md`](./phase-S2-init.md) | 2026-11-13 | 2026-11-13 | Lệnh CLI treecraft init tạo site mới từ starter corporate, sinh site.config.js, nạp serialization mẫu, doctor |
+| **S2** | Lệnh Khởi Tạo Dự Án Mới Một Bước (`treecraft init` Làm lại) | **Hoàn thành** | S1 | [`phase-S2-init.md`](./phase-S2-init.md) | 2026-11-13 | 2026-11-13 | Lệnh CLI treecraft init 1 bước dựng site, Docker Mongo, sync YAML topo, admin an toàn in 1 lần, publish mẫu, DEC-057 |
 | **12** | Hoàn thiện, Bảo mật, E2E SSR Test & Docker | **Chưa bắt đầu** | 0 → 11, L1, K1, E1, S1, S2 | [`phase-12-hardening.md`](./phase-12-hardening.md) | - | - | E2E test luồng Page -> Template -> Presentation -> Publish -> Site Renderer EJS |
 
 ---
