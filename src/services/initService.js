@@ -13,7 +13,6 @@ const path = require('path');
 const crypto = require('crypto');
 const net = require('net');
 const { execSync, spawnSync } = require('child_process');
-const mongoose = require('mongoose');
 
 const sitePaths = require('../config/sitePaths');
 const dbGuard = require('../config/dbGuard');
@@ -177,7 +176,30 @@ async function step1_CheckPreflight(targetDir, options = {}) {
     );
   }
 
-  // 1.4 Kiểm tra Starter và quy tắc Single Starter
+  // 1.4 Kiểm tra dependencies của Core (node_modules)
+  let hasMongoose = false;
+  try {
+    require.resolve('mongoose', { paths: [coreDir] });
+    hasMongoose = true;
+  } catch {
+    hasMongoose = false;
+  }
+
+  if (!hasMongoose && !options.skipDb && !options.dryRun) {
+    console.log('  📦 [Preflight] Phát hiện Core chưa được cài đặt node_modules.');
+    console.log('     Đang tự động chạy "npm install" trong thư mục Core...');
+    try {
+      execSync('npm install', { cwd: coreDir, stdio: 'inherit' });
+      console.log('  ✅ [Preflight] Đã cài đặt xong dependencies cho Core.');
+    } catch (npmErr) {
+      throw new Error(
+        `[Preflight Error] Không thể tự động chạy "npm install" trong thư mục Core: ${npmErr.message}\n` +
+        `  Cách xử lý: Vui lòng mở terminal tại thư mục Core và chạy: cd core && npm install`
+      );
+    }
+  }
+
+  // 1.5 Kiểm tra Starter và quy tắc Single Starter
   const starterName = options.starter || 'corporate';
   if (starterName !== 'corporate') {
     throw new Error(
@@ -186,7 +208,7 @@ async function step1_CheckPreflight(targetDir, options = {}) {
     );
   }
 
-  // 1.5 Kiểm tra Docker daemon hoặc MongoDB local (trừ khi có --skip-db)
+  // 1.6 Kiểm tra Docker daemon hoặc MongoDB local (trừ khi có --skip-db)
   if (!options.skipDb) {
     const isDockerUp = checkDockerAvailable();
     const isMongoPortOpen = await checkPortOpen('127.0.0.1', 27017);
@@ -466,6 +488,7 @@ async function step3_BootstrapLocalMongo(targetDir, options = {}) {
   }
 
   // Kết nối thử qua Mongoose với chốt chặn an toàn dbGuard
+  const mongoose = require('mongoose');
   const mongoUri = options.dbUri || `mongodb://127.0.0.1:27017/${options.dbPrefix}_master?replicaSet=rs0`;
   dbGuard.assertSafeFor('destructive', {
     uri: mongoUri,
