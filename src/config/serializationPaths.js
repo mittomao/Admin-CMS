@@ -11,6 +11,9 @@ const fs = require('fs');
 const { getSection } = require('./serializationSections');
 const sitePaths = require('./sitePaths');
 
+const PROJECT_ROOT = sitePaths.getCoreDir();
+const DEFAULT_SERIALIZATION_DIR = path.join(sitePaths.getCoreDir(), 'Serialization');
+
 // Forbidden characters in Windows file/directory names (excluding path separators and drive colon)
 const WINDOWS_INVALID_CHAR_REGEX = /[<>:"|?*]/;
 

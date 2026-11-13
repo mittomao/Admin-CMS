@@ -18,11 +18,25 @@ const { execSync } = require('child_process');
 const sitePaths = require('../src/config/sitePaths');
 const { validateSiteConfig } = require('../src/config/siteConfigSchema');
 const branding = require('../src/config/branding');
+const { initSite } = require('../src/services/initService');
 
 describe('GĐ S1: Tách Core và Site (DEC-056)', () => {
   const originalEnv = { ...process.env };
   const realCoreDir = sitePaths.getCoreDir();
-  const realSiteDir = path.join(realCoreDir, 'site');
+  let realSiteDir;
+
+  beforeAll(async () => {
+    realSiteDir = path.join(os.tmpdir(), `treecraft-test-site-${Date.now()}`);
+    await initSite({
+      targetDir: realSiteDir,
+      name: 'Corporate Test Site',
+      skipDb: true,
+    });
+  });
+
+  afterAll(() => {
+    fs.rmSync(realSiteDir, { recursive: true, force: true });
+  });
 
   afterEach(() => {
     process.env = { ...originalEnv };
