@@ -236,13 +236,15 @@ function handleDbCommand(subCommand) {
 }
 
 async function handleStart() {
-  require('../src/server');
+  const { startServer } = require('../src/server');
+  await startServer();
 }
 
 async function handleDev() {
   process.env.NODE_ENV = 'development';
   process.env.APP_ENV = process.env.APP_ENV || 'development';
-  require('../src/server');
+  const { startServer } = require('../src/server');
+  await startServer();
 }
 
 async function handleMigrate() {

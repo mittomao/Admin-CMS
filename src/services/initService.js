@@ -344,9 +344,9 @@ module.exports = {
 # ------------------------------------------------------------------------------
 APP_ENV=development
 NODE_ENV=development
-PORT=3000
+PORT=4000
 APP_NAME=${JSON.stringify(options.projectName)}
-APP_URL=http://localhost:3000
+APP_URL=http://localhost:4000
 
 # Cơ sở dữ liệu MongoDB Local Docker (DEC-052 / DEC-057)
 MONGO_URI=${mongoUri}
@@ -756,8 +756,8 @@ async function step8_RunDoctorAndPrintSummary(targetDir, adminCreds, options = {
   console.log(`   1. Khởi chạy máy chủ phát triển (tại thư mục gốc repo):`);
   console.log(`      node core/bin/treecraft.js dev`);
   console.log(`      (Hoặc nếu đang đứng trong thư mục site/: node ../core/bin/treecraft.js dev)`);
-  console.log(`   2. Truy cập website công khai:  http://localhost:3000/`);
-  console.log(`   3. Đăng nhập trang quản trị:    http://localhost:3000/admin`);
+  console.log(`   2. Truy cập website công khai:  http://localhost:4000/`);
+  console.log(`   3. Đăng nhập trang quản trị:    http://localhost:4000/admin`);
   console.log(`\n⚠️  LƯU Ý QUẢN TRỊ MÃ NGUỒN GIT:`);
   console.log(`   - Hãy commit toàn bộ thư mục site/ vào kho mã nguồn của bạn.`);
   console.log(`   - TUYỆT ĐỐI KHÔNG commit các file chứa mật khẩu bí mật: .env, .env.development\n`);
