@@ -1,0 +1,1793 @@
+{
+  "version": "1.0.0",
+  "description": "Treecraft Corporate Starter - Full Content Tree & Templates Backup",
+  "generatedAt": "2026-11-16T06:40:23.546Z",
+  "counts": {
+    "templates": 25,
+    "items": 35
+  },
+  "templates": [
+    {
+      "_id": "6aeae250248055b9172f85eb",
+      "name": "Template",
+      "displayName": "Template",
+      "path": "/root/templates/System/Template",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85e7",
+      "name": "Template Folder",
+      "displayName": "Template Folder",
+      "path": "/root/templates/System/Template Folder",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85ec",
+      "name": "Folder",
+      "displayName": "Folder",
+      "path": "/root/templates/System/Folder",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85ed",
+      "name": "Layout",
+      "displayName": "Layout",
+      "path": "/root/templates/System/Layout",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85ee",
+      "name": "Layout Folder",
+      "displayName": "Layout Folder",
+      "path": "/root/templates/System/Layout Folder",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85ef",
+      "name": "Rendering",
+      "displayName": "Rendering",
+      "path": "/root/templates/System/Rendering",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85f0",
+      "name": "Rendering Folder",
+      "displayName": "Rendering Folder",
+      "path": "/root/templates/System/Rendering Folder",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85f1",
+      "name": "Placeholder",
+      "displayName": "Placeholder",
+      "path": "/root/templates/System/Placeholder",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85f2",
+      "name": "Placeholder Folder",
+      "displayName": "Placeholder Folder",
+      "path": "/root/templates/System/Placeholder Folder",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85e8",
+      "name": "Standard Template",
+      "displayName": "Standard Template",
+      "path": "/root/templates/System/Standard Template",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85f3",
+      "name": "Media Folder",
+      "displayName": "Media Folder",
+      "path": "/root/templates/System/Media Folder",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85f4",
+      "name": "Image",
+      "displayName": "Image",
+      "path": "/root/templates/System/Image",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeae250248055b9172f85f5",
+      "name": "File",
+      "displayName": "File",
+      "path": "/root/templates/System/File",
+      "isSystem": true,
+      "sections": []
+    },
+    {
+      "_id": "6aeaccf1b200083aee58706a",
+      "name": "HeroBanner",
+      "displayName": "Hero Banner",
+      "path": "/root/layout/Renderings/HeroBanner",
+      "icon": "rendering",
+      "description": "Template dữ liệu cho component HeroBanner",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [
+        {
+          "id": "6aeaccf2b200083aee587087",
+          "name": "Hero Data",
+          "sortOrder": 100,
+          "fields": [
+            {
+              "id": "6aeaccf2b200083aee587088",
+              "name": "HeroTitle",
+              "title": "Hero Title",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 10,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587089",
+              "name": "HeroDescription",
+              "title": "Hero Description",
+              "type": "richText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 20,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee58708a",
+              "name": "BackgroundImage",
+              "title": "Background Image",
+              "type": "image",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 30,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            }
+          ]
+        }
+      ],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeaccf1b200083aee587074",
+      "name": "ImageText",
+      "displayName": "Image Text",
+      "path": "/root/layout/Renderings/ImageText",
+      "icon": "rendering",
+      "description": "Template dữ liệu cho component ImageText",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [
+        {
+          "id": "6aeaccf2b200083aee587094",
+          "name": "Content Data",
+          "sortOrder": 100,
+          "fields": [
+            {
+              "id": "6aeaccf2b200083aee587095",
+              "name": "Image",
+              "title": "Illustration Image",
+              "type": "image",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 10,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587096",
+              "name": "Title",
+              "title": "Title",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 20,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587097",
+              "name": "Body",
+              "title": "Body Content",
+              "type": "richText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 30,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587098",
+              "name": "Alignment",
+              "title": "Image Alignment (left/right)",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "left",
+              "shared": false,
+              "sortOrder": 40,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            }
+          ]
+        }
+      ],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeaccf1b200083aee58706f",
+      "name": "Introduction",
+      "displayName": "Introduction",
+      "path": "/root/layout/Renderings/Introduction",
+      "icon": "rendering",
+      "description": "Template dữ liệu cho component Introduction",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [
+        {
+          "id": "6aeaccf2b200083aee58708e",
+          "name": "Intro Data",
+          "sortOrder": 100,
+          "fields": [
+            {
+              "id": "6aeaccf2b200083aee58708f",
+              "name": "IntroHeading",
+              "title": "Introduction Heading",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 10,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587090",
+              "name": "IntroBody",
+              "title": "Introduction Body",
+              "type": "richText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 20,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            }
+          ]
+        }
+      ],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeaccf2b200083aee587086",
+      "name": "HeroBanner",
+      "displayName": "Hero Banner Component",
+      "path": "/root/templates/Feature/Components/HeroBanner",
+      "icon": "ti ti-ad-2",
+      "description": "Template dữ liệu cho component HeroBanner",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [
+        {
+          "id": "6aeaccf2b200083aee587087",
+          "name": "Hero Data",
+          "sortOrder": 100,
+          "fields": [
+            {
+              "id": "6aeaccf2b200083aee587088",
+              "name": "HeroTitle",
+              "title": "Hero Title",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 10,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587089",
+              "name": "HeroDescription",
+              "title": "Hero Description",
+              "type": "richText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 20,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee58708a",
+              "name": "BackgroundImage",
+              "title": "Background Image",
+              "type": "image",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 30,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            }
+          ]
+        }
+      ],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeaccf2b200083aee587093",
+      "name": "ImageText",
+      "displayName": "Image & Text Component",
+      "path": "/root/templates/Feature/Components/ImageText",
+      "icon": "ti ti-photo",
+      "description": "Template dữ liệu cho component ImageText",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [
+        {
+          "id": "6aeaccf2b200083aee587094",
+          "name": "Content Data",
+          "sortOrder": 100,
+          "fields": [
+            {
+              "id": "6aeaccf2b200083aee587095",
+              "name": "Image",
+              "title": "Illustration Image",
+              "type": "image",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 10,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587096",
+              "name": "Title",
+              "title": "Title",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 20,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587097",
+              "name": "Body",
+              "title": "Body Content",
+              "type": "richText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 30,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587098",
+              "name": "Alignment",
+              "title": "Image Alignment (left/right)",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "left",
+              "shared": false,
+              "sortOrder": 40,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            }
+          ]
+        }
+      ],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeaccf2b200083aee58708d",
+      "name": "Introduction",
+      "displayName": "Introduction Component",
+      "path": "/root/templates/Feature/Components/Introduction",
+      "icon": "ti ti-file-description",
+      "description": "Template dữ liệu cho component Introduction",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [
+        {
+          "id": "6aeaccf2b200083aee58708e",
+          "name": "Intro Data",
+          "sortOrder": 100,
+          "fields": [
+            {
+              "id": "6aeaccf2b200083aee58708f",
+              "name": "IntroHeading",
+              "title": "Introduction Heading",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 10,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeaccf2b200083aee587090",
+              "name": "IntroBody",
+              "title": "Introduction Body",
+              "type": "richText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 20,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            }
+          ]
+        }
+      ],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeae6ac0951c55f2b989c1a",
+      "name": "carousel-item",
+      "displayName": "Carousel Item",
+      "path": "/root/templates/Feature/Components/carousel-item",
+      "icon": "template",
+      "description": "",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [
+        {
+          "id": "6aeae6cd0951c55f2b989c42",
+          "name": "Carousel Item Settings",
+          "sortOrder": 10,
+          "fields": [
+            {
+              "id": "6aeae6e40951c55f2b989c49",
+              "name": "title",
+              "title": "title",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 10,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeae6f40951c55f2b989c51",
+              "name": "description",
+              "title": "description",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 20,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            },
+            {
+              "id": "6aeae70c0951c55f2b989c5a",
+              "name": "link",
+              "title": "link",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 30,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            }
+          ]
+        }
+      ],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeb2e83bd626a030bd90b87",
+      "name": "dining-listing-page",
+      "displayName": "Dining Listing Page",
+      "path": "/root/templates/Feature/Components/dining-listing-page",
+      "icon": "ti ti-file-text",
+      "description": "",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [
+        {
+          "id": "6aeb2e96bd626a030bd90ba1",
+          "name": "Config",
+          "sortOrder": 10,
+          "fields": [
+            {
+              "id": "6aeb2ec9bd626a030bd90baf",
+              "name": "link",
+              "title": "link",
+              "type": "singleLineText",
+              "source": "",
+              "required": false,
+              "defaultValue": "",
+              "shared": false,
+              "sortOrder": 10,
+              "unversioned": false,
+              "helpText": "",
+              "validation": {},
+              "visibility": {},
+              "permissions": {},
+              "layout": {},
+              "config": {}
+            }
+          ]
+        }
+      ],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeafdd9eb146b460df856bb",
+      "name": "offer-item",
+      "displayName": "Offer Item",
+      "path": "/root/templates/Feature/Components/offer-item",
+      "icon": "template",
+      "description": "",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeaccf2b200083aee58709e",
+      "name": "Home",
+      "displayName": "Home Page Template",
+      "path": "/root/templates/Project/Pages/Home",
+      "icon": "ti ti-home",
+      "description": "Page Template cho Trang Chủ",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [],
+      "standardValues": {}
+    },
+    {
+      "_id": "6aeb2ff1bd626a030bd90d48",
+      "name": "about-us-page-template",
+      "displayName": "About Us Page Template",
+      "path": "/root/templates/Project/Pages/about-us-page-template",
+      "icon": "ti ti-file-text",
+      "description": "",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [],
+      "sections": [],
+      "standardValues": {}
+    },
+    {
+      "_id": "6ae95cc6b1e541e051fd413e",
+      "name": "Folder",
+      "displayName": "Folder",
+      "path": "/root/templates/common/Folder",
+      "icon": "folder",
+      "description": "A structural folder item to organize other items",
+      "isSystem": false,
+      "baseTemplates": [],
+      "insertOptions": [
+        {
+          "id": "6ae95cc6b1e541e051fd413e",
+          "name": "Folder",
+          "path": "/root/templates/common/Folder"
+        }
+      ],
+      "sections": [
+        {
+          "id": "6ae997c689e14ebb6dc365bb",
+          "name": "Item Info",
+          "sortOrder": 10,
+          "fields": []
+        }
+      ],
+      "standardValues": {}
+    }
+  ],
+  "items": [
+    {
+      "_id": "6ae95cc6b1e541e051fd4162",
+      "name": "root",
+      "displayName": "root",
+      "path": "/root",
+      "templateId": "6aeae250248055b9172f85ec",
+      "parentId": null,
+      "ancestors": [],
+      "sortOrder": 10,
+      "languages": [
+        {
+          "code": "vi",
+          "versions": [
+            {
+              "version": 1,
+              "fields": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "6aea24d8fb85fae7f0a4099d",
+      "name": "content",
+      "displayName": "Content",
+      "path": "/root/content",
+      "templateId": "6aea24d7fb85fae7f0a40974",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "sortOrder": 100,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "version": 1,
+              "fields": {},
+              "note": "Root content folder"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162"
+      ]
+    },
+    {
+      "_id": "6aea24d7fb85fae7f0a409a8",
+      "name": "layout",
+      "displayName": "Layout",
+      "path": "/root/layout",
+      "templateId": "6aeae250248055b9172f85ec",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162"
+      ],
+      "sortOrder": 200,
+      "languages": [
+        {
+          "code": "vi",
+          "versions": [
+            {
+              "version": 1,
+              "fields": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "6ae95cc6b1e541e051fd416c",
+      "name": "media library",
+      "displayName": "Media Library",
+      "path": "/root/media library",
+      "templateId": "6aeae250248055b9172f85f3",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162"
+      ],
+      "sortOrder": 300,
+      "languages": [
+        {
+          "code": "vi",
+          "versions": [
+            {
+              "version": 1,
+              "fields": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "6ae95cc6b1e541e051fd416b",
+      "name": "templates",
+      "displayName": "Templates",
+      "path": "/root/templates",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "sortOrder": 400,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162"
+      ]
+    },
+    {
+      "_id": "6ae95cc6b1e541e051fd416d",
+      "name": "system",
+      "displayName": "System",
+      "path": "/root/system",
+      "templateId": "6aeae250248055b9172f85ec",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162"
+      ],
+      "sortOrder": 500,
+      "languages": [
+        {
+          "code": "vi",
+          "versions": [
+            {
+              "version": 1,
+              "fields": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "6ae95cc6b1e541e051fd416e",
+      "name": "Banners",
+      "displayName": "Banners",
+      "path": "/root/media library/Banners",
+      "templateId": "6aeae250248055b9172f85f3",
+      "parentId": "6ae95cc6b1e541e051fd416c",
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416c"
+      ],
+      "sortOrder": 100,
+      "languages": [
+        {
+          "code": "vi",
+          "versions": [
+            {
+              "version": 1,
+              "fields": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "6ae95cc6b1e541e051fd416f",
+      "name": "Editor Uploads",
+      "displayName": "Editor Uploads",
+      "path": "/root/media library/Editor Uploads",
+      "templateId": "6aeae250248055b9172f85f3",
+      "parentId": "6ae95cc6b1e541e051fd416c",
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416c"
+      ],
+      "sortOrder": 200,
+      "languages": [
+        {
+          "code": "vi",
+          "versions": [
+            {
+              "version": 1,
+              "fields": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee5870b2",
+      "name": "about-us",
+      "displayName": "Về Chúng Tôi",
+      "path": "/root/content/about-us",
+      "templateId": "6aeb2ff1bd626a030bd90d48",
+      "parentId": "6aea24d8fb85fae7f0a4099d",
+      "sortOrder": 200,
+      "icon": "ti ti-info-circle",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "version": 1,
+              "fields": {
+                "PageTitle": "Về Chúng Tôi | Giới Thiệu Treecraft",
+                "Title": "Về Chúng Tôi",
+                "IntroHeading": "Sứ Mệnh Xây Dựng Nền Tảng CMS Hiện Đại",
+                "IntroBody": "<p>Chúng tôi phát triển hệ thống quản trị nội dung linh hoạt, chuẩn phân cấp Treecraft và hoàn toàn tự chủ trong hệ sinh thái Node.js.</p>",
+                "Body": "<p>Nền tảng giúp doanh nghiệp kết xuất trang web với tốc độ cao, độ trễ tối thiểu, hỗ trợ đa ngôn ngữ và tối ưu hóa SEO tối đa.</p>",
+                "MetaDescription": "Tìm hiểu về đội ngũ phát triển và sứ mệnh của giải pháp Treecraft Monolith CMS."
+              },
+              "note": "Initial corporate sample about-us"
+            }
+          ]
+        },
+        {
+          "code": "en",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "version": 1,
+              "fields": {
+                "PageTitle": "About Us | Treecraft Introduction",
+                "Title": "About Us",
+                "IntroHeading": "Mission to Build Modern CMS Platform",
+                "IntroBody": "<p>We develop a flexible, hierarchical Treecraft-standard content management system entirely self-hosted in the Node.js ecosystem.</p>",
+                "Body": "<p>The platform enables high-speed rendering with minimal latency, multi-language support, and SEO optimization.</p>",
+                "MetaDescription": "Learn about the team and mission of Treecraft Monolith CMS."
+              },
+              "note": "Initial english sample about-us"
+            }
+          ]
+        }
+      ],
+      "presentation": {
+        "shared": {
+          "layoutId": "6aeaccf1b200083aee587065",
+          "renderings": [
+            {
+              "uid": "d01a2b3c4d5e6f7a8b9c0d2a",
+              "renderingId": "6aeaccf1b200083aee58706f",
+              "placeholderKey": "maincontent",
+              "sortOrder": 100
+            },
+            {
+              "uid": "d01a2b3c4d5e6f7a8b9c0d2b",
+              "renderingId": "6aeaccf1b200083aee587074",
+              "placeholderKey": "maincontent",
+              "sortOrder": 200
+            }
+          ],
+          "devices": []
+        },
+        "final": []
+      },
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d8fb85fae7f0a4099d"
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee5870b1",
+      "name": "home",
+      "displayName": "Trang Chủ",
+      "path": "/root/content/home",
+      "templateId": "6aeaccf2b200083aee58709e",
+      "parentId": "6aea24d8fb85fae7f0a4099d",
+      "sortOrder": 100,
+      "icon": "ti ti-home",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "version": 1,
+              "fields": {
+                "PageTitle": "Trang Chủ | Treecraft Experience Platform",
+                "HeroTitle": "Trải Nghiệm Quản Trị Nội Dung Đỉnh Cao",
+                "HeroDescription": "<p>Hệ thống Monolithic CMS kết xuất <strong>100% Server-Side EJS</strong> cực nhanh, an toàn và tối ưu hóa SEO vượt trội.</p>",
+                "IntroHeading": "Chào Mừng Đến Với Hệ Thống Treecraft Monolith",
+                "IntroBody": "<p>Treecraft tách biệt hoàn hảo giữa không gian soạn thảo biên tập viên (Master Store) và hạ tầng phân phối công khai siêu tốc (Web Store). Mọi trang web được dựng từ các thành phần linh hoạt, phân cấp và có khả năng mở rộng không giới hạn.</p>",
+                "MetaDescription": "Trang chủ website chính thức chạy trên Treecraft CMS Node.js Monolith kết xuất SSR EJS."
+              },
+              "note": "Initial corporate sample home"
+            }
+          ]
+        },
+        {
+          "code": "en",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "version": 1,
+              "fields": {
+                "PageTitle": "Home | Treecraft Experience Platform",
+                "HeroTitle": "Ultimate Enterprise Content Management",
+                "HeroDescription": "<p>High-performance Monolithic CMS rendered <strong>100% Server-Side with EJS</strong>, secure, and SEO optimized.</p>",
+                "IntroHeading": "Welcome to Treecraft Monolith Architecture",
+                "IntroBody": "<p>Treecraft decouples authoring environments (Master Store) from blazing-fast delivery environments (Web Store). Pages are composed of flexible, reusable rendering components.</p>",
+                "MetaDescription": "Official homepage running on Treecraft Monolithic CMS."
+              },
+              "note": "Initial english sample home"
+            }
+          ]
+        }
+      ],
+      "presentation": {
+        "shared": {
+          "layoutId": "6aeaccf1b200083aee587065",
+          "renderings": [
+            {
+              "uid": "c01a2b3c4d5e6f7a8b9c0d1e",
+              "renderingId": "6aeaccf1b200083aee58706a",
+              "placeholderKey": "maincontent",
+              "sortOrder": 100
+            },
+            {
+              "uid": "c01a2b3c4d5e6f7a8b9c0d1f",
+              "renderingId": "6aeaccf1b200083aee58706f",
+              "placeholderKey": "maincontent",
+              "sortOrder": 200
+            }
+          ],
+          "devices": []
+        },
+        "final": []
+      },
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d8fb85fae7f0a4099d"
+      ]
+    },
+    {
+      "_id": "6aea24d8fb85fae7f0a409ad",
+      "name": "Layouts",
+      "displayName": "Layouts",
+      "path": "/root/layout/Layouts",
+      "templateId": "6aea24d7fb85fae7f0a40977",
+      "parentId": "6aea24d7fb85fae7f0a409a8",
+      "sortOrder": 100,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8"
+      ]
+    },
+    {
+      "_id": "6aeaccf1b200083aee58705e",
+      "name": "Placeholders",
+      "displayName": "Placeholders",
+      "path": "/root/layout/Placeholders",
+      "templateId": "6aeaccf0b200083aee587033",
+      "parentId": "6aea24d7fb85fae7f0a409a8",
+      "sortOrder": 200,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8"
+      ]
+    },
+    {
+      "_id": "6aea24d8fb85fae7f0a409b2",
+      "name": "Renderings",
+      "displayName": "Renderings",
+      "path": "/root/layout/Renderings",
+      "templateId": "6aea24d7fb85fae7f0a4097c",
+      "parentId": "6aea24d7fb85fae7f0a409a8",
+      "sortOrder": 300,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8"
+      ]
+    },
+    {
+      "_id": "6aeae251248055b9172f85fa",
+      "name": "Feature",
+      "displayName": "Feature",
+      "path": "/root/templates/Feature",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6ae95cc6b1e541e051fd416b",
+      "sortOrder": 300,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b"
+      ]
+    },
+    {
+      "_id": "6aeae251248055b9172f8607",
+      "name": "Project",
+      "displayName": "Project",
+      "path": "/root/templates/Project",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6ae95cc6b1e541e051fd416b",
+      "sortOrder": 400,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b"
+      ]
+    },
+    {
+      "_id": "6aeaf46de620d879bafc23d2",
+      "name": "common",
+      "displayName": "Common",
+      "path": "/root/templates/common",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6ae95cc6b1e541e051fd416b",
+      "sortOrder": 100,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "Initial version",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b"
+      ]
+    },
+    {
+      "_id": "6aeaccf1b200083aee587065",
+      "name": "HomeLayout",
+      "displayName": "Home Layout",
+      "path": "/root/layout/Layouts/HomeLayout",
+      "templateId": "6aea24d7fb85fae7f0a4098a",
+      "parentId": "6aea24d8fb85fae7f0a409ad",
+      "sortOrder": 100,
+      "icon": "layout",
+      "sharedFields": {
+        "viewPath": "site/layouts/HomeLayout.ejs"
+      },
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8",
+        "6aea24d8fb85fae7f0a409ad"
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee587083",
+      "name": "footer",
+      "displayName": "Footer",
+      "path": "/root/layout/Placeholders/footer",
+      "templateId": "6aeaccf0b200083aee587041",
+      "parentId": "6aeaccf1b200083aee58705e",
+      "sortOrder": 300,
+      "icon": "placeholder",
+      "sharedFields": {
+        "description": "Phần chân trang web",
+        "allowedRenderings": "",
+        "placeholderKey": "footer"
+      },
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8",
+        "6aeaccf1b200083aee58705e"
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee587079",
+      "name": "header",
+      "displayName": "Header",
+      "path": "/root/layout/Placeholders/header",
+      "templateId": "6aeaccf0b200083aee587041",
+      "parentId": "6aeaccf1b200083aee58705e",
+      "sortOrder": 100,
+      "icon": "placeholder",
+      "sharedFields": {
+        "description": "Phần đầu trang web",
+        "allowedRenderings": "",
+        "placeholderKey": "header"
+      },
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8",
+        "6aeaccf1b200083aee58705e"
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee58707e",
+      "name": "maincontent",
+      "displayName": "Main Content",
+      "path": "/root/layout/Placeholders/maincontent",
+      "templateId": "6aeaccf0b200083aee587041",
+      "parentId": "6aeaccf1b200083aee58705e",
+      "sortOrder": 200,
+      "icon": "placeholder",
+      "sharedFields": {
+        "description": "Nội dung chính giữa trang web",
+        "allowedRenderings": "6aeaccf1b200083aee58706a,6aeaccf1b200083aee58706f,6aeaccf1b200083aee587074",
+        "placeholderKey": "maincontent"
+      },
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8",
+        "6aeaccf1b200083aee58705e"
+      ]
+    },
+    {
+      "_id": "6aeaccf1b200083aee58706a",
+      "name": "HeroBanner",
+      "displayName": "Hero Banner",
+      "path": "/root/layout/Renderings/HeroBanner",
+      "templateId": "6aea24d7fb85fae7f0a40992",
+      "parentId": "6aea24d8fb85fae7f0a409b2",
+      "sortOrder": 100,
+      "icon": "rendering",
+      "sharedFields": {
+        "icon": "ti ti-ad-2",
+        "componentTemplate": "6aeaccf2b200083aee587086",
+        "viewPath": "site/components/HeroBanner.ejs"
+      },
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {
+                "6aead5f71823c2a61434aae1": "site/components/HeroBanner.ejs",
+                "6aead5f71823c2a61434aae2": "6aeaccf2b200083aee587086",
+                "6aead5f71823c2a61434aae3": "",
+                "6aead5f71823c2a61434aae4": "ti ti-ad-2"
+              },
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8",
+        "6aea24d8fb85fae7f0a409b2"
+      ]
+    },
+    {
+      "_id": "6aeaccf1b200083aee587074",
+      "name": "ImageText",
+      "displayName": "Image Text",
+      "path": "/root/layout/Renderings/ImageText",
+      "templateId": "6aea24d7fb85fae7f0a40992",
+      "parentId": "6aea24d8fb85fae7f0a409b2",
+      "sortOrder": 300,
+      "icon": "rendering",
+      "sharedFields": {
+        "icon": "ti ti-photo",
+        "componentTemplate": "6aeaccf2b200083aee587093",
+        "viewPath": "site/components/ImageText.ejs"
+      },
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8",
+        "6aea24d8fb85fae7f0a409b2"
+      ]
+    },
+    {
+      "_id": "6aeaccf1b200083aee58706f",
+      "name": "Introduction",
+      "displayName": "Introduction",
+      "path": "/root/layout/Renderings/Introduction",
+      "templateId": "6aea24d7fb85fae7f0a40992",
+      "parentId": "6aea24d8fb85fae7f0a409b2",
+      "sortOrder": 200,
+      "icon": "rendering",
+      "sharedFields": {
+        "icon": "ti ti-file-description",
+        "componentTemplate": "6aeaccf2b200083aee58708d",
+        "viewPath": "site/components/Introduction.ejs"
+      },
+      "languages": [],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8",
+        "6aea24d8fb85fae7f0a409b2"
+      ]
+    },
+    {
+      "_id": "6aeae7350951c55f2b989c7c",
+      "name": "carousel",
+      "displayName": "Carousel",
+      "path": "/root/layout/Renderings/carousel",
+      "templateId": "6aea24d7fb85fae7f0a40992",
+      "parentId": "6aea24d8fb85fae7f0a409b2",
+      "sortOrder": 400,
+      "icon": "rendering",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {
+                "6aead5f71823c2a61434aae1": "site/components/CarouselItem.ejs",
+                "6aead5f71823c2a61434aae2": "6aeae6ac0951c55f2b989c1a",
+                "6aead5f71823c2a61434aae3": "",
+                "6aead5f71823c2a61434aae4": "ti ti-box"
+              },
+              "neverPublish": false,
+              "note": "Initial version",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6aea24d7fb85fae7f0a409a8",
+        "6aea24d8fb85fae7f0a409b2"
+      ]
+    },
+    {
+      "_id": "6aeae251248055b9172f8601",
+      "name": "Components",
+      "displayName": "Components",
+      "path": "/root/templates/Feature/Components",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6aeae251248055b9172f85fa",
+      "sortOrder": 100,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f85fa"
+      ]
+    },
+    {
+      "_id": "6aeae251248055b9172f860e",
+      "name": "Pages",
+      "displayName": "Pages",
+      "path": "/root/templates/Project/Pages",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6aeae251248055b9172f8607",
+      "sortOrder": 100,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f8607"
+      ]
+    },
+    {
+      "_id": "6ae95cc6b1e541e051fd413e",
+      "name": "Folder",
+      "displayName": "Folder",
+      "path": "/root/templates/common/Folder",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeaf46de620d879bafc23d2",
+      "sortOrder": 100,
+      "icon": "folder",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeaf46de620d879bafc23d2"
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee587086",
+      "name": "HeroBanner",
+      "displayName": "Hero Banner Component",
+      "path": "/root/templates/Feature/Components/HeroBanner",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 100,
+      "icon": "ti ti-ad-2",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f85fa",
+        "6aeae251248055b9172f8601"
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee587093",
+      "name": "ImageText",
+      "displayName": "Image & Text Component",
+      "path": "/root/templates/Feature/Components/ImageText",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 100,
+      "icon": "ti ti-photo",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f85fa",
+        "6aeae251248055b9172f8601"
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee58708d",
+      "name": "Introduction",
+      "displayName": "Introduction Component",
+      "path": "/root/templates/Feature/Components/Introduction",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 100,
+      "icon": "ti ti-file-description",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f85fa",
+        "6aeae251248055b9172f8601"
+      ]
+    },
+    {
+      "_id": "6aeae6ac0951c55f2b989c1a",
+      "name": "carousel-item",
+      "displayName": "Carousel Item",
+      "path": "/root/templates/Feature/Components/carousel-item",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 200,
+      "icon": "template",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "Initial version",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f85fa",
+        "6aeae251248055b9172f8601"
+      ]
+    },
+    {
+      "_id": "6aeb2e83bd626a030bd90b87",
+      "name": "dining-listing-page",
+      "displayName": "Dining Listing Page",
+      "path": "/root/templates/Feature/Components/dining-listing-page",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 400,
+      "icon": "",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "Initial version",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f85fa",
+        "6aeae251248055b9172f8601"
+      ]
+    },
+    {
+      "_id": "6aeafdd9eb146b460df856bb",
+      "name": "offer-item",
+      "displayName": "Offer Item",
+      "path": "/root/templates/Feature/Components/offer-item",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 300,
+      "icon": "template",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "Initial version",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f85fa",
+        "6aeae251248055b9172f8601"
+      ]
+    },
+    {
+      "_id": "6aeaccf2b200083aee58709e",
+      "name": "Home",
+      "displayName": "Home Page Template",
+      "path": "/root/templates/Project/Pages/Home",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f860e",
+      "sortOrder": 100,
+      "icon": "ti ti-home",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f8607",
+        "6aeae251248055b9172f860e"
+      ]
+    },
+    {
+      "_id": "6aeb2ff1bd626a030bd90d48",
+      "name": "about-us-page-template",
+      "displayName": "About Us Page Template",
+      "path": "/root/templates/Project/Pages/about-us-page-template",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f860e",
+      "sortOrder": 200,
+      "icon": "",
+      "sharedFields": {},
+      "languages": [
+        {
+          "code": "vi",
+          "unversionedFields": {},
+          "versions": [
+            {
+              "fields": {},
+              "neverPublish": false,
+              "note": "Initial version",
+              "validFrom": null,
+              "validTo": null,
+              "version": 1,
+              "workflowState": "6aef3037ff3d4ea2efe4c138"
+            }
+          ]
+        }
+      ],
+      "ancestors": [
+        "6ae95cc6b1e541e051fd4162",
+        "6ae95cc6b1e541e051fd416b",
+        "6aeae251248055b9172f8607",
+        "6aeae251248055b9172f860e"
+      ]
+    }
+  ]
+}

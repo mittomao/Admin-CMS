@@ -1085,49 +1085,65 @@ class YamlSectionService {
         }
       }
 
-      // Resolve Presentation if present
+      // Resolve Presentation if present (DEC-038 / DEC-039 / Phase 6.2)
       let resolvedPresentation = null;
-      if (data.presentation) {
-        let layoutId = null;
-        if (data.presentation.layoutPath) {
-          layoutId = layoutMapByPath.get(data.presentation.layoutPath)?._id || null;
-        }
-        if (!layoutId && data.presentation.layoutId) {
-          layoutId = layoutMapById.get(data.presentation.layoutId)?._id || null;
-        }
-        if (!layoutId && data.presentation.layoutName) {
-          layoutId = layoutMapByName.get(data.presentation.layoutName)?._id || null;
+      if (data.presentation && typeof data.presentation === 'object') {
+        const resolveLayoutId = (src) => {
+          if (!src) return null;
+          let lid = null;
+          if (src.layoutPath) lid = layoutMapByPath.get(src.layoutPath)?._id || null;
+          if (!lid && src.layoutId) {
+            lid = layoutMapById.get(String(src.layoutId))?._id || (mongoose.Types.ObjectId.isValid(src.layoutId) ? new mongoose.Types.ObjectId(src.layoutId) : null);
+          }
+          if (!lid && src.layoutName) lid = layoutMapByName.get(src.layoutName)?._id || null;
+          return lid;
+        };
+
+        const resolveRenderingsList = (renderingsArr) => {
+          if (!Array.isArray(renderingsArr)) return [];
+          return renderingsArr.map((r) => {
+            let rendId = null;
+            if (r.renderingPath) rendId = layoutMapByPath.get(r.renderingPath)?._id || null;
+            if (!rendId && r.renderingId) {
+              rendId = layoutMapById.get(String(r.renderingId))?._id || (mongoose.Types.ObjectId.isValid(r.renderingId) ? new mongoose.Types.ObjectId(r.renderingId) : null);
+            }
+            if (!rendId && r.renderingName) rendId = layoutMapByName.get(r.renderingName)?._id || null;
+            return {
+              uid: r.uid || r.id || crypto.randomUUID(),
+              renderingId: rendId,
+              placeholder: r.placeholderKey || r.placeholder || 'maincontent',
+              placeholderKey: r.placeholderKey || r.placeholder || 'maincontent',
+              sortOrder: r.sortOrder || 100,
+              parameters: r.parameters || {},
+              datasourceId: r.datasourceId || r.datasource || null,
+            };
+          });
+        };
+
+        const sharedSource = data.presentation.shared || (Array.isArray(data.presentation.renderings) || data.presentation.layoutId ? data.presentation : null);
+
+        let resolvedShared = null;
+        if (sharedSource) {
+          resolvedShared = {
+            layoutId: resolveLayoutId(sharedSource),
+            renderings: resolveRenderingsList(sharedSource.renderings),
+            devices: [],
+          };
         }
 
-        const renderings = Array.isArray(data.presentation.renderings)
-          ? data.presentation.renderings.map((r) => {
-              let rendId = null;
-              if (r.renderingPath) {
-                rendId = layoutMapByPath.get(r.renderingPath)?._id || null;
-              }
-              if (!rendId && r.renderingId) {
-                rendId = layoutMapById.get(r.renderingId)?._id || null;
-              }
-              if (!rendId && r.renderingName) {
-                rendId = layoutMapByName.get(r.renderingName)?._id || null;
-              }
-              return {
-                uid: r.uid || r.id || crypto.randomUUID(),
-                renderingId: rendId,
-                placeholder: r.placeholder || 'maincontent',
-                placeholderKey: r.placeholder || 'maincontent',
-                sortOrder: r.sortOrder || 100,
-                parameters: r.parameters || {},
-                datasourceId: r.datasource || null,
-              };
-            })
-          : [];
+        let resolvedFinal = [];
+        if (Array.isArray(data.presentation.final)) {
+          resolvedFinal = data.presentation.final.map((f) => ({
+            language: f.language || 'vi',
+            version: f.version || 1,
+            layoutId: resolveLayoutId(f),
+            renderings: resolveRenderingsList(f.renderings),
+          }));
+        }
 
         resolvedPresentation = {
-          final: {
-            layoutId,
-            renderings,
-          },
+          shared: resolvedShared || { layoutId: null, renderings: [], devices: [] },
+          final: resolvedFinal,
         };
       }
 
@@ -1169,7 +1185,22 @@ class YamlSectionService {
           layoutMapByName.set(newItem.name, newItem);
         }
       } else if (mode === 'createonly') {
-        // Skip existing in createOnly mode
+        // Skip content overwrite in createOnly mode, but self-heal structural parentId and missing presentation
+        let needsHeal = false;
+        if (resolvedParentId && String(existing.parentId) !== String(resolvedParentId)) {
+          existing.parentId = resolvedParentId;
+          existing.ancestors = resolvedAncestors;
+          needsHeal = true;
+        }
+        const hasNoRenderings = !existing.presentation?.shared?.renderings || existing.presentation.shared.renderings.length === 0;
+        const incomingHasRenderings = resolvedPresentation?.shared?.renderings && resolvedPresentation.shared.renderings.length > 0;
+        if (hasNoRenderings && incomingHasRenderings) {
+          existing.presentation = resolvedPresentation;
+          needsHeal = true;
+        }
+        if (needsHeal) {
+          await existing.save();
+        }
         skippedCount++;
         processedIds.add(existing._id.toString());
       } else {

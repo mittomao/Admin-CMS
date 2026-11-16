@@ -298,6 +298,7 @@ Các lệnh khả dụng:
   db:down             Dừng container Docker MongoDB của site (down)
   db:status           Xem trạng thái container Docker MongoDB của site (ps)
   seed                Khởi tạo dữ liệu cơ bản cho DB local (Users, Roles, Admin)
+  db:restore-json     Phục hồi nhanh toàn bộ Cây Nội Dung (Content Tree) từ tệp JSON sao lưu
   migrate             Chạy các migration hệ thống cần thiết
   help                Hiển thị trợ giúp này
 
@@ -335,6 +336,11 @@ switch (command.toLowerCase()) {
     break;
   case 'seed':
     handleSeed();
+    break;
+  case 'restore-json':
+  case 'db:restore-json':
+    const { restoreFromJson } = require('../src/scripts/restore-from-json');
+    restoreFromJson(args[1]);
     break;
   case 'admin:reset':
   case 'reset-admin':
