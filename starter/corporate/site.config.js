@@ -21,17 +21,8 @@ module.exports = {
     production: 'corporate_prod',
   },
 
-  // Tên database MongoDB (Master & Web) theo chuẩn DEC-052
-  mongoDbMaster: {
-    development: 'treecraft_corporate_master',
-    staging: 'treecraft_corporate_staging',
-    production: 'treecraft_corporate_prod_master',
-  },
-  mongoDbWeb: {
-    development: 'treecraft_corporate_web',
-    staging: 'treecraft_corporate_staging_web',
-    production: 'treecraft_corporate_prod_web',
-  },
+  // Tên cơ sở dữ liệu MongoDB duy nhất của dự án (DEC-058)
+  dbName: 'treecraft_corporate',
 
   // Ràng buộc phiên bản Core tương thích
   requiresCore: '>=1.0.0',

@@ -130,6 +130,7 @@ async function handleInit() {
   let targetDir = './site';
   let starter = 'corporate';
   let name = null;
+  let slug = null;
   let root = 'root';
   let dbPrefix = null;
   let defaultLanguage = 'vi';
@@ -137,6 +138,7 @@ async function handleInit() {
   let skipDb = false;
   let dbUri = null;
   let adminUser = 'admin';
+  let resetAdmin = false;
   let noSample = false;
   let noPublish = false;
   let dryRun = false;
@@ -152,6 +154,10 @@ async function handleInit() {
       name = remainingArgs[++i];
     } else if (a.startsWith('--name=')) {
       name = a.slice(7);
+    } else if (a === '--slug' && i + 1 < remainingArgs.length) {
+      slug = remainingArgs[++i];
+    } else if (a.startsWith('--slug=')) {
+      slug = a.slice(7);
     } else if (a === '--root' && i + 1 < remainingArgs.length) {
       root = remainingArgs[++i];
     } else if (a.startsWith('--root=')) {
@@ -172,6 +178,8 @@ async function handleInit() {
       adminUser = remainingArgs[++i];
     } else if (a.startsWith('--admin-user=')) {
       adminUser = a.slice(13);
+    } else if (a === '--reset-admin') {
+      resetAdmin = true;
     } else if (a === '--force' || a === '-f') {
       force = true;
     } else if (a === '--skip-db') {
@@ -192,6 +200,7 @@ async function handleInit() {
       targetDir,
       starter,
       name,
+      slug,
       root,
       dbPrefix,
       defaultLanguage,
@@ -199,10 +208,12 @@ async function handleInit() {
       skipDb,
       dbUri,
       adminUser,
+      resetAdmin,
       noSample,
       noPublish,
       dryRun,
     });
+    process.exit(0);
   } catch (err) {
     console.error(`\n❌ [treecraft init] Khởi tạo thất bại: ${err.message}\n`);
     process.exit(1);
@@ -324,6 +335,11 @@ switch (command.toLowerCase()) {
     break;
   case 'seed':
     handleSeed();
+    break;
+  case 'admin:reset':
+  case 'reset-admin':
+    args.push('--reset-admin');
+    handleInit();
     break;
   case 'migrate':
     handleMigrate();

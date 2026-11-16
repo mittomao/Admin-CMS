@@ -755,6 +755,81 @@ Tài liệu này lưu trữ danh sách 5 câu hỏi kỹ thuật / nghiệp vụ
 - **Lựa chọn B:** Chặn cứng ngay lập tức không cho server khởi động nếu core bị thay đổi.
 - **Lý do đề xuất:** Cân bằng giữa tính kỷ luật kiến trúc và sự linh hoạt trong quá trình thử nghiệm phát triển.
 
+---
+
+# CÂU HỎI KỸ THUẬT GIAI ĐOẠN S4 (LUỒNG REPO MỚI: SUBMODULE → INIT → DEV)
+
+Tài liệu này lưu trữ danh sách 6 câu hỏi kỹ thuật / nghiệp vụ cần xác nhận cho **Giai đoạn S4: Kiểm Tra và Hoàn Thiện Luồng Repo Mới**, kèm theo đề xuất mặc định của Tech Lead.
+
+---
+
+### 1. Quy tắc đặt tên Database: Slug hoá tên project như thế nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-058](decisions/DEC-058-single-database-dual-collection-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** Tên DB = `treecraft_<slug>`. Trong đó `<slug>` được chuẩn hóa từ tên thư mục dự án (hoặc cờ `--name`): chuyển thành chữ thường, thay khoảng trắng và ký tự đặc biệt bằng dấu gạch dưới `_`, bỏ dấu tiếng Việt, cắt tối đa 32 ký tự hợp lệ cho MongoDB.
+  - Ví dụ: Dự án `Celphones` ➔ `treecraft_celphones`.
+  - Dự án `Cửa Hàng Điện Thoại 2026!` ➔ `treecraft_cua_hang_dien_thoai_2026`.
+- **Lựa chọn B:** Sử dụng tên cố định `treecraft_cms` cho mọi dự án.
+- **Lý do đề xuất:** Đảm bảo mỗi dự án sở hữu một cơ sở dữ liệu riêng biệt, không bao giờ ghi đè hay xung đột dữ liệu khi nhiều dự án cùng chạy trên một MongoDB local.
+
+---
+
+### 2. Tiền tố `treecraft` cố định trong Core hay cho phép ghi đè?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-058](decisions/DEC-058-single-database-dual-collection-architecture.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Tiền tố mặc định là `treecraft_` (lấy từ `branding.DB_PREFIX`), nhưng cho phép ghi đè** thông qua cờ `--db-prefix <prefix>` khi chạy `init` hoặc thuộc tính `dbName` trong `site.config.js`.
+- **Lựa chọn B:** Hard-code cứng tiền tố `treecraft_` trong mã nguồn Core, cấm ghi đè.
+- **Lý do đề xuất:** Cung cấp sự linh hoạt cho các dự án doanh nghiệp lớn (Enterprise) muốn đồng bộ tiền tố database theo quy ước đặt tên riêng của hạ tầng DevOps doanh nghiệp.
+
+---
+
+### 3. Tự động cài đặt dependencies của Core (`npm install`) trong lệnh `init`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md), [DEC-057](decisions/DEC-057-one-step-init-scaffolding-and-db-bootstrap.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Tự động cài đặt.** Khi chạy `node core/bin/treecraft.js init`, nếu phát hiện `core/node_modules/` chưa tồn tại hoặc thiếu dependencies thiết yếu (`mongoose`, `express`, `ejs`,...), lệnh `init` tự động thực thi `npm install` bên trong thư mục `core/`, hiển thị thông báo tiến độ trực quan. Nếu gặp lỗi mạng thì dừng an toàn và in rõ hướng dẫn.
+- **Lựa chọn B:** Bắt buộc lập trình viên phải tự `cd core && npm install` bằng tay trước khi chạy `init`.
+- **Lý do đề xuất:** Thực hiện đúng mục tiêu cốt lõi: Luồng chuẩn chỉ gồm đúng 2 thao tác (`submodule add` ➔ `node core/bin/treecraft.js init`), loại bỏ hoàn toàn các bước thủ công gây lỗi cho người dùng mới.
+
+---
+
+### 4. Mỗi dự án một container Docker Mongo riêng hay dùng chung một Mongo local nhiều DB?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-058](decisions/DEC-058-single-database-dual-collection-architecture.md), [DEC-052](DEC-052-environment-database-separation-and-dbguard.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Tái sử dụng thông minh.** Nếu máy tính đã có MongoDB local đang lắng nghe trên cổng 27017 (hoặc container chung), hệ thống kết nối và tạo database `treecraft_<slug>` trực tiếp trong MongoDB đó. Nếu cổng 27017 chưa có dịch vụ nào chạy, `docker-compose.dev.yml` của site sẽ khởi tạo container riêng được cô lập theo slug (`${slug}-mongo-dev`) và volume riêng (`${slug}_mongodb_data`).
+- **Lựa chọn B:** Luôn luôn ép buộc mỗi site phải chạy một Docker container MongoDB riêng trên các cổng khác nhau.
+- **Lý do đề xuất:** Tiết kiệm tài nguyên RAM/CPU tối đa cho máy phát triển của lập trình viên khi làm việc với nhiều dự án song song.
+
+---
+
+### 5. Lệnh `dev` chạy trực tiếp ở gốc repository dự án với `package.json` tối thiểu?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-separation-and-sitepaths.md), `sitePaths.js`
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Lệnh `init` sẽ sinh file `package.json` tối thiểu tại **thư mục gốc của repository dự án** chứa các scripts ủy thác sang Core CLI:
+  ```json
+  {
+    "name": "my-project",
+    "scripts": {
+      "dev": "node core/bin/treecraft.js dev",
+      "start": "node core/bin/treecraft.js start",
+      "doctor": "node core/bin/treecraft.js doctor",
+      "db:up": "node core/bin/treecraft.js db:up",
+      "db:down": "node core/bin/treecraft.js db:down"
+    }
+  }
+  ```
+  Nhờ đó, lập trình viên sau khi `init` chỉ cần gõ đúng một lệnh quen thuộc: `npm run dev`.
+- **Lựa chọn B:** Bắt buộc người dùng phải gõ lệnh dài `node core/bin/treecraft.js dev` hoặc phải `cd site` mới chạy được.
+- **Lý do đề xuất:** Trải nghiệm lập trình viên chuẩn mực theo tiêu chuẩn hệ sinh thái Node.js hiện đại, tránh nhầm lẫn đường dẫn tương đối.
+
+---
+
+### 6. Khóa cấu hình Cloudinary để trống lúc `init` có được chấp nhận không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-038](decisions/DEC-038-cloudinary-media-item-unification.md), [DEC-057](decisions/DEC-057-one-step-init-scaffolding-and-db-bootstrap.md)
+- **Lựa chọn A (Đề xuất mặc định):** **Được chấp nhận.** File `.env.development` sinh ra sẽ để trống các khóa `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_CLOUD_NAME` kèm dòng ghi chú cảnh báo: *"Tính năng upload ảnh vào Media Library sẽ chưa hoạt động cho tới khi bạn điền thông tin khoá này"*. Server vẫn khởi động bình thường, website vẫn hiển thị component và hình ảnh SVG/mặc định.
+- **Lựa chọn B:** Chặn cứng lệnh `init` hoặc `dev`, bắt buộc phải nhập khóa Cloudinary mới cho khởi chạy.
+- **Lý do đề xuất:** Giúp lập trình viên có thể dựng khung dự án và kiểm tra giao diện website công khai ngay lập tức trong vài giây mà không bị cản trở bởi thủ tục đăng ký tài khoản Cloudinary ban đầu.
+
 
 
 

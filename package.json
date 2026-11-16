@@ -28,6 +28,7 @@
     "lint:fix": "eslint src/ tests/ --fix",
     "format": "prettier --write \"src/**/*.{js,json,ejs}\" \"public/**/*.{css,js}\"",
     "test": "jest --detectOpenHandles --forceExit",
+    "verify:fresh-install": "node src/scripts/verify-fresh-install.js",
     "check:branding": "node src/scripts/check-branding.js",
     "check:languages": "node src/scripts/check-languages.js",
     "check:env": "node src/scripts/check-env.js",

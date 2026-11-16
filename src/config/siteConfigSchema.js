@@ -75,9 +75,10 @@ function validateSiteConfig(config) {
   // 5. cloudinaryRootFolder
   let cloudinaryRootFolder = config.cloudinaryRootFolder || 'treecraft';
 
-  // 6. mongoDbMaster & mongoDbWeb
-  let mongoDbMaster = config.mongoDbMaster || null;
-  let mongoDbWeb = config.mongoDbWeb || null;
+  // 6. dbName (DEC-058: Một DB duy nhất cho mỗi dự án)
+  let dbName = config.dbName
+    || (config.mongoDbMaster && config.mongoDbMaster.development ? config.mongoDbMaster.development.replace(/_master$/, '') : null)
+    || 'treecraft_site';
 
   // 7. requiresCore (SemVer)
   const requiresCore = config.requiresCore || '>=1.0.0';
@@ -96,8 +97,7 @@ function validateSiteConfig(config) {
     defaultLanguage,
     languages,
     cloudinaryRootFolder,
-    mongoDbMaster,
-    mongoDbWeb,
+    dbName,
     requiresCore,
     starter,
     siteApiVersion,

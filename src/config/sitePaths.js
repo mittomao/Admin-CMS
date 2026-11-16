@@ -192,14 +192,13 @@ function getSiteConfig() {
     // Nếu chưa có file site.config.js nhưng thư mục site tồn tại (ví dụ giai đoạn khởi tạo/chuyển đổi)
     // Tự sinh cấu hình fallback mặc định
     const fallbackConfig = {
-      projectName: 'Treecraft Site',
+      projectName: 'Treecraft',
       rootName: 'root',
       rootPath: '/root',
       defaultLanguage: 'vi',
       languages: ['vi'],
-      cloudinaryRootFolder: 'treecraft',
-      mongoDbMaster: null,
-      mongoDbWeb: null,
+      cloudinaryRootFolder: 'AdminCMS',
+      dbName: 'treecraft_site',
       requiresCore: '>=1.0.0',
       starter: 'corporate',
       siteApiVersion: '1.0.0',

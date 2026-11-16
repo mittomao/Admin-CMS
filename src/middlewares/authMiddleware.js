@@ -7,6 +7,27 @@ const requireAuth = (req, res, next) => {
   if (req.session && req.session.user) {
     req.user = req.session.user;
     res.locals.user = req.session.user;
+
+    // Bắt buộc đổi mật khẩu ở lần đăng nhập đầu tiên (GĐ S4 / DEC-058)
+    if (req.session.user.mustChangePassword) {
+      const allowedPaths = ['/admin/change-password', '/admin/logout'];
+      const currentUrl = req.originalUrl.split('?')[0];
+      const isAllowed = allowedPaths.includes(currentUrl);
+
+      if (!isAllowed) {
+        const isApi = req.originalUrl.startsWith('/api/') || 
+          (req.accepts('json') && !req.accepts('html'));
+        if (isApi) {
+          return res.status(403).json({
+            success: false,
+            message: 'Bắt buộc đổi mật khẩu ở lần đăng nhập đầu tiên.',
+            code: 'MUST_CHANGE_PASSWORD',
+          });
+        }
+        return res.redirect('/admin/change-password');
+      }
+    }
+
     return next();
   }
 
@@ -28,6 +49,9 @@ const requireAuth = (req, res, next) => {
 // Middleware to redirect logged-in users away from auth pages (login)
 const guestOnly = (req, res, next) => {
   if (req.session && req.session.user) {
+    if (req.session.user.mustChangePassword) {
+      return res.redirect('/admin/change-password');
+    }
     return res.redirect('/admin/launchpad');
   }
   next();

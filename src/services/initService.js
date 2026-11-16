@@ -24,11 +24,30 @@ const dbGuard = require('../config/dbGuard');
  */
 function slugify(str) {
   return String(str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9_-]/g, '_')
+    .replace(/[^a-z0-9_]/g, '_')
     .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 32);
+}
+
+/**
+ * Phân giải tên Database duy nhất theo DEC-058 (treecraft_<slug>)
+ */
+function resolveDbName(slug, options = {}) {
+  if (options.dbName) return options.dbName;
+  const prefix = options.dbPrefix || 'treecraft';
+  if (prefix.endsWith('_')) {
+    return `${prefix}${slug}`;
+  }
+  if (prefix === slug) {
+    return `treecraft_${slug}`;
+  }
+  return `${prefix}_${slug}`;
 }
 
 /**
@@ -177,15 +196,17 @@ async function step1_CheckPreflight(targetDir, options = {}) {
   }
 
   // 1.4 Kiểm tra dependencies của Core (node_modules)
-  let hasMongoose = false;
+  let coreDependenciesReady = false;
   try {
     require.resolve('mongoose', { paths: [coreDir] });
-    hasMongoose = true;
+    require.resolve('express', { paths: [coreDir] });
+    require.resolve('ejs', { paths: [coreDir] });
+    coreDependenciesReady = true;
   } catch {
-    hasMongoose = false;
+    coreDependenciesReady = false;
   }
 
-  if (!hasMongoose && !options.skipDb && !options.dryRun) {
+  if (!coreDependenciesReady && !options.dryRun) {
     console.log('  📦 [Preflight] Phát hiện Core chưa được cài đặt node_modules.');
     console.log('     Đang tự động chạy "npm install" trong thư mục Core...');
     try {
@@ -283,7 +304,7 @@ async function step2_ScaffoldSiteDirectory(targetDir, options = {}) {
   const siteConfigFile = path.join(targetDir, 'site.config.js');
   if (!fs.existsSync(siteConfigFile)) {
     const siteConfigContent = `/**
- * Cấu hình Dự án Site (DEC-056 / DEC-057)
+ * Cấu hình Dự án Site (DEC-056 / DEC-058)
  * Khởi tạo tự động bởi lệnh "treecraft init"
  */
 
@@ -300,22 +321,13 @@ module.exports = {
 
   // Thư mục lưu trữ media trên Cloudinary theo từng môi trường
   cloudinaryRootFolder: {
-    development: ${JSON.stringify(`${options.dbPrefix}_dev`)},
-    staging: ${JSON.stringify(`${options.dbPrefix}_staging`)},
-    production: ${JSON.stringify(`${options.dbPrefix}_prod`)},
+    development: ${JSON.stringify(`${options.slug}_dev`)},
+    staging: ${JSON.stringify(`${options.slug}_staging`)},
+    production: ${JSON.stringify(`${options.slug}_prod`)},
   },
 
-  // Tên database MongoDB (Master & Web) theo chuẩn DEC-052
-  mongoDbMaster: {
-    development: ${JSON.stringify(`${options.dbPrefix}_master`)},
-    staging: ${JSON.stringify(`${options.dbPrefix}_staging_master`)},
-    production: ${JSON.stringify(`${options.dbPrefix}_prod_master`)},
-  },
-  mongoDbWeb: {
-    development: ${JSON.stringify(`${options.dbPrefix}_web`)},
-    staging: ${JSON.stringify(`${options.dbPrefix}_staging_web`)},
-    production: ${JSON.stringify(`${options.dbPrefix}_prod_web`)},
-  },
+  // Tên database MongoDB (Một DB duy nhất cho mỗi site - DEC-058)
+  dbName: ${JSON.stringify(options.dbName)},
 
   // Ràng buộc phiên bản Core tương thích
   requiresCore: '>=1.0.0',
@@ -335,12 +347,11 @@ module.exports = {
   if (!fs.existsSync(envDevFile)) {
     const sessionSecret = crypto.randomBytes(32).toString('hex');
     const backupKey = crypto.randomBytes(32).toString('hex');
-    const mongoUri = options.dbUri || `mongodb://127.0.0.1:27017/${options.dbPrefix}_master?replicaSet=rs0`;
-    const mongoUriWeb = options.dbUriWeb || `mongodb://127.0.0.1:27017/${options.dbPrefix}_web?replicaSet=rs0`;
+    const mongoUri = options.dbUri || `mongodb://127.0.0.1:27017/${options.dbName}?replicaSet=rs0`;
 
     const envContent = `# ------------------------------------------------------------------------------
 # TREECRAFT CMS - CẤU HÌNH PHÁT TRIỂN (DEVELOPMENT)
-# Khởi tạo tự động bởi lệnh "treecraft init" (DEC-057)
+# Khởi tạo tự động bởi lệnh "treecraft init" (DEC-057 / DEC-058)
 # ------------------------------------------------------------------------------
 APP_ENV=development
 NODE_ENV=development
@@ -348,9 +359,8 @@ PORT=4000
 APP_NAME=${JSON.stringify(options.projectName)}
 APP_URL=http://localhost:4000
 
-# Cơ sở dữ liệu MongoDB Local Docker (DEC-052 / DEC-057)
+# Cơ sở dữ liệu MongoDB Local Docker (DEC-058: Một DB duy nhất cho mỗi dự án)
 MONGO_URI=${mongoUri}
-MONGO_URI_WEB=${mongoUriWeb}
 ALLOW_REMOTE_DB_IN_DEV=false
 
 # Mật mã phiên làm việc và mã hóa sao lưu an toàn (Tự động sinh 32 bytes Hex)
@@ -362,7 +372,7 @@ BACKUP_ENCRYPTION_KEY=${backupKey}
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
-CLOUDINARY_ROOT_FOLDER=${options.dbPrefix}_dev
+CLOUDINARY_ROOT_FOLDER=${options.slug}_dev
 `;
     await fsp.writeFile(envDevFile, envContent, 'utf8');
     const baseEnvFile = path.join(targetDir, '.env');
@@ -387,30 +397,63 @@ CLOUDINARY_ROOT_FOLDER=${options.dbPrefix}_dev
     const starterCompose = path.join(starterDir, 'docker-compose.dev.yml');
     if (fs.existsSync(starterCompose)) {
       let composeContent = await fsp.readFile(starterCompose, 'utf8');
-      composeContent = composeContent.replace(/\$\{COMPOSE_PROJECT_NAME:-treecraft\}/g, options.dbPrefix);
+      composeContent = composeContent.replace(/\$\{COMPOSE_PROJECT_NAME:-treecraft\}/g, options.slug);
       await fsp.writeFile(composeDest, composeContent, 'utf8');
     }
   }
 
-  // 2.6 Sinh package.json tối giản cho site (nếu chưa có)
+  // 2.6 Sinh package.json cho site/ và repoRoot/
   const sitePkgFile = path.join(targetDir, 'package.json');
   if (!fs.existsSync(sitePkgFile)) {
     const sitePkg = {
-      name: options.dbPrefix || 'treecraft-site',
+      name: `${options.slug}-site`,
       version: '1.0.0',
       private: true,
       description: `${options.projectName} - Treecraft Website Project`,
       scripts: {
-        dev: 'treecraft dev',
-        start: 'treecraft start',
-        doctor: 'treecraft doctor',
-        where: 'treecraft where',
-        'db:up': 'treecraft db:up',
-        'db:down': 'treecraft db:down',
-        'db:status': 'treecraft db:status',
+        dev: 'node ../core/bin/treecraft.js dev',
+        start: 'node ../core/bin/treecraft.js start',
+        doctor: 'node ../core/bin/treecraft.js doctor',
+        where: 'node ../core/bin/treecraft.js where',
+        'db:up': 'node ../core/bin/treecraft.js db:up',
+        'db:down': 'node ../core/bin/treecraft.js db:down',
+        'db:status': 'node ../core/bin/treecraft.js db:status',
       },
     };
     await fsp.writeFile(sitePkgFile, JSON.stringify(sitePkg, null, 2) + '\n', 'utf8');
+  }
+
+  // Sinh hoặc cập nhật package.json tại gốc repo (parent của site/ và core/)
+  const repoRoot = path.resolve(targetDir, '..');
+  const rootPkgFile = path.join(repoRoot, 'package.json');
+  if (!fs.existsSync(rootPkgFile)) {
+    const rootPkg = {
+      name: options.slug,
+      version: '1.0.0',
+      private: true,
+      description: `${options.projectName} - Treecraft CMS Project`,
+      scripts: {
+        dev: 'node core/bin/treecraft.js dev',
+        start: 'node core/bin/treecraft.js start',
+        doctor: 'node core/bin/treecraft.js doctor',
+        where: 'node core/bin/treecraft.js where',
+        'db:up': 'node core/bin/treecraft.js db:up',
+        'db:down': 'node core/bin/treecraft.js db:down',
+        'db:status': 'node core/bin/treecraft.js db:status',
+      },
+    };
+    await fsp.writeFile(rootPkgFile, JSON.stringify(rootPkg, null, 2) + '\n', 'utf8');
+  } else {
+    try {
+      const rootPkgContent = JSON.parse(await fsp.readFile(rootPkgFile, 'utf8'));
+      rootPkgContent.scripts = rootPkgContent.scripts || {};
+      if (!rootPkgContent.scripts.dev) rootPkgContent.scripts.dev = 'node core/bin/treecraft.js dev';
+      if (!rootPkgContent.scripts.start) rootPkgContent.scripts.start = 'node core/bin/treecraft.js start';
+      if (!rootPkgContent.scripts.doctor) rootPkgContent.scripts.doctor = 'node core/bin/treecraft.js doctor';
+      await fsp.writeFile(rootPkgFile, JSON.stringify(rootPkgContent, null, 2) + '\n', 'utf8');
+    } catch (_err) {
+      // Ignored if root package.json is unparseable
+    }
   }
 
   // 2.7 Sao chép .gitignore (nếu chưa có)
@@ -482,14 +525,14 @@ async function step3_BootstrapLocalMongo(targetDir, options = {}) {
     if (!ready) {
       throw new Error(
         `[MongoDB Error] Quá thời gian chờ container MongoDB khởi động trên 127.0.0.1:27017.\n` +
-        `  Vui lòng kiểm tra log container: docker logs ${options.dbPrefix}-mongo-dev`
+        `  Vui lòng kiểm tra log container: docker logs ${options.slug || options.dbPrefix}-mongo-dev`
       );
     }
   }
 
   // Kết nối thử qua Mongoose với chốt chặn an toàn dbGuard
   const mongoose = require('mongoose');
-  const mongoUri = options.dbUri || `mongodb://127.0.0.1:27017/${options.dbPrefix}_master?replicaSet=rs0`;
+  const mongoUri = options.dbUri || `mongodb://127.0.0.1:27017/${options.dbName}?replicaSet=rs0`;
   dbGuard.assertSafeFor('destructive', {
     uri: mongoUri,
     appEnv: 'development',
@@ -656,6 +699,17 @@ async function step6_CreateAdminUser(options = {}) {
       password: rawPassword,
       isGenerated: true,
     };
+  } else if (options.resetAdmin) {
+    const rawPassword = generateSecurePassword();
+    const passwordHash = await User.hashPassword(rawPassword);
+    admin.passwordHash = passwordHash;
+    admin.mustChangePassword = true;
+    await admin.save();
+    return {
+      username: adminUsername,
+      password: rawPassword,
+      isGenerated: true,
+    };
   } else {
     // Nếu tài khoản đã có sẵn từ trước trong chế độ incremental
     return {
@@ -752,13 +806,12 @@ async function step8_RunDoctorAndPrintSummary(targetDir, adminCreds, options = {
     console.log('└────────────────────────────────────────────────────────────┘');
   }
 
-  console.log(`\n👉 Các bước tiếp theo:`);
-  console.log(`   1. Khởi chạy máy chủ phát triển (tại thư mục gốc repo):`);
-  console.log(`      node core/bin/treecraft.js dev`);
-  console.log(`      (Hoặc nếu đang đứng trong thư mục site/: node ../core/bin/treecraft.js dev)`);
-  console.log(`   2. Truy cập website công khai:  http://localhost:4000/`);
-  console.log(`   3. Đăng nhập trang quản trị:    http://localhost:4000/admin`);
-  console.log(`\n⚠️  LƯU Ý QUẢN TRỊ MÃ NGUỒN GIT:`);
+  console.log(`\n👉 Lệnh tiếp theo (Chỉ cần 1 lệnh duy nhất):`);
+  console.log(`   npm run dev`);
+  console.log(`   (Hoặc: node core/bin/treecraft.js dev)\n`);
+  console.log(`   - Website công khai : http://localhost:4000/`);
+  console.log(`   - Trang quản trị    : http://localhost:4000/admin\n`);
+  console.log(`⚠️  LƯU Ý QUẢN TRỊ MÃ NGUỒN GIT:`);
   console.log(`   - Hãy commit toàn bộ thư mục site/ vào kho mã nguồn của bạn.`);
   console.log(`   - TUYỆT ĐỐI KHÔNG commit các file chứa mật khẩu bí mật: .env, .env.development\n`);
 }
@@ -772,8 +825,10 @@ async function initSite(options = {}) {
   const baseName = path.basename(targetDir);
   const repoName = path.basename(path.resolve(targetDir, '..'));
   const projectName = options.name || options.projectName || (baseName === 'site' ? repoName : baseName);
+  const slug = options.slug || slugify(options.name || projectName) || 'site';
   const rootName = options.root || options.rootName || 'root';
-  const dbPrefix = options.dbPrefix || slugify(projectName) || 'treecraft_site';
+  const dbPrefix = slug;
+  const dbName = resolveDbName(slug, options);
   const defaultLanguage = options.defaultLanguage || options.lang || 'vi';
   const languages = Array.isArray(options.languages) ? options.languages : ['vi', 'en'];
 
@@ -781,6 +836,8 @@ async function initSite(options = {}) {
     ...options,
     targetDir,
     projectName,
+    slug,
+    dbName,
     rootName,
     dbPrefix,
     defaultLanguage,
@@ -811,9 +868,21 @@ async function initSite(options = {}) {
       success: true,
       targetDir,
       projectName,
+      slug,
+      dbName,
       dbPrefix,
     };
   } finally {
+    // Ngắt kết nối Mongoose để giải phóng socket và giúp tiến trình Node.js thoát sạch
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection && mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect();
+      }
+    } catch (_e) {
+      // ignore
+    }
+
     // Dọn dẹp / khôi phục context cũ
     if (previousSiteDir) {
       process.env.TREECRAFT_SITE_DIR = previousSiteDir;
@@ -828,6 +897,7 @@ async function initSite(options = {}) {
 module.exports = {
   initSite,
   slugify,
+  resolveDbName,
   generateSecurePassword,
   checkPortOpen,
   checkDockerAvailable,

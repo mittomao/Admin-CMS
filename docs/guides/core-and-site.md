@@ -37,6 +37,7 @@ my-project/
 ### Nguyên tắc Vàng:
 - **Core chỉ đọc, Site chỉ ghi:** Core tuyệt đối không bao giờ ghi file runtime (logs, cache, uploads, backups, serialization YAML) vào thư mục của nó.
 - **Độc lập vị trí tuyệt đối (Location Independence):** Core có thể nằm ở bất kỳ đâu trên máy tính hoặc trong `node_modules/@treecraft/core`, giải quyết mọi đường dẫn thông qua module trung tâm `src/config/sitePaths.js`.
+- **Kiến trúc dữ liệu một Database (DEC-058):** Mỗi site sử dụng duy nhất một database MongoDB mang tên `treecraft_<slug>`. Dữ liệu soạn thảo (Master) và dữ liệu công khai (Web) được phân tách thành hai collection độc lập trong cùng DB: `items_master` và `items_web`. Tuyệt đối không dùng DB Web riêng biệt hay biến `MONGO_URI_WEB`.
 
 ---
 
@@ -145,10 +146,10 @@ Màn hình console hiển thị tiến trình 8 bước với biểu tượng tr
 └────────────────────────────────────────────────────────────┘
 
 👉 Các bước tiếp theo:
-   1. Di chuyển vào thư mục dự án: cd site
-   2. Khởi chạy máy chủ phát triển: node core/bin/treecraft.js dev
-   3. Truy cập website công khai:  http://localhost:3000/
-   4. Đăng nhập trang quản trị:    http://localhost:3000/admin
+   1. Khởi chạy máy chủ phát triển: npm run dev
+      (Hoặc: node core/bin/treecraft.js dev)
+   2. Truy cập website công khai:  http://localhost:4000/
+   3. Đăng nhập trang quản trị:    http://localhost:4000/admin
 
 ⚠️  LƯU Ý QUẢN TRỊ MÃ NGUỒN GIT:
    - Hãy commit toàn bộ thư mục site/ vào kho mã nguồn của bạn.
@@ -157,18 +158,32 @@ Màn hình console hiển thị tiến trình 8 bước với biểu tượng tr
 
 ### (5) Cách kiểm tra thành công
 1. **Kiểm tra Website Công Khai:**
-   - Chạy lệnh: `node core/bin/treecraft.js dev`
-   - Mở trình duyệt truy cập: `http://localhost:3000/` và `http://localhost:3000/about-us`.
+   - Chạy lệnh: `npm run dev` (tại thư mục gốc repo)
+   - Mở trình duyệt truy cập: `http://localhost:4000/` và `http://localhost:4000/about-us`.
    - Cả hai trang đều phải tải nhanh và trả về mã HTTP 200.
 2. **Kiểm tra Trang Quản Trị (Admin CMS):**
-   - Mở trình duyệt truy cập: `http://localhost:3000/admin`.
+   - Mở trình duyệt truy cập: `http://localhost:4000/admin`.
    - Đăng nhập bằng tài khoản `admin` và mật khẩu ngẫu nhiên vừa được in ra.
    - Xác nhận hệ thống yêu cầu đổi mật khẩu ở lần đăng nhập đầu tiên.
 3. **Kiểm tra Chẩn Đoán Tính Toàn Vẹn:**
-   - Chạy lệnh: `node core/bin/treecraft.js doctor`
+   - Chạy lệnh: `npm run doctor` (hoặc `node core/bin/treecraft.js doctor`)
    - Kết quả phải đạt 10/10 bài kiểm tra (10 PASSED, 0 FAILED).
 
 ### (6) Lỗi thường gặp và cách xử lý
+- **Lỗi `Cannot find module '.../site/core/bin/treecraft.js'` (MODULE_NOT_FOUND):**
+  - *Nguyên nhân:* Người dùng di chuyển vào trong `site/` (`cd site`) rồi chạy lệnh trỏ `core/bin/treecraft.js`. Submodule `core/` nằm ở gốc dự án, không nằm trong `site/`.
+  - *Cách xử lý:* Đứng tại thư mục gốc của repository dự án và chạy `npm run dev` hoặc `node core/bin/treecraft.js dev`. Nếu đang ở trong `site/`, bạn có thể chạy `npm run dev` hoặc `node ../core/bin/treecraft.js dev`.
+- **Lỗi Server dừng/treo sau dòng `Session store initialized` mà không mở cổng lắng nghe:**
+  - *Nguyên nhân:* Trước phiên bản S4, hàm dev chỉ nạp file mà không kích hoạt gọi `startServer()`.
+  - *Cách xử lý:* Lỗi này đã được giải quyết triệt để trong phiên bản S4. Đảm bảo cập nhật submodule core mới nhất.
+- **Quên mật khẩu quản trị viên Admin hoặc muốn cấp lại:**
+  - *Cách xử lý:* Chạy lệnh reset admin trực tiếp:
+    ```bash
+    node core/bin/treecraft.js admin:reset
+    # Hoặc:
+    node core/bin/treecraft.js init --reset-admin
+    ```
+    Hệ thống sẽ sinh mật khẩu ngẫu nhiên mới và in ra màn hình console một lần duy nhất.
 - **Lỗi `[Preflight Error] Thư mục hiện tại không nằm trong một Git repository`:**
   - *Nguyên nhân:* Thư mục dự án chưa khởi tạo Git.
   - *Cách xử lý:* Chạy lệnh `git init` tại thư mục dự án rồi chạy lại lệnh `init`.
@@ -180,9 +195,12 @@ Màn hình console hiển thị tiến trình 8 bước với biểu tượng tr
   - *Cách xử lý:* Bỏ cờ `--starter` để sử dụng mặc định starter `corporate`.
 - **Lỗi xung đột cổng 27017:**
   - *Nguyên nhân:* Một container MongoDB của dự án khác đang chiếm cổng 27017.
-  - *Cách xử lý:* Chạy lệnh `treecraft db:down` ở thư mục dự án cũ, hoặc truyền cờ `--db-uri <uri>` để trỏ tới database khác.
+  - *Cách xử lý:* Chạy lệnh `npm run db:down` ở thư mục dự án cũ, hoặc truyền cờ `--db-uri <uri>` để trỏ tới database khác.
+- **Cổng 4000 bị chiếm bởi ứng dụng khác:**
+  - *Cách xử lý:* Mở file `site/.env.development`, đổi `PORT=4001` (hoặc cổng bất kỳ còn trống) rồi chạy lại `npm run dev`.
 
 ### (7) Cảnh báo và rủi ro
+- **Kiến Trúc Dữ Liệu Một Database (DEC-058):** Mỗi site chỉ sử dụng duy nhất một database `treecraft_<slug>`, chứa cả 2 collections `items_master` và `items_web`. Không sử dụng database Web riêng biệt và không có biến `MONGO_URI_WEB`.
 - **Bảo Mật Mật Khẩu Admin:** Mật khẩu ngẫu nhiên chỉ xuất hiện duy nhất 1 lần trên màn hình console khi chạy lệnh `init`. Hãy lưu lại ngay và đổi mật khẩu khi đăng nhập lần đầu. Mật khẩu không bao giờ được ghi ra bất kỳ file log nào.
 - **Bảo Vệ Biến Môi Trường:** Thư mục `site/.gitignore` đã tự động chặn các file `.env` và `.env.*`. Tuyệt đối không xóa bỏ quy tắc này hoặc đưa file `.env.development` lên kho mã nguồn Git công khai.
 - **Tính Bất Biến Của Core:** Không bao giờ sửa đổi code trong thư mục `core/`. Mọi mã nguồn EJS, CSS, script và dữ liệu riêng phải đặt hoàn toàn trong thư mục `site/`.

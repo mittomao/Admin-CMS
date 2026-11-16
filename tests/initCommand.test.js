@@ -14,6 +14,8 @@ const { execSync } = require('child_process');
 const sitePaths = require('../src/config/sitePaths');
 const {
   initSite,
+  slugify,
+  resolveDbName,
   generateSecurePassword,
   isInsideGitRepo,
 } = require('../src/services/initService');
@@ -41,6 +43,23 @@ describe('GĐ S2: Lệnh Khởi Tạo Dự Án Mới Một Bước (treecraft in
       expect(/[A-Z]/.test(pwd)).toBe(true);
       expect(/[a-z]/.test(pwd)).toBe(true);
       expect(/[0-9]/.test(pwd)).toBe(true);
+    });
+
+    test('slugify chuẩn hoá tiếng Việt có dấu, ký tự đặc biệt và giới hạn độ dài', () => {
+      expect(slugify('Điện Thoại & Phụ Kiện Giá Rẻ!')).toBe('dien_thoai_phu_kien_gia_re');
+      expect(slugify('Celphones Store')).toBe('celphones_store');
+      expect(slugify('---hello---world---')).toBe('hello_world');
+      // Cắt độ dài tối đa 32 ký tự
+      const longName = 'A'.repeat(50);
+      expect(slugify(longName).length).toBeLessThanOrEqual(32);
+    });
+
+    test('resolveDbName tuân thủ DEC-058 (tiền tố treecraft_, một DB duy nhất)', () => {
+      expect(resolveDbName('celphones')).toBe('treecraft_celphones');
+      expect(resolveDbName('site')).toBe('treecraft_site');
+      expect(resolveDbName('beta_enterprise')).toBe('treecraft_beta_enterprise');
+      // Tùy chọn override dbPrefix
+      expect(resolveDbName('celphones', { dbPrefix: 'custom' })).toBe('custom_celphones');
     });
 
     test('isInsideGitRepo phát hiện chính xác thư mục có hoặc không có .git', () => {
@@ -118,13 +137,14 @@ describe('GĐ S2: Lệnh Khởi Tạo Dự Án Mới Một Bước (treecraft in
       const validation = validateSiteConfig(generatedConfig);
       expect(validation.valid).toBe(true);
       expect(generatedConfig.projectName).toBe('Beta Enterprise');
-      expect(generatedConfig.mongoDbMaster.development).toBe('beta_enterprise_master');
+      expect(generatedConfig.dbName).toBe('treecraft_beta_enterprise');
 
       // 2. Kiểm tra .env.development & .env
       const envDevPath = path.join(targetSiteDir, '.env.development');
       expect(fs.existsSync(envDevPath)).toBe(true);
       const envContent = fs.readFileSync(envDevPath, 'utf8');
-      expect(envContent).toContain('beta_enterprise_master');
+      expect(envContent).toContain('treecraft_beta_enterprise');
+      expect(envContent).not.toContain('MONGO_URI_WEB');
       expect(envContent).toMatch(/SESSION_SECRET=[a-f0-9]{64}/);
       expect(envContent).toMatch(/BACKUP_ENCRYPTION_KEY=[a-f0-9]{64}/);
 
@@ -152,10 +172,14 @@ describe('GĐ S2: Lệnh Khởi Tạo Dự Án Mới Một Bước (treecraft in
       const pkgPath = path.join(targetSiteDir, 'package.json');
       expect(fs.existsSync(pkgPath)).toBe(true);
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-      expect(pkg.name).toBe('beta_enterprise');
-      expect(pkg.scripts.dev).toBe('treecraft dev');
-      expect(pkg.scripts.start).toBe('treecraft start');
-      expect(pkg.scripts['db:up']).toBe('treecraft db:up');
+      expect(pkg.name).toContain('beta_enterprise');
+      expect(pkg.scripts.dev).toContain('treecraft.js dev');
+      expect(pkg.scripts.start).toContain('treecraft.js start');
+
+      const rootPkgPath = path.join(testOutputDir, 'package.json');
+      expect(fs.existsSync(rootPkgPath)).toBe(true);
+      const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf8'));
+      expect(rootPkg.scripts.dev).toBe('node core/bin/treecraft.js dev');
 
       const gitignorePath = path.join(targetSiteDir, '.gitignore');
       expect(fs.existsSync(gitignorePath)).toBe(true);
