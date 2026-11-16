@@ -441,6 +441,30 @@ class YamlSectionService {
       .lean();
     const layoutPathSet = new Set(existingLayouts.map((l) => l.path));
     const layoutIdSet = new Set(existingLayouts.map((l) => l._id.toString()));
+    const layoutMapByName = new Map(existingLayouts.map((l) => [l.name, l]));
+
+    // Pre-populate templates and layouts defined within the files of this section/batch
+    for (const relFile of files) {
+      try {
+        const absFile = path.join(sectionDir, relFile);
+        const content = fs.readFileSync(absFile, 'utf8');
+        const parsed = parseYamlToItem(content, relFile);
+        if (parsed.path) {
+          if (Array.isArray(parsed.sections) || parsed.path.startsWith(branding.PATHS.TEMPLATES || '/root/templates')) {
+            templatePathSet.add(parsed.path);
+            if (parsed._id) templateIdSet.add(parsed._id.toString());
+            if (parsed.name) templateMapByName.set(parsed.name, parsed);
+          }
+          if (parsed.path.startsWith(branding.PATHS.LAYOUT || '/root/layout')) {
+            layoutPathSet.add(parsed.path);
+            if (parsed._id) layoutIdSet.add(parsed._id.toString());
+            if (parsed.name) layoutMapByName.set(parsed.name, parsed);
+          }
+        }
+      } catch {
+        // syntax errors handled in the main loop
+      }
+    }
 
     // Pre-load existing items in DB under section roots
     const existingItems = await Item.find(buildSectionMongoQuery(section)).select('_id path').lean();
@@ -482,13 +506,18 @@ class YamlSectionService {
       // Check template dependency
       if (itemData.template) {
         const tPath = itemData.template.path;
-        const tId = itemData.template.id;
-        if (!templatePathSet.has(tPath) && !templateIdSet.has(tId)) {
+        const tId = itemData.template.id ? itemData.template.id.toString() : null;
+        const tName = itemData.template.name;
+        const hasTemplate = (tPath && templatePathSet.has(tPath)) ||
+                            (tId && templateIdSet.has(tId)) ||
+                            (tName && templateMapByName.has(tName)) ||
+                            (tPath && tPath.startsWith(`${branding.PATHS.TEMPLATES || '/root/templates'}/System`));
+        if (!hasTemplate) {
           missingDeps.push({
             file: relFile,
             itemPath: itemData.path,
             dependencyType: 'Template',
-            reference: tPath || tId,
+            reference: tPath || tName || tId,
           });
         }
       }
@@ -497,8 +526,12 @@ class YamlSectionService {
       if (itemData.presentation && Array.isArray(itemData.presentation.renderings)) {
         for (const r of itemData.presentation.renderings) {
           const rPath = r.renderingPath;
-          const rId = r.renderingId;
-          if (rPath && !layoutPathSet.has(rPath) && !layoutIdSet.has(rId)) {
+          const rId = r.renderingId ? r.renderingId.toString() : null;
+          const rName = r.renderingName;
+          const hasRendering = (rPath && layoutPathSet.has(rPath)) ||
+                               (rId && layoutIdSet.has(rId)) ||
+                               (rName && layoutMapByName.has(rName));
+          if (!hasRendering && (rPath || rId)) {
             missingDeps.push({
               file: relFile,
               itemPath: itemData.path,
@@ -754,86 +787,24 @@ class YamlSectionService {
     parsedItems.sort((a, b) => a.path.split('/').length - b.path.split('/').length);
 
     // Pre-load reference maps
-    const allTemplates = await Template.find({}).select('_id name path').lean();
+    const allTemplates = await Template.find({}).select('_id name path sections').lean();
     const templateMapByPath = new Map(allTemplates.map((t) => [t.path, t]));
     const templateMapById = new Map(allTemplates.map((t) => [t._id.toString(), t]));
+    const templateMapByName = new Map(allTemplates.map((t) => [t.name, t]));
 
     const allLayouts = await Item.find({ path: { $regex: `^${branding.PATHS.LAYOUT || '/root/layout'}` } })
       .select('_id name path')
       .lean();
     const layoutMapByPath = new Map(allLayouts.map((l) => [l.path, l]));
     const layoutMapById = new Map(allLayouts.map((l) => [l._id.toString(), l]));
+    const layoutMapByName = new Map(allLayouts.map((l) => [l.name, l]));
 
-    let createdCount = 0;
-    let updatedCount = 0;
-    let skippedCount = 0;
-    const processedIds = new Set();
-
+    // ============================================================
+    // PASS 1: Upsert all Template schemas first (DEC-055)
+    // Ensures all templates are in MongoDB and in-memory maps before
+    // items try to reference them by path, ID, or name.
+    // ============================================================
     for (const data of parsedItems) {
-      // Find template
-      let resolvedTemplateId = null;
-      if (data.template) {
-        const tByPath = data.template.path ? templateMapByPath.get(data.template.path) : null;
-        const tById = data.template.id ? templateMapById.get(data.template.id) : null;
-        resolvedTemplateId = (tByPath || tById)?._id || null;
-      }
-
-      // Find parentId if missing
-      let resolvedParentId = data.parentId || null;
-      if (!resolvedParentId && data.parentPath) {
-        const parentItem = await Item.findOne({ path: data.parentPath }).select('_id').lean();
-        resolvedParentId = parentItem?._id || null;
-      } else if (!resolvedParentId && data.path) {
-        const parts = data.path.split('/');
-        parts.pop();
-        const parentPath = parts.join('/');
-        if (parentPath && parentPath !== '') {
-          const parentItem = await Item.findOne({ path: parentPath }).select('_id').lean();
-          resolvedParentId = parentItem?._id || null;
-        }
-      }
-
-      // Resolve Presentation if present
-      let resolvedPresentation = null;
-      if (data.presentation) {
-        let layoutId = null;
-        if (data.presentation.layoutPath) {
-          layoutId = layoutMapByPath.get(data.presentation.layoutPath)?._id || null;
-        }
-        if (!layoutId && data.presentation.layoutId) {
-          layoutId = layoutMapById.get(data.presentation.layoutId)?._id || null;
-        }
-
-        const renderings = Array.isArray(data.presentation.renderings)
-          ? data.presentation.renderings.map((r) => {
-              let rendId = null;
-              if (r.renderingPath) {
-                rendId = layoutMapByPath.get(r.renderingPath)?._id || null;
-              }
-              if (!rendId && r.renderingId) {
-                rendId = layoutMapById.get(r.renderingId)?._id || null;
-              }
-              return {
-                uid: r.uid || r.id || crypto.randomUUID(),
-                renderingId: rendId,
-                placeholder: r.placeholder || 'maincontent',
-                placeholderKey: r.placeholder || 'maincontent',
-                sortOrder: r.sortOrder || 100,
-                parameters: r.parameters || {},
-                datasourceId: r.datasource || null,
-              };
-            })
-          : [];
-
-        resolvedPresentation = {
-          final: {
-            layoutId,
-            renderings,
-          },
-        };
-      }
-
-      // Upsert Template schema into MongoDB (DEC-055)
       if (Array.isArray(data.sections)) {
         let existingTpl = null;
         if (data._id) existingTpl = await Template.findById(data._id);
@@ -964,6 +935,10 @@ class YamlSectionService {
 
           existingTpl.updatedBy = user?._id || null;
           await existingTpl.save();
+
+          templateMapByPath.set(existingTpl.path, existingTpl);
+          templateMapById.set(existingTpl._id.toString(), existingTpl);
+          templateMapByName.set(existingTpl.name, existingTpl);
         } else {
           // Create new Template document
           const tplSections = (data.sections || []).map((sec) => ({
@@ -1017,7 +992,123 @@ class YamlSectionService {
           });
 
           await newTpl.save();
+
+          templateMapByPath.set(newTpl.path, newTpl);
+          templateMapById.set(newTpl._id.toString(), newTpl);
+          templateMapByName.set(newTpl.name, newTpl);
         }
+      }
+    }
+
+    // ============================================================
+    // PASS 2: Create / Update Items with fully resolved templateId
+    // ============================================================
+    let createdCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
+    const processedIds = new Set();
+
+    for (const data of parsedItems) {
+      // Find template
+      let resolvedTemplateId = null;
+      if (data.template) {
+        const tByPath = data.template.path ? templateMapByPath.get(data.template.path) : null;
+        const tById = data.template.id ? templateMapById.get(String(data.template.id)) : null;
+        const tByName = data.template.name ? templateMapByName.get(data.template.name) : null;
+        resolvedTemplateId = (tByPath || tById || tByName)?._id || null;
+      }
+
+      // Safe Fallbacks for resolvedTemplateId if still not resolved:
+      if (!resolvedTemplateId) {
+        if (data.path && data.path.startsWith(branding.PATHS.TEMPLATES || '/root/templates')) {
+          if (Array.isArray(data.sections)) {
+            // It's a template itself -> template is System/Template
+            const tplTemplate = templateMapByPath.get(`${branding.PATHS.TEMPLATES || '/root/templates'}/System/Template`) ||
+                                templateMapByName.get('Template');
+            resolvedTemplateId = tplTemplate?._id || null;
+          } else {
+            // It's an organization folder under /root/templates -> Template Folder
+            const folderTemplate = templateMapByPath.get(`${branding.PATHS.TEMPLATES || '/root/templates'}/System/Template Folder`) ||
+                                   templateMapByName.get('Template Folder');
+            resolvedTemplateId = folderTemplate?._id || null;
+          }
+        } else if (data.template?.name) {
+          const namedTemplate = templateMapByName.get(data.template.name);
+          if (namedTemplate) resolvedTemplateId = namedTemplate._id;
+        }
+      }
+
+      // Final ultimate fallback: if resolvedTemplateId is STILL null, fallback to Standard Template or Folder or any template
+      if (!resolvedTemplateId) {
+        const fallback = templateMapByName.get('Standard Template') ||
+                         templateMapByName.get('Template Folder') ||
+                         templateMapByName.get('Folder') ||
+                         (allTemplates.length > 0 ? allTemplates[0] : null);
+        if (fallback) {
+          resolvedTemplateId = fallback._id;
+          logger.warn(`[yamlSectionService] Item "${data.path}" không tìm thấy templateId chỉ định, fallback về template "${fallback.name}" (${fallback._id})`);
+        }
+      }
+
+      // Find parentId if missing
+      let resolvedParentId = data.parentId || null;
+      if (!resolvedParentId && data.parentPath) {
+        const parentItem = await Item.findOne({ path: data.parentPath }).select('_id').lean();
+        resolvedParentId = parentItem?._id || null;
+      } else if (!resolvedParentId && data.path) {
+        const parts = data.path.split('/');
+        parts.pop();
+        const parentPath = parts.join('/');
+        if (parentPath && parentPath !== '') {
+          const parentItem = await Item.findOne({ path: parentPath }).select('_id').lean();
+          resolvedParentId = parentItem?._id || null;
+        }
+      }
+
+      // Resolve Presentation if present
+      let resolvedPresentation = null;
+      if (data.presentation) {
+        let layoutId = null;
+        if (data.presentation.layoutPath) {
+          layoutId = layoutMapByPath.get(data.presentation.layoutPath)?._id || null;
+        }
+        if (!layoutId && data.presentation.layoutId) {
+          layoutId = layoutMapById.get(data.presentation.layoutId)?._id || null;
+        }
+        if (!layoutId && data.presentation.layoutName) {
+          layoutId = layoutMapByName.get(data.presentation.layoutName)?._id || null;
+        }
+
+        const renderings = Array.isArray(data.presentation.renderings)
+          ? data.presentation.renderings.map((r) => {
+              let rendId = null;
+              if (r.renderingPath) {
+                rendId = layoutMapByPath.get(r.renderingPath)?._id || null;
+              }
+              if (!rendId && r.renderingId) {
+                rendId = layoutMapById.get(r.renderingId)?._id || null;
+              }
+              if (!rendId && r.renderingName) {
+                rendId = layoutMapByName.get(r.renderingName)?._id || null;
+              }
+              return {
+                uid: r.uid || r.id || crypto.randomUUID(),
+                renderingId: rendId,
+                placeholder: r.placeholder || 'maincontent',
+                placeholderKey: r.placeholder || 'maincontent',
+                sortOrder: r.sortOrder || 100,
+                parameters: r.parameters || {},
+                datasourceId: r.datasource || null,
+              };
+            })
+          : [];
+
+        resolvedPresentation = {
+          final: {
+            layoutId,
+            renderings,
+          },
+        };
       }
 
       // Check existing item by path or ID
@@ -1058,6 +1149,12 @@ class YamlSectionService {
         await newItem.save();
         createdCount++;
         processedIds.add(newItem._id.toString());
+
+        if (newItem.path && newItem.path.startsWith(branding.PATHS.LAYOUT || '/root/layout')) {
+          layoutMapByPath.set(newItem.path, newItem);
+          layoutMapById.set(newItem._id.toString(), newItem);
+          layoutMapByName.set(newItem.name, newItem);
+        }
       } else if (mode === 'createonly') {
         // Skip existing in createOnly mode
         skippedCount++;
@@ -1087,6 +1184,12 @@ class YamlSectionService {
         await existing.save();
         updatedCount++;
         processedIds.add(existing._id.toString());
+
+        if (existing.path && existing.path.startsWith(branding.PATHS.LAYOUT || '/root/layout')) {
+          layoutMapByPath.set(existing.path, existing);
+          layoutMapById.set(existing._id.toString(), existing);
+          layoutMapByName.set(existing.name, existing);
+        }
       }
     }
 
