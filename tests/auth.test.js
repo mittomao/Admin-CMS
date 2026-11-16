@@ -172,5 +172,65 @@ describe('GĐ 1 - Authentication & Launchpad Tests', () => {
     expect(launchpadRes.text).toContain('Content Editor');
     expect(launchpadRes.text).not.toContain('User Manager'); // Author does not have access
   });
+
+  it('Initial login with mustChangePassword: true forces password change and accesses Launchpad', async () => {
+    // Seed new user requiring password change
+    const initHash = await User.hashPassword('tempPassword123');
+    await User.create({
+      username: 'newadmin',
+      email: 'newadmin@treecraft.local',
+      passwordHash: initHash,
+      fullName: 'New Admin',
+      roles: [adminRole._id],
+      isActive: true,
+      mustChangePassword: true,
+    });
+
+    const agent = request.agent(app);
+
+    // 1. Login with temporary password
+    const loginRes = await agent
+      .post('/admin/login')
+      .type('form')
+      .send({
+        username: 'newadmin',
+        password: 'tempPassword123',
+      });
+
+    // Should redirect to change-password
+    expect(loginRes.status).toBe(302);
+    expect(loginRes.headers.location).toBe('/admin/change-password');
+
+    // 2. Accessing launchpad before changing password redirects to /admin/change-password
+    const blockRes = await agent.get('/admin/launchpad');
+    expect(blockRes.status).toBe(302);
+    expect(blockRes.headers.location).toBe('/admin/change-password');
+
+    // 3. Render change-password page
+    const pageRes = await agent.get('/admin/change-password');
+    expect(pageRes.status).toBe(200);
+    expect(pageRes.text).toContain('Đổi Mật Khẩu Khởi Tạo');
+
+    // 4. Submit change-password form with new password
+    const changeRes = await agent
+      .post('/admin/change-password')
+      .type('form')
+      .send({
+        newPassword: 'MySecurePassword2026!',
+        confirmPassword: 'MySecurePassword2026!',
+      });
+
+    expect(changeRes.status).toBe(302);
+    expect(changeRes.headers.location).toBe('/admin/launchpad');
+
+    // 5. User can now access launchpad dashboard
+    const launchpadRes = await agent.get('/admin/launchpad');
+    expect(launchpadRes.status).toBe(200);
+    expect(launchpadRes.text).toContain('New Admin');
+
+    // 6. Database record was updated
+    const updatedUser = await User.findOne({ username: 'newadmin' });
+    expect(updatedUser.mustChangePassword).toBe(false);
+  });
 });
 

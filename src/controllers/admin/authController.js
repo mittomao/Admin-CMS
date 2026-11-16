@@ -110,9 +110,23 @@ const postChangePassword = async (req, res) => {
 
   try {
     const User = require('../../models/User');
-    const userDoc = await User.findById(req.session.user._id);
+    const userId = req.session.user.id || req.session.user._id;
+    let userDoc = null;
+    if (userId) {
+      userDoc = await User.findById(userId);
+    }
+    if (!userDoc && req.session.user.username) {
+      userDoc = await User.findOne({ username: req.session.user.username.trim().toLowerCase() });
+    }
+
     if (!userDoc) {
-      return res.redirect('/admin/login');
+      logger.warn(`Change password failed: user not found (id: ${userId}, user: ${req.session.user.username})`);
+      return res.render('admin/auth/change-password', {
+        layout: 'layouts/auth',
+        title: `${branding.PROJECT_NAME} - Đổi Mật Khẩu Khởi Tạo`,
+        error: 'Không tìm thấy tài khoản người dùng trong hệ thống.',
+        user: req.session.user,
+      });
     }
 
     userDoc.passwordHash = await User.hashPassword(newPassword);
@@ -120,14 +134,19 @@ const postChangePassword = async (req, res) => {
     await userDoc.save();
 
     req.session.user.mustChangePassword = false;
-    req.session.save((err) => {
-      if (err) {
-        logger.error(`Session save error after change password: ${err.message}`);
-      }
-      logger.info(`User [${userDoc.username}] changed initial password successfully.`);
-      return res.redirect('/admin/launchpad');
+    await new Promise((resolve) => {
+      req.session.save((err) => {
+        if (err) {
+          logger.error(`Session save error after change password: ${err.message}`);
+        }
+        resolve();
+      });
     });
+
+    logger.info(`User [${userDoc.username}] changed initial password successfully.`);
+    return res.redirect('/admin/launchpad');
   } catch (err) {
+    logger.error(`Error changing password: ${err.message}`);
     return res.render('admin/auth/change-password', {
       layout: 'layouts/auth',
       title: `${branding.PROJECT_NAME} - Đổi Mật Khẩu Khởi Tạo`,

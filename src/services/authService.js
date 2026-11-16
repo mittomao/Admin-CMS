@@ -35,6 +35,7 @@ class AuthService {
     // Prepare session-safe user object
     const sessionUser = {
       id: user._id.toString(),
+      _id: user._id.toString(),
       username: user.username,
       fullName: user.fullName,
       email: user.email,
