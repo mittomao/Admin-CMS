@@ -94,15 +94,12 @@ const presentationService = {
    * Get all active Layout items under /root/layout/Layouts/
    */
   async getAllLayouts() {
-    const layoutTemplate = await Template.findOne({ name: 'Layout' }).lean();
     const layoutRegex = new RegExp(`^(${branding.PATHS.LAYOUTS}|/root/layout/Layouts)/[^/]+$`, 'i');
     const query = {
       path: { $regex: layoutRegex },
-      deleted: false,
+      deleted: { $ne: true },
+      isDeleted: { $ne: true },
     };
-    if (layoutTemplate) {
-      query.templateId = layoutTemplate._id;
-    }
 
     const layouts = await Item.find(query)
       .sort({ sortOrder: 1, name: 1 })
@@ -128,15 +125,12 @@ const presentationService = {
    * Get all active Placeholder items under /root/layout/Placeholders/
    */
   async getAllPlaceholders() {
-    const placeholderTemplate = await Template.findOne({ name: 'Placeholder' }).lean();
     const placeholderRegex = new RegExp(`^(${branding.PATHS.PLACEHOLDERS}|/root/layout/Placeholders)/[^/]+$`, 'i');
     const query = {
       path: { $regex: placeholderRegex },
-      deleted: false,
+      deleted: { $ne: true },
+      isDeleted: { $ne: true },
     };
-    if (placeholderTemplate) {
-      query.templateId = placeholderTemplate._id;
-    }
 
     const placeholders = await Item.find(query)
       .sort({ sortOrder: 1, name: 1 })
@@ -191,15 +185,12 @@ const presentationService = {
    * Get all active Rendering items under /root/layout/Renderings/
    */
   async getAllRenderings() {
-    const renderingTemplate = await Template.findOne({ name: 'Rendering' }).lean();
-    const renderingRegex = new RegExp(`^(${branding.PATHS.RENDERINGS}|/root/layout/Renderings)/.*`, 'i');
+    const renderingRegex = new RegExp(`^(${branding.PATHS.RENDERINGS}|/root/layout/Renderings)/.+`, 'i');
     const query = {
       path: { $regex: renderingRegex },
-      deleted: false,
+      deleted: { $ne: true },
+      isDeleted: { $ne: true },
     };
-    if (renderingTemplate) {
-      query.templateId = renderingTemplate._id;
-    }
 
     const renderings = await Item.find(query)
       .sort({ sortOrder: 1, name: 1 })

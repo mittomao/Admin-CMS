@@ -74,6 +74,32 @@ async function restoreFromJson(filePath) {
     const Item = require('../models/Item');
     const PublishedItem = require('../models/PublishedItem');
 
+    // 0. Dọn dẹp triệt để các node rác, node trùng lặp (/root/content/Home, /root/content/About-Us)
+    console.log(`🧹 [0/3] Dọn dẹp các node rác/trùng lặp và giải phóng xung đột dữ liệu...`);
+    await Item.deleteMany({
+      $or: [
+        { path: { $in: ['/root/content/Home', '/root/content/About-Us', '/root/content/AboutUs'] } },
+        { path: { $in: data.items.map((i) => i.path) }, _id: { $nin: data.items.map((i) => i._id) } },
+      ],
+    });
+    await PublishedItem.deleteMany({
+      $or: [
+        { path: { $in: ['/root/content/Home', '/root/content/About-Us', '/root/content/AboutUs'] } },
+        { path: { $in: data.items.map((i) => i.path) }, _id: { $nin: data.items.map((i) => i._id) } },
+      ],
+    });
+
+    const tplNames = data.templates.map((t) => t.name).filter(Boolean);
+    const tplPaths = data.templates.map((t) => t.path).filter(Boolean);
+    const tplIds = data.templates.map((t) => t._id).filter(Boolean);
+    await Template.deleteMany({
+      $or: [
+        { name: { $in: tplNames }, _id: { $nin: tplIds } },
+        { path: { $in: tplPaths }, _id: { $nin: tplIds } },
+      ],
+    });
+    console.log(`   ✓ Dọn dẹp hoàn tất.\n`);
+
     // 1. Phục hồi Templates
     console.log(`📦 [1/3] Đang nạp ${data.templates.length} Templates...`);
     let tplCount = 0;
