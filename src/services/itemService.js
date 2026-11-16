@@ -508,6 +508,34 @@ const itemService = {
     const db = options.db || (typeof options === 'string' ? options : 'master');
     const cleanDb = this.validateDb(db);
     const Repo = this.getItemRepository(cleanDb);
+
+    // Self-healing: Ensure items whose path is directly under parentNode have matching parentId & ancestors
+    try {
+      const parentNode = await Repo.findById(parentId).select('_id path ancestors').lean();
+      if (parentNode && parentNode.path) {
+        const escapedPath = parentNode.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const directChildrenRegex = new RegExp(`^${escapedPath}/[^/]+$`, 'i');
+        const misparented = await Repo.find({
+          path: directChildrenRegex,
+          parentId: { $ne: parentNode._id },
+          isDeleted: { $ne: true },
+          deleted: { $ne: true },
+        }).select('_id path parentId');
+
+        if (misparented.length > 0) {
+          const correctAncestors = [...(parentNode.ancestors || []), parentNode._id];
+          for (const orphan of misparented) {
+            await Repo.updateOne(
+              { _id: orphan._id },
+              { $set: { parentId: parentNode._id, ancestors: correctAncestors } }
+            );
+          }
+        }
+      }
+    } catch {
+      // Ignored for resilience
+    }
+
     const query = { parentId, isDeleted: { $ne: true }, deleted: { $ne: true } };
 
     const children = await Repo.find(query)

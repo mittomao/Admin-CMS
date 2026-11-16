@@ -607,10 +607,12 @@ const seedData = async (options = {}) => {
     });
 
     // 6. Seed Tree Root & Core Nodes
-    // Root: /root
+    // Root: /root (DEC-043: canonical root ID 6ae95cc6b1e541e051fd4162)
+    const CANONICAL_ROOT_ID = new mongoose.Types.ObjectId('6ae95cc6b1e541e051fd4162');
     let rootNode = await Item.findOne({ path: branding.PATHS.ROOT, deleted: false });
     if (!rootNode) {
       rootNode = await Item.create({
+        _id: CANONICAL_ROOT_ID,
         name: branding.ROOT_NAME,
         displayName: branding.ROOT_NAME,
         templateId: templatesMap['Folder'],
@@ -643,14 +645,14 @@ const seedData = async (options = {}) => {
       logger.info(`Created Root node: ${branding.PATHS.ROOT}`);
     }
 
-    // First-level branches under root:
+    // First-level branches under root (DEC-043 canonical IDs):
     // /root/content, /root/layout, /root/media library, /root/templates, /root/system
     const branches = [
-      { name: 'content', displayName: 'Content', sortOrder: 100 },
-      { name: 'layout', displayName: 'Layout', sortOrder: 200 },
-      { name: 'media library', displayName: 'Media Library', sortOrder: 300 },
-      { name: 'templates', displayName: 'Templates', sortOrder: 400 },
-      { name: 'system', displayName: 'System', sortOrder: 500 },
+      { name: 'content', displayName: 'Content', sortOrder: 100, id: '6aea24d8fb85fae7f0a4099d' },
+      { name: 'layout', displayName: 'Layout', sortOrder: 200, id: '6aea24d7fb85fae7f0a409a8' },
+      { name: 'media library', displayName: 'Media Library', sortOrder: 300, id: '6ae95cc6b1e541e051fd416c' },
+      { name: 'templates', displayName: 'Templates', sortOrder: 400, id: '6ae95cc6b1e541e051fd416b' },
+      { name: 'system', displayName: 'System', sortOrder: 500, id: '6ae95cc6b1e541e051fd416d' },
     ];
 
     const branchesMap = {};
@@ -660,6 +662,7 @@ const seedData = async (options = {}) => {
       let branchItem = await Item.findOne({ path: bPath, deleted: false });
       if (!branchItem) {
         branchItem = await Item.create({
+          _id: b.id ? new mongoose.Types.ObjectId(b.id) : undefined,
           name: b.name,
           displayName: b.displayName,
           templateId: targetTemplateId,

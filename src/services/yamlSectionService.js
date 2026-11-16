@@ -1050,18 +1050,38 @@ class YamlSectionService {
         }
       }
 
-      // Find parentId if missing
-      let resolvedParentId = data.parentId || null;
-      if (!resolvedParentId && data.parentPath) {
-        const parentItem = await Item.findOne({ path: data.parentPath }).select('_id').lean();
-        resolvedParentId = parentItem?._id || null;
-      } else if (!resolvedParentId && data.path) {
+      // Resolve parentId & ancestors by PATH first (Hierarchical Source of Truth)
+      let resolvedParentId = null;
+      let resolvedAncestors = [];
+      let parentItem = null;
+
+      if (data.path === '/root' || data.path === (branding.PATHS.ROOT || '/root')) {
+        resolvedParentId = null;
+        resolvedAncestors = [];
+      } else {
         const parts = data.path.split('/');
         parts.pop();
-        const parentPath = parts.join('/');
-        if (parentPath && parentPath !== '') {
-          const parentItem = await Item.findOne({ path: parentPath }).select('_id').lean();
-          resolvedParentId = parentItem?._id || null;
+        const expectedParentPath = data.parentPath || parts.join('/');
+
+        if (expectedParentPath && expectedParentPath !== '') {
+          // Priority 1: Find parent by path in DB
+          parentItem = await Item.findOne({ path: expectedParentPath, deleted: { $ne: true } }).select('_id ancestors').lean();
+          if (parentItem) {
+            resolvedParentId = parentItem._id;
+            resolvedAncestors = [...(parentItem.ancestors || []), parentItem._id];
+          }
+        }
+
+        // Priority 2: If parent not found by path, try lookup by data.parentId in DB
+        if (!resolvedParentId && data.parentId) {
+          parentItem = await Item.findOne({ _id: data.parentId, deleted: { $ne: true } }).select('_id ancestors').lean();
+          if (parentItem) {
+            resolvedParentId = parentItem._id;
+            resolvedAncestors = [...(parentItem.ancestors || []), parentItem._id];
+          } else if (mongoose.Types.ObjectId.isValid(data.parentId)) {
+            // Priority 3: Fallback to data.parentId as ObjectId if nothing else found
+            resolvedParentId = new mongoose.Types.ObjectId(data.parentId);
+          }
         }
       }
 
@@ -1129,6 +1149,7 @@ class YamlSectionService {
           path: data.path,
           templateId: resolvedTemplateId,
           parentId: resolvedParentId,
+          ancestors: resolvedAncestors,
           sortOrder: data.sortOrder || 100,
           icon: data.icon || '',
           sharedFields: data.sharedFields || {},
@@ -1137,14 +1158,6 @@ class YamlSectionService {
           createdBy: user?._id || null,
           updatedBy: user?._id || null,
         });
-
-        // Compute ancestors if parent known
-        if (resolvedParentId) {
-          const p = await Item.findById(resolvedParentId).select('ancestors').lean();
-          if (p) {
-            newItem.ancestors = [...(p.ancestors || []), p._id];
-          }
-        }
 
         await newItem.save();
         createdCount++;
@@ -1167,6 +1180,9 @@ class YamlSectionService {
         if (data.sortOrder !== undefined) existing.sortOrder = data.sortOrder;
         if (resolvedTemplateId) existing.templateId = resolvedTemplateId;
         if (resolvedParentId) existing.parentId = resolvedParentId;
+        if (resolvedAncestors.length > 0 || data.path === '/root' || data.path === (branding.PATHS.ROOT || '/root')) {
+          existing.ancestors = resolvedAncestors;
+        }
 
         if (data.sharedFields) {
           existing.sharedFields = data.sharedFields;

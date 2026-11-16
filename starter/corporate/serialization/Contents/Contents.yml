@@ -6,7 +6,7 @@ template:
   id: 6aea24d7fb85fae7f0a40974
   name: Folder
   path: /root/templates/System/Folder
-parentId: 6aea24d7fb85fae7f0a40960
+parentId: 6ae95cc6b1e541e051fd4162
 parentPath: /root
 sortOrder: 100
 icon: folder
