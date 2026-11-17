@@ -7,6 +7,7 @@ const Template = require('../models/Template');
 const languageService = require('./languageService');
 const logger = require('../utils/logger');
 const branding = require('../config/branding');
+const sitePaths = require('../config/sitePaths');
 
 const uuidv4 = () => randomUUID();
 
@@ -76,9 +77,10 @@ const presentationService = {
       throw new ValidationError('viewPath bắt buộc phải nằm trong thư mục whitelist "site/" (ví dụ: site/layouts/... hoặc site/components/...).');
     }
 
-    // 4. Kiểm tra file tồn tại trên đĩa nếu được yêu cầu
+    // 4. Kiểm tra file tồn tại trên đĩa nếu được yêu cầu (DEC-056: sitePaths.VIEWS_DIR)
     if (checkFileExists) {
-      const fullPath = path.join(process.cwd(), 'src', 'views', cleanPath);
+      const stripped = cleanPath.startsWith('site/') ? cleanPath.substring(5) : cleanPath;
+      const fullPath = path.resolve(sitePaths.VIEWS_DIR, stripped);
       if (!fs.existsSync(fullPath)) {
         logger.warn(`[validateViewPath] Tệp view vật lý chưa tồn tại trên đĩa: ${fullPath}`);
       }

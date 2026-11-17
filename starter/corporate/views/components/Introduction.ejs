@@ -1,0 +1,14 @@
+<section class="py-12 sm:py-16 lg:py-20 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center">
+    <% if (fields && fields.IntroHeading) { %>
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 mb-6">
+        <%= fields.IntroHeading %>
+      </h2>
+    <% } %>
+    <% if (fields && fields.IntroBody) { %>
+      <div class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto space-y-4">
+        <%- fields.IntroBody %>
+      </div>
+    <% } %>
+  </div>
+</section>

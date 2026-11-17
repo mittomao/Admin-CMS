@@ -9,6 +9,7 @@ const Template = require('../models/Template');
 const Item = require('../models/Item');
 const Language = require('../models/Language');
 const branding = require('../config/branding');
+const systemIds = require('../config/systemIds');
 
 const getMaskedUri = (uri) => (uri ? uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@') : '');
 
@@ -357,6 +358,7 @@ const seedData = async () => {
         isSystem: true,
         description: 'Mẫu component trống để khởi tạo component hoặc page template mới',
         path: `${branding.PATHS.SYSTEM_TEMPLATES}/Standard Template`,
+        sortOrder: 50,
         sections: [],
       },
       {
@@ -561,7 +563,9 @@ const seedData = async () => {
     for (const t of templatesConfig) {
       let tpl = await Template.findOne({ name: t.name });
       if (!tpl) {
-        tpl = await Template.create(t);
+        const fixedId = systemIds.getSystemTemplateIdByName(t.name);
+        const createData = fixedId ? { _id: new mongoose.Types.ObjectId(fixedId), ...t } : t;
+        tpl = await Template.create(createData);
         logger.info(`Created Template: ${t.name}`);
       } else {
         // Update sections/fields to ensure schema is up-to-date
@@ -604,7 +608,9 @@ const seedData = async () => {
     // Root: /root
     let rootNode = await Item.findOne({ path: branding.PATHS.ROOT, deleted: false });
     if (!rootNode) {
+      const fixedRootId = systemIds.getSystemIdByPath(branding.PATHS.ROOT);
       rootNode = await Item.create({
+        ...(fixedRootId ? { _id: new mongoose.Types.ObjectId(fixedRootId) } : {}),
         name: branding.ROOT_NAME,
         displayName: branding.ROOT_NAME,
         templateId: templatesMap['Folder'],
@@ -638,22 +644,24 @@ const seedData = async () => {
     }
 
     // First-level branches under root:
-    // /root/content, /root/layout, /root/media library, /root/templates, /root/system
+    // /root/content, /root/media library, /root/layout, /root/system, /root/templates
     const branches = [
       { name: 'content', displayName: 'Content', sortOrder: 100 },
-      { name: 'layout', displayName: 'Layout', sortOrder: 200 },
-      { name: 'media library', displayName: 'Media Library', sortOrder: 300 },
+      { name: 'media library', displayName: 'Media Library', sortOrder: 200 },
+      { name: 'layout', displayName: 'Layout', sortOrder: 300 },
+      { name: 'system', displayName: 'System', sortOrder: 300 },
       { name: 'templates', displayName: 'Templates', sortOrder: 400 },
-      { name: 'system', displayName: 'System', sortOrder: 500 },
     ];
 
     const branchesMap = {};
     for (const b of branches) {
       const bPath = `${branding.PATHS.ROOT}/${b.name}`;
-      const targetTemplateId = b.name === 'media library' ? templatesMap['Media Folder'] : templatesMap['Folder'];
+      const targetTemplateId = b.name === 'templates' ? (templatesMap['Template Folder'] || templatesMap['Folder']) : templatesMap['Folder'];
       let branchItem = await Item.findOne({ path: bPath, deleted: false });
       if (!branchItem) {
+        const fixedBranchId = systemIds.getSystemIdByPath(bPath);
         branchItem = await Item.create({
+          ...(fixedBranchId ? { _id: new mongoose.Types.ObjectId(fixedBranchId) } : {}),
           name: b.name,
           displayName: b.displayName,
           templateId: targetTemplateId,
@@ -688,121 +696,129 @@ const seedData = async () => {
       branchesMap[b.name] = branchItem._id;
     }
 
-    // Node /root/content/home
-    const homePath = branding.PATHS.HOME;
-    let homeItem = await Item.findOne({ path: homePath, deleted: false });
-    if (!homeItem) {
-      homeItem = await Item.create({
-        name: 'home',
-        displayName: 'Home',
-        templateId: templatesMap['Page'],
-        parentId: branchesMap['content'],
-        ancestors: [rootNode._id, branchesMap['content']],
-        path: homePath,
-        sortOrder: 100,
-        fields: {
-          title: `Welcome to ${branding.PROJECT_NAME} CMS`,
-          summary: `A modern ${branding.PROJECT_NAME} CMS experience with hierarchical tree management.`,
-          body: '<p>Welcome to your new CMS! You can edit items, create child nodes, and navigate the content tree.</p>',
-          isFeatured: true,
-          publishDate: new Date().toISOString().split('T')[0],
-        },
-        sharedFields: {},
-        languages: [
-          {
-            code: 'vi',
-            unversionedFields: {},
-            versions: [
-              {
-                version: 1,
-                fields: {
-                  title: 'Chào mừng bạn đến với Treecraft CMS',
-                  summary: 'Trải nghiệm quản trị nội dung phân cấp Treecraft.',
-                  body: '<p>Chào mừng bạn đến với hệ thống CMS mới! Bạn có thể chỉnh sửa các item, tạo các node con và điều hướng cây nội dung.</p>',
-                  isFeatured: true,
-                  publishDate: new Date().toISOString().split('T')[0],
-                },
-                createdBy: adminUser._id,
-                note: 'Phiên bản khởi tạo tiếng Việt',
-              },
-            ],
-          },
-          {
-            code: 'en',
-            unversionedFields: {},
-            versions: [
-              {
-                version: 1,
-                fields: {
-                  title: 'Welcome to Treecraft CMS',
-                  summary: 'A modern Treecraft CMS experience with hierarchical tree management.',
-                  body: '<p>Welcome to your new CMS! You can edit items, create child nodes, and navigate the content tree.</p>',
-                  isFeatured: true,
-                  publishDate: new Date().toISOString().split('T')[0],
-                },
-                createdBy: adminUser._id,
-                note: 'Initial Seed Version',
-              },
-            ],
-          },
-        ],
-        presentation: {
-          shared: { devices: [] },
-          final: [],
-        },
-        createdBy: adminUser._id,
-      });
-      logger.info(`Created Sample Page node: ${homePath}`);
-    }
+    const isSystemOnly = process.env.SEED_SYSTEM_ONLY === 'true';
 
-    // 8. Seed Media Library Folders as Items (GĐ 5.1: Mọi Media là Item)
-    const mediaLibraryBranch = await Item.findOne({ path: branding.PATHS.MEDIA, deleted: false });
-    if (mediaLibraryBranch) {
-      if (mediaLibraryBranch.templateId.toString() !== templatesMap['Media Folder'].toString()) {
-        mediaLibraryBranch.templateId = templatesMap['Media Folder'];
-        await mediaLibraryBranch.save();
-      }
-
-      const sampleBannersPath = `${branding.PATHS.MEDIA}/banners`;
-      let bannersFolder = await Item.findOne({ path: sampleBannersPath, deleted: false });
-      if (!bannersFolder) {
-        bannersFolder = await Item.create({
-          name: 'banners',
-          displayName: 'Banners',
-          templateId: templatesMap['Media Folder'],
-          parentId: mediaLibraryBranch._id,
-          ancestors: [...mediaLibraryBranch.ancestors, mediaLibraryBranch._id],
-          path: sampleBannersPath,
+    // 7. Seed Sample Home Page Node (chỉ tạo ở chế độ standalone dev truyền thống)
+    if (!isSystemOnly) {
+      const homePath = branding.PATHS.HOME;
+      let homeItem = await Item.findOne({ path: homePath, deleted: false });
+      if (!homeItem) {
+        homeItem = await Item.create({
+          name: 'home',
+          displayName: 'Home',
+          templateId: templatesMap['Page'],
+          parentId: branchesMap['content'],
+          ancestors: [rootNode._id, branchesMap['content']],
+          path: homePath,
           sortOrder: 100,
-          fields: {},
+          fields: {
+            title: `Welcome to ${branding.PROJECT_NAME} CMS`,
+            summary: `A modern ${branding.PROJECT_NAME} CMS experience with hierarchical tree management.`,
+            body: '<p>Welcome to your new CMS! You can edit items, create child nodes, and navigate the content tree.</p>',
+            isFeatured: true,
+            publishDate: new Date().toISOString().split('T')[0],
+          },
           sharedFields: {},
-          createdBy: adminUser._id
+          languages: [
+            {
+              code: 'vi',
+              unversionedFields: {},
+              versions: [
+                {
+                  version: 1,
+                  fields: {
+                    title: 'Chào mừng bạn đến với Treecraft CMS',
+                    summary: 'Trải nghiệm quản trị nội dung phân cấp Treecraft.',
+                    body: '<p>Chào mừng bạn đến với hệ thống CMS mới! Bạn có thể chỉnh sửa các item, tạo các node con và điều hướng cây nội dung.</p>',
+                    isFeatured: true,
+                    publishDate: new Date().toISOString().split('T')[0],
+                  },
+                  createdBy: adminUser._id,
+                  note: 'Phiên bản khởi tạo tiếng Việt',
+                },
+              ],
+            },
+            {
+              code: 'en',
+              unversionedFields: {},
+              versions: [
+                {
+                  version: 1,
+                  fields: {
+                    title: 'Welcome to Treecraft CMS',
+                    summary: 'A modern Treecraft CMS experience with hierarchical tree management.',
+                    body: '<p>Welcome to your new CMS! You can edit items, create child nodes, and navigate the content tree.</p>',
+                    isFeatured: true,
+                    publishDate: new Date().toISOString().split('T')[0],
+                  },
+                  createdBy: adminUser._id,
+                  note: 'Initial Seed Version',
+                },
+              ],
+            },
+          ],
+          presentation: {
+            shared: { devices: [] },
+            final: [],
+          },
+          createdBy: adminUser._id,
         });
-        logger.info('Created Media Library subfolder Item: Banners');
+        logger.info(`Created Sample Page node: ${homePath}`);
       }
 
-      const editorUploadsPath = `${branding.PATHS.MEDIA}/editor-uploads`;
-      let editorUploadsFolder = await Item.findOne({ path: editorUploadsPath, deleted: false });
-      if (!editorUploadsFolder) {
-        editorUploadsFolder = await Item.create({
-          name: 'editor-uploads',
-          displayName: 'Editor Uploads',
-          templateId: templatesMap['Media Folder'],
-          parentId: mediaLibraryBranch._id,
-          ancestors: [...mediaLibraryBranch.ancestors, mediaLibraryBranch._id],
-          path: editorUploadsPath,
-          sortOrder: 200,
-          fields: {},
-          sharedFields: {},
-          createdBy: adminUser._id
-        });
-        logger.info('Created Media Library subfolder Item: Editor Uploads');
+      // 8. Seed Media Library Folders as Items (GĐ 5.1: Mọi Media là Item)
+      const mediaLibraryBranch = await Item.findOne({ path: branding.PATHS.MEDIA, deleted: false });
+      if (mediaLibraryBranch) {
+        if (mediaLibraryBranch.templateId.toString() !== templatesMap['Media Folder'].toString()) {
+          mediaLibraryBranch.templateId = templatesMap['Media Folder'];
+          await mediaLibraryBranch.save();
+        }
+
+        const sampleBannersPath = `${branding.PATHS.MEDIA}/banners`;
+        let bannersFolder = await Item.findOne({ path: sampleBannersPath, deleted: false });
+        if (!bannersFolder) {
+          bannersFolder = await Item.create({
+            name: 'banners',
+            displayName: 'Banners',
+            templateId: templatesMap['Media Folder'],
+            parentId: mediaLibraryBranch._id,
+            ancestors: [...mediaLibraryBranch.ancestors, mediaLibraryBranch._id],
+            path: sampleBannersPath,
+            sortOrder: 100,
+            fields: {},
+            sharedFields: {},
+            createdBy: adminUser._id
+          });
+          logger.info('Created Media Library subfolder Item: Banners');
+        }
+
+        const editorUploadsPath = `${branding.PATHS.MEDIA}/editor-uploads`;
+        let editorUploadsFolder = await Item.findOne({ path: editorUploadsPath, deleted: false });
+        if (!editorUploadsFolder) {
+          editorUploadsFolder = await Item.create({
+            name: 'editor-uploads',
+            displayName: 'Editor Uploads',
+            templateId: templatesMap['Media Folder'],
+            parentId: mediaLibraryBranch._id,
+            ancestors: [...mediaLibraryBranch.ancestors, mediaLibraryBranch._id],
+            path: editorUploadsPath,
+            sortOrder: 200,
+            fields: {},
+            sharedFields: {},
+            createdBy: adminUser._id
+          });
+          logger.info('Created Media Library subfolder Item: Editor Uploads');
+        }
       }
     }
 
     // 9. Seed Presentation System Items (GĐ 6)
     const { seedPresentationData } = require('./seed-presentation-data');
-    await seedPresentationData();
+    await seedPresentationData({ systemOnly: isSystemOnly });
+
+    // 10. Seed Template Tree Hierarchy (System Templates -> Items under /root/templates/System)
+    const { migrateTemplatesToContentTree } = require('./migrate-templates-to-content-tree');
+    await migrateTemplatesToContentTree();
 
     logger.info('Seed completed successfully!');
     await mongoose.disconnect();

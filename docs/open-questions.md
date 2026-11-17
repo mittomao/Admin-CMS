@@ -684,3 +684,115 @@ Tài liệu này lưu trữ danh sách 5 câu hỏi kỹ thuật / nghiệp vụ
 
 
 
+
+
+---
+
+## CÁC CÂU HỎI MỞ CHO GIAI ĐOẠN S: TÁCH CORE & SITE VÀ TREE PARITY
+
+### Nhóm 1: Tách Core và Site (Core & Site Split)
+
+#### 6. Nhận diện ngữ cảnh chạy (Detection Order của `sitePaths.js`)
+- **Câu hỏi:** Khi không truyền `--site` và không có biến môi trường `TREECRAFT_SITE_DIR`, cơ chế tìm ngược `site.config.js` có giới hạn bao nhiêu cấp?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-056](decisions/DEC-056-core-and-site-architecture-split.md)
+- **Lựa chọn A (Đề xuất mặc định):** Tìm ngược tối đa 4 cấp thư mục cha từ `process.cwd()`. Nếu không tìm thấy, tự động fallback về chế độ Standalone của Core (coi chính repo hiện tại là monolithic site).
+- **Lựa chọn B:** Chỉ tìm đúng tại `process.cwd()`, nếu không có thì báo lỗi ngay.
+- **Lý do đề xuất:** Giúp lập trình viên có thể đứng ở bất kỳ thư mục con nào bên trong dự án (`my-project`, `my-project/site`, `my-project/site/views`) đều chạy được lệnh mà không cần gõ đường dẫn tuyệt đối; đồng thời bảo toàn tính tương thích ngược cho repo Core độc lập.
+
+#### 7. Quản lý `node_modules` ở repo người dùng (`my-project`)
+- **Câu hỏi:** Repo người dùng có cần thư mục `node_modules` riêng hay dùng chung dependencies trong `core/node_modules`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** `my-project/package.json` chỉ chứa wrapper scripts (ví dụ: `"dev": "node core/bin/treecraft.js dev"`). Toàn bộ dependencies được cài đặt tập trung trong `core/node_modules`. Khi chạy `treecraft init`, script tự kiểm tra và cài `npm install` trong `core` nếu chưa có.
+- **Lựa chọn B:** Cài đặt toàn bộ dependencies ra root của `my-project`.
+- **Lý do đề xuất:** Tránh lãng phí dung lượng ổ đĩa, đảm bảo toàn bộ dự án dùng chính xác phiên bản thư viện đã được Core kiểm thử và khoá trong `core/package-lock.json`.
+
+#### 8. Phục vụ Static Assets & Thứ tự ưu tiên
+- **Câu hỏi:** Khi có trùng tên file giữa `site/public/` và `core/public/` (ví dụ `favicon.ico`), thứ tự ưu tiên thế nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** `site/public/` được ưu tiên phục vụ trước tại root `/` để người dùng có thể tự do override favicon, logo, style của site. Riêng namespace `/admin/assets/` luôn phục vụ độc quyền từ `core/public/`.
+- **Lựa chọn B:** Chỉ phục vụ từ `site/public/`.
+- **Lý do đề xuất:** Đảm bảo admin dashboard luôn hiển thị đúng icon và style của Treecraft Core, trong khi website công khai hoàn toàn do người dùng làm chủ.
+
+#### 9. Quy ước tên Database dự án mới
+- **Câu hỏi:** Định dạng tên database cho dự án mới được khởi tạo?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-057](decisions/DEC-057-single-database-two-collections.md)
+- **Lựa chọn A (Đề xuất mặc định):** Chuẩn hoá theo cú pháp `treecraft_<slug>` (ví dụ dự án có slug `corporate` thì DB tên `treecraft_corporate`).
+- **Lựa chọn B:** Đặt tên tự do không có tiền tố.
+- **Lý do đề xuất:** Dễ quản lý trong môi trường MongoDB dùng chung nhiều dự án và giúp `dbGuard.js` kiểm soát an toàn chính xác.
+
+#### 10. Xử lý Database đã tồn tại khi chạy `init`
+- **Câu hỏi:** Nếu database `treecraft_<slug>` đã tồn tại dữ liệu trước đó, lệnh `init` sẽ xử lý ra sao?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Cảnh báo an toàn và dừng lại. Yêu cầu lập trình viên chỉ định `--force` để xóa và khởi tạo lại, hoặc chọn `--slug` khác.
+- **Lựa chọn B:** Tự động xóa sạch không hỏi.
+- **Lý do đề xuất:** Chống mất mát dữ liệu vô ý (Defense-in-Depth).
+
+#### 11. Cơ chế cấp mật khẩu Admin khi chạy `init`
+- **Câu hỏi:** Cung cấp mật khẩu Admin ban đầu như thế nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Nếu truyền cờ `--admin-pass <pass>` thì dùng mật khẩu đó; nếu ở chế độ tương tác (interactive) thì nhắc nhập; nếu chạy với `--yes` (không tương tác) thì tự động sinh mật khẩu ngẫu nhiên an toàn 12 ký tự và in ra màn hình terminal kèm cảnh báo đổi mật khẩu.
+- **Lựa chọn B:** Luôn hardcode mật khẩu mặc định (ví dụ `Admin@123`).
+- **Lý do đề xuất:** Bảo mật cao, tránh việc dự án đẩy lên internet bị tấn công brute-force bằng mật khẩu mặc định phổ biến.
+
+#### 12. Tên thư mục dự án bên cạnh Core
+- **Câu hỏi:** Thư mục dự án có bắt buộc tên là `site/` không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Mặc định quy ước chuẩn là `site/`, nhưng hoàn toàn hỗ trợ cấu hình linh hoạt qua cờ `--site <path>` hoặc biến môi trường `TREECRAFT_SITE_DIR`.
+- **Lựa chọn B:** Viết cứng bắt buộc tên là `site/`.
+- **Lý do đề xuất:** Tối ưu hóa tính chuẩn mực (convention over configuration) trong khi vẫn giữ độ mở linh hoạt cho các cấu trúc repo đặc biệt (monorepo).
+
+#### 13. Bảo vệ tính bất biến của Core Submodule
+- **Câu hỏi:** Làm thế nào để ngăn chặn lập trình viên vô tình sửa code trong `core/`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Ghi rõ hướng dẫn trong `docs/guides/core-and-site.md`, cấu hình root `.gitignore` của repo mới bỏ qua `core/` (quản lý bởi submodule), và kiểm tra runtime để Core không bao giờ tự tạo/sửa file trong chính nó.
+- **Lựa chọn B:** Không có biện pháp gì ngoài hướng dẫn miệng.
+- **Lý do đề xuất:** Thiết lập rào chắn kỹ thuật rõ ràng để đảm bảo tính toàn vẹn của mã nguồn Core.
+
+---
+
+### Nhóm 2: Đồng nhất Cây Nội dung (Content Tree Parity)
+
+#### 14. Nguồn tạo của Root node `/root` và 5 Root Branches
+- **Câu hỏi:** Các node gốc `/root`, `/root/content`, `/root/layout`, `/root/media library`, `/root/system`, `/root/templates` được tạo từ đâu?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Quyết định liên quan:** [DEC-058](decisions/DEC-058-content-tree-parity-and-starter-snapshot.md)
+- **Lựa chọn A (Đề xuất mặc định):** Được tạo độc quyền bởi Core System Seed (`seed-initial-data.js`) với deterministic ObjectId cố định.
+- **Lựa chọn B:** Được xuất ra YAML và nạp qua Serialization.
+- **Lý do đề xuất:** Node gốc là xương sống bất biến của CMS, bắt buộc phải có ID cố định để toàn bộ hệ sinh thái (routes, auth, acl, template lookup) hoạt động tin cậy.
+
+#### 15. Quản lý 13 System Templates (`/root/templates/System/**`)
+- **Câu hỏi:** 13 System Templates được quản lý qua Seed hay qua YAML Serialization?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Quản lý bởi Core System Seed. Không đưa vào thư mục YAML hàng ngày của Site (theo cấu hình `includeSystemTemplates: false`).
+- **Lựa chọn B:** Serialize toàn bộ ra YAML.
+- **Lý do đề xuất:** System Templates là định nghĩa nền tảng của CMS, không nên để dự án con tùy tiện chỉnh sửa hoặc tạo diff rác trong Git.
+
+#### 16. Vị trí lưu trữ bộ Starter Serialization của Core
+- **Câu hỏi:** Bộ dữ liệu mẫu của Core được lưu trữ ở đâu?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Lưu trữ tại `core/starter/corporate/serialization/` với cấu trúc section YAML chuẩn DEC-054 và DEC-055.
+- **Lựa chọn B:** Đặt ngay trong thư mục `Serialization/` của root Core repo.
+- **Lý do đề xuất:** Đóng gói độc lập trong `starter/corporate` giúp Core có thể cung cấp nhiều starter khác nhau trong tương lai (ví dụ: `corporate`, `ecommerce`, `blog`, `minimal`).
+
+#### 17. Hành vi khi chạy `init`: Copy hay Symlink Starter YAML?
+- **Câu hỏi:** Lệnh `init` sẽ copy hay symlink dữ liệu starter vào `site/serialization/`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Copy toàn bộ thư mục starter vào `site/serialization/`.
+- **Lựa chọn B:** Tạo symlink trỏ tới Core.
+- **Lý do đề xuất:** Copy giúp dự án người dùng sở hữu hoàn toàn bản sao dữ liệu của mình, có thể chỉnh sửa, thêm field, commit vào git repo riêng mà không làm bẩn Core submodule.
+
+#### 18. Xử lý các Media Items mẫu trong Media Library
+- **Câu hỏi:** Các node con trong `/root/media library/` (ví dụ `home`, `test`, các hình ảnh mẫu) được đồng bộ như thế nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Khởi tạo khung thư mục `/root/media library/home` trong seed/starter; nếu có file mẫu thì copy vào starter static storage.
+- **Lựa chọn B:** Bỏ qua hoàn toàn media library, chỉ tạo node gốc.
+- **Lý do đề xuất:** Giúp trang chủ mẫu (`home`) hiển thị đầy đủ hình ảnh banner và carousel ngay khi vừa `npm run dev`.
+
+#### 19. Tiêu chí đánh giá đạt chuẩn 100% Tree Parity (`tree:compare`)
+- **Câu hỏi:** Điều kiện nào để công cụ đối soát xác nhận Parity đạt 100%?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** Toàn bộ 54 items trong DB mới phải khớp chính xác 100% với Snapshot Manifest về: `_id`, `path`, `name`, `templateId`, `sortOrder`, hash của `fields` và cấu hình `presentation` (layoutId, renderings).
+- **Lựa chọn B:** Chỉ so sánh số lượng items và path.
+- **Lý do đề xuất:** Đảm bảo độ tin cậy tuyệt đối (zero drift) giữa môi trường Core chuẩn và dự án mới được khởi tạo.

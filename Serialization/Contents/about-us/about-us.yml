@@ -1,0 +1,30 @@
+_id: 6aeb34f210a6df2700e096ed
+name: about-us
+displayName: About Us
+path: /root/content/about-us
+template:
+  id: 6aeb2ff1bd626a030bd90d48
+  name: about-us-page-template
+  path: /root/templates/Project/Pages/about-us-page-template
+parentId: 6ae95cc6b1e541e051fd4165
+parentPath: /root/content
+sortOrder: 200
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields:
+          6aeaccf2b200083aee587088: Hero Banner About Us
+          6aeaccf2b200083aee587089: <p><img style="max-width:100%;height:auto" src="/media/file/6aec243c99d1f2a97c1ccce9" alt="Meo-Scottish-Fold.jpg" data-media-id="6aec243c99d1f2a97c1ccce9" /></p>
+          6aeaccf2b200083aee58708a: https://res.cloudinary.com/v41qu0lg/image/upload/v1793865035/AdminCMS/home/iphone-18-pro-01.webp
+          6aeaccf2b200083aee587095: ''
+          6aeaccf2b200083aee587096: ''
+          6aeaccf2b200083aee587097: ''
+          6aeaccf2b200083aee587098: left
+        neverPublish: false
+        note: Initial version
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

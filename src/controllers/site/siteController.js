@@ -7,8 +7,9 @@ const { NotFoundError } = require('../../utils/errors');
 const logger = require('../../utils/logger');
 const env = require('../../config/env');
 const branding = require('../../config/branding');
+const sitePaths = require('../../config/sitePaths');
 
-const VIEWS_SITE_DIR = path.resolve(__dirname, '../../views/site');
+const VIEWS_SITE_DIR = sitePaths.VIEWS_DIR;
 
 class SiteController {
   /**

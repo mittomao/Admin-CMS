@@ -1,0 +1,59 @@
+_id: 6aeaccf1b200083aee58706f
+name: Introduction
+displayName: Introduction
+path: /root/layout/Renderings/Introduction
+template:
+  id: 6aea24d7fb85fae7f0a40992
+  name: Rendering
+  path: /root/templates/System/Rendering
+parentId: 6aea24d8fb85fae7f0a409b2
+parentPath: /root/layout/Renderings
+sortOrder: 200
+icon: rendering
+description: Template dữ liệu cho component Introduction
+isSystem: false
+baseTemplates: []
+insertOptions: []
+sections:
+  - id: 6aeaccf2b200083aee58708e
+    name: Intro Data
+    sortOrder: 100
+    fields:
+      - id: 6aeaccf2b200083aee58708f
+        name: IntroHeading
+        title: Introduction Heading
+        type: singleLineText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 10
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+      - id: 6aeaccf2b200083aee587090
+        name: IntroBody
+        title: Introduction Body
+        type: richText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 20
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+standardValues: {}
+sharedFields:
+  icon: ti ti-file-description
+  componentTemplate: 6aeaccf2b200083aee58708d
+  viewPath: site/components/Introduction.ejs
+languages: []

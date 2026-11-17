@@ -1,0 +1,29 @@
+_id: 6aeafdd9eb146b460df856bb
+name: offer-item
+displayName: Offer Item
+path: /root/templates/Feature/Components/offer-item
+template:
+  id: 6aeae250248055b9172f85eb
+  name: Template
+  path: /root/templates/System/Template
+parentId: 6aeae251248055b9172f8601
+parentPath: /root/templates/Feature/Components
+sortOrder: 300
+icon: template
+isSystem: false
+baseTemplates: []
+insertOptions: []
+sections: []
+standardValues: {}
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields: {}
+        neverPublish: false
+        note: Initial version
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

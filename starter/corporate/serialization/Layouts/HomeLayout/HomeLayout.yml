@@ -1,0 +1,15 @@
+_id: 6aeaccf1b200083aee587065
+name: HomeLayout
+displayName: Home Layout
+path: /root/layout/Layouts/HomeLayout
+template:
+  id: 6aea24d7fb85fae7f0a4098a
+  name: Layout
+  path: /root/templates/System/Layout
+parentId: 6aea24d8fb85fae7f0a409ad
+parentPath: /root/layout/Layouts
+sortOrder: 100
+icon: layout
+sharedFields:
+  viewPath: site/layouts/HomeLayout.ejs
+languages: []

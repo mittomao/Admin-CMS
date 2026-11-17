@@ -1,0 +1,98 @@
+_id: 6aeaccf2b200083aee587093
+name: ImageText
+displayName: Image & Text Component
+path: /root/templates/Feature/Components/ImageText
+template:
+  id: 6aeae250248055b9172f85eb
+  name: Template
+  path: /root/templates/System/Template
+parentId: 6aeae251248055b9172f8601
+parentPath: /root/templates/Feature/Components
+sortOrder: 100
+icon: ti ti-photo
+description: Template dữ liệu cho component ImageText
+isSystem: false
+baseTemplates: []
+insertOptions: []
+sections:
+  - id: 6aeaccf2b200083aee587094
+    name: Content Data
+    sortOrder: 100
+    fields:
+      - id: 6aeaccf2b200083aee587095
+        name: Image
+        title: Illustration Image
+        type: image
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 10
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+      - id: 6aeaccf2b200083aee587096
+        name: Title
+        title: Title
+        type: singleLineText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 20
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+      - id: 6aeaccf2b200083aee587097
+        name: Body
+        title: Body Content
+        type: richText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 30
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+      - id: 6aeaccf2b200083aee587098
+        name: Alignment
+        title: Image Alignment (left/right)
+        type: singleLineText
+        source: ''
+        required: false
+        defaultValue: left
+        shared: false
+        sortOrder: 40
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+standardValues: {}
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields: {}
+        neverPublish: false
+        note: ''
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

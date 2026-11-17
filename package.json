@@ -49,7 +49,10 @@
     "serialize:diff": "node src/scripts/serialize-section-cli.js diff",
     "serialize:reserialize": "node src/scripts/serialize-section-cli.js reserialize",
     "serialize:sync": "node src/scripts/serialize-section-cli.js sync",
-    "serialize:migrate-layout": "node src/scripts/migrate-serialization-layout.js"
+    "serialize:migrate-layout": "node src/scripts/migrate-serialization-layout.js",
+    "tree:snapshot": "node src/scripts/tree-snapshot.js",
+    "tree:compare": "node src/scripts/tree-compare.js",
+    "verify:fresh-install": "node tests/verify-fresh-install.js"
   },
   "keywords": [
     "cms",

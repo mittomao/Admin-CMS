@@ -1,0 +1,89 @@
+_id: 6aeaccf1b200083aee58706a
+name: HeroBanner
+displayName: Hero Banner
+path: /root/layout/Renderings/HeroBanner
+template:
+  id: 6aea24d7fb85fae7f0a40992
+  name: Rendering
+  path: /root/templates/System/Rendering
+parentId: 6aea24d8fb85fae7f0a409b2
+parentPath: /root/layout/Renderings
+sortOrder: 100
+icon: rendering
+description: Template dữ liệu cho component HeroBanner
+isSystem: false
+baseTemplates: []
+insertOptions: []
+sections:
+  - id: 6aeaccf2b200083aee587087
+    name: Hero Data
+    sortOrder: 100
+    fields:
+      - id: 6aeaccf2b200083aee587088
+        name: HeroTitle
+        title: Hero Title
+        type: singleLineText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 10
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+      - id: 6aeaccf2b200083aee587089
+        name: HeroDescription
+        title: Hero Description
+        type: richText
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 20
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+      - id: 6aeaccf2b200083aee58708a
+        name: BackgroundImage
+        title: Background Image
+        type: image
+        source: ''
+        required: false
+        defaultValue: ''
+        shared: false
+        sortOrder: 30
+        unversioned: false
+        helpText: ''
+        validation: {}
+        visibility: {}
+        permissions: {}
+        layout: {}
+        config: {}
+standardValues: {}
+sharedFields:
+  icon: ti ti-ad-2
+  componentTemplate: 6aeaccf2b200083aee587086
+  viewPath: site/components/HeroBanner.ejs
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields:
+          6aead5f71823c2a61434aae1: site/components/HeroBanner.ejs
+          6aead5f71823c2a61434aae2: 6aeaccf2b200083aee587086
+          6aead5f71823c2a61434aae3: ''
+          6aead5f71823c2a61434aae4: ti ti-ad-2
+        neverPublish: false
+        note: ''
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

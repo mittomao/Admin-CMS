@@ -1,0 +1,13 @@
+_id: 6aea24d8fb85fae7f0a409ad
+name: Layouts
+displayName: Layouts
+path: /root/layout/Layouts
+template:
+  id: 6aea24d7fb85fae7f0a40977
+  name: Layout Folder
+  path: /root/templates/System/Layout Folder
+parentId: 6aea24d7fb85fae7f0a409a8
+sortOrder: 100
+icon: folder
+sharedFields: {}
+languages: []

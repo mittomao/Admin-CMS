@@ -14,6 +14,7 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const Template = require('../models/Template');
 const Item = require('../models/Item');
 const branding = require('../config/branding');
+const systemIds = require('../config/systemIds');
 
 const isDryRun = process.argv.includes('--dry-run');
 
@@ -43,8 +44,10 @@ async function migrateTemplatesToContentTree() {
   let templateFolderTpl = await Template.findOne({ name: 'Template Folder' });
   if (!templateFolderTpl) {
     console.log('[Tạo Template] Template Folder');
+    const fixedFolderTplId = systemIds.getSystemTemplateIdByName('Template Folder');
     if (!isDryRun) {
       templateFolderTpl = await Template.create({
+        ...(fixedFolderTplId ? { _id: new mongoose.Types.ObjectId(fixedFolderTplId) } : {}),
         name: 'Template Folder',
         displayName: 'Template Folder',
         icon: 'ti ti-folder',
@@ -53,15 +56,17 @@ async function migrateTemplatesToContentTree() {
         sections: [],
       });
     } else {
-      templateFolderTpl = new Template({ _id: new mongoose.Types.ObjectId(), name: 'Template Folder' });
+      templateFolderTpl = new Template({ _id: new mongoose.Types.ObjectId(fixedFolderTplId || undefined), name: 'Template Folder' });
     }
   }
 
   let templateDefTpl = await Template.findOne({ name: 'Template' });
   if (!templateDefTpl) {
     console.log('[Tạo Template] Template (Definition)');
+    const fixedDefTplId = systemIds.getSystemTemplateIdByName('Template');
     if (!isDryRun) {
       templateDefTpl = await Template.create({
+        ...(fixedDefTplId ? { _id: new mongoose.Types.ObjectId(fixedDefTplId) } : {}),
         name: 'Template',
         displayName: 'Template',
         icon: 'ti ti-template',
@@ -70,7 +75,7 @@ async function migrateTemplatesToContentTree() {
         sections: [],
       });
     } else {
-      templateDefTpl = new Template({ _id: new mongoose.Types.ObjectId(), name: 'Template' });
+      templateDefTpl = new Template({ _id: new mongoose.Types.ObjectId(fixedDefTplId || undefined), name: 'Template' });
     }
   }
 
@@ -79,8 +84,10 @@ async function migrateTemplatesToContentTree() {
     let item = await Item.findOne({ path: folderData.path });
     if (!item) {
       console.log(`[Tạo Thư mục Tree] ${folderData.path}`);
+      const fixedId = systemIds.getSystemIdByPath(folderData.path);
       if (!isDryRun) {
         item = await Item.create({
+          ...(fixedId ? { _id: new mongoose.Types.ObjectId(fixedId) } : {}),
           ...folderData,
           templateId: templateFolderTpl._id,
           fields: {},
@@ -90,7 +97,7 @@ async function migrateTemplatesToContentTree() {
           deleted: false,
         });
       } else {
-        item = new Item({ _id: new mongoose.Types.ObjectId(), ...folderData });
+        item = new Item({ _id: new mongoose.Types.ObjectId(fixedId || undefined), ...folderData });
       }
     } else {
       let updated = false;
@@ -113,6 +120,8 @@ async function migrateTemplatesToContentTree() {
     return item;
   }
 
+  const isSystemOnly = process.argv.includes('--system-only') || process.env.SEED_SYSTEM_ONLY === 'true';
+
   // 3. Khởi tạo cây thư mục chuẩn dưới templates root
   const templatesRoot = await ensureFolderItem({
     name: 'templates',
@@ -130,59 +139,66 @@ async function migrateTemplatesToContentTree() {
     parentId: templatesRoot._id,
     ancestors: [rootNode._id, templatesRoot._id],
     path: branding.PATHS.SYSTEM_TEMPLATES,
-    sortOrder: 100,
+    sortOrder: 200,
     icon: 'ti ti-folder-cog',
   });
 
-  const featureFolder = await ensureFolderItem({
-    name: 'Feature',
-    displayName: 'Feature',
-    parentId: templatesRoot._id,
-    ancestors: [rootNode._id, templatesRoot._id],
-    path: branding.PATHS.FEATURE_TEMPLATES,
-    sortOrder: 200,
-    icon: 'ti ti-folder-star',
-  });
+  let featureFolder = null;
+  let componentsFolder = null;
+  let projectFolder = null;
+  let pagesFolder = null;
 
-  const componentsFolder = await ensureFolderItem({
-    name: 'Components',
-    displayName: 'Components',
-    parentId: featureFolder._id,
-    ancestors: [rootNode._id, templatesRoot._id, featureFolder._id],
-    path: branding.PATHS.FEATURE_COMPONENTS,
-    sortOrder: 100,
-    icon: 'ti ti-folder-plus',
-  });
+  if (!isSystemOnly) {
+    featureFolder = await ensureFolderItem({
+      name: 'Feature',
+      displayName: 'Feature',
+      parentId: templatesRoot._id,
+      ancestors: [rootNode._id, templatesRoot._id],
+      path: branding.PATHS.FEATURE_TEMPLATES,
+      sortOrder: 200,
+      icon: 'ti ti-folder-star',
+    });
 
-  const projectFolder = await ensureFolderItem({
-    name: 'Project',
-    displayName: 'Project',
-    parentId: templatesRoot._id,
-    ancestors: [rootNode._id, templatesRoot._id],
-    path: branding.PATHS.PROJECT_TEMPLATES,
-    sortOrder: 300,
-    icon: 'ti ti-folder',
-  });
+    componentsFolder = await ensureFolderItem({
+      name: 'Components',
+      displayName: 'Components',
+      parentId: featureFolder._id,
+      ancestors: [rootNode._id, templatesRoot._id, featureFolder._id],
+      path: branding.PATHS.FEATURE_COMPONENTS,
+      sortOrder: 100,
+      icon: 'ti ti-folder-plus',
+    });
 
-  const pagesFolder = await ensureFolderItem({
-    name: 'Pages',
-    displayName: 'Pages',
-    parentId: projectFolder._id,
-    ancestors: [rootNode._id, templatesRoot._id, projectFolder._id],
-    path: branding.PATHS.PROJECT_PAGES,
-    sortOrder: 100,
-    icon: 'ti ti-folder',
-  });
+    projectFolder = await ensureFolderItem({
+      name: 'Project',
+      displayName: 'Project',
+      parentId: templatesRoot._id,
+      ancestors: [rootNode._id, templatesRoot._id],
+      path: branding.PATHS.PROJECT_TEMPLATES,
+      sortOrder: 300,
+      icon: 'ti ti-folder',
+    });
+
+    pagesFolder = await ensureFolderItem({
+      name: 'Pages',
+      displayName: 'Pages',
+      parentId: projectFolder._id,
+      ancestors: [rootNode._id, templatesRoot._id, projectFolder._id],
+      path: branding.PATHS.PROJECT_PAGES,
+      sortOrder: 100,
+      icon: 'ti ti-folder',
+    });
+  }
 
   // 4. Dọn dẹp dummy items cũ dưới templates (nếu không phải là một trong các folder chuẩn)
   const standardFolderIds = [
-    templatesRoot._id.toString(),
-    systemFolder._id.toString(),
-    featureFolder._id.toString(),
-    componentsFolder._id.toString(),
-    projectFolder._id.toString(),
-    pagesFolder._id.toString(),
-  ];
+    templatesRoot?._id?.toString(),
+    systemFolder?._id?.toString(),
+    featureFolder?._id?.toString(),
+    componentsFolder?._id?.toString(),
+    projectFolder?._id?.toString(),
+    pagesFolder?._id?.toString(),
+  ].filter(Boolean);
 
   const allTemplates = await Template.find({});
   const allTemplateIds = new Set(allTemplates.map((t) => t._id.toString()));
@@ -204,9 +220,25 @@ async function migrateTemplatesToContentTree() {
     }
   }
 
+  const SYSTEM_TEMPLATE_NAMES = [
+    '_BasePage',
+    'Standard Template',
+    'Page',
+    'Sample Item',
+    'Template Folder',
+    'Template',
+    'Layout',
+    'Layout Folder',
+    'Placeholder',
+    'Placeholder Folder',
+    'Rendering',
+    'Rendering Folder',
+  ];
+
   // 5. Đồng bộ từng Template thành một node Item trong Cây Nội Dung
   let templatesMigrated = 0;
   for (const tpl of allTemplates) {
+    if (isSystemOnly && !SYSTEM_TEMPLATE_NAMES.includes(tpl.name)) continue;
     let targetFolder = systemFolder;
 
     // Phân loại template theo nhánh thư mục
@@ -223,6 +255,8 @@ async function migrateTemplatesToContentTree() {
     const expectedPath = `${targetFolder.path}/${tpl.name}`;
     console.log(`[Đồng bộ Template] ${tpl.name} -> ${expectedPath}`);
 
+    const fixedSortOrder = tpl.name === 'Standard Template' ? 50 : (tpl.sortOrder !== undefined ? tpl.sortOrder : (tpl.isSystem ? 10 : 100));
+
     if (!isDryRun) {
       let item = await Item.findById(tpl._id);
       if (!item) {
@@ -236,7 +270,7 @@ async function migrateTemplatesToContentTree() {
           parentId: targetFolder._id,
           ancestors: [...targetFolder.ancestors, targetFolder._id],
           path: expectedPath,
-          sortOrder: tpl.isSystem ? 10 : 100,
+          sortOrder: fixedSortOrder,
           fields: {},
           sharedFields: {},
           languages: [{ code: 'vi', versions: [{ version: 1, fields: {} }] }],
@@ -253,6 +287,7 @@ async function migrateTemplatesToContentTree() {
         item.parentId = targetFolder._id;
         item.ancestors = [...targetFolder.ancestors, targetFolder._id];
         item.path = expectedPath;
+        item.sortOrder = fixedSortOrder;
         item.deleted = false;
         await item.save();
       }

@@ -1,0 +1,9 @@
+formatVersion: "1.0"
+layoutVersion: 2
+generator: "Treecraft CMS"
+sections:
+  - Templates
+  - Renderings
+  - Layouts
+  - Placeholders
+  - Contents

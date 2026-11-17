@@ -1,0 +1,22 @@
+{
+  "sectionKey": "template",
+  "itemCount": 15,
+  "lastReserializedAt": "2026-11-11T08:59:22.288Z",
+  "lastReserializedBy": "admin",
+  "stats": {
+    "created": 15,
+    "updated": 0,
+    "unchanged": 0,
+    "orphansDetected": 0,
+    "orphansPruned": 0
+  },
+  "lastSyncedAt": "2026-11-11T09:03:26.440Z",
+  "lastSyncedBy": "admin",
+  "lastSyncStats": {
+    "mode": "overwrite",
+    "created": 0,
+    "updated": 15,
+    "skipped": 0,
+    "deleted": 0
+  }
+}

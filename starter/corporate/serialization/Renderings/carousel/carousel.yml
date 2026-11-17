@@ -1,0 +1,28 @@
+_id: 6aeae7350951c55f2b989c7c
+name: carousel
+displayName: Carousel
+path: /root/layout/Renderings/carousel
+template:
+  id: 6aea24d7fb85fae7f0a40992
+  name: Rendering
+  path: /root/templates/System/Rendering
+parentId: 6aea24d8fb85fae7f0a409b2
+parentPath: /root/layout/Renderings
+sortOrder: 400
+icon: rendering
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields:
+          6aead5f71823c2a61434aae1: site/components/CarouselItem.ejs
+          6aead5f71823c2a61434aae2: 6aeae6ac0951c55f2b989c1a
+          6aead5f71823c2a61434aae3: ''
+          6aead5f71823c2a61434aae4: ti ti-box
+        neverPublish: false
+        note: Initial version
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

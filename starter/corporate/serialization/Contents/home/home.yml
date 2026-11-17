@@ -1,0 +1,52 @@
+_id: 6aeaf42fe620d879bafc2373
+name: home
+displayName: Home
+path: /root/content/home
+template:
+  id: 6aeaccf2b200083aee58709e
+  name: Home
+  path: /root/templates/Project/Pages/Home
+parentId: 6ae95cc6b1e541e051fd4165
+parentPath: /root/content
+sortOrder: 100
+icon: ti ti-home
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields:
+          6aeaccf2b200083aee587088: Home Page 123
+          6aeaccf2b200083aee587089: <p>aaaaaaaaaaaaaaa</p>
+          6aeaccf2b200083aee58708a: https://res.cloudinary.com/v41qu0lg/image/upload/v1793848783/dsc00738_af9f21cb224d45a8bc589260ab581422_master.webp
+          6aeaccf2b200083aee58708f: Intro Test
+          6aeaccf2b200083aee587090: <p><strong>Lorem Ipsum</strong> is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing Library in London, took a 1914 Cicero translation and scrambled it to make dummy text for Letraset's Body Type sheets. It has survived not only many decades, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised thanks to these sheets and more recently with desktop publishing software like Aldus PageMaker and Microsoft Word including versions of Lorem Ipsum.</p>
+          6aeaccf2b200083aee587095: https://res.cloudinary.com/v41qu0lg/image/upload/v1793968033/AdminCMS/test/mazda-cx-5-2026-100-7127-17521-7775-7915-1752140017-17521925465871739801497.webp
+          6aeaccf2b200083aee587096: ''
+          6aeaccf2b200083aee587097: <p><img style="max-width:100%;height:auto" src="/media/file/6aedc7a1705103d63fdd9f8b" alt="mazda-cx-5-2026-100-7127-17521-7775-7915-1752140017-17521925465871739801497.webp" data-media-id="6aedc7a1705103d63fdd9f8b" /></p>
+          6aeaccf2b200083aee587098: left
+        neverPublish: false
+        note: Initial version
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c13a
+  - code: en
+    unversionedFields: {}
+    versions:
+      - fields:
+          6aeaccf2b200083aee587088: Home Page 12345
+          6aeaccf2b200083aee587089: <p>aaaaaaaaaaaaaaa</p>
+          6aeaccf2b200083aee58708a: https://res.cloudinary.com/v41qu0lg/image/upload/v1793848783/dsc00738_af9f21cb224d45a8bc589260ab581422_master.webp
+          6aeaccf2b200083aee58708f: Intro Test
+          6aeaccf2b200083aee587090: <p><strong>Lorem Ipsum</strong> is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing Library in London, took a 1914 Cicero translation and scrambled it to make dummy text for Letraset's Body Type sheets. It has survived not only many decades, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised thanks to these sheets and more recently with desktop publishing software like Aldus PageMaker and Microsoft Word including versions of Lorem Ipsum.</p>
+          6aeaccf2b200083aee587095: ''
+          6aeaccf2b200083aee587096: ''
+          6aeaccf2b200083aee587097: ''
+          6aeaccf2b200083aee587098: left
+        neverPublish: false
+        note: ''
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: null
