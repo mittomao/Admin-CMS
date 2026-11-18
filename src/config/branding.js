@@ -1,26 +1,36 @@
 'use strict';
 
 /**
- * Treecraft CMS - Branding & System Path Constants (DEC-043 / Phase R1)
+ * Treecraft CMS - Branding & System Path Constants (DEC-043 / DEC-056 / Phase S)
  * Single Source of Truth for brand naming and tree root path.
+ * Wraps siteConfig for brand identity while preserving immutable tree root constants.
  */
+
+const sitePaths = require('./sitePaths');
+const siteConfig = sitePaths.resolveSiteConfig();
 
 const ROOT_NAME = 'root';
 const ROOT_PATH = `/${ROOT_NAME}`;
 
-module.exports = {
-  // Brand Identity
-  PROJECT_NAME: 'Treecraft',
-  PROJECT_TITLE: 'Treecraft CMS',
-  PROJECT_DESCRIPTION: 'Treecraft - Hierarchical XM Content Management System',
-  DEFAULT_DOMAIN: 'treecraft',
-  SESSION_COOKIE_NAME: 'treecraft_session_id',
+const projectName = siteConfig.name || 'Treecraft';
+const projectTitle = siteConfig.title || (siteConfig.name ? `${siteConfig.name} CMS` : 'Treecraft CMS');
+const projectDescription = siteConfig.description || 'Treecraft - Hierarchical XM Content Management System';
+const defaultDomain = siteConfig.domain || (siteConfig.slug ? `${siteConfig.slug}.local` : 'treecraft');
+const sessionCookieName = siteConfig.sessionCookie || 'treecraft_session_id';
 
-  // Tree Root
+module.exports = {
+  // Brand Identity (Configurable via site.config.js)
+  PROJECT_NAME: projectName,
+  PROJECT_TITLE: projectTitle,
+  PROJECT_DESCRIPTION: projectDescription,
+  DEFAULT_DOMAIN: defaultDomain,
+  SESSION_COOKIE_NAME: sessionCookieName,
+
+  // Tree Root (Immutable System Invariant)
   ROOT_NAME,
   ROOT_PATH,
 
-  // Standard Tree Branches
+  // Standard Tree Branches (Immutable System Invariant)
   PATHS: {
     ROOT: ROOT_PATH,
     CONTENT: `${ROOT_PATH}/content`,

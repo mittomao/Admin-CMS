@@ -96,12 +96,19 @@ app.use(cookieParser());
 // 4. Session Configuration
 app.use(configureSession());
 
-// 5. Static Files
-app.use(express.static(path.join(__dirname, '../public')));
+// 5. Static Files (DEC-056: Dual Static Mount for Core and Site)
+const sitePaths = require('./config/sitePaths');
+app.use(express.static(sitePaths.ADMIN_PUBLIC_DIR));
+if (!sitePaths.isStandaloneMode && sitePaths.PUBLIC_DIR !== sitePaths.ADMIN_PUBLIC_DIR) {
+  app.use(express.static(sitePaths.PUBLIC_DIR));
+}
 
 // 6. Template Engine (EJS + Express Layouts)
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+const viewsDirs = sitePaths.isStandaloneMode
+  ? [sitePaths.ADMIN_VIEWS_DIR]
+  : [sitePaths.ADMIN_VIEWS_DIR, sitePaths.VIEWS_DIR];
+app.set('views', viewsDirs);
 app.use(expressLayouts);
 app.set('layout', 'layouts/shell');
 app.set('layout extractScripts', true);

@@ -9,18 +9,20 @@
 const path = require('path');
 const fs = require('fs');
 const { getSection } = require('./serializationSections');
+const sitePaths = require('./sitePaths');
 
-const PROJECT_ROOT = path.resolve(__dirname, '../../');
-const DEFAULT_SERIALIZATION_DIR = path.join(PROJECT_ROOT, 'Serialization');
+const PROJECT_ROOT = sitePaths.isStandaloneMode ? sitePaths.CORE_DIR : sitePaths.SITE_DIR;
+const DEFAULT_SERIALIZATION_DIR = sitePaths.getSerializationDir();
 
 // Forbidden directory roots that can never be set as SERIALIZATION_DIR or written to
 const FORBIDDEN_DIRS = [
-  path.join(PROJECT_ROOT, 'src'),
-  path.join(PROJECT_ROOT, 'public'),
-  path.join(PROJECT_ROOT, '.git'),
-  path.join(PROJECT_ROOT, 'node_modules'),
-  path.join(PROJECT_ROOT, 'storage/backups'),
-  path.join(PROJECT_ROOT, 'data/backups'),
+  path.join(sitePaths.CORE_DIR, 'src'),
+  path.join(sitePaths.CORE_DIR, 'public'),
+  path.join(sitePaths.CORE_DIR, '.git'),
+  path.join(sitePaths.CORE_DIR, 'node_modules'),
+  path.join(sitePaths.SITE_DIR, 'public'),
+  path.join(sitePaths.SITE_DIR, 'node_modules'),
+  sitePaths.getBackupDir(),
 ];
 
 // Forbidden characters in Windows file/directory names (excluding path separators and drive colon)
@@ -32,7 +34,7 @@ const WINDOWS_INVALID_CHAR_REGEX = /[<>:"|?*]/;
  */
 function getSerializationDir() {
   const envDir = process.env.SERIALIZATION_DIR;
-  const resolvedDir = envDir ? path.resolve(PROJECT_ROOT, envDir) : DEFAULT_SERIALIZATION_DIR;
+  const resolvedDir = envDir ? path.resolve(PROJECT_ROOT, envDir) : sitePaths.getSerializationDir();
 
   // Security check: cannot be project root or system root
   if (resolvedDir === PROJECT_ROOT || resolvedDir === path.parse(resolvedDir).root) {

@@ -1,0 +1,13 @@
+_id: 6aea24d8fb85fae7f0a409b2
+name: Renderings
+displayName: Renderings
+path: /root/layout/Renderings
+template:
+  id: 6aea24d7fb85fae7f0a4097c
+  name: Rendering Folder
+  path: /root/templates/System/Rendering Folder
+parentId: 6aea24d7fb85fae7f0a409a8
+sortOrder: 300
+icon: folder
+sharedFields: {}
+languages: []

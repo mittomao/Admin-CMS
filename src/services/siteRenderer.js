@@ -11,17 +11,16 @@ const { AppError, NotFoundError } = require('../utils/errors');
 const logger = require('../utils/logger');
 const env = require('../config/env');
 const branding = require('../config/branding');
+const sitePaths = require('../config/sitePaths');
 const languageService = require('./languageService');
-
-const VIEWS_SITE_DIR = path.resolve(__dirname, '../views/site');
 
 class SiteRenderer {
   constructor() {
-    this.viewsSiteDir = VIEWS_SITE_DIR;
+    this.viewsSiteDir = sitePaths.VIEWS_DIR;
   }
 
   /**
-   * Validate and resolve safe viewPath inside src/views/site (DEC-033)
+   * Validate and resolve safe viewPath inside site views directory (DEC-033 / DEC-056)
    * @param {string} rawViewPath 
    * @returns {string} Absolute file path
    */
@@ -48,7 +47,7 @@ class SiteRenderer {
     const resolved = path.resolve(this.viewsSiteDir, normalized);
 
     // Whitelist check
-    if (!resolved.startsWith(this.viewsSiteDir)) {
+    if (!sitePaths.isPathInside(this.viewsSiteDir, resolved)) {
       throw new AppError(`Access forbidden: view path outside allowed site views directory: ${rawViewPath}`, 403);
     }
 

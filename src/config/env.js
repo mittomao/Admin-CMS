@@ -1,13 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
+const sitePaths = require('./sitePaths');
 const branding = require('./branding');
 
 // Ghi nhận các biến có sẵn từ OS process.env để đảm bảo chúng luôn có quyền ưu tiên cao nhất
 const osEnvKeys = new Set(Object.keys(process.env));
 
-// 1. Nạp file .env chính (Base Config)
-const mainEnvPath = path.resolve(process.cwd(), '.env');
+// 1. Nạp file .env chính (Base Config từ Site hoặc Core Standalone)
+const mainEnvPath = path.resolve(sitePaths.SITE_DIR, '.env');
 if (fs.existsSync(mainEnvPath)) {
   const mainConfig = dotenv.parse(fs.readFileSync(mainEnvPath, 'utf8'));
   for (const k in mainConfig) {
@@ -46,7 +47,7 @@ if (appEnv) {
 
 // 3. Nạp đè cấu hình theo môi trường (.env.${APP_ENV}) nếu tồn tại
 const overrideEnvFile = `.env.${appEnv}`;
-const overrideEnvPath = path.resolve(process.cwd(), overrideEnvFile);
+const overrideEnvPath = path.resolve(sitePaths.SITE_DIR, overrideEnvFile);
 if (fs.existsSync(overrideEnvPath)) {
   const overrideConfig = dotenv.parse(fs.readFileSync(overrideEnvPath, 'utf8'));
   for (const k in overrideConfig) {
@@ -109,15 +110,16 @@ const env = {
   BASIC_AUTH_ENABLED: process.env.BASIC_AUTH_ENABLED,
   BASIC_AUTH_REALM: process.env.BASIC_AUTH_REALM || branding.PROJECT_NAME,
   TRUST_PROXY: process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1',
-  // Backup & Restore Configuration (GĐ K1 & GĐ E1 isolated per environment)
-  BACKUP_DIR: path.resolve(process.env.BACKUP_DIR || path.join(process.cwd(), 'storage', 'backups', appEnv)),
+  // Backup & Restore Configuration (GĐ K1 & GĐ E1 isolated per environment, DEC-056 sitePaths)
+  BACKUP_DIR: path.resolve(process.env.BACKUP_DIR || path.join(sitePaths.getBackupDir(), appEnv)),
   BACKUP_ENCRYPTION_KEY: process.env.BACKUP_ENCRYPTION_KEY || '',
   BACKUP_RETENTION_COUNT: parseInt(process.env.BACKUP_RETENTION_COUNT || '7', 10),
   BACKUP_RETENTION_DAYS: parseInt(process.env.BACKUP_RETENTION_DAYS || '30', 10),
   MONGODUMP_PATH: process.env.MONGODUMP_PATH || 'mongodump',
   MONGORESTORE_PATH: process.env.MONGORESTORE_PATH || 'mongorestore',
   MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true' || process.env.MAINTENANCE_MODE === '1',
-  // Serialization Directory (DEC-054 - defaults to "Serialization" directly in repo root)
+  // Serialization Directory (DEC-054 & DEC-056 sitePaths)
+  SERIALIZATION_DIR: process.env.SERIALIZATION_DIR || sitePaths.getSerializationDir(),
   SERIALIZATION_DIR: process.env.SERIALIZATION_DIR || 'Serialization',
   isDev: appEnv === 'development',
   isStaging: appEnv === 'staging',

@@ -62,7 +62,9 @@ flowchart TD
 | **F3** | Universal Custom Field System - An Toàn & Hoàn Thiện Danh Mục | **Hoàn thành** | F1, F2, 2, 3, 7 | [`phase-F3-hardening-catalog.md`](./phase-F3-hardening-catalog.md) | 2026-11-09 | 2026-11-09 | Field-level ACL (read/write/hidden), hoàn thiện danh mục toàn diện 30+ Field Types (33 types đạt chuẩn) |
 | **K1** | Sao Lưu & Phục Hồi Database (Backup & Restore) | **Hoàn thành** | 0, 1, 5.1, 7, 8, 8.1, 9, 10, 11 | [`phase-K1-backup-restore.md`](./phase-K1-backup-restore.md) | 2026-11-10 | 2026-11-10 | Dual-Engine mongodump/NDJSON, AES-256-GCM, SHA-256, Safe Restore 2 modes, Chế độ bảo trì 503, Retention & Scheduler, DEC-051 |
 | **E1** | Tách Môi Trường Database (Local / Cloud) & dbGuard | **Hoàn thành** | 0, 1, 5.1, 7, 8, 8.1, 9, 10, 11, K1 | [`phase-E1-environments.md`](./phase-E1-environments.md) | 2026-11-10 | 2026-11-10 | Tách Mongo local Docker cho dev, cloud cho staging/prod, dbGuard chốt chặn an toàn, DB test tạm _tmp_*, DEC-052 |
-| **12** | Hoàn thiện, Bảo mật, E2E SSR Test & Docker | **Chưa bắt đầu** | 0 → 11, L1, K1, E1 | [`phase-12-hardening.md`](./phase-12-hardening.md) | - | - | E2E test luồng Page -> Template -> Presentation -> Publish -> Site Renderer EJS |
+| **S** | Tách Core & Site, Lệnh init Một Bước ("Submodule → Init → Dev") | **Hoàn thành** | 11-Y3, R2 | [`phase-S-core-site-split.md`](./phase-S-core-site-split.md) | 2026-11-17 | 2026-11-17 | Core repo bất biến dạng Git Submodule, site/ tách rời, sitePaths resolver, lệnh init một bước thuần Node.js, DEC-056, DEC-057 |
+| **S-Parity** | Bảo toàn Đồng nhất Cây Nội dung & Snapshot Starter | **Hoàn thành** | S | [`phase-S-tree-parity.md`](./phase-S-tree-parity.md) | 2026-11-17 | 2026-11-17 | Parity 100% cây nội dung sau init, phân tách Core System Seed & Site Starter YAML, CLI tree:snapshot & tree:compare, DEC-058 |
+| **12** | Hoàn thiện, Bảo mật, E2E SSR Test & Docker | **Chưa bắt đầu** | 0 → 11, L1, K1, E1, S | [`phase-12-hardening.md`](./phase-12-hardening.md) | - | - | E2E test luồng Page -> Template -> Presentation -> Publish -> Site Renderer EJS |
 
 ---
 

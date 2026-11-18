@@ -3,6 +3,7 @@ const Template = require('../models/Template');
 const Item = require('../models/Item');
 const logger = require('../utils/logger');
 const branding = require('../config/branding');
+const systemIds = require('../config/systemIds');
 
 let isDryRunMode = false;
 
@@ -13,11 +14,13 @@ async function ensureTemplate(data) {
   const dryRun = isDryRunMode;
   let tpl = await Template.findOne({ name: data.name });
   if (!tpl) {
+    const fixedId = systemIds.getSystemTemplateIdByName(data.name);
+    const createData = fixedId ? { _id: new mongoose.Types.ObjectId(fixedId), ...data } : data;
     if (dryRun) {
       logger.info(`[DRY-RUN] Sẽ tạo Template: ${data.name}`);
       return new Template({ _id: new mongoose.Types.ObjectId(), ...data });
     }
-    tpl = await Template.create(data);
+    tpl = await Template.create(createData);
     logger.info(`[Presentation Seed] Created Template: ${data.name}`);
   } else {
     let updated = false;
@@ -89,11 +92,13 @@ async function ensureItem(data) {
   }
 
   if (!item) {
+    const fixedId = systemIds.getSystemIdByPath(data.path);
+    const createData = fixedId ? { _id: new mongoose.Types.ObjectId(fixedId), ...data } : data;
     if (dryRun) {
       logger.info(`[DRY-RUN] Sẽ tạo Item: ${data.path}`);
-      return new Item({ _id: new mongoose.Types.ObjectId(), ...data });
+      return new Item({ _id: new mongoose.Types.ObjectId(), ...createData });
     }
-    item = await Item.create(data);
+    item = await Item.create(createData);
     logger.info(`[Presentation Seed] Created Item: ${data.path}`);
   } else {
     let updated = false;
@@ -340,6 +345,12 @@ async function seedPresentationData(options = {}) {
     // Xóa template Device và Placeholder Settings cũ nếu còn
     await Template.deleteMany({ name: { $in: ['Device', 'Placeholder Settings'] } });
     logger.info('[Presentation Seed] Đã dọn dẹp các node cũ Devices & Placeholder Settings.');
+  }
+
+  // Nếu chạy ở chế độ systemOnly (DEC-058): dừng lại ở khung sườn hệ thống, để starter serialization nạp Layouts/Placeholders/Renderings
+  if (options.systemOnly || process.env.SEED_SYSTEM_ONLY === 'true') {
+    logger.info('[Presentation Seed] Đã hoàn tất khung sườn hệ thống Presentation. Bỏ qua Layouts/Placeholders/Renderings (do Starter Serialization quản lý).');
+    return;
   }
 
   // 4. Khởi tạo 3 Nhánh Thư mục Cốt lõi

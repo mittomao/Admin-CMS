@@ -14,6 +14,7 @@ const Template = require('../models/Template');
 const Setting = require('../models/Setting');
 const eventBus = require('../utils/eventBus');
 const branding = require('../config/branding');
+const systemIds = require('../config/systemIds');
 const logger = require('../utils/logger');
 const { ValidationError, ConflictError, NotFoundError } = require('../utils/errors');
 
@@ -118,7 +119,9 @@ class LanguageService {
     // 1. Ensure Templates Folder Template & Language Template
     let folderTpl = await Template.findOne({ name: 'Languages Folder' });
     if (!folderTpl) {
+      const fixedFolderTplId = systemIds.getSystemTemplateIdByName('Language Root');
       folderTpl = await Template.create({
+        ...(fixedFolderTplId ? { _id: new mongoose.Types.ObjectId(fixedFolderTplId) } : {}),
         name: 'Languages Folder',
         displayName: 'Languages Folder',
         icon: 'ti ti-folder',
@@ -199,7 +202,9 @@ class LanguageService {
     // 3. Ensure /root/system/Languages exists
     let langFolder = await Item.findOne({ path: langFolderPath });
     if (!langFolder) {
+      const fixedId = systemIds.getSystemIdByPath(langFolderPath);
       langFolder = await Item.create({
+        ...(fixedId ? { _id: new mongoose.Types.ObjectId(fixedId) } : {}),
         name: 'Languages',
         displayName: 'Languages',
         templateId: folderTpl._id,
@@ -212,35 +217,37 @@ class LanguageService {
       });
     }
 
-    // 4. Ensure initial vi and en items exist under /root/system/Languages
-    for (const defLang of FALLBACK_LANGUAGES) {
-      const existing = await Item.findOne({
-        parentId: langFolder._id,
-        name: { $regex: new RegExp(`^${defLang.code}$`, 'i') },
-        isDeleted: { $ne: true },
-      });
-      if (!existing) {
-        await Item.create({
-          name: defLang.code,
-          displayName: defLang.displayName,
-          templateId: langTpl._id,
+    // 4. Ensure initial vi and en items exist under /root/system/Languages (Skip in SEED_SYSTEM_ONLY mode for 100% Tree Parity)
+    if (process.env.SEED_SYSTEM_ONLY !== 'true') {
+      for (const defLang of FALLBACK_LANGUAGES) {
+        const existing = await Item.findOne({
           parentId: langFolder._id,
-          ancestors: [...langFolder.ancestors, langFolder._id],
-          path: `${langFolderPath}/${defLang.code}`,
-          sortOrder: defLang.sortOrder,
-          isSystem: true,
-          sharedFields: {
-            code: defLang.code,
-            displayName: defLang.displayName,
-            nativeName: defLang.nativeName,
-            direction: defLang.direction,
-            enabled: defLang.enabled,
-            sortOrder: defLang.sortOrder,
-            fallbackLanguage: defLang.fallbackLanguage || '',
-            urlPrefix: defLang.code === branding.SITE_DEFAULT_LANGUAGE ? '' : defLang.code,
-            flagIcon: defLang.flagIcon || 'ti ti-flag',
-          },
+          name: { $regex: new RegExp(`^${defLang.code}$`, 'i') },
+          isDeleted: { $ne: true },
         });
+        if (!existing) {
+          await Item.create({
+            name: defLang.code,
+            displayName: defLang.displayName,
+            templateId: langTpl._id,
+            parentId: langFolder._id,
+            ancestors: [...langFolder.ancestors, langFolder._id],
+            path: `${langFolderPath}/${defLang.code}`,
+            sortOrder: defLang.sortOrder,
+            isSystem: true,
+            sharedFields: {
+              code: defLang.code,
+              displayName: defLang.displayName,
+              nativeName: defLang.nativeName,
+              direction: defLang.direction,
+              enabled: defLang.enabled,
+              sortOrder: defLang.sortOrder,
+              fallbackLanguage: defLang.fallbackLanguage || '',
+              urlPrefix: defLang.code === branding.SITE_DEFAULT_LANGUAGE ? '' : defLang.code,
+              flagIcon: defLang.flagIcon || 'ti ti-flag',
+            },
+          });
+        }
       }
     }
 

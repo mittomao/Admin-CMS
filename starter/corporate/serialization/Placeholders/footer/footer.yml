@@ -1,0 +1,17 @@
+_id: 6aeaccf2b200083aee587083
+name: footer
+displayName: Footer
+path: /root/layout/Placeholders/footer
+template:
+  id: 6aeaccf0b200083aee587041
+  name: Placeholder
+  path: /root/templates/System/Placeholder
+parentId: 6aeaccf1b200083aee58705e
+parentPath: /root/layout/Placeholders
+sortOrder: 300
+icon: placeholder
+sharedFields:
+  description: Phần chân trang web
+  allowedRenderings: ''
+  placeholderKey: footer
+languages: []

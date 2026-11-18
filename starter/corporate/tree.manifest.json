@@ -1,0 +1,787 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-11-17T04:15:23.338Z",
+  "totalItems": 54,
+  "sha256": "146b8065450cad606f6f2c5e2615cb09dd38f11d07bcc047272becbfa4445eba",
+  "nodes": [
+    {
+      "id": "6ae95cc6b1e541e051fd4162",
+      "name": "root",
+      "displayName": "root",
+      "path": "/root",
+      "templateId": "6ae95cc6b1e541e051fd413e",
+      "parentId": null,
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6ae95cc6b1e541e051fd4165",
+      "name": "content",
+      "displayName": "Content",
+      "path": "/root/content",
+      "templateId": "6ae95cc6b1e541e051fd413e",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeb34f210a6df2700e096ed",
+      "name": "about-us",
+      "displayName": "About Us",
+      "path": "/root/content/about-us",
+      "templateId": "6aeb2ff1bd626a030bd90d48",
+      "parentId": "6ae95cc6b1e541e051fd4165",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaf42fe620d879bafc2373",
+      "name": "home",
+      "displayName": "Home",
+      "path": "/root/content/home",
+      "templateId": "6aeaccf2b200083aee58709e",
+      "parentId": "6ae95cc6b1e541e051fd4165",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "en",
+        "vi"
+      ]
+    },
+    {
+      "id": "6aea24d7fb85fae7f0a409a8",
+      "name": "layout",
+      "displayName": "Layout",
+      "path": "/root/layout",
+      "templateId": "6ae95cc6b1e541e051fd413e",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "sortOrder": 300,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6aea24d8fb85fae7f0a409ad",
+      "name": "Layouts",
+      "displayName": "Layouts",
+      "path": "/root/layout/Layouts",
+      "templateId": "6aea24d7fb85fae7f0a40977",
+      "parentId": "6aea24d7fb85fae7f0a409a8",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6aeaccf1b200083aee587065",
+      "name": "HomeLayout",
+      "displayName": "Home Layout",
+      "path": "/root/layout/Layouts/HomeLayout",
+      "templateId": "6aea24d7fb85fae7f0a4098a",
+      "parentId": "6aea24d8fb85fae7f0a409ad",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "37d62f19c1c6ec5d",
+      "sharedFieldsHash": "37d62f19c1c6ec5d",
+      "languages": []
+    },
+    {
+      "id": "6aeaccf1b200083aee58705e",
+      "name": "Placeholders",
+      "displayName": "Placeholders",
+      "path": "/root/layout/Placeholders",
+      "templateId": "6aeaccf0b200083aee587033",
+      "parentId": "6aea24d7fb85fae7f0a409a8",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6aeaccf2b200083aee587083",
+      "name": "footer",
+      "displayName": "Footer",
+      "path": "/root/layout/Placeholders/footer",
+      "templateId": "6aeaccf0b200083aee587041",
+      "parentId": "6aeaccf1b200083aee58705e",
+      "sortOrder": 300,
+      "hasPresentation": false,
+      "fieldsHash": "000cb11e4e5c3c47",
+      "sharedFieldsHash": "000cb11e4e5c3c47",
+      "languages": []
+    },
+    {
+      "id": "6aeaccf2b200083aee587079",
+      "name": "header",
+      "displayName": "Header",
+      "path": "/root/layout/Placeholders/header",
+      "templateId": "6aeaccf0b200083aee587041",
+      "parentId": "6aeaccf1b200083aee58705e",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "553cb6b64a687b76",
+      "sharedFieldsHash": "553cb6b64a687b76",
+      "languages": []
+    },
+    {
+      "id": "6aeaccf2b200083aee58707e",
+      "name": "maincontent",
+      "displayName": "Main Content",
+      "path": "/root/layout/Placeholders/maincontent",
+      "templateId": "6aeaccf0b200083aee587041",
+      "parentId": "6aeaccf1b200083aee58705e",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "76d536f300e92332",
+      "sharedFieldsHash": "76d536f300e92332",
+      "languages": []
+    },
+    {
+      "id": "6aea24d8fb85fae7f0a409b2",
+      "name": "Renderings",
+      "displayName": "Renderings",
+      "path": "/root/layout/Renderings",
+      "templateId": "6aea24d7fb85fae7f0a4097c",
+      "parentId": "6aea24d7fb85fae7f0a409a8",
+      "sortOrder": 300,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6aeaccf1b200083aee58706a",
+      "name": "HeroBanner",
+      "displayName": "Hero Banner",
+      "path": "/root/layout/Renderings/HeroBanner",
+      "templateId": "6aea24d7fb85fae7f0a40992",
+      "parentId": "6aea24d8fb85fae7f0a409b2",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "c06362993ddf5bca",
+      "sharedFieldsHash": "c06362993ddf5bca",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaccf1b200083aee587074",
+      "name": "ImageText",
+      "displayName": "Image Text",
+      "path": "/root/layout/Renderings/ImageText",
+      "templateId": "6aea24d7fb85fae7f0a40992",
+      "parentId": "6aea24d8fb85fae7f0a409b2",
+      "sortOrder": 300,
+      "hasPresentation": false,
+      "fieldsHash": "4f7ac5559b5032bb",
+      "sharedFieldsHash": "4f7ac5559b5032bb",
+      "languages": []
+    },
+    {
+      "id": "6aeaccf1b200083aee58706f",
+      "name": "Introduction",
+      "displayName": "Introduction",
+      "path": "/root/layout/Renderings/Introduction",
+      "templateId": "6aea24d7fb85fae7f0a40992",
+      "parentId": "6aea24d8fb85fae7f0a409b2",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "989360224bfe4dbb",
+      "sharedFieldsHash": "989360224bfe4dbb",
+      "languages": []
+    },
+    {
+      "id": "6aeae7350951c55f2b989c7c",
+      "name": "carousel",
+      "displayName": "Carousel",
+      "path": "/root/layout/Renderings/carousel",
+      "templateId": "6aea24d7fb85fae7f0a40992",
+      "parentId": "6aea24d8fb85fae7f0a409b2",
+      "sortOrder": 400,
+      "hasPresentation": false,
+      "fieldsHash": "db7afbaad815a502",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6ae95cc6b1e541e051fd4168",
+      "name": "media library",
+      "displayName": "Media Library",
+      "path": "/root/media library",
+      "templateId": "6ae95cc6b1e541e051fd413e",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6aec140733a39c69cb95ba4e",
+      "name": "home",
+      "displayName": "Home",
+      "path": "/root/media library/home",
+      "templateId": "6aec052e66a61643d5ccbf88",
+      "parentId": "6ae95cc6b1e541e051fd4168",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6aec243c99d1f2a97c1ccce9",
+      "name": "contact",
+      "displayName": "Meo-Scottish-Fold.jpg",
+      "path": "/root/media library/home/contact",
+      "templateId": "6aec052e66a61643d5ccbf90",
+      "parentId": "6aec140733a39c69cb95ba4e",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "f0d59e7d374b1b88",
+      "sharedFieldsHash": "8c657a2d30c1a69b",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aec2ca0cb78ea3edebef16e",
+      "name": "iphone-18-pro-01",
+      "displayName": "iphone-18-pro-max-256gb-bang-thanh_75076500.webp",
+      "path": "/root/media library/home/iphone-18-pro-01",
+      "templateId": "6aec052e66a61643d5ccbf90",
+      "parentId": "6aec140733a39c69cb95ba4e",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "e7b1cc7ee3624fed",
+      "sharedFieldsHash": "8b71d627d95a713b",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aec3649b336e0da26d5be50",
+      "name": "test",
+      "displayName": "iphone-18-pro-01.webp",
+      "path": "/root/media library/home/test",
+      "templateId": "6aec052e66a61643d5ccbf90",
+      "parentId": "6aec140733a39c69cb95ba4e",
+      "sortOrder": 300,
+      "hasPresentation": false,
+      "fieldsHash": "8542d8688b7e32e8",
+      "sharedFieldsHash": "55e599e3b1a5370e",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aec05a079a4d7a0e6eee275",
+      "name": "test",
+      "displayName": "Test",
+      "path": "/root/media library/test",
+      "templateId": "6aec052e66a61643d5ccbf88",
+      "parentId": "6ae95cc6b1e541e051fd4168",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6aec05a079a4d7a0e6eee278",
+      "name": "dsc00738_af9f21cb224d45a8bc589260ab581422_master",
+      "displayName": "dsc00738_af9f21cb224d45a8bc589260ab581422_master",
+      "path": "/root/media library/test/dsc00738_af9f21cb224d45a8bc589260ab581422_master",
+      "templateId": "6aec052e66a61643d5ccbf90",
+      "parentId": "6aec05a079a4d7a0e6eee275",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "cb21c99db886445b",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aedc7a1705103d63fdd9f8b",
+      "name": "mazda-cx-5-2026-100-7127-17521-7775-7915-1752140017-17521925465871739801497",
+      "displayName": "mazda-cx-5-2026-100-7127-17521-7775-7915-1752140017-17521925465871739801497.webp",
+      "path": "/root/media library/test/mazda-cx-5-2026-100-7127-17521-7775-7915-1752140017-17521925465871739801497",
+      "templateId": "6aec052e66a61643d5ccbf90",
+      "parentId": "6aec05a079a4d7a0e6eee275",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "826398e48c4493cf",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6ae95cc6b1e541e051fd416e",
+      "name": "system",
+      "displayName": "System",
+      "path": "/root/system",
+      "templateId": "6ae95cc6b1e541e051fd413e",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "sortOrder": 300,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6af17b670ffbbe032133f2b8",
+      "name": "Languages",
+      "displayName": "Languages",
+      "path": "/root/system/Languages",
+      "templateId": "6af17b660ffbbe032133f29e",
+      "parentId": "6ae95cc6b1e541e051fd416e",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6ae95cc6b1e541e051fd416b",
+      "name": "templates",
+      "displayName": "Templates",
+      "path": "/root/templates",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6ae95cc6b1e541e051fd4162",
+      "sortOrder": 400,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": []
+    },
+    {
+      "id": "6aeae251248055b9172f85fa",
+      "name": "Feature",
+      "displayName": "Feature",
+      "path": "/root/templates/Feature",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6ae95cc6b1e541e051fd416b",
+      "sortOrder": 300,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeae251248055b9172f8601",
+      "name": "Components",
+      "displayName": "Components",
+      "path": "/root/templates/Feature/Components",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6aeae251248055b9172f85fa",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaccf2b200083aee587086",
+      "name": "HeroBanner",
+      "displayName": "Hero Banner Component",
+      "path": "/root/templates/Feature/Components/HeroBanner",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaccf2b200083aee587093",
+      "name": "ImageText",
+      "displayName": "Image & Text Component",
+      "path": "/root/templates/Feature/Components/ImageText",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaccf2b200083aee58708d",
+      "name": "Introduction",
+      "displayName": "Introduction Component",
+      "path": "/root/templates/Feature/Components/Introduction",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeae6ac0951c55f2b989c1a",
+      "name": "carousel-item",
+      "displayName": "Carousel Item",
+      "path": "/root/templates/Feature/Components/carousel-item",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeb2e83bd626a030bd90b87",
+      "name": "dining-listing-page",
+      "displayName": "Dining Listing Page",
+      "path": "/root/templates/Feature/Components/dining-listing-page",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 400,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeafdd9eb146b460df856bb",
+      "name": "offer-item",
+      "displayName": "Offer Item",
+      "path": "/root/templates/Feature/Components/offer-item",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f8601",
+      "sortOrder": 300,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeae251248055b9172f8607",
+      "name": "Project",
+      "displayName": "Project",
+      "path": "/root/templates/Project",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6ae95cc6b1e541e051fd416b",
+      "sortOrder": 400,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeae251248055b9172f860e",
+      "name": "Pages",
+      "displayName": "Pages",
+      "path": "/root/templates/Project/Pages",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6aeae251248055b9172f8607",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaccf2b200083aee58709e",
+      "name": "Home",
+      "displayName": "Home Page Template",
+      "path": "/root/templates/Project/Pages/Home",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f860e",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeb2ff1bd626a030bd90d48",
+      "name": "about-us-page-template",
+      "displayName": "About Us Page Template",
+      "path": "/root/templates/Project/Pages/about-us-page-template",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f860e",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeae251248055b9172f85f4",
+      "name": "System",
+      "displayName": "System",
+      "path": "/root/templates/System",
+      "templateId": "6aeae250248055b9172f85e7",
+      "parentId": "6ae95cc6b1e541e051fd416b",
+      "sortOrder": 200,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aea24d7fb85fae7f0a4098a",
+      "name": "Layout",
+      "displayName": "Layout",
+      "path": "/root/templates/System/Layout",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aea24d7fb85fae7f0a40977",
+      "name": "Layout Folder",
+      "displayName": "Layout Folder",
+      "path": "/root/templates/System/Layout Folder",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6ae95cc6b1e541e051fd4142",
+      "name": "Page",
+      "displayName": "Page",
+      "path": "/root/templates/System/Page",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaccf0b200083aee587041",
+      "name": "Placeholder",
+      "displayName": "Placeholder",
+      "path": "/root/templates/System/Placeholder",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaccf0b200083aee587033",
+      "name": "Placeholder Folder",
+      "displayName": "Placeholder Folder",
+      "path": "/root/templates/System/Placeholder Folder",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aea24d7fb85fae7f0a40992",
+      "name": "Rendering",
+      "displayName": "Rendering",
+      "path": "/root/templates/System/Rendering",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aea24d7fb85fae7f0a4097c",
+      "name": "Rendering Folder",
+      "displayName": "Rendering Folder",
+      "path": "/root/templates/System/Rendering Folder",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6ae95cc6b1e541e051fd414d",
+      "name": "Sample Item",
+      "displayName": "Sample Item",
+      "path": "/root/templates/System/Sample Item",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeafc0648c8829413fffede",
+      "name": "Standard Template",
+      "displayName": "Standard Template",
+      "path": "/root/templates/System/Standard Template",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 50,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeae250248055b9172f85eb",
+      "name": "Template",
+      "displayName": "Template",
+      "path": "/root/templates/System/Template",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeae250248055b9172f85e7",
+      "name": "Template Folder",
+      "displayName": "Template Folder",
+      "path": "/root/templates/System/Template Folder",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6ae97d27093120b9b6fcba58",
+      "name": "_BasePage",
+      "displayName": "Base Page",
+      "path": "/root/templates/System/_BasePage",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeae251248055b9172f85f4",
+      "sortOrder": 10,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6aeaf46de620d879bafc23d2",
+      "name": "common",
+      "displayName": "Common",
+      "path": "/root/templates/common",
+      "templateId": "6ae95cc6b1e541e051fd413e",
+      "parentId": "6ae95cc6b1e541e051fd416b",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    },
+    {
+      "id": "6ae95cc6b1e541e051fd413e",
+      "name": "Folder",
+      "displayName": "Folder",
+      "path": "/root/templates/common/Folder",
+      "templateId": "6aeae250248055b9172f85eb",
+      "parentId": "6aeaf46de620d879bafc23d2",
+      "sortOrder": 100,
+      "hasPresentation": false,
+      "fieldsHash": "44136fa355b3678a",
+      "sharedFieldsHash": "44136fa355b3678a",
+      "languages": [
+        "vi"
+      ]
+    }
+  ]
+}

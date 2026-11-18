@@ -1,0 +1,23 @@
+_id: 6ae95cc6b1e541e051fd4165
+name: content
+displayName: Content
+path: /root/content
+template:
+  id: 6ae95cc6b1e541e051fd413e
+  name: Folder
+  path: /root/templates/common/Folder
+parentId: 6ae95cc6b1e541e051fd4162
+sortOrder: 100
+icon: content-root
+sharedFields: {}
+languages:
+  - code: vi
+    unversionedFields: {}
+    versions:
+      - fields: {}
+        neverPublish: false
+        note: ''
+        validFrom: null
+        validTo: null
+        version: 1
+        workflowState: 6aef3037ff3d4ea2efe4c138

@@ -1,0 +1,13 @@
+_id: 6ae95cc6b1e541e051fd416b
+name: templates
+displayName: Templates
+path: /root/templates
+template:
+  id: 6aeae250248055b9172f85e7
+  name: Template Folder
+  path: /root/templates/System/Template Folder
+parentId: 6ae95cc6b1e541e051fd4162
+sortOrder: 400
+icon: folder
+sharedFields: {}
+languages: []
