@@ -94,6 +94,26 @@ function slugify(text) {
     .replace(/--+/g, '-');
 }
 
+function slugifyForDb(text) {
+  return (text || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[\s-]+/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .replace(/__+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'site';
+}
+
+function askQuestion(rl, query, defaultValue) {
+  return new Promise((resolve) => {
+    const promptText = defaultValue ? `${query} [${defaultValue}]: ` : `${query}: `;
+    rl.question(promptText, (answer) => {
+      resolve(answer.trim() || defaultValue || '');
+    });
+  });
+}
+
 /**
  * Command: init
  * One-step initialization for fresh projects
@@ -103,21 +123,61 @@ async function runInit(cliArgs) {
   console.log(`${colors.bold}${colors.green}   Treecraft CMS — Project Initializer (Phase S)    ${colors.reset}`);
   console.log(`${colors.bold}${colors.cyan}===================================================${colors.reset}\n`);
 
+  const projectRoot = process.cwd();
+  const folderName = path.basename(projectRoot);
+  const defaultProjectName = (folderName === 'core' || folderName === 'Admin CMS') ? 'Corporate Site' : folderName;
+
   const isNonInteractive = cliArgs.yes || cliArgs.y || false;
 
-  const projectName = cliArgs.name || (isNonInteractive ? 'My Corporate Site' : null);
-  const projectSlug = cliArgs.slug || (projectName ? slugify(projectName) : 'corporate');
+  let projectName = cliArgs.name || null;
+  let projectSlug = cliArgs.slug || null;
+  let port = cliArgs.port ? parseInt(cliArgs.port, 10) : null;
+  let mongoUri = cliArgs['mongo-uri'] || null;
+
+  if (!isNonInteractive) {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    try {
+      if (!projectName) {
+        projectName = await askQuestion(rl, `${colors.cyan}?${colors.reset} Project Name`, defaultProjectName);
+      }
+
+      const suggestedSlug = slugifyForDb(projectName);
+      if (!projectSlug) {
+        projectSlug = await askQuestion(rl, `${colors.cyan}?${colors.reset} Project Slug (used for DB & domain)`, suggestedSlug);
+      }
+      projectSlug = slugifyForDb(projectSlug);
+
+      if (!port) {
+        const portStr = await askQuestion(rl, `${colors.cyan}?${colors.reset} Server Port`, '4000');
+        port = parseInt(portStr, 10) || 4000;
+      }
+
+      if (!mongoUri) {
+        mongoUri = await askQuestion(rl, `${colors.cyan}?${colors.reset} MongoDB URI`, 'mongodb://127.0.0.1:27017');
+      }
+    } finally {
+      rl.close();
+    }
+  } else {
+    if (!projectName) projectName = defaultProjectName;
+    if (!projectSlug) projectSlug = slugifyForDb(projectName);
+    if (!port) port = 4000;
+    if (!mongoUri) mongoUri = 'mongodb://127.0.0.1:27017';
+  }
+
+  projectSlug = slugifyForDb(projectSlug);
   const dbPrefix = cliArgs['db-prefix'] || 'treecraft_';
   const dbName = cliArgs['db-name'] || `${dbPrefix}${projectSlug}`;
-  const mongoUri = cliArgs['mongo-uri'] || 'mongodb://127.0.0.1:27017';
   const fullMongoUri = `${mongoUri.replace(/\/+$/, '')}/${dbName}`;
-  const port = parseInt(cliArgs.port || '4000', 10);
   const adminUser = cliArgs['admin-user'] || 'admin';
   const adminPass = cliArgs['admin-pass'] || (isNonInteractive ? 'Admin@123456' : null);
 
-  const projectRoot = process.cwd();
   logInfo(`Initializing new project in: ${colors.bold}${projectRoot}${colors.reset}`);
-  logInfo(`Project Name: ${colors.bold}${projectName || 'Corporate Site'}${colors.reset} (slug: ${projectSlug})`);
+  logInfo(`Project Name: ${colors.bold}${projectName}${colors.reset} (slug: ${projectSlug})`);
   logInfo(`Database: ${colors.bold}${dbName}${colors.reset}`);
 
   // 1. Check and install core dependencies if missing
@@ -138,10 +198,10 @@ async function runInit(cliArgs) {
   if (!fs.existsSync(projectPkgPath)) {
     logInfo('Generating root package.json with Treecraft CLI wrappers...');
     const pkg = {
-      name: projectSlug,
+      name: projectSlug.replace(/_/g, '-'),
       version: '1.0.0',
       private: true,
-      description: `${projectName || 'Corporate Site'} built with Treecraft CMS`,
+      description: `${projectName} built with Treecraft CMS`,
       scripts: {
         dev: 'node core/bin/treecraft.js dev',
         start: 'node core/bin/treecraft.js start',
@@ -226,9 +286,9 @@ async function runInit(cliArgs) {
     const envExampleContent = [
       'APP_ENV=development',
       'NODE_ENV=development',
-      'PORT=4000',
-      'MONGO_URI=mongodb://127.0.0.1:27017/treecraft_corporate',
-      'MONGO_DB_NAME=treecraft_corporate',
+      `PORT=${port}`,
+      `MONGO_URI=mongodb://127.0.0.1:27017/${dbName}`,
+      `MONGO_DB_NAME=${dbName}`,
       'SESSION_SECRET=change_me_in_production',
       'STORAGE_PROVIDER=local',
       '',

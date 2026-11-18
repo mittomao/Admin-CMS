@@ -97,6 +97,19 @@ async function runVerification() {
         throw new Error(`Verification failed: Expected file does not exist: ${f}`);
       }
     }
+
+    // Verify dynamic DB naming in generated configs
+    const generatedSiteConfig = require(path.join(TMP_DIR, 'site', 'site.config.js'));
+    if (generatedSiteConfig.dbName !== TEST_DB) {
+      throw new Error(`Verification failed: site.config.js dbName (${generatedSiteConfig.dbName}) != expected (${TEST_DB})`);
+    }
+
+    const envContent = fs.readFileSync(path.join(TMP_DIR, 'site', '.env.development'), 'utf8');
+    if (!envContent.includes(`MONGO_DB_NAME=${TEST_DB}`)) {
+      throw new Error(`Verification failed: .env.development does not contain MONGO_DB_NAME=${TEST_DB}`);
+    }
+    log(`✅ Dynamic DB Name verified in configs: ${TEST_DB}`);
+
     log('✅ All project and site files verified successfully on disk.');
 
     // 5. Validate Content Tree Parity

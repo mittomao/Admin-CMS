@@ -71,11 +71,18 @@ Chạy lệnh init qua Node.js trực tiếp từ thư mục `core/bin`:
 ```bash
 node core/bin/treecraft.js init
 ```
-CLI sẽ hỏi tên dự án, slug, cổng mạng (port) và kết nối MongoDB.
+CLI sẽ tự động nhận diện tên thư mục hiện tại làm tên dự án mặc định, sau đó hỏi xác nhận:
+- **Project Name:** Mặc định là tên thư mục hiện tại (ví dụ: `my-portal`).
+- **Project Slug:** Tự động chuẩn hoá thành snake_case để đặt tên Database: `treecraft_<slug>` (ví dụ: `treecraft_my_portal`).
+- **Port & MongoDB URI:** Cổng chạy server (mặc định: `4000`) và kết nối MongoDB cục bộ (mặc định: `mongodb://127.0.0.1:27017`).
 
 **Chế độ Tự động Nhanh (--yes / Thích hợp cho CI/CD hoặc chạy nhanh):**
 ```bash
-node core/bin/treecraft.js init --name "My Corporate Portal" --slug "my_portal" --port 4000 --yes
+# Tự động lấy tên thư mục làm tên dự án và sinh DB: treecraft_{tên_thư_mục}
+node core/bin/treecraft.js init --yes
+
+# Hoặc tùy biến tên dự án và cổng mạng:
+node core/bin/treecraft.js init --name "My Corporate Portal" --port 4000 --yes
 ```
 
 Lệnh `init` sẽ tự động thực hiện:
