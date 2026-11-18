@@ -22,10 +22,10 @@ const postLogin = async (req, res) => {
   try {
     const { user } = await authService.login(username, password);
 
-    req.session.user = user;
-    req.session.save((err) => {
-      if (err) {
-        logger.error(`Session save error: ${err.message}`);
+    // Defense against Session Fixation (GĐ 12 / SEC-02)
+    req.session.regenerate((regenErr) => {
+      if (regenErr) {
+        logger.error(`Session regenerate error: ${regenErr.message}`);
         return res.render('admin/auth/login', {
           layout: 'layouts/auth',
           title: `${branding.PROJECT_NAME} Login`,
@@ -35,11 +35,33 @@ const postLogin = async (req, res) => {
         });
       }
 
-      eventBus.emit('auth.login', { user, req });
-      logger.info(`User [${user.username}] logged in successfully.`);
-      return res.redirect(redirectTarget);
+      req.session.user = user;
+      req.session.save((err) => {
+        if (err) {
+          logger.error(`Session save error: ${err.message}`);
+          return res.render('admin/auth/login', {
+            layout: 'layouts/auth',
+            title: `${branding.PROJECT_NAME} Login`,
+            returnUrl: redirectTarget,
+            error: 'An error occurred during session creation. Please try again.',
+            username: username || '',
+          });
+        }
+
+        if (req.loginRateLimiter) {
+          req.loginRateLimiter.reset();
+        }
+
+        eventBus.emit('auth.login', { user, req });
+        logger.info(`User [${user.username}] logged in successfully.`);
+        return res.redirect(redirectTarget);
+      });
     });
   } catch (error) {
+    if (req.loginRateLimiter) {
+      req.loginRateLimiter.recordFailure();
+    }
+
     eventBus.emit('auth.failed', { username, req, error: error.message });
     logger.warn(`Failed login attempt for [${username}]: ${error.message}`);
     return res.render('admin/auth/login', {

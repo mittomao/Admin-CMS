@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const presentationController = require('../../controllers/admin/presentationController');
 const { requireAuth } = require('../../middlewares/authMiddleware');
+const csrfMiddleware = require('../../middlewares/csrfMiddleware');
 
 router.use(requireAuth);
 
@@ -10,13 +11,13 @@ router.get('/item/:id/presentation', (req, res, next) =>
   presentationController.getPresentationDetailsModal(req, res, next)
 );
 
-// Save presentation from Content Editor Modal
-router.post('/item/:id/presentation', (req, res, next) =>
+// Save presentation from Content Editor Modal (CSRF protected)
+router.post('/item/:id/presentation', csrfMiddleware.verifyToken, (req, res, next) =>
   presentationController.savePresentation(req, res, next)
 );
 
-// Reset presentation from Content Editor Modal
-router.post('/item/:id/presentation/reset', (req, res, next) =>
+// Reset presentation from Content Editor Modal (CSRF protected)
+router.post('/item/:id/presentation/reset', csrfMiddleware.verifyToken, (req, res, next) =>
   presentationController.resetPresentation(req, res, next)
 );
 

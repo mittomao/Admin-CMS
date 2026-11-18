@@ -18,6 +18,11 @@
     "check:branding": "node src/scripts/check-branding.js",
     "check:languages": "node src/scripts/check-languages.js",
     "check:env": "node src/scripts/check-env.js",
+    "doctor": "node src/scripts/doctor.js",
+    "core:check": "node src/scripts/core-upgrade-cli.js check",
+    "core:prepare": "node src/scripts/core-upgrade-cli.js prepare",
+    "core:verify": "node src/scripts/core-upgrade-cli.js verify",
+    "core:rollback": "node src/scripts/core-upgrade-cli.js rollback",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:status": "docker compose ps",
@@ -79,7 +84,7 @@
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "sanitize-html": "2.13.0",
+    "sanitize-html": "^2.18.2",
     "winston": "^3.17.0"
   },
   "devDependencies": {
@@ -93,6 +98,11 @@
     "prettier": "^3.4.2",
     "supertest": "^7.0.0",
     "tailwindcss": "^3.4.17"
+  },
+  "overrides": {
+    "sanitize-html": {
+      "htmlparser2": "^9.1.0"
+    }
   },
   "jest": {
     "testTimeout": 60000

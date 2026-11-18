@@ -57,7 +57,7 @@ Qua rà soát mã nguồn tại `src/config/serializationPaths.js`, `src/config/
     }
   };
   ```
-  Tất cả các section đều được gán thuộc tính `folder` bắt đầu bằng `items/`. Thiết kế ban đầu này vay mượn từ cấu trúc thư mục của Sitecore/Unicorn (nơi phân biệt giữa `items` và `configuration`). Tuy nhiên trong hệ thống Treecraft, toàn bộ thư mục `Serialization/` đã mang bản chất lưu trữ các item phân cấp, nên tầng bọc `items/` trở nên hoàn toàn dư thừa, làm tăng thêm một cấp thư mục không cần thiết.
+  Tất cả các section đều được gán thuộc tính `folder` bắt đầu bằng `items/`. Thiết kế ban đầu này vay mượn từ cấu trúc thư mục của Unicorn (nơi phân biệt giữa `items` và `configuration`). Tuy nhiên trong hệ thống Treecraft, toàn bộ thư mục `Serialization/` đã mang bản chất lưu trữ các item phân cấp, nên tầng bọc `items/` trở nên hoàn toàn dư thừa, làm tăng thêm một cấp thư mục không cần thiết.
 
 ### (3) Lớp lặp 3: `items/templates` (hoặc tên section) bị lặp lại trong đường dẫn
 - **Căn nguyên 1 - Ghép nối tên thư mục Section với đường dẫn tương đối:**

@@ -2,7 +2,6 @@
 
 const path = require('path');
 const fs = require('fs');
-const os = require('os');
 const sitePaths = require('../src/config/sitePaths');
 
 describe('sitePaths resolver (DEC-056)', () => {
@@ -43,6 +42,19 @@ describe('sitePaths resolver (DEC-056)', () => {
     const config = sitePaths.resolveSiteConfig();
     expect(typeof config).toBe('object');
     expect(config).not.toBeNull();
+  });
+
+  test('verifyCoreImmutability returns clean state in standalone mode', () => {
+    const status = sitePaths.verifyCoreImmutability();
+    expect(status).toBeDefined();
+    expect(status.isClean).toBe(true);
+  });
+
+  test('resolves default serialization and backup directories safely', () => {
+    const serDir = sitePaths.getSerializationDir();
+    const backupDir = sitePaths.getBackupDir();
+    expect(typeof serDir).toBe('string');
+    expect(typeof backupDir).toBe('string');
   });
 });
 

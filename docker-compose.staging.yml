@@ -1,0 +1,82 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: treecraft-app-staging
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
+    environment:
+      - APP_ENV=staging
+      - NODE_ENV=production
+      - PORT=4000
+      - MONGO_URI=mongodb://mongo:27017/treecraft_staging?replicaSet=rs0
+      - SESSION_SECRET=staging_super_secure_treecraft_session_secret_2026
+      - STORAGE_PROVIDER=local
+      - TRUST_PROXY=true
+    ports:
+      - "4000:4000"
+    volumes:
+      - staging-backups:/app/site/backups
+      - staging-data:/app/data
+    networks:
+      - treecraft-staging-net
+
+  mongo:
+    image: mongo:8.0
+    container_name: treecraft-mongo-staging
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    # Internal network only - MongoDB port is NOT published to host for security
+    volumes:
+      - mongo-staging-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --port 27017 --eval \"db.adminCommand('ping')\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - treecraft-staging-net
+
+  mongo-init:
+    image: mongo:8.0
+    container_name: treecraft-mongo-staging-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: >
+      mongosh --host mongo:27017 --eval '
+        try {
+          const status = rs.status();
+          if (status.ok === 1) {
+            console.log("[Treecraft Staging] Replica set rs0 is already active.");
+          }
+        } catch (err) {
+          console.log("[Treecraft Staging] Initializing replica set rs0 for single-node staging MongoDB...");
+          const res = rs.initiate({
+            _id: "rs0",
+            members: [{ _id: 0, host: "mongo:27017" }]
+          });
+          console.log("[Treecraft Staging] rs.initiate result:", JSON.stringify(res));
+        }
+      '
+    restart: "no"
+    networks:
+      - treecraft-staging-net
+
+networks:
+  treecraft-staging-net:
+    driver: bridge
+
+volumes:
+  mongo-staging-data:
+    name: treecraft-mongo-staging-data
+  staging-backups:
+    name: treecraft-staging-backups
+  staging-data:
+    name: treecraft-staging-data

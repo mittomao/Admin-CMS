@@ -13,4 +13,7 @@ yarn-error.log*
 .DS_Store
 .idea/
 .vscode/
+data/
+backups/
+site/backups/
 

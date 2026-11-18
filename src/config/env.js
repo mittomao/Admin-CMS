@@ -120,7 +120,6 @@ const env = {
   MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true' || process.env.MAINTENANCE_MODE === '1',
   // Serialization Directory (DEC-054 & DEC-056 sitePaths)
   SERIALIZATION_DIR: process.env.SERIALIZATION_DIR || sitePaths.getSerializationDir(),
-  SERIALIZATION_DIR: process.env.SERIALIZATION_DIR || 'Serialization',
   isDev: appEnv === 'development',
   isStaging: appEnv === 'staging',
   isProd: appEnv === 'production',

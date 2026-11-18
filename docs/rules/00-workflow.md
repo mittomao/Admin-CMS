@@ -11,6 +11,8 @@
 2. **Kỷ luật một giai đoạn:**
    - Mỗi lệnh `APPROVE GĐ <số>` chỉ cho phép thực hiện **đúng một giai đoạn duy nhất**.
    - Tuyệt đối không tự ý làm gộp hoặc làm trước sang các giai đoạn tiếp theo.
+3. **Quyền tự chủ thực thi:**
+   - Ngoài những lệnh liên quan đến xóa dữ liệu vĩnh viễn hoặc thay đổi git (commit, add, push, pull, branch, checkout, reset, revert, stash, merge...), AI Agent được phép chủ động thực hiện tất cả các tác vụ trong giai đoạn mà không cần hỏi xác nhận từng bước.
 
 ## 2. Quy trình Thực hiện Trước - Trong - Sau khi Code
 

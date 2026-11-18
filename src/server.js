@@ -1,6 +1,7 @@
 const http = require('http');
 const app = require('./app');
 const env = require('./config/env');
+const sitePaths = require('./config/sitePaths');
 const dbGuard = require('./config/dbGuard');
 const { connectDB, disconnectDB } = require('./config/db');
 const backupService = require('./services/backupService');
@@ -10,6 +11,12 @@ let server;
 
 const startServer = async () => {
   try {
+    // Kiểm tra tính bất biến của Core Submodule (SEC-10 / GĐ 12)
+    const coreStatus = sitePaths.verifyCoreImmutability({ throwOnError: env.isProd });
+    if (!coreStatus.isClean) {
+      logger.warn(`[Core Security] ${coreStatus.message}`);
+    }
+
     // In Banner nhận diện môi trường và cấu hình
     dbGuard.printStartupBanner({
       appEnv: env.APP_ENV,
@@ -42,11 +49,29 @@ const startServer = async () => {
   }
 };
 
-// Graceful Shutdown Handler
+// Graceful Shutdown Handler (Task 12.D4)
+let isShuttingDown = false;
+
 const gracefulShutdown = async (signal) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  app.locals.isShuttingDown = true;
+
   logger.info(`Received ${signal}. Shutting down gracefully...`);
-  backupService.stopScheduler();
+
+  // Stop background cron jobs
+  try {
+    backupService.stopScheduler();
+  } catch (err) {
+    logger.warn(`Error stopping backup scheduler: ${err.message}`);
+  }
+
   if (server) {
+    // Close idle connections to speed up drain
+    if (typeof server.closeIdleConnections === 'function') {
+      server.closeIdleConnections();
+    }
+
     server.close(async () => {
       logger.info('HTTP server closed.');
       await disconnectDB();
@@ -58,8 +83,9 @@ const gracefulShutdown = async (signal) => {
     setTimeout(() => {
       logger.error('Force shutdown after timeout.');
       process.exit(1);
-    }, 10000);
+    }, 10000).unref();
   } else {
+    await disconnectDB();
     process.exit(0);
   }
 };

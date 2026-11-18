@@ -170,6 +170,12 @@ const contentEditorController = {
         }
 
         const { item, resolvedTemplate, languagesList, versionsList, hasLanguage, hasVersion, versionInfo, componentTemplates, quickInfo } = schemaData;
+
+        // Check read permission on web item (SEC-06)
+        if (!(await itemService.canPerform(req.user, item, 'item:read'))) {
+          return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền đọc (item:read) trên mục này.</div>');
+        }
+
         const breadcrumbs = await itemService.getPathBreadcrumb(item, 'web');
 
         // Check orphan: item in web but not in master
@@ -374,6 +380,11 @@ const contentEditorController = {
         return res.status(404).send('<div class="alert alert-danger m-3">Item not found.</div>');
       }
 
+      // Check read permission on item (SEC-06)
+      if (req.user && !(await itemService.canPerform(req.user, item, 'item:read'))) {
+        return res.status(403).send('<div class="alert alert-danger m-3">Bạn không có quyền đọc (item:read) trên mục này.</div>');
+      }
+
       let children = await itemService.getChildren(id, { db: currentDb });
       if (req.user) {
         children = await aclService.filterReadable(req.user, children);
@@ -402,6 +413,10 @@ const contentEditorController = {
   async getInsertOptions(req, res, next) {
     try {
       const { id } = req.params;
+      const item = await itemService.getById(id, 'master');
+      if (item && req.user && !(await itemService.canPerform(req.user, item, 'item:read'))) {
+        return res.status(403).json({ success: false, message: 'Bạn không có quyền đọc (item:read) trên mục này.' });
+      }
       const options = await templateService.getInsertOptions(id);
       res.json({ success: true, data: options });
     } catch (error) {

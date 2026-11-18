@@ -19,7 +19,8 @@ router.all('/*', (req, res, next) => {
     p.startsWith('/admin') ||
     p.startsWith('/api') ||
     p.startsWith('/media') ||
-    p.startsWith('/health')
+    p.startsWith('/health') ||
+    p.startsWith('/ready')
   ) {
     return next();
   }

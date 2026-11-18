@@ -132,12 +132,12 @@ const defaultFallbackApps = [
   },
   {
     name: 'Control Panel',
-    description: 'Configure database, rebuild indexes, and system settings',
-    icon: 'ti ti-settings',
+    description: 'System Health, hardware metrics, database status, and cache management',
+    icon: 'ti ti-activity-heartbeat',
     iconBg: 'rose',
     group: 'Control Panel & Maintenance',
-    url: '#',
-    isStub: true,
+    url: '/admin/control-panel',
+    isStub: false,
   },
   {
     name: 'Recycle Bin',
@@ -228,6 +228,8 @@ const getLaunchpad = async (req, res) => {
     const normalizedApps = visibleApps.map((app) => {
       let resolvedUrl = app.url;
       let resolvedStub = Boolean(app.isStub);
+      let resolvedIcon = app.icon;
+      let resolvedDesc = app.description;
 
       if (app.name === 'Media Library') {
         resolvedUrl = '/admin/media-library';
@@ -259,12 +261,17 @@ const getLaunchpad = async (req, res) => {
       } else if (app.name === 'Basic Auth') {
         resolvedUrl = '/admin/basic-auth';
         resolvedStub = false;
+      } else if (app.name === 'Control Panel') {
+        resolvedUrl = '/admin/control-panel';
+        resolvedStub = false;
+        resolvedIcon = 'ti ti-activity-heartbeat';
+        resolvedDesc = 'System Health, hardware metrics, database status, and cache management';
       }
 
       return {
         name: app.name,
-        description: app.description,
-        icon: mapToTablerIcon(app.icon),
+        description: resolvedDesc || app.description,
+        icon: mapToTablerIcon(resolvedIcon || app.icon),
         iconBg: app.iconBg || 'blue',
         group: app.group || 'Content Editing',
         url: resolvedUrl,

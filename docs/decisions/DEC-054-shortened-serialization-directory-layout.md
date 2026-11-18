@@ -67,6 +67,6 @@ Serialization/                       # = SERIALIZATION_DIR (mặc định tại 
 ## 3. Hệ quả & Lợi ích
 
 - Đường dẫn tệp ngắn hơn ~60%, loại bỏ hoàn toàn nguy cơ vượt quá 260 ký tự trên Windows.
-- Cây thư mục Git sạch sẽ, trực quan, tương thích tiêu chuẩn Sitecore/Unicorn.
+- Cây thư mục Git sạch sẽ, trực quan, tương thích tiêu chuẩn Unicorn/Treecraft.
 - Hoàn toàn độc lập với 2 tab JSON cũ.
 

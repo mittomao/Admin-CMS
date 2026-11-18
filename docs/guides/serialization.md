@@ -9,7 +9,7 @@
 ### 1.1. Mục đích
 Tính năng Serialization trong Treecraft CMS phục vụ 2 kịch bản chính:
 1. **Gói JSON Đa Phân Vùng (Tab 1 "Xuất Gói" & Tab 2 "Nhập Gói"):** Sử dụng khi cần xuất/nhập toàn bộ dữ liệu hoặc trích xuất các phân vùng lớn thành một tệp `.json` duy nhất để sao lưu hệ thống, chuyển giao dự án hoặc khôi phục thảm họa.
-2. **Đồng bộ YAML theo từng Section (Tab 3 "YAML Sync"):** Sử dụng trong quy trình phát triển mã nguồn hàng ngày (Git flow) tương tự Sitecore Unicorn / Rainbow. Dữ liệu được chia nhỏ thành từng file YAML độc lập lưu trong thư mục `Serialization/` tại gốc repository, hỗ trợ commit lên Git, theo dõi lịch sử thay đổi từng dòng (diff), và đồng bộ chính xác từng nhánh cây mà không đụng chạm đến toàn bộ hệ thống.
+2. **Đồng bộ YAML theo từng Section (Tab 3 "YAML Sync"):** Sử dụng trong quy trình phát triển mã nguồn hàng ngày (Git flow) theo mô hình Unicorn / Rainbow. Dữ liệu được chia nhỏ thành từng file YAML độc lập lưu trong thư mục `Serialization/` tại gốc repository, hỗ trợ commit lên Git, theo dõi lịch sử thay đổi từng dòng (diff), và đồng bộ chính xác từng nhánh cây mà không đụng chạm đến toàn bộ hệ thống.
 
 ### 1.2. Khi nào sử dụng từng Section
 Theo kiến trúc **DEC-054** và **DEC-055**, hệ thống chuẩn hóa 5 section độc lập:

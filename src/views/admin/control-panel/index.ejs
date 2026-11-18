@@ -1,0 +1,301 @@
+<div class="container-xl py-4">
+  <!-- Page Header -->
+  <div class="page-header d-print-none mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle text-uppercase font-semibold text-slate-400">
+          Treecraft Operations &bull; Task 12.E2
+        </div>
+        <h2 class="page-title text-slate-900 dark:text-white d-flex align-items-center gap-2">
+          <i class="ti ti-activity-heartbeat text-danger"></i>
+          <span>System Health & Control Panel</span>
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-0">
+          Theo dõi tài nguyên hệ thống, trạng thái cơ sở dữ liệu MongoDB, bộ nhớ đệm Site Cache và công cụ vận hành.
+        </p>
+      </div>
+      <div class="col-auto ms-auto d-print-none d-flex gap-2">
+        <a href="/admin/launchpad" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-apps"></i>
+          <span>Launchpad</span>
+        </a>
+        <a href="/admin/databases" class="btn btn-outline-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs">
+          <i class="ti ti-database"></i>
+          <span>Databases</span>
+        </a>
+        <a href="/admin/control-panel" class="btn btn-primary d-flex align-items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm">
+          <i class="ti ti-refresh"></i>
+          <span>Làm mới chỉ số</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metric Overview Cards -->
+  <div class="row row-cards mb-4">
+    <!-- Server Status & Uptime -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-body p-3">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="avatar rounded-xl bg-green-50 dark:bg-green-950/60 text-green-600 dark:text-green-400">
+                <i class="ti ti-server fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium text-slate-500 text-xs uppercase tracking-wide">Trạng thái Server</div>
+              <div class="text-green-600 dark:text-green-400 fw-bold fs-3 d-flex align-items-center gap-1.5">
+                <span class="badge bg-green text-white p-1 rounded-circle" style="width: 8px; height: 8px;"></span>
+                <span>Active</span>
+              </div>
+              <div class="text-slate-400 text-[11px]">Uptime: <%= systemStats.uptime %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memory RSS & Heap -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-body p-3">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="avatar rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <i class="ti ti-cpu fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium text-slate-500 text-xs uppercase tracking-wide">Node Heap Used</div>
+              <div class="text-slate-900 dark:text-white fw-bold fs-3"><%= memoryStats.heapUsed %></div>
+              <div class="text-slate-400 text-[11px]">RSS: <%= memoryStats.rss %> (<%= memoryStats.heapUsedPercent %>% Heap)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Database Status -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-body p-3">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="avatar rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
+                <i class="ti ti-database fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium text-slate-500 text-xs uppercase tracking-wide">Database</div>
+              <div class="text-slate-900 dark:text-white fw-bold fs-4 text-truncate" title="<%= dbStats.name %>"><%= dbStats.name %></div>
+              <div class="text-slate-400 text-[11px]"><%= dbStats.masterCount %> master / <%= dbStats.webCount %> web</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Site Cache -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-body p-3">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <span class="avatar rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                <i class="ti ti-bolt fs-2"></i>
+              </span>
+            </div>
+            <div class="col">
+              <div class="font-weight-medium text-slate-500 text-xs uppercase tracking-wide">Site Cache</div>
+              <div class="text-slate-900 dark:text-white fw-bold fs-3"><%= cacheStats.currentSize %> <span class="fs-5 text-slate-400 fw-normal">/ <%= cacheStats.maxItems %></span></div>
+              <div class="text-slate-400 text-[11px]">TTL: <%= cacheStats.ttlSeconds %>s &bull; <%= cacheStats.enabled ? 'Bật' : 'Tắt' %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Sections -->
+  <div class="row g-4">
+    <!-- Left Column: Runtime & Hardware Metrics -->
+    <div class="col-lg-6">
+      <div class="card border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900 mb-4">
+        <div class="card-header border-bottom border-slate-100 dark:border-slate-800 px-4 py-3">
+          <h3 class="card-title text-sm fw-bold d-flex align-items-center gap-2 m-0">
+            <i class="ti ti-device-laptop text-primary"></i>
+            <span>Thông tin Runtime & Môi trường Thực thi</span>
+          </h3>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-vcenter card-table text-xs">
+            <tbody>
+              <tr>
+                <td class="text-slate-500 w-50">Node.js Version</td>
+                <td class="fw-semibold text-slate-800 dark:text-slate-200"><%= systemStats.nodeVersion %></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Môi trường (APP_ENV)</td>
+                <td><span class="badge bg-blue-lt text-uppercase"><%= systemStats.appEnv %></span></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Chế độ thực thi (NODE_ENV)</td>
+                <td><span class="badge bg-slate-lt"><%= systemStats.nodeEnv %></span></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Process ID (PID)</td>
+                <td class="font-monospace text-slate-600 dark:text-slate-400"><%= systemStats.pid %></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Hệ điều hành / Kiến trúc</td>
+                <td class="text-slate-800 dark:text-slate-200"><%= systemStats.platform %></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Cổng mạng (PORT)</td>
+                <td class="fw-semibold text-slate-800 dark:text-slate-200"><%= systemStats.port %></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Mô hình Dự án</td>
+                <td>
+                  <% if (systemStats.isStandalone) { %>
+                    <span class="badge bg-cyan-lt">Standalone Core</span>
+                  <% } else { %>
+                    <span class="badge bg-green-lt">Site với Core Submodule</span>
+                  <% } %>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Memory Usage Breakdown -->
+      <div class="card border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-header border-bottom border-slate-100 dark:border-slate-800 px-4 py-3">
+          <h3 class="card-title text-sm fw-bold d-flex align-items-center gap-2 m-0">
+            <i class="ti ti-chart-bar text-primary"></i>
+            <span>Phân bổ Bộ nhớ Node.js (Memory Allocation)</span>
+          </h3>
+        </div>
+        <div class="card-body p-4">
+          <div class="mb-3">
+            <div class="d-flex justify-content-between text-xs mb-1">
+              <span class="text-slate-600 dark:text-slate-400">Heap Memory Used / Total</span>
+              <span class="fw-bold text-slate-800 dark:text-slate-200"><%= memoryStats.heapUsed %> / <%= memoryStats.heapTotal %> (<%= memoryStats.heapUsedPercent %>%)</span>
+            </div>
+            <div class="progress progress-sm">
+              <div class="progress-bar bg-primary" style="width: <%= memoryStats.heapUsedPercent %>%" role="progressbar"></div>
+            </div>
+          </div>
+
+          <div class="row g-2 text-xs">
+            <div class="col-6">
+              <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <div class="text-slate-400 text-[11px]">Resident Set Size (RSS)</div>
+                <div class="fw-bold fs-4 text-slate-800 dark:text-slate-200 mt-0.5"><%= memoryStats.rss %></div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <div class="text-slate-400 text-[11px]">External C++ Buffers</div>
+                <div class="fw-bold fs-4 text-slate-800 dark:text-slate-200 mt-0.5"><%= memoryStats.external %></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Database & Cache Operations -->
+    <div class="col-lg-6">
+      <!-- Database Card -->
+      <div class="card border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900 mb-4">
+        <div class="card-header border-bottom border-slate-100 dark:border-slate-800 px-4 py-3">
+          <h3 class="card-title text-sm fw-bold d-flex align-items-center gap-2 m-0">
+            <i class="ti ti-database text-purple-600"></i>
+            <span>Trạng thái Cơ sở Dữ liệu MongoDB</span>
+          </h3>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-vcenter card-table text-xs">
+            <tbody>
+              <tr>
+                <td class="text-slate-500 w-50">Tên Database</td>
+                <td class="fw-bold text-primary font-monospace"><%= dbStats.name %></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Chuỗi kết nối (Masked)</td>
+                <td class="font-monospace text-slate-600 dark:text-slate-400 text-[11px]"><%= dbStats.maskedUri %></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Mongoose Connection</td>
+                <td>
+                  <span class="badge bg-green-lt d-inline-flex align-items-center gap-1">
+                    <i class="ti ti-circle-check"></i>
+                    <span><%= dbStats.status.toUpperCase() %></span>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Replica Set</td>
+                <td class="fw-semibold text-slate-800 dark:text-slate-200"><%= dbStats.replicaSet %></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Tổng số Collections</td>
+                <td class="fw-bold text-slate-800 dark:text-slate-200"><%= dbStats.collectionsCount %></td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Master Items (items_master)</td>
+                <td class="fw-bold text-slate-800 dark:text-slate-200"><%= dbStats.masterCount %> bản ghi</td>
+              </tr>
+              <tr>
+                <td class="text-slate-500">Web Store Items (items_web)</td>
+                <td class="fw-bold text-slate-800 dark:text-slate-200"><%= dbStats.webCount %> bản ghi</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Site Render Cache Card -->
+      <div class="card border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl bg-white dark:bg-slate-900">
+        <div class="card-header border-bottom border-slate-100 dark:border-slate-800 px-4 py-3 d-flex justify-content-between align-items-center">
+          <h3 class="card-title text-sm fw-bold d-flex align-items-center gap-2 m-0">
+            <i class="ti ti-bolt text-amber-500"></i>
+            <span>Bộ nhớ đệm Render Cache (Public Site)</span>
+          </h3>
+          <span class="badge <%= cacheStats.enabled ? 'bg-green-lt' : 'bg-red-lt' %>">
+            <%= cacheStats.enabled ? 'Đang bật' : 'Đang tắt' %>
+          </span>
+        </div>
+        <div class="card-body p-4">
+          <p class="text-slate-500 text-xs mb-3">
+            Trang Public Site kết xuất HTML phía server (SSR) được lưu đệm trong RAM để đáp ứng phản hồi &lt; 50ms và tự động giải phóng khi Publish hoặc sửa đổi nội dung.
+          </p>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between text-xs mb-1">
+              <span class="text-slate-600 dark:text-slate-400">Dung lượng Cache sử dụng</span>
+              <span class="fw-bold text-slate-800 dark:text-slate-200"><%= cacheStats.currentSize %> / <%= cacheStats.maxItems %> trang (<%= cacheStats.usagePercent %>%)</span>
+            </div>
+            <div class="progress progress-sm">
+              <div class="progress-bar bg-amber-500" style="width: <%= cacheStats.usagePercent %>%" role="progressbar"></div>
+            </div>
+          </div>
+
+          <form action="/admin/control-panel/clear-cache" method="POST" class="mt-4 pt-2 border-top border-slate-100 dark:border-slate-800 d-flex justify-content-between align-items-center">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="text-slate-400 text-xs">
+              Thời gian sống mặc định (TTL): <strong><%= cacheStats.ttlSeconds %> giây</strong>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1.5 font-semibold" onclick="return confirm('Bạn có chắc chắn muốn xoá sạch toàn bộ trang trong Render Cache?');">
+              <i class="ti ti-trash"></i>
+              <span>Làm sạch Cache ngay</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

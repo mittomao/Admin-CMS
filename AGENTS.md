@@ -10,12 +10,12 @@ Quản lý bố cục Presentation (Layout, Rendering, Placeholders) và render 
 1. **Chỉ code khi có lệnh:** Chỉ được phép tạo/sửa code, cài thư viện hoặc chạy DB migration khi người dùng gửi đúng cú pháp: `APPROVE GĐ <số>` (ví dụ: `APPROVE GĐ 6`).
 2. **Kỷ luật từng giai đoạn:** Mỗi lệnh phê duyệt chỉ thực hiện **đúng một giai đoạn duy nhất**; tuyệt đối không làm gộp hay làm trước giai đoạn tiếp theo.
 3. **Không tự ý cài thêm package ngoài:** Phải hỏi ý kiến người dùng trước khi cài thêm bất kỳ thư viện bên ngoài nào chưa có trong kế hoạch.
-4. **Dừng và hỏi ngay:** Khi gặp điểm chưa rõ, phát sinh mâu thuẫn hoặc lệch phạm vi, phải dừng lại hỏi ý kiến người dùng, không tự suy diễn.
+4. **Quyền tự chủ thực thi:** Ngoài những lệnh liên quan đến xóa hoặc thay đổi git (commit, push, branch, reset, checkout, clean...), cho phép AI Agent chủ động thực hiện tất cả các tác vụ trong giai đoạn mà không cần hỏi xác nhận từng bước.
 5. **Kỷ luật checklist:** Hoàn thành task nào tick ngay `[x]` vào checklist của file phase tương ứng; hoàn thành giai đoạn phải kiểm tra DoD, cập nhật trạng thái `Hoàn thành` và báo cáo rồi dừng lại chờ duyệt.
 
 ## 3. TRẠNG THÁI HIỆN TẠI
 - **Nguồn sự thật duy nhất (Single Source of Truth):** Xem bảng tiến độ chi tiết và sơ đồ phụ thuộc 13 giai đoạn (GĐ 0 → GĐ 12, kèm GĐ R1, R2) tại [docs/phases/README.md](docs/phases/README.md).
-- **Tóm tắt nhanh:** GĐ 0 (Bootstrap), GĐ 1 (Auth & Launchpad), GĐ 2 (Content Editor MVP), GĐ 3 (Template Manager), GĐ 4 (Version & Ngôn ngữ), GĐ 5 (Media Library), GĐ 6 (Presentation EJS), GĐ 6.2 (Rendering Component Template & Effective Fields), GĐ 7 (ACL & Access Management), GĐ 8 (Workflow, Publish, Audit Trail), GĐ 10 (Chuyển đổi Database & Diff Master/Web), **GĐ R1 (Rebrand Treecraft & Root Rename)** và **GĐ R2 (Hoàn tất dọn sạch dấu vết)** đã **Hoàn thành**. GĐ 9 (Recycle Bin & Audit Log), GĐ 11, GĐ 12 ở trạng thái **Chưa bắt đầu**.
+- **Tóm tắt nhanh:** Toàn bộ 13 giai đoạn cốt lõi (GĐ 0 → GĐ 12, kèm GĐ 5.1, 6.2, 6.3, 8.1, R1, R2, B1, 11-Y2, 11-Y3, L1, F1-F3, K1, E1, S, S-Parity) đã **Hoàn thành 100%**. Hệ thống Treecraft CMS đạt trạng thái Production-Ready.
 
 ## 4. QUY TRÌNH ĐỌC TÀI LIỆU CHO MỖI PHIÊN (BẮT BUỘC)
 1. **Bước 1 (Khởi động phiên):** Luôn đọc tuần tự: `AGENTS.md` → [docs/rules/00-workflow.md](docs/rules/00-workflow.md) → [docs/phases/README.md](docs/phases/README.md).

@@ -1,4 +1,3 @@
-const path = require('path');
 const express = require('express');
 const expressLayouts = require('express-ejs-layouts');
 const helmet = require('helmet');
@@ -9,7 +8,9 @@ const cookieParser = require('cookie-parser');
 const env = require('./config/env');
 const logger = require('./utils/logger');
 const { getConnectionStatus } = require('./config/db');
+const mongoose = require('mongoose');
 const configureSession = require('./config/session');
+const correlationIdMiddleware = require('./middlewares/correlationId');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 
 // Pre-load and register all Mongoose models
@@ -46,6 +47,7 @@ const apiSerializationRoutes = require('./routes/api/serializationRoutes');
 const adminLanguageRoutes = require('./routes/admin/languageRoutes');
 const adminBackupRoutes = require('./routes/admin/backupRoutes');
 const apiBackupRoutes = require('./routes/api/backupRoutes');
+const adminControlPanelRoutes = require('./routes/admin/controlPanelRoutes');
 const siteRoutes = require('./routes/site/siteRoutes');
 const mediaController = require('./controllers/admin/mediaController');
 const contentEditorController = require('./controllers/admin/contentEditorController');
@@ -59,22 +61,54 @@ if (env.TRUST_PROXY) {
   app.set('trust proxy', 1);
 }
 
-// 1. Security Headers (Helmet with relaxed CSP for local assets, Tabler CDN & Google Fonts)
+// 0. Correlation ID Tracking (Task 12.E1)
+app.use(correlationIdMiddleware);
+
+// 1. Security Headers (Helmet with segregated CSP for Admin and Public Site - SEC-07)
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.jsdelivr.net'],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
-        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
-        imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', '*.cloudinary.com'],
-        mediaSrc: ["'self'", 'https://res.cloudinary.com', '*.cloudinary.com'],
-        connectSrc: ["'self'", 'https://res.cloudinary.com', 'https://api.cloudinary.com', '*.cloudinary.com'],
-      },
-    },
+    contentSecurityPolicy: false, // Managed below via segregated middleware
+    crossOriginEmbedderPolicy: false,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    hsts: env.isProd
+      ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+      : false,
   })
 );
+
+// Admin CMS CSP (allows Tabler CDN, Google Fonts, TinyMCE)
+const adminCspMiddleware = helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.jsdelivr.net'],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
+    imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', '*.cloudinary.com'],
+    mediaSrc: ["'self'", 'https://res.cloudinary.com', '*.cloudinary.com'],
+    connectSrc: ["'self'", 'https://res.cloudinary.com', 'https://api.cloudinary.com', '*.cloudinary.com'],
+  },
+});
+
+// Public Site CSP (strict: NO unsafe-eval)
+const siteCspMiddleware = helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+    imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', '*.cloudinary.com'],
+    mediaSrc: ["'self'", 'https://res.cloudinary.com', '*.cloudinary.com'],
+    connectSrc: ["'self'"],
+  },
+});
+
+app.use((req, res, next) => {
+  if (req.path.startsWith('/admin') || req.path.startsWith('/api')) {
+    adminCspMiddleware(req, res, next);
+  } else {
+    siteCspMiddleware(req, res, next);
+  }
+});
 
 // 2. HTTP Request Compression & Logging
 app.use(compression());
@@ -88,9 +122,9 @@ if (env.isDev) {
   );
 }
 
-// 3. Body Parsing & Cookie Handling
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 3. Body Parsing & Cookie Handling with payload limits (SEC-08)
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
 
 // 4. Session Configuration
@@ -136,15 +170,73 @@ app.use((req, res, next) => {
 });
 
 // 8. Base Routes
-// Health Check Endpoint
+// Liveness Probe Endpoint (Task 12.D3)
 app.get('/health', (req, res) => {
+  if (app.locals.isShuttingDown) {
+    return res.status(503).json({
+      status: 'shutting_down',
+      message: 'Server is currently shutting down',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   const dbStatus = getConnectionStatus();
-  res.json({
+  return res.status(200).json({
     status: 'ok',
-    db: dbStatus,
     uptime: Math.floor(process.uptime()),
+    db: dbStatus,
+    database: dbStatus,
     timestamp: new Date().toISOString(),
   });
+});
+
+// Readiness Probe Endpoint (Task 12.D3)
+app.get('/ready', async (req, res) => {
+  if (app.locals.isShuttingDown) {
+    return res.status(503).json({
+      status: 'not_ready',
+      reason: 'Server is shutting down',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  try {
+    const isDbConnected = getConnectionStatus() === 'connected' && mongoose.connection.readyState === 1;
+    if (!isDbConnected || !mongoose.connection.db) {
+      return res.status(503).json({
+        status: 'not_ready',
+        database: 'disconnected',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Ping MongoDB directly to verify socket responsiveness
+    await mongoose.connection.db.admin().ping();
+
+    // Verify key collections are accessible
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const collectionNames = collections.map((c) => c.name);
+    const hasCoreCollections = collectionNames.includes('items_master') || collectionNames.includes('system_settings');
+
+    return res.status(200).json({
+      status: 'ready',
+      database: {
+        status: 'connected',
+        name: dbGuard.extractDatabaseName(env.MONGO_URI),
+        collectionsCount: collectionNames.length,
+        hasCoreCollections,
+      },
+      maintenance: env.MAINTENANCE_MODE,
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    return res.status(503).json({
+      status: 'not_ready',
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Maintenance Mode Middleware (DEC-051 / GĐ K1)
@@ -179,6 +271,7 @@ app.use('/admin/basic-auth', adminBasicAuthRoutes);
 app.use('/admin/serialization', adminSerializationRoutes);
 app.use('/admin/languages', adminLanguageRoutes);
 app.use('/admin/backups', adminBackupRoutes);
+app.use('/admin/control-panel', adminControlPanelRoutes);
 app.use('/api/presentation', apiPresentationRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/templates', templateRoutes);

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const presentationController = require('../../controllers/admin/presentationController');
 const { requireAuth } = require('../../middlewares/authMiddleware');
+const csrfMiddleware = require('../../middlewares/csrfMiddleware');
 
 router.use(requireAuth);
 
@@ -25,13 +26,13 @@ router.get('/item/:id', (req, res, next) =>
   presentationController.getPresentationJson(req, res, next)
 );
 
-// Item Presentation: PUT /api/presentation/item/:id
-router.put('/item/:id', (req, res, next) =>
+// Item Presentation: PUT /api/presentation/item/:id (CSRF protected)
+router.put('/item/:id', csrfMiddleware.verifyToken, (req, res, next) =>
   presentationController.savePresentation(req, res, next)
 );
 
-// Item Presentation Reset: POST /api/presentation/item/:id/reset
-router.post('/item/:id/reset', (req, res, next) =>
+// Item Presentation Reset: POST /api/presentation/item/:id/reset (CSRF protected)
+router.post('/item/:id/reset', csrfMiddleware.verifyToken, (req, res, next) =>
   presentationController.resetPresentation(req, res, next)
 );
 
@@ -40,8 +41,8 @@ router.get('/template/:id/standard', (req, res, next) =>
   presentationController.getTemplateStandardPresentation(req, res, next)
 );
 
-// Template Standard Presentation: PUT /api/presentation/template/:id/standard
-router.put('/template/:id/standard', (req, res, next) =>
+// Template Standard Presentation: PUT /api/presentation/template/:id/standard (CSRF protected)
+router.put('/template/:id/standard', csrfMiddleware.verifyToken, (req, res, next) =>
   presentationController.setTemplateStandardPresentation(req, res, next)
 );
 

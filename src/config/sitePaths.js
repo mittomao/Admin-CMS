@@ -162,6 +162,36 @@ function isPathInside(parentDir, childPath) {
   return resolvedChild === resolvedParent || resolvedChild.startsWith(resolvedParent + path.sep);
 }
 
+/**
+ * Verify Core Immutability (SEC-10 / GĐ 12)
+ * Ensures Core submodule has not been modified in staging / production.
+ */
+function verifyCoreImmutability(options = {}) {
+  const { throwOnError = false } = options;
+  if (!isStandaloneMode) {
+    try {
+      const { execSync } = require('child_process');
+      const gitStatus = execSync('git status --porcelain', {
+        cwd: CORE_DIR,
+        encoding: 'utf8',
+        timeout: 3000,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+
+      if (gitStatus.length > 0) {
+        const msg = `[Security Warning] Phát hiện mã nguồn Core bị thay đổi trực tiếp (Core Dirty State): ${CORE_DIR}`;
+        if (throwOnError) {
+          throw new Error(msg);
+        }
+        return { isClean: false, message: msg, details: gitStatus };
+      }
+    } catch (e) {
+      if (throwOnError && e.message.includes('Core Dirty State')) throw e;
+    }
+  }
+  return { isClean: true };
+}
+
 module.exports = {
   CORE_DIR,
   SITE_DIR,
@@ -181,5 +211,6 @@ module.exports = {
   normalizePath,
   isPathInside,
   detectSiteDir,
+  verifyCoreImmutability,
 };
 

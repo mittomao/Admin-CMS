@@ -13,7 +13,7 @@
 Giai đoạn 11 đã hoàn thành cơ chế đóng gói và phục hồi dữ liệu thông qua gói JSON đa phân vùng (`treecraft-package-*.json`). Mặc dù gói JSON giải quyết rất tốt bài toán sao lưu tổng thể và di chuyển môi trường trọn gói, trong quy trình phát triển hằng ngày của các lập trình viên và nhóm cộng tác mã nguồn (Git flow), việc serialize toàn bộ cây nội dung vào một file JSON duy nhất bộc lộ nhiều hạn chế:
 1. **Xung đột Git (Merge Conflicts):** Khi nhiều lập trình viên cùng chỉnh sửa các template, component hoặc trang nội dung khác nhau, việc lưu tất cả vào một file JSON khổng lồ sẽ gây ra xung đột merge không thể giải quyết tự động.
 2. **Không đồng bộ theo ngữ cảnh (Lack of Granular Scoping):** Lập trình viên frontend chỉ muốn đồng bộ nhánh `Renderings` và `Layouts`, trong khi chuyên viên giải pháp muốn đồng bộ `Templates`, và biên tập viên chỉ muốn đồng bộ một phần `Content`. Việc phải xuất/nhập toàn bộ cây gây tốn thời gian và rủi ro ghi đè dữ liệu ngoài ý muốn.
-3. **Nhu cầu lưu trữ dạng file phân tán (One Item Per File):** Triết lý Sitecore Unicorn / Rainbow chứng minh rằng việc lưu mỗi item là một file YAML có định dạng ổn định giúp theo dõi lịch sử thay đổi rõ ràng trên Git diff từng dòng.
+3. **Nhu cầu lưu trữ dạng file phân tán (One Item Per File):** Triết lý Unicorn / Rainbow chứng minh rằng việc lưu mỗi item là một file YAML có định dạng ổn định giúp theo dõi lịch sử thay đổi rõ ràng trên Git diff từng dòng.
 
 Do đó, hệ thống cần bổ sung **Tab thứ 3 "YAML Sync"** trên trang Serialization, cho phép thực thi Reserialize (DB $\rightarrow$ YAML) và Sync (YAML $\rightarrow$ DB) **theo từng section của cây**, độc lập và an toàn tuyệt đối.
 

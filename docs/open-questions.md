@@ -796,3 +796,111 @@ Tài liệu này lưu trữ danh sách 5 câu hỏi kỹ thuật / nghiệp vụ
 - **Lựa chọn A (Đề xuất mặc định):** Toàn bộ 54 items trong DB mới phải khớp chính xác 100% với Snapshot Manifest về: `_id`, `path`, `name`, `templateId`, `sortOrder`, hash của `fields` và cấu hình `presentation` (layoutId, renderings).
 - **Lựa chọn B:** Chỉ so sánh số lượng items và path.
 - **Lý do đề xuất:** Đảm bảo độ tin cậy tuyệt đối (zero drift) giữa môi trường Core chuẩn và dự án mới được khởi tạo.
+
+
+---
+
+# CÂU HỎI KỸ THUẬT GIAI ĐOẠN 12 (HOÀN THIỆN, BẢO MẬT, HIỆU NĂNG, ĐÓNG GÓI, VẬN HÀNH, TÀI LIỆU)
+
+Tài liệu này lưu trữ danh sách 10 câu hỏi kỹ thuật then chốt cho **Giai đoạn 12: Hoàn thiện (Hardening)** kèm đề xuất mặc định của Tech Lead.
+
+---
+
+### 20. Phân chia Giai đoạn 12 thành 3 tiểu giai đoạn (12a, 12b, 12c)
+- **Câu hỏi:** Có phân tách Giai đoạn 12 thành 3 bước độc lập để nghiệm thu và kiểm soát rủi ro không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Chia thành:
+  - **GĐ 12a:** Kiểm thử (Nhóm A) + Bảo mật (Nhóm B) + Hiệu năng (Nhóm C).
+  - **GĐ 12b:** Đóng gói Docker (Nhóm D) + Vận hành & Giám sát (Nhóm E).
+  - **GĐ 12c:** Hoàn thiện Tài liệu chuẩn 7 mục (Nhóm F) + Quy tắc AI `.agents/rules/`.
+- **Lựa chọn B:** Làm gộp toàn bộ trong một đợt duy nhất.
+- **Lý do đề xuất:** Khối lượng công việc lớn (~45h làm việc). Phân tách giúp người dùng review từng phần an toàn, bám sát nguyên tắc kỷ luật từng giai đoạn của `AGENTS.md`.
+
+---
+
+### 21. Hình thức triển khai thực tế của hệ thống (Production Deployment Strategy)
+- **Câu hỏi:** Mục tiêu đóng gói triển khai thực tế hướng tới mô hình hạ tầng nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Docker trên một máy chủ (VPS / VM)** sử dụng `docker-compose` kết nối ứng dụng Node.js Monolith và MongoDB replica set.
+- **Lựa chọn B:** Triển khai Kubernetes phân tán (k8s) hoặc Serverless Container (Cloud Run / ECS).
+- **Lý do đề xuất:** Phù hợp với kiến trúc monolithic EJS SSR hiện tại, tối ưu chi phí vận hành, dễ sao lưu và bảo trì cho đa số doanh nghiệp vừa và nhỏ.
+
+---
+
+### 22. Kiến trúc MongoDB trên môi trường Production
+- **Câu hỏi:** Môi trường production sử dụng MongoDB Standalone hay Replica Set?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Bắt buộc sử dụng Replica Set** (tối thiểu 1-node replica set `rs0` hoặc MongoDB Atlas 3-node).
+- **Lựa chọn B:** Sử dụng MongoDB Standalone đơn lẻ.
+- **Lý do đề xuất:** Publishing Engine và Backup Safe Restore của Treecraft sử dụng Mongoose Transactions (ACID) để chống mất đồng bộ dữ liệu. MongoDB bắt buộc phải là Replica Set mới hỗ trợ Multi-Document Transactions.
+
+---
+
+### 23. Thiết lập CI tự động bằng GitHub Actions
+- **Câu hỏi:** Có tạo workflow GitHub Actions tự động kiểm thử và build Docker không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Tạo `.github/workflows/ci.yml` tự động chạy: `lint`, `check:*`, `npm test` (kết nối service container mongo:8.0 replica set), `npm audit`, và build Docker image. Không chạy migration thật trong CI. Tech Lead sẽ hỏi ý kiến người dùng trước khi tạo thư mục `.github/`.
+- **Lựa chọn B:** Không thiết lập CI, kiểm thử hoàn toàn thủ công tại local.
+- **Lý do đề xuất:** Đảm bảo chất lượng mã nguồn tự động ngăn ngừa hồi quy khi cộng tác mã nguồn trên GitHub.
+
+---
+
+### 24. Ngưỡng độ phủ kiểm thử tự động (Test Coverage Threshold)
+- **Câu hỏi:** Thiết lập ngưỡng độ phủ mã nguồn (Code Coverage Threshold) cho Jest là bao nhiêu?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Ngưỡng 70% toàn hệ thống; riêng đường phân quyền ACL, Workflow và Publishing Engine đạt 100% logic nhánh.**
+- **Lựa chọn B:** Đặt ngưỡng cố định 80% hoặc 90% cào bằng cho toàn bộ repo.
+- **Lý do đề xuất:** Tránh lãng phí công sức vào các file views EJS, seed scripts hoặc CLI wrappers, nhưng đảm bảo tuyệt đối an toàn cho các động cơ lõi quyết định tính toàn vẹn dữ liệu.
+
+---
+
+### 25. Tích hợp công cụ giám sát lỗi tập trung (Sentry / APM)
+- **Câu hỏi:** Có cài đặt SDK theo dõi lỗi bên ngoài như Sentry, Datadog hay New Relic trong GĐ 12 không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Chưa cài SDK bên ngoài.** Chuẩn hoá hệ thống ghi log nội bộ: Logger xuất JSON có cấu trúc ở production, gán `correlationId` qua middleware và che giấu dữ liệu nhạy cảm. Sẵn sàng hook để tích hợp APM sau khi có nhu cầu.
+- **Lựa chọn B:** Cài đặt package `@sentry/node` ngay trong giai đoạn này.
+- **Lý do đề xuất:** Tuân thủ quy tắc vàng không tự ý cài đặt thư viện bên ngoài nằm ngoài `02-tech-stack.md` khi chưa được phê duyệt cụ thể.
+
+---
+
+### 26. Nâng cấp trang System Health trong Admin Control Panel
+- **Câu hỏi:** Mở rộng giao diện kiểm tra sức khoẻ hệ thống tại `/admin` như thế nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Mở rộng trang Control Panel / Ping hiện tại thành System Health Dashboard:** Hiển thị trực quan trạng thái kết nối DB, Memory RSS / Heap, Uptime, trạng thái Site Cache và số lượng item trong bộ nhớ.
+- **Lựa chọn B:** Chỉ giữ endpoint API JSON `/health` và `/ready`, không làm giao diện đồ hoạ.
+- **Lý do đề xuất:** Giúp quản trị viên CMS theo dõi tình trạng server trực tiếp mà không cần mở terminal hay công cụ bên thứ ba.
+
+---
+
+### 27. Chính sách xử lý lỗ hổng thư viện phụ thuộc (`npm audit`)
+- **Câu hỏi:** Quy tắc xử lý các cảnh báo lỗ hổng từ lệnh `npm audit`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Tự động nâng cấp các bản vá minor / patch an toàn** (ví dụ nâng `sanitize-html` lên `^2.18.2` để sửa CVE XSS); đối với bản nâng cấp major có nguy cơ breaking change, Tech Lead bắt buộc dừng lại hỏi ý kiến người dùng.
+- **Lựa chọn B:** Giữ nguyên phiên bản cũ để tránh rủi ro tương thích.
+- **Lý do đề xuất:** Loại bỏ rủi ro an ninh nghiêm trọng từ các package runtime trong khi vẫn kiểm soát được tính ổn định của hệ thống.
+
+---
+
+### 28. Ngân sách hiệu năng (Performance Budget) và Assertions
+- **Câu hỏi:** Có áp dụng ngân sách hiệu năng đề xuất của Nhóm C và kiểm tra tự động qua test suite không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Áp dụng ngân sách:
+  - Mở node cây phân cấp: $< 300\text{ms}$ với 1.000 items.
+  - Phản hồi trang Public Site từ Render Cache: $< 50\text{ms}$.
+  - Nạp form biên tập Content Editor: $< 500\text{ms}$.
+  Có assertion tự động trong test suite để cảnh báo nếu hiệu năng bị suy giảm.
+- **Lựa chọn B:** Chỉ đo đạc thủ công, không thiết lập assertion chặn trong test suite.
+- **Lý do đề xuất:** Đảm bảo trải nghiệm mượt mà desktop-like của Treecraft CMS không bị thoái hoá trong tương lai.
+
+---
+
+### 29. Thiết lập thư mục quy tắc AI `.agents/rules/`
+- **Câu hỏi:** Có tạo thư mục `.agents/rules/` để hỗ trợ các phiên làm việc của AI assistant không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Có.** Tạo 3 file quy tắc súc tích tại `.agents/rules/`:
+  - `01-general.md`: Nhận diện Treecraft, quy tắc vàng, cấm commit, kỷ luật checklist.
+  - `02-architecture.md`: Mô hình 1 DB 2 collections, Core bất biến, Site submodule, `sitePaths`.
+  - `03-git-safety.md`: Quy tắc an toàn git chỉ đọc, quy chuẩn thông điệp commit.
+  Mỗi file $\le 12.000$ ký tự, liên kết trực tiếp tới `docs/rules/`.
+- **Lựa chọn B:** Chỉ duy trì duy nhất file `AGENTS.md` tại thư mục gốc.
+- **Lý do đề xuất:** Tận dụng tính năng modular rules của Antigravity để AI agents tự động nạp ngữ cảnh chính xác mà không làm phình to file `AGENTS.md`.

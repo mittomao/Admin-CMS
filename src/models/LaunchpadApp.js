@@ -45,6 +45,10 @@ const launchpadAppSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isStub: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
