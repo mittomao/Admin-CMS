@@ -51,6 +51,20 @@ async function syncStarter() {
   }
 
   console.log('[sync-starter] ✅ All starter sections synchronized successfully!');
+
+  // Publish starter content to Web delivery store so Public Site renders immediately (DEC-057)
+  try {
+    const publishService = require('../services/publishService');
+    const pubRes = await publishService.publishItem(null, {
+      mode: 'Site',
+      user: { isAdmin: true },
+      languages: ['vi', 'en'],
+    });
+    console.log(`[sync-starter] Published starter items to Web store (${pubRes.totalItemsPublished || 0} items published).`);
+  } catch (pubErr) {
+    console.warn(`[sync-starter] Starter publish notice: ${pubErr.message}`);
+  }
+
   await mongoose.disconnect();
 }
 
