@@ -2,9 +2,9 @@
 'use strict';
 
 /**
- * Treecraft CMS - Unified CLI Entry Point (DEC-056 / Phase S)
+ * Treecraft CMS - Unified CLI Entry Point (DEC-059 / Phase N)
  * Designed for 100% native Node.js execution with zero top-level external dependencies.
- * Powers the single-step "submodule -> init -> dev" workflow.
+ * Powers the standard "npm init -> npm install treecraft-core -> npx treecraft init -> npm run dev" workflow.
  */
 
 const fs = require('fs');
@@ -180,48 +180,51 @@ async function runInit(cliArgs) {
   logInfo(`Project Name: ${colors.bold}${projectName}${colors.reset} (slug: ${projectSlug})`);
   logInfo(`Database: ${colors.bold}${dbName}${colors.reset}`);
 
-  // 1. Check and install core dependencies if missing
+  // 1. Check core dependencies if developing from source
   const coreNodeModules = path.join(CORE_DIR, 'node_modules');
-  if (!fs.existsSync(coreNodeModules)) {
-    logInfo('Installing Core dependencies (this happens only once)...');
+  if (!fs.existsSync(coreNodeModules) && !CORE_DIR.includes('node_modules')) {
+    logInfo('Installing Core dependencies...');
     try {
-      execSync('npm install --prefix core', { cwd: projectRoot, stdio: 'inherit' });
+      execSync('npm install', { cwd: CORE_DIR, stdio: 'inherit' });
       logSuccess('Core dependencies installed successfully.');
     } catch (e) {
-      logWarn('Fallback: running npm install inside core directory...');
-      execSync('npm install', { cwd: CORE_DIR, stdio: 'inherit' });
+      logWarn(`Could not install dependencies in CORE_DIR: ${e.message}`);
     }
   }
 
-  // 2. Generate project root package.json if not present
+  // 2. Generate or update project root package.json with CLI scripts
   const projectPkgPath = path.join(projectRoot, 'package.json');
-  if (!fs.existsSync(projectPkgPath)) {
-    logInfo('Generating root package.json with Treecraft CLI wrappers...');
-    const pkg = {
-      name: projectSlug.replace(/_/g, '-'),
-      version: '1.0.0',
-      private: true,
-      description: `${projectName} built with Treecraft CMS`,
-      scripts: {
-        dev: 'node core/bin/treecraft.js dev',
-        start: 'node core/bin/treecraft.js start',
-        'sync:export': 'node core/bin/treecraft.js sync:export',
-        'sync:import': 'node core/bin/treecraft.js sync:import',
-        backup: 'node core/bin/treecraft.js backup',
-        restore: 'node core/bin/treecraft.js restore',
-        'tree:compare': 'node core/bin/treecraft.js tree:compare',
-      },
-    };
-    fs.writeFileSync(projectPkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-    logSuccess('Created package.json');
+  let pkg = {};
+  if (fs.existsSync(projectPkgPath)) {
+    try {
+      pkg = JSON.parse(fs.readFileSync(projectPkgPath, 'utf8'));
+    } catch (e) {
+      pkg = {};
+    }
   }
+  pkg.name = pkg.name || projectSlug.replace(/_/g, '-');
+  pkg.version = pkg.version || '1.0.0';
+  pkg.private = pkg.private !== undefined ? pkg.private : true;
+  pkg.description = pkg.description || `${projectName} built with Treecraft CMS`;
+  pkg.scripts = {
+    ...(pkg.scripts || {}),
+    dev: 'treecraft dev',
+    start: 'treecraft start',
+    doctor: 'treecraft doctor',
+    'sync:export': 'treecraft sync:export',
+    'sync:import': 'treecraft sync:import',
+    backup: 'treecraft backup',
+    restore: 'treecraft restore',
+    'tree:compare': 'treecraft tree:compare',
+  };
+  fs.writeFileSync(projectPkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+  logSuccess('Configured package.json with Treecraft CLI scripts');
 
   // 3. Generate .gitignore if not present
   const gitignorePath = path.join(projectRoot, '.gitignore');
   if (!fs.existsSync(gitignorePath)) {
     const gitignoreContent = [
       'node_modules/',
-      'core/',
       'site/.env*',
       '!site/.env.example',
       'site/backups/',
@@ -435,18 +438,57 @@ async function main() {
       break;
     }
 
+    case 'doctor': {
+      const script = path.join(CORE_DIR, 'src', 'scripts', 'doctor.js');
+      const childArgs = args.slice(1);
+      spawn('node', [script, ...childArgs], { cwd: process.cwd(), stdio: 'inherit' });
+      break;
+    }
+
+    case 'backup': {
+      const script = path.join(CORE_DIR, 'src', 'scripts', 'backup-cli.js');
+      const childArgs = args.slice(1).length ? args.slice(1) : ['create'];
+      spawn('node', [script, ...childArgs], { cwd: process.cwd(), stdio: 'inherit' });
+      break;
+    }
+
+    case 'restore': {
+      const script = path.join(CORE_DIR, 'src', 'scripts', 'backup-cli.js');
+      const childArgs = ['restore', ...args.slice(1)];
+      spawn('node', [script, ...childArgs], { cwd: process.cwd(), stdio: 'inherit' });
+      break;
+    }
+
+    case 'sync:export': {
+      const script = path.join(CORE_DIR, 'src', 'scripts', 'serialize-section-cli.js');
+      spawn('node', [script, 'reserialize'], { cwd: process.cwd(), stdio: 'inherit' });
+      break;
+    }
+
+    case 'sync:import': {
+      const script = path.join(CORE_DIR, 'src', 'scripts', 'serialize-section-cli.js');
+      spawn('node', [script, 'sync'], { cwd: process.cwd(), stdio: 'inherit' });
+      break;
+    }
+
     case 'help':
     default:
       console.log(`
 ${colors.bold}${colors.cyan}Treecraft CMS CLI${colors.reset}
 
 Usage:
-  node core/bin/treecraft.js <command> [options]
+  treecraft <command> [options]
+  npx treecraft <command> [options]
 
 Commands:
   ${colors.green}init${colors.reset}             Initialize a new site in the current directory
   ${colors.green}dev${colors.reset}              Start development server
   ${colors.green}start${colors.reset}            Start production server
+  ${colors.green}doctor${colors.reset}           Run system health and readiness diagnostic
+  ${colors.green}sync:export${colors.reset}      Export content and templates to YAML serialization
+  ${colors.green}sync:import${colors.reset}      Import content and templates from YAML serialization
+  ${colors.green}backup${colors.reset}           Create a database backup
+  ${colors.green}restore${colors.reset}          Restore database from a backup
   ${colors.green}tree:snapshot${colors.reset}    Export content tree snapshot manifest
   ${colors.green}tree:compare${colors.reset}     Compare two content trees for 100% parity
   ${colors.green}help${colors.reset}             Show this help message

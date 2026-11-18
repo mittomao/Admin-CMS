@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Treecraft CMS - Live HTTP Smoke Test on Fresh Submodule Project (Pre-Merge Layer 3 & 4)
+ * Treecraft CMS - Live HTTP Smoke Test on Fresh NPM Package Project (Pre-Merge Layer 3 & 4)
  * Validates that a fresh project initialized via Treecraft CLI starts up, serves
  * SSR public pages via EJS, handles Admin authentication, and keeps Core completely immutable.
  */
@@ -79,49 +79,32 @@ async function runSmokeTest() {
   let serverProcess = null;
 
   try {
-    // 1. Git init in temp dir
-    execSync('git init', { cwd: TMP_DIR, stdio: 'pipe' });
-    execSync('git config user.name "Treecraft Tester"', { cwd: TMP_DIR, stdio: 'pipe' });
-    execSync('git config user.email "test@treecraft.local"', { cwd: TMP_DIR, stdio: 'pipe' });
+    // 1. Pack Core into .tgz tarball in TMP_DIR
+    log('1. Packaging Core into local tarball via npm pack...');
+    execSync(`npm pack --pack-destination "${TMP_DIR}"`, {
+      cwd: CORE_DIR,
+      stdio: 'pipe',
+    });
 
-    // 2. Add Core as submodule or link
-    log('2. Adding Core submodule via file protocol...');
-    const coreUrl = CORE_DIR.replace(/\\/g, '/');
-    try {
-      execSync(`git -c protocol.file.allow=always submodule add "file://${coreUrl}" core`, {
-        cwd: TMP_DIR,
-        stdio: 'pipe',
-      });
-    } catch (subErr) {
-      log(`Submodule add notice: ${subErr.message}. Falling back to copy.`);
-      const targetCore = path.join(TMP_DIR, 'core');
-      fs.cpSync(CORE_DIR, targetCore, {
-        recursive: true,
-        filter: (src) => !src.includes('node_modules') && !src.includes('.git') && !src.includes('storage') && !src.includes('data'),
-      });
+    const tarballFiles = fs.readdirSync(TMP_DIR).filter((f) => f.endsWith('.tgz'));
+    if (tarballFiles.length === 0) {
+      throw new Error('Smoke test failed: npm pack did not produce a .tgz tarball');
     }
+    const tarballName = tarballFiles[0];
+    log(`Tarball produced: ${tarballName}`);
 
-    const targetCore = path.join(TMP_DIR, 'core');
-    if (fs.existsSync(path.join(CORE_DIR, 'bin'))) {
-      fs.cpSync(path.join(CORE_DIR, 'bin'), path.join(targetCore, 'bin'), { recursive: true });
-    }
-    if (fs.existsSync(path.join(CORE_DIR, 'starter'))) {
-      fs.cpSync(path.join(CORE_DIR, 'starter'), path.join(targetCore, 'starter'), { recursive: true });
-    }
-    if (fs.existsSync(path.join(CORE_DIR, 'src'))) {
-      fs.cpSync(path.join(CORE_DIR, 'src'), path.join(targetCore, 'src'), { recursive: true });
-    }
-    if (fs.existsSync(path.join(CORE_DIR, 'node_modules')) && !fs.existsSync(path.join(targetCore, 'node_modules'))) {
-      try {
-        fs.symlinkSync(path.join(CORE_DIR, 'node_modules'), path.join(targetCore, 'node_modules'), 'junction');
-      } catch (linkErr) {
-        // ignore
-      }
-    }
+    // 2. Initialize project and install package
+    log('2. Running npm init -y and installing Core package...');
+    execSync('npm init -y', { cwd: TMP_DIR, stdio: 'pipe' });
+    execSync(`npm install ./${tarballName} --no-audit --prefer-offline`, {
+      cwd: TMP_DIR,
+      stdio: 'pipe',
+    });
+    log('Core package installed in node_modules.');
 
     // 3. Run treecraft init
-    log(`3. Initializing fresh project via CLI: node core/bin/treecraft.js init...`);
-    const initCmd = `node core/bin/treecraft.js init --name "Smoke Portal" --slug "${SMOKE_SLUG}" --port ${SMOKE_PORT} --yes`;
+    log(`3. Initializing fresh project via CLI: npx treecraft init...`);
+    const initCmd = `npx treecraft init --name "Smoke Portal" --slug "${SMOKE_SLUG}" --port ${SMOKE_PORT} --yes`;
     execSync(initCmd, {
       cwd: TMP_DIR,
       stdio: 'inherit',
@@ -130,7 +113,11 @@ async function runSmokeTest() {
     // 4. Start Server
     log(`4. Starting live project server on port ${SMOKE_PORT}...`);
     const siteDir = path.join(TMP_DIR, 'site');
-    serverProcess = spawn('node', ['core/bin/treecraft.js', 'dev'], {
+    const installedCore = fs.existsSync(path.join(TMP_DIR, 'node_modules', 'treecraft-core'))
+      ? path.join(TMP_DIR, 'node_modules', 'treecraft-core')
+      : path.join(TMP_DIR, 'node_modules', '@treecraft', 'core');
+    const cliPath = path.join(installedCore, 'bin', 'treecraft.js');
+    serverProcess = spawn('node', [cliPath, 'dev'], {
       cwd: TMP_DIR,
       env: {
         ...process.env,
@@ -266,19 +253,19 @@ async function runSmokeTest() {
     log('✅ GET /admin/content-editor: 200 OK (Content Editor workspace rendered)');
 
     // 6. Verify Core Immutability
-    log('6. Validating Core Immutability (zero rogue writes in core/)...');
-    const coreLogs = path.join(targetCore, 'logs');
-    const coreSite = path.join(targetCore, 'site');
-    const coreStorage = path.join(targetCore, 'storage');
+    log(`6. Validating Core Immutability (zero rogue writes in ${installedCore})...`);
+    const coreLogs = path.join(installedCore, 'logs');
+    const coreSite = path.join(installedCore, 'site');
+    const coreStorage = path.join(installedCore, 'storage');
 
     if (fs.existsSync(coreLogs) && fs.readdirSync(coreLogs).length > 0) {
-      throw new Error('Violation: Core/logs has written files');
+      throw new Error(`Violation: ${installedCore}/logs has written files`);
     }
     if (fs.existsSync(coreSite)) {
-      throw new Error('Violation: Core/site was created');
+      throw new Error(`Violation: ${installedCore}/site was created`);
     }
     if (fs.existsSync(coreStorage) && fs.readdirSync(coreStorage).length > 0) {
-      throw new Error('Violation: Core/storage has written files');
+      throw new Error(`Violation: ${installedCore}/storage has written files`);
     }
     log('✅ Core Immutability verified: Thư mục core hoàn toàn nguyên vẹn và bất biến.');
 

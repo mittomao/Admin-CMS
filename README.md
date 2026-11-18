@@ -18,8 +18,8 @@ Treecraft CMS là hệ thống quản trị nội dung cấp doanh nghiệp (Ent
 2. **Tách biệt Master & Web Store trong 1 Database:**
    - `items_master`: Kho soạn thảo nội dung của biên tập viên, hỗ trợ đa phiên bản (Versions), đa ngôn ngữ (Languages) và quy trình phê duyệt Workflow (Draft $\rightarrow$ Review $\rightarrow$ Approved).
    - `items_web`: Kho xuất bản tối ưu hóa cho Public Site Renderer (chỉ đọc), đáp ứng thời gian phản hồi cực nhanh (&lt; 50ms khi có Render Cache).
-3. **Kiến trúc Tách biệt Core & Site (Git Submodule):**
-   - **Treecraft Core:** Bất biến, đóng gói toàn bộ engine xử lý, admin dashboard, API và CLI quản trị.
+3. **Phân phối Độc quyền qua NPM Package (`treecraft-core`):**
+   - **Treecraft Core:** Đóng gói thành thư viện npm công khai, bất biến, cài đặt trong `node_modules`, quản lý toàn bộ engine xử lý, admin dashboard, API và CLI quản trị.
    - **Site Project:** Nơi chứa giao diện EJS views, styles Tailwind CSS, assets tĩnh, cấu hình thương hiệu và các file Serialization YAML độc lập của từng dự án.
 4. **An ninh Bảo mật Đa lớp (Defense in Depth):**
    - Chốt chặn `dbGuard` ngăn ngừa vô tình ghi đè DB Remote/Cloud ở môi trường Dev.
@@ -40,7 +40,17 @@ Treecraft CMS là hệ thống quản trị nội dung cấp doanh nghiệp (Ent
 
 ## 3. Khởi Động Nhanh (Quickstart)
 
-### Cách 1: Chạy trực tiếp trên máy phát triển (Local Dev)
+### Cách 1: Khởi tạo Website Mới từ NPM (Khuyến nghị)
+
+```bash
+mkdir my-project && cd my-project
+npm init -y
+npm install treecraft-core
+npx treecraft init
+npm run dev
+```
+
+### Cách 2: Phát triển mã nguồn Treecraft Core cục bộ (Local Core Dev)
 
 ```bash
 # 1. Cài đặt thư viện dependencies

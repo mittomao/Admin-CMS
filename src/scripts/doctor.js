@@ -69,7 +69,7 @@ async function runDoctor() {
     dbGuard = require('../config/dbGuard');
     pass(`Môi trường APP_ENV: [${env.APP_ENV}] | NODE_ENV: [${env.NODE_ENV}]`);
     pass(`Cổng lắng nghe (PORT): ${env.PORT}`);
-    pass(`Chế độ dự án: ${sitePaths.isStandaloneMode ? 'Standalone Core Development' : 'Site Project với Core Submodule'}`);
+    pass(`Chế độ dự án: ${sitePaths.isStandaloneMode ? 'Standalone Core Development' : 'Site Project với Core NPM Package'}`);
     pass(`Thư mục Site: ${sitePaths.SITE_DIR}`);
     pass(`Thư mục Core: ${sitePaths.CORE_DIR}`);
   } catch (err) {
@@ -82,7 +82,7 @@ async function runDoctor() {
   try {
     const immutability = sitePaths.verifyCoreImmutability({ throwOnError: false });
     if (immutability.isClean) {
-      pass('Thư mục Core hoàn toàn bất biến, không bị sửa đổi ngoài luồng.');
+      pass(`Thư mục Core hoàn toàn bất biến, không bị sửa đổi ngoài luồng (${immutability.mode || 'verified'}).`);
     } else {
       if (env.isProd) {
         fail(`[BẢO MẬT PRODUCTION] ${immutability.message}`);
@@ -91,24 +91,24 @@ async function runDoctor() {
       }
     }
   } catch (err) {
-    warn(`Không thể kiểm tra git immutability: ${err.message}`);
+    warn(`Không thể kiểm tra package immutability: ${err.message}`);
   }
 
   // 4. Directory Permissions Check
   console.log(`\n${colors.bold}4. KIỂM TRA QUYỀN TRUY CẬP THƯ MỤC LƯU TRỮ${colors.reset}`);
   const dirsToCheck = [
-    { label: 'Thư mục Backup', dir: env.BACKUP_DIR },
-    { label: 'Thư mục Serialization', dir: env.SERIALIZATION_DIR },
-    { label: 'Thư mục Views Admin', dir: sitePaths.ADMIN_VIEWS_DIR },
+    { label: 'Thư mục Backup', dir: env.BACKUP_DIR, mode: fs.constants.R_OK | fs.constants.W_OK, desc: 'Đọc/Ghi' },
+    { label: 'Thư mục Serialization', dir: env.SERIALIZATION_DIR, mode: fs.constants.R_OK | fs.constants.W_OK, desc: 'Đọc/Ghi' },
+    { label: 'Thư mục Views Admin', dir: sitePaths.ADMIN_VIEWS_DIR, mode: fs.constants.R_OK, desc: 'Chỉ Đọc (Read-Only)' },
   ];
 
   for (const item of dirsToCheck) {
     try {
-      if (!fs.existsSync(item.dir)) {
+      if (!fs.existsSync(item.dir) && (item.mode & fs.constants.W_OK)) {
         fs.mkdirSync(item.dir, { recursive: true });
       }
-      fs.accessSync(item.dir, fs.constants.R_OK | fs.constants.W_OK);
-      pass(`${item.label} (${item.dir}): Đọc/Ghi thành công`);
+      fs.accessSync(item.dir, item.mode);
+      pass(`${item.label} (${item.dir}): ${item.desc} thành công`);
     } catch (err) {
       fail(`${item.label} (${item.dir}): Lỗi truy cập - ${err.message}`);
     }

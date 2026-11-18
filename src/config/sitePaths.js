@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * Treecraft CMS - Site Paths & Context Resolver (DEC-056 / Phase S)
- * Single Source of Truth for resolving paths across Core (submodule) and Site directories.
- * Supports Submodule Mode and Standalone/Monolith Mode with zero disruption.
+ * Treecraft CMS - Site Paths & Context Resolver (DEC-059 / Phase N)
+ * Single Source of Truth for resolving paths across Core (NPM package) and Site directories.
+ * Designed for distribution as treecraft-core with seamless Site project resolution.
  */
 
 const path = require('path');
@@ -163,12 +163,39 @@ function isPathInside(parentDir, childPath) {
 }
 
 /**
- * Verify Core Immutability (SEC-10 / GĐ 12)
- * Ensures Core submodule has not been modified in staging / production.
+ * Verify Core Immutability & Package Integrity (SEC-10 / DEC-059 / GĐ N)
+ * In production / staging, ensures Core package has not been tampered with.
+ * Supports NPM package integrity when installed in node_modules,
+ * and git status check when developing Core directly from repository.
  */
-function verifyCoreImmutability(options = {}) {
+function verifyPackageIntegrity(options = {}) {
   const { throwOnError = false } = options;
-  if (!isStandaloneMode) {
+
+  // 1. If running as NPM package inside node_modules
+  const isInsideNodeModules = CORE_DIR.includes('node_modules');
+  if (isInsideNodeModules) {
+    const pkgJsonPath = path.join(CORE_DIR, 'package.json');
+    if (!fs.existsSync(pkgJsonPath)) {
+      const msg = `[Security Error] Core package.json không tồn tại tại: ${CORE_DIR}`;
+      if (throwOnError) throw new Error(msg);
+      return { isClean: false, message: msg };
+    }
+
+    // Verify key runtime entry points exist
+    const essentialFiles = ['src/server.js', 'src/app.js', 'bin/treecraft.js'];
+    for (const f of essentialFiles) {
+      if (!fs.existsSync(path.join(CORE_DIR, f))) {
+        const msg = `[Security Error] Tệp cốt lõi của Core bị thiếu (${f}) tại: ${CORE_DIR}`;
+        if (throwOnError) throw new Error(msg);
+        return { isClean: false, message: msg };
+      }
+    }
+
+    return { isClean: true, mode: 'npm-package' };
+  }
+
+  // 2. If running in Core git repository (Development mode)
+  if (!isStandaloneMode && fs.existsSync(path.join(CORE_DIR, '.git'))) {
     try {
       const { execSync } = require('child_process');
       const gitStatus = execSync('git status --porcelain', {
@@ -189,8 +216,12 @@ function verifyCoreImmutability(options = {}) {
       if (throwOnError && e.message.includes('Core Dirty State')) throw e;
     }
   }
-  return { isClean: true };
+
+  return { isClean: true, mode: isStandaloneMode ? 'standalone-dev' : 'clean' };
 }
+
+// Backward-compatible alias
+const verifyCoreImmutability = verifyPackageIntegrity;
 
 module.exports = {
   CORE_DIR,
@@ -212,5 +243,6 @@ module.exports = {
   isPathInside,
   detectSiteDir,
   verifyCoreImmutability,
+  verifyPackageIntegrity,
 };
 

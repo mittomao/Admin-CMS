@@ -1,8 +1,9 @@
 'use strict';
 
 /**
- * Treecraft CMS - Fresh Install Verification Script (DEC-056 / Phase S)
- * Runs end-to-end verification of the "git init -> git submodule add -> init -> dev" workflow
+ * Treecraft CMS - NPM Package Fresh Install Verification (DEC-059 / Phase N)
+ * Runs end-to-end verification of the standard Node.js workflow:
+ * "npm pack -> npm init -y -> npm install <tgz> -> npx treecraft init -> tree:compare"
  * strictly inside an isolated OS temporary directory.
  */
 
@@ -13,7 +14,7 @@ const { execSync } = require('child_process');
 const mongoose = require('mongoose');
 
 const CORE_DIR = path.resolve(__dirname, '..');
-const TMP_DIR = path.join(os.tmpdir(), `treecraft-verify-${Date.now()}`);
+const TMP_DIR = path.join(os.tmpdir(), `treecraft-npm-verify-${Date.now()}`);
 const TEST_SLUG = `verify_${Date.now()}`;
 const TEST_DB = `treecraft_${TEST_SLUG}`;
 const TEST_PORT = 4099;
@@ -27,59 +28,49 @@ async function runVerification() {
   fs.mkdirSync(TMP_DIR, { recursive: true });
 
   try {
-    // 1. Git init in temp dir
-    log('1. Initializing fresh git repository in temp directory...');
-    execSync('git init', { cwd: TMP_DIR, stdio: 'pipe' });
-    execSync('git config user.name "Treecraft Tester"', { cwd: TMP_DIR, stdio: 'pipe' });
-    execSync('git config user.email "test@treecraft.local"', { cwd: TMP_DIR, stdio: 'pipe' });
+    // 1. Pack Core into .tgz tarball in TMP_DIR
+    log('1. Packaging Core into local tarball via npm pack...');
+    execSync(`npm pack --pack-destination "${TMP_DIR}"`, {
+      cwd: CORE_DIR,
+      stdio: 'inherit',
+    });
 
-    // 2. Add Core as submodule (allow file protocol)
-    log('2. Adding Core submodule via file protocol...');
-    const coreUrl = CORE_DIR.replace(/\\/g, '/');
-    try {
-      execSync(`git -c protocol.file.allow=always submodule add "file://${coreUrl}" core`, {
-        cwd: TMP_DIR,
-        stdio: 'pipe',
-      });
-    } catch (subErr) {
-      log(`Submodule add notice: ${subErr.message}. Falling back to copy.`);
-      const targetCore = path.join(TMP_DIR, 'core');
-      fs.cpSync(CORE_DIR, targetCore, {
-        recursive: true,
-        filter: (src) => !src.includes('node_modules') && !src.includes('.git') && !src.includes('storage') && !src.includes('data'),
-      });
+    const tarballFiles = fs.readdirSync(TMP_DIR).filter((f) => f.endsWith('.tgz'));
+    if (tarballFiles.length === 0) {
+      throw new Error('Verification failed: npm pack did not produce a .tgz tarball');
     }
+    const tarballName = tarballFiles[0];
+    log(`Tarball produced: ${tarballName}`);
 
-    // Sync working copy files into core (since git working copy changes are uncommitted)
-    const targetCore = path.join(TMP_DIR, 'core');
-    if (fs.existsSync(path.join(CORE_DIR, 'bin'))) {
-      fs.cpSync(path.join(CORE_DIR, 'bin'), path.join(targetCore, 'bin'), { recursive: true });
-    }
-    if (fs.existsSync(path.join(CORE_DIR, 'starter'))) {
-      fs.cpSync(path.join(CORE_DIR, 'starter'), path.join(targetCore, 'starter'), { recursive: true });
-    }
-    if (fs.existsSync(path.join(CORE_DIR, 'src'))) {
-      fs.cpSync(path.join(CORE_DIR, 'src'), path.join(targetCore, 'src'), { recursive: true });
-    }
-    // Link core's node_modules for fast verify without downloading packages
-    if (fs.existsSync(path.join(CORE_DIR, 'node_modules')) && !fs.existsSync(path.join(targetCore, 'node_modules'))) {
-      try {
-        fs.symlinkSync(path.join(CORE_DIR, 'node_modules'), path.join(targetCore, 'node_modules'), 'junction');
-      } catch (linkErr) {
-        // ignore if already linked
-      }
-    }
+    // 2. Initialize project in temp directory
+    log('2. Running npm init -y in temp directory...');
+    execSync('npm init -y', { cwd: TMP_DIR, stdio: 'pipe' });
 
-    // 3. Execute treecraft init
-    log('3. Running one-step init: node core/bin/treecraft.js init --yes...');
-    const initCmd = `node core/bin/treecraft.js init --name "Verify Portal" --slug "${TEST_SLUG}" --port ${TEST_PORT} --yes`;
+    // 3. Install Core package from local tarball
+    log(`3. Installing ${tarballName} via npm install...`);
+    execSync(`npm install ./${tarballName} --no-audit --prefer-offline`, {
+      cwd: TMP_DIR,
+      stdio: 'inherit',
+    });
+
+    const installedCliUnscoped = path.join(TMP_DIR, 'node_modules', 'treecraft-core', 'bin', 'treecraft.js');
+    const installedCliScoped = path.join(TMP_DIR, 'node_modules', '@treecraft', 'core', 'bin', 'treecraft.js');
+    const installedCli = fs.existsSync(installedCliUnscoped) ? installedCliUnscoped : installedCliScoped;
+    if (!fs.existsSync(installedCli)) {
+      throw new Error(`Verification failed: CLI not found at ${installedCli}`);
+    }
+    log('✅ Core package and CLI installed successfully in node_modules.');
+
+    // 4. Run treecraft init
+    log('4. Initializing fresh site via: npx treecraft init --yes...');
+    const initCmd = `npx treecraft init --name "Verify Portal" --slug "${TEST_SLUG}" --port ${TEST_PORT} --yes`;
     execSync(initCmd, {
       cwd: TMP_DIR,
       stdio: 'inherit',
     });
 
-    // 4. Validate generated file structure
-    log('4. Validating generated directory structure and files...');
+    // 5. Validate generated file structure
+    log('5. Validating generated directory structure and files...');
     const expectedFiles = [
       path.join(TMP_DIR, 'package.json'),
       path.join(TMP_DIR, '.gitignore'),
@@ -98,6 +89,13 @@ async function runVerification() {
       }
     }
 
+    // Verify package.json scripts
+    const sitePkg = JSON.parse(fs.readFileSync(path.join(TMP_DIR, 'package.json'), 'utf8'));
+    if (!sitePkg.scripts || sitePkg.scripts.dev !== 'treecraft dev') {
+      throw new Error(`Verification failed: package.json script "dev" is not "treecraft dev"`);
+    }
+    log('✅ Generated package.json has valid Treecraft CLI scripts.');
+
     // Verify dynamic DB naming in generated configs
     const generatedSiteConfig = require(path.join(TMP_DIR, 'site', 'site.config.js'));
     if (generatedSiteConfig.dbName !== TEST_DB) {
@@ -110,10 +108,15 @@ async function runVerification() {
     }
     log(`✅ Dynamic DB Name verified in configs: ${TEST_DB}`);
 
-    log('✅ All project and site files verified successfully on disk.');
+    // Verify .gitignore does not contain submodule 'core/'
+    const gitignoreContent = fs.readFileSync(path.join(TMP_DIR, '.gitignore'), 'utf8');
+    if (gitignoreContent.includes('core/')) {
+      throw new Error('Verification failed: .gitignore should not contain core/ in NPM mode');
+    }
+    log('✅ .gitignore verified clean of submodule artifacts.');
 
-    // 5. Validate Content Tree Parity
-    log('5. Validating Content Tree Parity against corporate starter manifest...');
+    // 6. Validate Content Tree Parity
+    log('6. Validating Content Tree Parity against corporate starter manifest...');
     const compareScript = path.join(CORE_DIR, 'src', 'scripts', 'tree-compare.js');
     const snapshotPath = path.join(CORE_DIR, 'starter', 'corporate', 'tree.manifest.json');
     const testDbUri = `mongodb://127.0.0.1:27017/${TEST_DB}`;
@@ -125,7 +128,7 @@ async function runVerification() {
     log('✅ Content Tree Parity check passed with 100% match!');
 
     console.log(`\n======================================================`);
-    console.log(`🎉 VERIFICATION COMPLETED: Luồng Submodule -> Init -> Dev thành công 100%!`);
+    console.log(`🎉 VERIFICATION COMPLETED: Luồng NPM Package -> Init -> Dev thành công 100%!`);
     console.log(`======================================================\n`);
   } finally {
     // Cleanup temporary MongoDB database

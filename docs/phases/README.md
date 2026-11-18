@@ -65,6 +65,7 @@ flowchart TD
 | **S** | Tách Core & Site, Lệnh init Một Bước ("Submodule → Init → Dev") | **Hoàn thành** | 11-Y3, R2 | [`phase-S-core-site-split.md`](./phase-S-core-site-split.md) | 2026-11-17 | 2026-11-17 | Core repo bất biến dạng Git Submodule, site/ tách rời, sitePaths resolver, lệnh init một bước thuần Node.js, DEC-056, DEC-057 |
 | **S-Parity** | Bảo toàn Đồng nhất Cây Nội dung & Snapshot Starter | **Hoàn thành** | S | [`phase-S-tree-parity.md`](./phase-S-tree-parity.md) | 2026-11-17 | 2026-11-17 | Parity 100% cây nội dung sau init, phân tách Core System Seed & Site Starter YAML, CLI tree:snapshot & tree:compare, DEC-058 |
 | **12** | Hoàn thiện (Kiểm thử, Bảo mật, Hiệu năng, Triển khai, Tài liệu) | **Hoàn thành** | 0 → 11, L1, K1, E1, S | [`phase-12-hardening.md`](./phase-12-hardening.md) | 2026-11-18 | 2026-11-18 | Hoàn tất toàn diện 3 tiểu giai đoạn 12a (Test/Bảo mật/Hiệu năng), 12b (Docker/Vận hành/System Health), 12c (Tài liệu chuẩn 7 mục/Quy tắc AI) |
+| **N** | Phát hành công khai Core lên NPM và Bỏ hẳn Git Submodule | **Hoàn thành** | S, K1, E1, 12 | [`phase-N-npm-package.md`](./phase-N-npm-package.md) | 2026-11-18 | 2026-11-18 | Chuyển kênh phân phối duy nhất sang npm package công khai, dọn sạch hoàn toàn git submodule khỏi codebase |
 
 ---
 

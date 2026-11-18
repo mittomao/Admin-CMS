@@ -11,7 +11,7 @@ let server;
 
 const startServer = async () => {
   try {
-    // Kiểm tra tính bất biến của Core Submodule (SEC-10 / GĐ 12)
+    // Kiểm tra tính toàn vẹn của Core (Package Integrity / SEC-10 / DEC-059)
     const coreStatus = sitePaths.verifyCoreImmutability({ throwOnError: env.isProd });
     if (!coreStatus.isClean) {
       logger.warn(`[Core Security] ${coreStatus.message}`);

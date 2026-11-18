@@ -4,7 +4,7 @@
  * Quy trình nâng cấp Core an toàn và khôi phục khi gặp sự cố:
  * 1. check   : Kiểm tra tính sẵn sàng trước khi nâng cấp
  * 2. prepare : Tự động tạo bản sao lưu an toàn (pre-upgrade backup) và lưu trạng thái rollback
- * 3. verify  : Xác minh sau khi cập nhật submodule Core (chạy doctor & schema verification)
+ * 3. verify  : Xác minh sau khi cập nhật gói Core npm (chạy doctor & schema verification)
  * 4. rollback: Tự động khôi phục dữ liệu từ bản sao lưu pre-upgrade nếu phiên bản mới bị lỗi
  */
 
@@ -34,14 +34,14 @@ function printBanner() {
 
 async function handleCheck() {
   printBanner();
-  console.log(`${colors.bold}1. KIỂM TRA MÔ HÌNH DỰ ÁN & SUBMODULE${colors.reset}`);
-  console.log(`- Mô hình: ${sitePaths.isStandaloneMode ? 'Standalone Core' : 'Site Project với Core Submodule'}`);
+  console.log(`${colors.bold}1. KIỂM TRA MÔ HÌNH DỰ ÁN & PHIÊN BẢN CORE${colors.reset}`);
+  console.log(`- Mô hình: ${sitePaths.isStandaloneMode ? 'Standalone Core' : 'Site Project với Core NPM Package'}`);
   console.log(`- Thư mục Site: ${sitePaths.SITE_DIR}`);
   console.log(`- Thư mục Core: ${sitePaths.CORE_DIR}`);
 
   const immutability = sitePaths.verifyCoreImmutability({ throwOnError: false });
   if (immutability.isClean) {
-    console.log(`  ${colors.green}✔ Core sạch sẽ, không có thay đổi untracked.${colors.reset}`);
+    console.log(`  ${colors.green}✔ Core sạch sẽ, toàn vẹn (${immutability.mode || 'verified'}).${colors.reset}`);
   } else {
     console.log(`  ${colors.yellow}⚠ Cảnh báo: ${immutability.message}${colors.reset}`);
   }
@@ -86,10 +86,9 @@ async function handlePrepare() {
   console.log(`- Kích thước:  ${backupResult.sizeBytes} bytes`);
   console.log(`- File state:  ${STATE_FILE}`);
 
-  console.log(`\n${colors.bold}BƯỚC 2: TIẾN HÀNH CẬP NHẬT SUBMODULE CORE${colors.reset}`);
+  console.log(`\n${colors.bold}BƯỚC 2: TIẾN HÀNH CẬP NHẬT GÓI CORE NPM${colors.reset}`);
   console.log(`Bạn có thể thực hiện lệnh sau trên terminal của Site:`);
-  console.log(`  ${colors.cyan}git submodule update --remote core${colors.reset}`);
-  console.log(`  ${colors.cyan}npm install${colors.reset}`);
+  console.log(`  ${colors.cyan}npm install treecraft-core@latest${colors.reset}`);
   console.log(`Sau đó kiểm tra xác minh bằng lệnh:`);
   console.log(`  ${colors.bold}npm run core:verify${colors.reset}\n`);
 }
@@ -140,8 +139,8 @@ async function handleRollback() {
     console.log(`\n${colors.green}✔ KHÔI PHỤC DỮ LIỆU THÀNH CÔNG!${colors.reset}`);
     console.log(`- Database: ${restoreResult.targetDb}`);
     console.log(`- Bản ghi phục hồi: ${restoreResult.totalRestored}`);
-    console.log(`\n${colors.yellow}LƯU Ý CUỐI: Hãy checkout lại phiên bản Core submodule cũ nếu cần:${colors.reset}`);
-    console.log(`  git submodule update --init --recursive\n`);
+    console.log(`\n${colors.yellow}LƯU Ý CUỐI: Cài đặt lại phiên bản Core cũ nếu cần:${colors.reset}`);
+    console.log(`  npm install treecraft-core@<previous_version>\n`);
     fs.unlinkSync(STATE_FILE);
   } else {
     console.error(`\n${colors.red}✖ Khôi phục thất bại: ${restoreResult.error}${colors.reset}`);

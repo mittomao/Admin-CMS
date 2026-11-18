@@ -84,7 +84,7 @@ describe('GĐ K1 — RestoreEngine Preconditions & Execution', () => {
       const storage = new LocalStorageProvider(testBackupDir);
       const restoreEngine = new RestoreEngine(storage);
 
-      const manifest = { appVersion: '1.0.0', schemaVersion: 1 };
+      const manifest = { appVersion: process.env.npm_package_version || '0.1.0', schemaVersion: 1 };
       const currentDb = mongoose.connection.db.databaseName;
 
       await expect(
@@ -100,7 +100,7 @@ describe('GĐ K1 — RestoreEngine Preconditions & Execution', () => {
       const storage = new LocalStorageProvider(testBackupDir);
       const restoreEngine = new RestoreEngine(storage);
 
-      const manifest = { appVersion: '1.0.0', schemaVersion: 1 };
+      const manifest = { appVersion: process.env.npm_package_version || '0.1.0', schemaVersion: 1 };
 
       await expect(
         restoreEngine.validatePreconditions(manifest, {
@@ -116,7 +116,7 @@ describe('GĐ K1 — RestoreEngine Preconditions & Execution', () => {
       const storage = new LocalStorageProvider(testBackupDir);
       const restoreEngine = new RestoreEngine(storage);
 
-      const manifest = { appVersion: '1.0.0', schemaVersion: 1 };
+      const manifest = { appVersion: process.env.npm_package_version || '0.1.0', schemaVersion: 1 };
 
       await expect(
         restoreEngine.validatePreconditions(manifest, {

@@ -14,7 +14,7 @@
 - Tên database động theo cấu hình: `treecraft_<project_slug>`.
 - Chốt chặn `dbGuard`: Ngăn chặn tuyệt đối việc kết nối nhầm sang DB Remote/Cloud ở môi trường Dev, kiểm tra dấu vân tay môi trường `settings.environmentFingerprint`.
 
-## 3. CẤU TRÚC CORE SUBMODULE & SITE (DEC-056)
-- **Core CMS:** Nằm tại `core/` (hoặc thư mục gốc nếu Standalone Dev), bất biến, không sửa code.
-- **Site Project:** Nằm tại thư mục cha, chứa `site.config.js`, `.env*`, `views/`, `public/`, `Serialization/`.
+## 3. CẤU TRÚC CORE NPM PACKAGE & SITE (DEC-059)
+- **Core CMS (treecraft-core):** Đóng gói thành npm package trong `node_modules/treecraft-core`, bất biến, chỉ đọc (Read-Only).
+- **Site Project:** Nằm tại thư mục làm việc của dự án (`process.cwd()`), chứa `site/site.config.js`, `site/.env*`, `site/views/`, `site/public/`, `site/serialization/`.
 - Luôn tra cứu đường dẫn qua module trung tâm: `src/config/sitePaths.js`.

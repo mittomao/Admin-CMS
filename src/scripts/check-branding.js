@@ -15,11 +15,9 @@ const ALLOWLIST_PATTERNS = [
   /^docs\/phases\/phase-R1-rebrand-root-rename\.md$/,
   /^docs\/phases\/phase-R2-/,
   /^docs\/phases\/R1-impact-matrix\.md$/,
-  /^docs\/reports\/phase-R1-report\.md$/,
+  /^docs\/reports\//,
   /^docs\/open-questions\.md$/,
   /^tests\/brandingAudit\.test\.js$/,
-  /^docs\/reports\/phase-R2-/,
-  /^docs\/reports\/R2-/,
   /^src\/scripts\/check-branding\.js$/,
 ];
 

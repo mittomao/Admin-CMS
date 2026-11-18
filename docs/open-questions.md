@@ -904,3 +904,102 @@ Tài liệu này lưu trữ danh sách 10 câu hỏi kỹ thuật then chốt ch
   Mỗi file $\le 12.000$ ký tự, liên kết trực tiếp tới `docs/rules/`.
 - **Lựa chọn B:** Chỉ duy trì duy nhất file `AGENTS.md` tại thư mục gốc.
 - **Lý do đề xuất:** Tận dụng tính năng modular rules của Antigravity để AI agents tự động nạp ngữ cảnh chính xác mà không làm phình to file `AGENTS.md`.
+
+---
+
+# CÂU HỎI CẦN XÁC NHẬN CHO GIAI ĐOẠN N (PHÁT HÀNH CÔNG KHAI CORE LÊN NPM & BỎ HẲN GIT SUBMODULE)
+
+Tài liệu này lưu trữ danh sách 10 câu hỏi kiến trúc và chính sách công khai cần người dùng xác nhận cho GĐ N, kèm theo đề xuất mặc định của Tech Lead.
+
+---
+
+### 30. Giấy phép mã nguồn mở công khai (License)
+- **Câu hỏi:** Lựa chọn loại giấy phép mã nguồn mở nào cho Treecraft Core khi phát hành công khai lên npm?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **MIT License.** Giấy phép siêu thoáng, ngắn gọn, tiêu chuẩn vàng của hệ sinh thái Node.js/npm, giúp nhà phát triển và doanh nghiệp dễ dàng tích hợp và đóng góp.
+- **Lựa chọn B:** **Apache-2.0 License.** Cung cấp thêm điều khoản cấp quyền sáng chế rõ ràng (patent grant), nhưng văn bản dài hơn.
+- **Lựa chọn C:** Giấy phép kép hoặc BSL (Business Source License).
+- **Lý do đề xuất:** Đa số các CMS mã nguồn mở thế hệ mới và framework Node.js đều chọn MIT để xây dựng cộng đồng nhanh nhất.
+
+---
+
+### 31. Tên gói và Scope trên npm Registry
+- **Câu hỏi:** Đặt tên gói trên npm Registry như thế nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **`@treecraft/core` (Scoped package).** Hiện tại cả scope `@treecraft` và package `core` đều còn trống trên npm. Dùng scoped package thể hiện tính chuyên nghiệp, tổ chức rõ ràng (`@treecraft/core`, `@treecraft/cli`, `@treecraft/starter-*` sau này), chống squatting tên.
+- **Lựa chọn B:** **`treecraft-core` (Unscoped package).** Dễ cài hơn một chút (`npm i treecraft-core`), cũng đang còn trống trên npm.
+- **Lý do đề xuất:** Tên `treecraft` đã bị người khác đăng ký từ 1 năm trước (tool CLI vẽ cây thư mục). Việc chọn `@treecraft/core` là lựa chọn chuẩn mực enterprise và hiện đại nhất.
+
+---
+
+### 32. Chính sách hỗ trợ dự án Git Submodule cũ
+- **Câu hỏi:** Xử lý các dự án đang chạy bằng Git Submodule từ GĐ S như thế nào?
+- **Trạng thái:** **Đã chốt theo yêu cầu người dùng (Bỏ qua công cụ migrate-to-npm)**
+- **Quyết định đã chốt:** Người dùng xác nhận hiện tại chưa có dự án nào sử dụng Git Submodule. Do đó **bỏ hẳn công cụ chuyển đổi `treecraft migrate-to-npm`** và tài liệu liên quan, tập trung toàn bộ nguồn lực vào luồng cài đặt mới từ npm (`npm init` $\rightarrow$ `npm i @treecraft/core` $\rightarrow$ `npx treecraft init`) và dọn sạch hoàn toàn dấu vết submodule khỏi codebase.
+
+---
+
+### 33. Xử lý kho lưu trữ công khai và lịch sử Git
+- **Câu hỏi:** Có cần viết lại lịch sử git để loại bỏ các tệp nhạy cảm không?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Không viết lại lịch sử git.** Kiểm toán thực tế cho thấy không có `.env` hay secret nào từng bị commit. Gói npm được kiểm soát nghiêm ngặt bằng cơ chế `files` whitelist (chỉ đóng gói code runtime cần thiết, loại bỏ hoàn toàn tests, docs nội bộ, serialization dev files).
+- **Lựa chọn B:** Sử dụng `git-filter-repo` để xoá sạch lịch sử cũ trước khi public repo GitHub.
+- **Lý do đề xuất:** Giữ nguyên lịch sử commit nguyên vẹn cho repo core, tránh làm vỡ các commit hash đã chia sẻ; gói npm chỉ chứa đúng các file trong `files` whitelist.
+
+---
+
+### 34. Thuật ngữ vay mượn từ CMS phân cấp truyền thống
+- **Câu hỏi:** Xử lý các thuật ngữ như `Launchpad`, `Workbox`, `Standard Values`, `Insert Options` như thế nào?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Giữ nguyên 100%.** Đây là các thuật ngữ công nghiệp kinh điển của mô hình Hierarchical Tree CMS (tương tự như `Layout`, `Component`, `Placeholder`), đã được thương hiệu hoá chuẩn mực dưới tên sản phẩm Treecraft và hằng số hoá trong `src/config/branding.js`.
+- **Lựa chọn B:** Đổi tên sang các thuật ngữ chung chung (ví dụ `Dashboard` thay cho `Launchpad`, `Tasks` thay cho `Workbox`).
+- **Lý do đề xuất:** Giúp người dùng có kinh nghiệm về CMS phân cấp tiếp cận và sử dụng Treecraft ngay lập tức mà không cần học lại các khái niệm mới.
+
+---
+
+### 35. Thư viện soạn thảo phong phú (TinyMCE)
+- **Câu hỏi:** Đóng gói thư viện TinyMCE như thế nào để tuân thủ giấy phép và tối ưu dung lượng gói npm?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Giữ nguyên cơ chế CDN jsDelivr với TinyMCE 6.8.3 Community Edition.** Không đóng gói binary hay mã nguồn TinyMCE vào tarball npm.
+- **Lựa chọn B:** Cài đặt package `tinymce` cục bộ và đóng gói vào tarball npm.
+- **Lý do đề xuất:** Tiết kiệm hơn 5MB dung lượng tarball của gói npm, không vướng bận bản quyền phân phối binary của bên thứ ba, tải nhanh từ mạng CDN toàn cầu.
+
+---
+
+### 36. Phiên bản phát hành khởi đầu (Initial Version)
+- **Câu hỏi:** Đặt số phiên bản khởi đầu trong `package.json` là bao nhiêu?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **`0.1.0`.** Theo chuẩn SemVer (Semantic Versioning), phiên bản `0.1.0` đánh dấu bản phát hành công khai ban đầu đầy đủ tính năng cốt lõi cho cộng đồng thử nghiệm trước khi chốt API ổn định bản `1.0.0`.
+- **Lựa chọn B:** Bắt đầu ngay từ `1.0.0`.
+- **Lý do đề xuất:** Chuẩn mực ngành phần mềm cho phép tinh chỉnh nhỏ các minor version trong giai đoạn đầu thu thập phản hồi của cộng đồng.
+
+---
+
+### 37. Bộ giao diện mẫu khởi tạo (Starter Template) công khai
+- **Câu hỏi:** Cấu trúc bộ starter mẫu đi kèm trong gói npm công khai?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Duy trì bộ starter mẫu trung tính hiện tại trong `starter/corporate/`:** Trang web doanh nghiệp giới thiệu dịch vụ, bài viết mẫu, liên hệ; sử dụng ảnh placeholder/Unsplash miễn phí và bản quyền mở; không chứa bất kỳ tên khách hàng hay thông tin nhạy cảm nào.
+- **Lựa chọn B:** Cung cấp bộ starter trống hoàn toàn (bare minimal).
+- **Lý do đề xuất:** Người dùng mới sau khi chạy `npx treecraft init` sẽ có ngay một website sống động, xem được ngay giao diện public và trang quản trị `/admin` để trải nghiệm trực quan sức mạnh của Treecraft.
+
+---
+
+### 38. Quy trình phát hành lên npm Registry
+- **Câu hỏi:** AI hay Maintainer (Người dùng) sẽ thực hiện lệnh `npm publish`?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Tuyệt đối tuân thủ quy tắc an toàn: AI chỉ chuẩn bị, kiểm tra bằng `npm pack` cục bộ và viết tài liệu runbook phát hành (`docs/guides/release-npm.md`). Maintainer (Người dùng) sẽ tự tay thực hiện lệnh `npm publish`** với tài khoản cá nhân, xác thực 2 lớp (2FA) và provenance.
+- **Lựa chọn B:** AI cấu hình GitHub Actions tự động publish khi push tag.
+- **Lý do đề xuất:** Bảo vệ an ninh tuyệt đối cho tài khoản npm và token của người dùng, loại trừ mọi nguy cơ lộ lọt mật khẩu hay phát hành ngoài ý muốn.
+
+---
+
+### 39. Tài liệu cộng đồng và an ninh mã nguồn mở
+- **Câu hỏi:** Bổ sung các tài liệu hướng dẫn cộng đồng và an ninh nào ở thư mục gốc repo?
+- **Trạng thái:** Đã có đề xuất mặc định (Chờ duyệt)
+- **Lựa chọn A (Đề xuất mặc định):** **Tạo bộ 4 tệp tiêu chuẩn:**
+  1. `README.md` (giới thiệu sản phẩm, quickstart `npm init`, badge, kiến trúc).
+  2. `LICENSE` (bản quyền MIT).
+  3. `SECURITY.md` (chính sách báo cáo lỗ hổng an ninh bảo mật).
+  4. `CHANGELOG.md` (nhật ký thay đổi theo chuẩn Keep a Changelog).
+- **Lựa chọn B:** Chỉ tạo `README.md` và `LICENSE`.
+- **Lý do đề xuất:** Chuẩn mực cho bất kỳ dự án mã nguồn mở chuyên nghiệp nào trên GitHub và npm.

@@ -1,9 +1,41 @@
 {
-  "name": "treecraft",
-  "version": "1.0.0",
-  "description": "Treecraft - Hierarchical XM Content Management System",
+  "name": "treecraft-core",
+  "version": "0.1.0",
+  "description": "Treecraft CMS Core - Hierarchical XM Content Management Engine",
   "main": "src/server.js",
+  "bin": {
+    "treecraft": "bin/treecraft.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mittomao/Admin-CMS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mittomao/Admin-CMS/issues"
+  },
+  "homepage": "https://github.com/mittomao/Admin-CMS#readme",
+  "files": [
+    "bin",
+    "src",
+    "starter",
+    "public/css",
+    "public/img/icons",
+    "public/js",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "SECURITY.md"
+  ],
   "scripts": {
+    "prepack": "npm run build:css:admin",
+    "prepublishOnly": "node src/scripts/prepublish-guard.js",
+    "pack:check": "node src/scripts/pack-check.js",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "build:css:site": "tailwindcss -c ./tailwind.site.config.js -i ./src/styles/site/main.css -o ./public/site/css/tailwind.css --minify",
@@ -66,8 +98,8 @@
     "mongodb",
     "content-management"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Treecraft Core Team",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.11.0",
