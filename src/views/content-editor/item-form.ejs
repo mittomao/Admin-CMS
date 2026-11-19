@@ -6,7 +6,7 @@
   currentVersion !=='undefined' ? currentVersion : 1; const langs=typeof languagesList !=='undefined' ? languagesList :
   [{ code: 'vi' , name: 'Tiếng Việt' , hasContent: true }]; const vers=typeof versionsList !=='undefined' ? versionsList
   : [{ version: 1 }]; %>
-  <form id="itemEditForm" class="d-flex flex-column h-100" data-item-id="<%= item._id %>" data-lang="<%= lang %>"
+  <form id="itemEditForm" class="d-flex flex-column h-100 overflow-hidden" data-item-id="<%= item._id %>" data-lang="<%= lang %>"
     data-version="<%= ver %>" data-db="<%= typeof currentDb !== 'undefined' ? currentDb : 'master' %>">
     <!-- Hidden Form Metadata -->
       <input type="hidden" name="id" id="formItemId" value="<%= item._id %>" />
@@ -306,8 +306,8 @@
 
 
           <!-- 2. Form Body (Scrollable Sections) -->
-          <div class="card-body p-3 overflow-auto flex-fill" style="max-height: calc(100vh - 280px);">
-            <fieldset class="border-0 p-0 m-0 card-body p-3 overflow-auto flex-fill" style="max-height: calc(100vh - 280px);" <%= (typeof currentDb !== 'undefined' && currentDb === 'web') ? 'disabled' : '' %>>
+          <div class="card-body p-3 overflow-auto flex-fill">
+            <fieldset class="border-0 p-0 m-0" <%= (typeof currentDb !== 'undefined' && currentDb === 'web') ? 'disabled' : '' %>>
               <!-- Quick Info Section (DEC-037 / GĐ 6.3) -->
               <%- include('../partials/quick-info', { quickInfo: locals.quickInfo, item: locals.item, template:
                 locals.template }) %>
@@ -468,8 +468,8 @@
                                   <% }) %>
                           </div>
                           <% } %>
+            </fieldset>
           </div>
-          </fieldset>
 
           <!-- 3. Form Footer Bar -->
           <div

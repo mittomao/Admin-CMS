@@ -567,5 +567,185 @@ img.sc-icon-img {
   border: 1px solid var(--tblr-border-color, #e2e8f0);
 }
 
+/* ==========================================================================
+   CONTENT EDITOR DESKTOP IDE LAYOUT & RESIZABLE TREE (DEC / DESKTOP IDE)
+   ========================================================================== */
+
+/* Khóa chiều cao cố định 100vh cho layout Content Editor */
+html:has(.content-editor-container),
+body:has(.content-editor-container) {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+body:has(.content-editor-container) .page {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body:has(.content-editor-container) .page-wrapper {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-bottom: 40px !important; /* bù trừ cho taskbar đáy */
+}
+
+/* 1. Header (Navbar + Ribbon) cố định */
+body:has(.content-editor-container) .navbar,
+body:has(.content-editor-container) .ribbon-container {
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+}
+
+body:has(.content-editor-container) .page-body,
+body:has(.content-editor-container) .page-body > .container-xl,
+body:has(.content-editor-container) .content-editor-container {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body:has(.content-editor-container) .content-editor-container > .d-flex.flex-fill {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* 2. Cây nội dung (Content Tree): Cuộn độc lập & Cắt chữ ellipsis */
+body:has(.content-editor-container) #contentTreePane {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+
+body:has(.content-editor-container) #fancytreeContainer {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+
+.fancytree-plain span.fancytree-node {
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.fancytree-plain span.fancytree-title {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  display: inline-block !important;
+}
+
+/* 3. Phân vùng nội dung bên phải: DUY NHẤT 1 thanh cuộn dọc */
+body:has(.content-editor-container) .content-workspace-pane {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body:has(.content-editor-container) .workspace-top-bar {
+  flex-shrink: 0 !important;
+}
+
+body:has(.content-editor-container) #editorWorkspace,
+body:has(.content-editor-container) .workspace-content-body {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+}
+
+body:has(.content-editor-container) #itemEditForm {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+body:has(.content-editor-container) #itemEditForm > .card-header,
+body:has(.content-editor-container) #itemEditForm > .card-footer {
+  flex-shrink: 0 !important;
+}
+
+/* Thanh cuộn dọc duy nhất cho Form Body */
+body:has(.content-editor-container) #itemEditForm > .card-body {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 1rem !important;
+}
+
+body:has(.content-editor-container) #itemEditForm fieldset,
+body:has(.content-editor-container) #itemEditForm .card-body fieldset {
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+
+/* Thanh Resizer Handle */
+.content-tree-resizer {
+  width: 6px;
+  cursor: col-resize;
+  background-color: transparent;
+  position: relative;
+  z-index: 50;
+  margin-left: -3px;
+  margin-right: -3px;
+  user-select: none;
+  touch-action: none;
+  transition: background-color 0.15s ease;
+}
+.content-tree-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 2px;
+  background-color: transparent;
+  transition: background-color 0.15s ease;
+}
+.content-tree-resizer:hover::after,
+.content-tree-resizer.is-dragging::after {
+  background-color: #206bc4;
+}
+
+body.tree-resizing,
+body.tree-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+
 
 

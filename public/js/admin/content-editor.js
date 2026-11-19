@@ -41,7 +41,74 @@ document.addEventListener('DOMContentLoaded', () => {
   initPublishModalEvents();
   initSecurityEditorModal();
   updateRibbonStateForDb();
+  initTreeResizerAndTooltips();
 });
+
+// ==========================================
+// Desktop IDE: Tree Resizer & Tooltips
+// ==========================================
+function initTreeResizerAndTooltips() {
+  // Khôi phục độ rộng cây từ localStorage
+  const pane = document.getElementById('contentTreePane');
+  const savedWidth = localStorage.getItem('treecraftContentTreeWidth');
+  if (pane && savedWidth) {
+    pane.style.maxWidth = '1000px';
+    pane.style.width = savedWidth + 'px';
+  }
+
+  // Lắng nghe sự kiện kéo thanh phân cách resizer
+  const resizer = document.getElementById('contentTreeResizer');
+  if (resizer && pane) {
+    let isDragging = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    resizer.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      isDragging = true;
+      startX = e.clientX;
+      startWidth = pane.offsetWidth;
+      resizer.classList.add('is-dragging');
+      document.body.classList.add('tree-resizing');
+
+      function onMouseMove(e) {
+        if (!isDragging) return;
+        const deltaX = e.clientX - startX;
+        let newWidth = startWidth + deltaX;
+        if (newWidth < 220) newWidth = 220;
+        const maxWidth = Math.min(950, window.innerWidth - 300);
+        if (newWidth > maxWidth) newWidth = maxWidth;
+
+        pane.style.maxWidth = '1000px';
+        pane.style.width = newWidth + 'px';
+      }
+
+      function onMouseUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        resizer.classList.remove('is-dragging');
+        document.body.classList.remove('tree-resizing');
+        localStorage.setItem('treecraftContentTreeWidth', pane.offsetWidth);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  }
+
+  // Dynamic Tooltip cho các tiêu đề item bị cắt gọn (...)
+  const treeContainer = document.getElementById('fancytreeContainer');
+  if (treeContainer) {
+    treeContainer.addEventListener('mouseover', function (e) {
+      const titleSpan = e.target.closest('.fancytree-title');
+      if (titleSpan && !titleSpan.getAttribute('title')) {
+        titleSpan.setAttribute('title', titleSpan.textContent.trim());
+      }
+    });
+  }
+}
 
 // ==========================================
 // 1. Content Tree Initialization (Fancytree)

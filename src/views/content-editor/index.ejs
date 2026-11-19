@@ -1,4 +1,4 @@
-<div class="content-editor-container d-flex flex-column h-100" style="min-height: calc(100vh - 120px);">
+<div class="content-editor-container d-flex flex-column h-100">
   <!-- 1. Treecraft Ribbon Toolbar -->
   <%- include('../partials/ribbon') %>
 
@@ -8,7 +8,7 @@
     <aside
       class="content-tree-pane bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-slate-800 d-flex flex-column flex-shrink-0"
       id="contentTreePane"
-      style="width: 320px; min-width: 260px; max-width: 500px;"
+      style="width: 320px; min-width: 220px; max-width: 1000px;"
     >
       <!-- Tree Filter / Search Bar -->
       <div class="p-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900">
@@ -88,6 +88,9 @@
         </div>
       </div>
     </aside>
+
+    <!-- Resizer Handle for Content Tree Pane (DEC / Desktop IDE Resizer) -->
+    <div id="contentTreeResizer" class="content-tree-resizer" title="Kéo để thay đổi độ rộng"></div>
 
     <!-- Center Workspace Pane: Breadcrumbs + View Mode + Form/Folder View -->
     <main class="content-workspace-pane flex-fill d-flex flex-column bg-slate-50/70 dark:bg-slate-950 overflow-hidden">

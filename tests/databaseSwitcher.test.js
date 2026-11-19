@@ -301,7 +301,7 @@ describe('GĐ 8.1 - Database Switcher Master/Web & Reconciliation', () => {
       expect(res.status).toBe(200);
       expect(res.text).toContain('Đang xem WEB database (chỉ đọc)');
       expect(res.text).toContain('Open in Master');
-      expect(res.text).toContain('<fieldset class="border-0 p-0 m-0 card-body p-3 overflow-auto flex-fill" style="max-height: calc(100vh - 280px);" disabled>');
+      expect(res.text).toContain('<fieldset class="border-0 p-0 m-0" disabled>');
     });
 
     test('Form in Web mode for unpublished item renders friendly Master redirect banner', async () => {
